@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
@@ -218,6 +219,11 @@ function AppSidebar() {
 
 function TopBar() {
     const { theme, setTheme } = useTheme()
+    const [notifications, setNotifications] = useState([
+        { id: 1, title: "New Lead Assigned", description: "Rahul Deshmukh from TechFirm India", time: "2 min ago", type: "lead" },
+        { id: 2, title: "Deal Stage Updated", description: "RetailGroup UAE moved to Negotiation", time: "1 hr ago", type: "deal" },
+        { id: 3, title: "Quote Approved", description: "VM Edulife for ₹1,80,000", time: "3 hr ago", type: "quote" },
+    ])
 
     return (
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
@@ -249,15 +255,61 @@ function TopBar() {
                 </Button>
 
                 {/* Notifications */}
-                <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-                    <Bell className="h-4 w-4" />
-                    <Badge
-                        variant="destructive"
-                        className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
-                    >
-                        3
-                    </Badge>
-                </Button>
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 relative">
+                            <Bell className="h-4 w-4" />
+                            {notifications.length > 0 && (
+                                <Badge
+                                    variant="destructive"
+                                    className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+                                >
+                                    {notifications.length}
+                                </Badge>
+                            )}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80">
+                        <div className="flex items-center justify-between px-4 py-2 border-b">
+                            <span className="text-sm font-semibold">Notifications</span>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-auto p-0 text-xs text-muted-foreground hover:text-primary h-8 px-2"
+                                onClick={() => setNotifications([])}
+                            >
+                                Clear all
+                            </Button>
+                        </div>
+                        <div className="max-h-[300px] overflow-auto">
+                            {notifications.length === 0 ? (
+                                <div className="p-8 text-center text-sm text-muted-foreground">
+                                    No new notifications
+                                </div>
+                            ) : (
+                                notifications.map((n: any) => (
+                                    <DropdownMenuItem key={n.id} className="flex flex-col items-start gap-1 p-4 cursor-pointer focus:bg-accent border-b last:border-0 rounded-none">
+                                        <div className="flex items-center justify-between w-full">
+                                            <span className="font-medium text-sm">{n.title}</span>
+                                            <span className="text-[10px] text-muted-foreground">{n.time}</span>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground line-clamp-2">
+                                            {n.description}
+                                        </p>
+                                    </DropdownMenuItem>
+                                ))
+                            )}
+                        </div>
+                        {notifications.length > 0 && (
+                            <div className="p-2 border-t mt-1">
+                                <Button variant="outline" size="sm" className="w-full text-xs h-8">
+                                    View all notifications
+                                </Button>
+                            </div>
+                        )}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
             </div>
         </header>
     )
@@ -273,9 +325,9 @@ export default function DashboardLayout({
             <AppSidebar />
             <SidebarInset>
                 <TopBar />
-                <main className="flex-1 overflow-auto p-6">
+                <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden p-6 w-full">
                     {children}
-                </main>
+                </div>
             </SidebarInset>
         </SidebarProvider>
     )

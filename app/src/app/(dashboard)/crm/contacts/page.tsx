@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -36,8 +37,6 @@ import {
     Receipt,
     Eye,
 } from "lucide-react"
-import { COUNTRIES } from "@/lib/constants/countries"
-import { ContactFormDialog } from "@/components/crm/contact-form-dialog"
 
 interface Contact {
     id: string
@@ -97,46 +96,13 @@ const initialContacts: Contact[] = [
         balance: 125000,
         isActive: true,
     },
-    {
-        id: "4",
-        displayName: "Priya Sharma",
-        type: "INDIVIDUAL",
-        email: "priya.sharma@example.com",
-        phone: "+91 87654 32109",
-        gstin: "",
-        pan: "CLMPS9876B",
-        customerGroup: "dealer",
-        countryCode: "IN",
-        currencyCode: "INR",
-        balance: 15750,
-        isActive: true,
-    },
-    {
-        id: "5",
-        displayName: "TechCorp India Pvt Ltd",
-        type: "COMPANY",
-        email: "info@techcorp.example.com",
-        phone: "+91 20 4567 8901",
-        gstin: "27AAICG9629C1ZF",
-        pan: "AAICG9629C",
-        customerGroup: "dealer",
-        countryCode: "IN",
-        currencyCode: "INR",
-        balance: 0,
-        isActive: true,
-    },
 ]
 
-const countryFlags: Record<string, string> = Object.fromEntries(
-    COUNTRIES.map(c => [c.code, c.flag])
-)
-
 export default function ContactsPage() {
+    const router = useRouter()
     const [contacts, setContacts] = useState<Contact[]>(initialContacts)
     const [searchQuery, setSearchQuery] = useState("")
     const [filterType, setFilterType] = useState<"all" | "INDIVIDUAL" | "COMPANY">("all")
-    const [dialogOpen, setDialogOpen] = useState(false)
-    const [editingContact, setEditingContact] = useState<Contact | null>(null)
 
     const filteredContacts = contacts.filter((c) => {
         const matchesSearch =
@@ -148,54 +114,14 @@ export default function ContactsPage() {
         return matchesSearch && matchesType
     })
 
-    const handleCreate = () => {
-        setEditingContact(null)
-        setDialogOpen(true)
-    }
-
-    const handleEdit = (contact: Contact) => {
-        setEditingContact(contact)
-        setDialogOpen(true)
-    }
-
     const handleDelete = (id: string) => {
         setContacts((prev) => prev.filter((c) => c.id !== id))
-    }
-
-    const handleSave = (data: any) => {
-        const fullPhone = `${data.phoneDialCode} ${data.phone}`.trim()
-        if (editingContact) {
-            setContacts((prev) =>
-                prev.map((c) =>
-                    c.id === editingContact.id
-                        ? { ...c, ...data, phone: fullPhone, displayName: data.displayName }
-                        : c
-                )
-            )
-        } else {
-            const newContact: Contact = {
-                id: Date.now().toString(),
-                displayName: data.displayName,
-                type: data.type,
-                email: data.email,
-                phone: fullPhone,
-                gstin: data.gstin || "",
-                pan: data.pan || "",
-                customerGroup: data.customerGroup,
-                countryCode: data.countryCode,
-                currencyCode: data.currencyCode,
-                balance: 0,
-                isActive: true,
-            }
-            setContacts((prev) => [newContact, ...prev])
-        }
     }
 
     const totalBalance = contacts.reduce((sum, c) => sum + c.balance, 0)
 
     return (
         <div className="space-y-6">
-            {/* Page Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
@@ -212,14 +138,13 @@ export default function ContactsPage() {
                         <Download className="h-4 w-4 mr-2" />
                         Export
                     </Button>
-                    <Button size="sm" onClick={handleCreate}>
+                    <Button size="sm" onClick={() => router.push("/crm/contacts/new")}>
                         <Plus className="h-4 w-4 mr-2" />
                         New Contact
                     </Button>
                 </div>
             </div>
 
-            {/* Stats Mini Cards */}
             <div className="grid grid-cols-4 gap-4">
                 <Card>
                     <CardContent className="pt-4 pb-3">
@@ -247,237 +172,159 @@ export default function ContactsPage() {
                 </Card>
             </div>
 
-            {/* Filters Bar */}
-            <Card>
-                <CardContent className="pt-6">
-                    <div className="flex items-center gap-3">
-                        <div className="relative flex-1 max-w-sm">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder="Search by name, email, GSTIN, PAN..."
-                                className="pl-8"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        <div className="flex gap-1.5">
-                            <Badge
-                                variant={filterType === "all" ? "default" : "outline"}
-                                className="cursor-pointer hover:bg-accent"
-                                onClick={() => setFilterType("all")}
-                            >
-                                All ({contacts.length})
-                            </Badge>
-                            <Badge
-                                variant={filterType === "COMPANY" ? "default" : "outline"}
-                                className="cursor-pointer hover:bg-accent"
-                                onClick={() => setFilterType("COMPANY")}
-                            >
-                                <Building2 className="h-3 w-3 mr-1" />
-                                Companies
-                            </Badge>
-                            <Badge
-                                variant={filterType === "INDIVIDUAL" ? "default" : "outline"}
-                                className="cursor-pointer hover:bg-accent"
-                                onClick={() => setFilterType("INDIVIDUAL")}
-                            >
-                                <User className="h-3 w-3 mr-1" />
-                                Individuals
-                            </Badge>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="flex items-center gap-2">
+                <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        type="search"
+                        placeholder="Search contacts, emails, IDs..."
+                        className="pl-8"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+                <Button variant="outline" className="gap-2">
+                    <Filter className="h-4 w-4" />
+                    Filter
+                </Button>
+                <div className="ml-auto flex gap-2">
+                    <Badge
+                        variant={filterType === "all" ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => setFilterType("all")}
+                    >
+                        All
+                    </Badge>
+                    <Badge
+                        variant={filterType === "COMPANY" ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => setFilterType("COMPANY")}
+                    >
+                        Companies
+                    </Badge>
+                    <Badge
+                        variant={filterType === "INDIVIDUAL" ? "default" : "outline"}
+                        className="cursor-pointer"
+                        onClick={() => setFilterType("INDIVIDUAL")}
+                    >
+                        Individuals
+                    </Badge>
+                </div>
+            </div>
 
-            {/* Contacts Table */}
             <Card>
-                <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-base">All Contacts</CardTitle>
-                        <CardDescription>
-                            {filteredContacts.length} of {contacts.length} contacts
-                        </CardDescription>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Type</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Phone</TableHead>
-                                <TableHead>GSTIN / Tax ID</TableHead>
-                                <TableHead>Group</TableHead>
-                                <TableHead className="text-right">Balance</TableHead>
-                                <TableHead className="w-10"></TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredContacts.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
-                                        {searchQuery ? "No contacts match your search." : "No contacts yet. Create your first one!"}
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                filteredContacts.map((contact) => (
-                                    <TableRow key={contact.id} className="cursor-pointer hover:bg-muted/50">
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium shrink-0">
-                                                    {contact.displayName.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <span className="font-medium">{contact.displayName}</span>
-                                                    <div className="text-xs text-muted-foreground">
-                                                        {countryFlags[contact.countryCode] || "🌐"} {contact.countryCode}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="text-xs">
-                                                {contact.type === "COMPANY" ? (
-                                                    <><Building2 className="h-3 w-3 mr-1" />Company</>
-                                                ) : (
-                                                    <><User className="h-3 w-3 mr-1" />Individual</>
-                                                )}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                                <Mail className="h-3 w-3 shrink-0" />
-                                                <span className="truncate max-w-[160px]">{contact.email}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                                <Phone className="h-3 w-3 shrink-0" />
-                                                {contact.phone}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {contact.gstin ? (
-                                                <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                                                    {contact.gstin}
-                                                </code>
-                                            ) : contact.pan ? (
-                                                <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                                                    PAN: {contact.pan}
-                                                </code>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Contact</TableHead>
+                            <TableHead>Contact Info</TableHead>
+                            <TableHead>Tax IDs</TableHead>
+                            <TableHead>Group</TableHead>
+                            <TableHead className="text-right">Balance</TableHead>
+                            <TableHead className="w-[50px]"></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filteredContacts.map((contact) => (
+                            <TableRow key={contact.id}>
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                                            {contact.type === "COMPANY" ? (
+                                                <Building2 className="h-5 w-5 text-primary" />
                                             ) : (
-                                                <span className="text-xs text-muted-foreground">—</span>
+                                                <User className="h-5 w-5 text-primary" />
                                             )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant="secondary"
-                                                className={`capitalize text-xs ${contact.customerGroup === "vip"
-                                                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                                                    : ""
-                                                    }`}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium leading-none">{contact.displayName}</p>
+                                            <p className="text-sm text-muted-foreground capitalize mt-1">
+                                                {contact.type.toLowerCase()}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="space-y-1">
+                                        <div className="flex items-center text-sm">
+                                            <Mail className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
+                                            {contact.email}
+                                        </div>
+                                        <div className="flex items-center text-sm text-muted-foreground">
+                                            <Phone className="mr-2 h-3.5 w-3.5" />
+                                            {contact.phone}
+                                        </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="space-y-1 text-sm">
+                                        {contact.gstin && (
+                                            <div className="flex justify-between gap-4">
+                                                <span className="text-muted-foreground">GST:</span>
+                                                <span className="font-medium">{contact.gstin}</span>
+                                            </div>
+                                        )}
+                                        {contact.pan && (
+                                            <div className="flex justify-between gap-4">
+                                                <span className="text-muted-foreground">PAN:</span>
+                                                <span className="font-medium">{contact.pan}</span>
+                                            </div>
+                                        )}
+                                        {!contact.gstin && !contact.pan && (
+                                            <span className="text-muted-foreground">-</span>
+                                        )}
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <Badge variant="secondary" className="capitalize">
+                                        {contact.customerGroup}
+                                    </Badge>
+                                </TableCell>
+                                <TableCell className="text-right font-medium">
+                                    {contact.balance > 0 ? (
+                                        <span className="text-destructive">
+                                            ₹{contact.balance.toLocaleString("en-IN")}
+                                        </span>
+                                    ) : (
+                                        <span className="text-muted-foreground">₹0</span>
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem>
+                                                <Eye className="h-4 w-4 mr-2" />
+                                                View Details
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}/edit`)}>
+                                                <Pencil className="h-4 w-4 mr-2" />
+                                                Edit Contact
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem>
+                                                <Receipt className="h-4 w-4 mr-2" />
+                                                View Transactions
+                                            </DropdownMenuItem>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuItem
+                                                className="text-destructive focus:text-destructive"
+                                                onClick={() => handleDelete(contact.id)}
                                             >
-                                                {contact.customerGroup}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right font-medium">
-                                            {contact.balance > 0 ? (
-                                                <span className="text-red-400">
-                                                    {{ INR: "₹", AED: "د.إ", SAR: "﷼", USD: "$" }[contact.currencyCode] || "$"}
-                                                    {contact.balance.toLocaleString("en-US")}
-                                                </span>
-                                            ) : (
-                                                <span className="text-emerald-400">
-                                                    {{ INR: "₹", AED: "د.إ", SAR: "﷼", USD: "$" }[contact.currencyCode] || "$"}0
-                                                </span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem>
-                                                        <Eye className="mr-2 h-4 w-4" />
-                                                        View Details
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleEdit(contact)}>
-                                                        <Pencil className="mr-2 h-4 w-4" />
-                                                        Edit
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem>
-                                                        <Receipt className="mr-2 h-4 w-4" />
-                                                        Create Invoice
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuSeparator />
-                                                    <DropdownMenuItem
-                                                        className="text-red-500 focus:text-red-500"
-                                                        onClick={() => handleDelete(contact.id)}
-                                                    >
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Delete
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
+                                                <Trash2 className="h-4 w-4 mr-2" />
+                                                Delete Contact
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
             </Card>
-
-            {/* Contact Form Dialog */}
-            <ContactFormDialog
-                key={editingContact ? editingContact.id : "new"}
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                onSave={handleSave}
-                mode={editingContact ? "edit" : "create"}
-                initialData={
-                    editingContact
-                        ? {
-                            type: editingContact.type,
-                            firstName: editingContact.displayName.split(" ")[0] || "",
-                            lastName: editingContact.displayName.split(" ").slice(1).join(" "),
-                            companyName: editingContact.displayName,
-                            displayName: editingContact.displayName,
-                            email: editingContact.email,
-                            phoneDialCode: editingContact.phone && editingContact.phone.includes(" ") ? editingContact.phone.split(" ")[0] : "+91",
-                            phone: editingContact.phone && editingContact.phone.includes(" ") ? editingContact.phone.split(" ").slice(1).join(" ") : (editingContact.phone || ""),
-                            mobileDialCode: "+91",
-                            mobile: "",
-                            website: "",
-                            customerGroup: editingContact.customerGroup,
-                            countryCode: editingContact.countryCode,
-                            currencyCode: editingContact.currencyCode,
-                            gstin: editingContact.gstin || "",
-                            pan: editingContact.pan || "",
-                            cin: "",
-                            tan: "",
-                            msmeUdyam: "",
-                            trn: "",
-                            tradeLicense: "",
-                            vatNumberKsa: "",
-                            crNumber: "",
-                            ein: "",
-                            creditLimit: "",
-                            billingStreet: "",
-                            billingCity: "",
-                            billingState: "",
-                            billingZip: "",
-                            billingCountry: "",
-                            notes: "",
-                        }
-                        : undefined
-                }
-            />
         </div>
     )
 }

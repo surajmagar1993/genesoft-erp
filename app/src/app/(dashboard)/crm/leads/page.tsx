@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,31 +13,36 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-    Plus, Search, MoreHorizontal, Target, ArrowRightCircle, Pencil, Trash2, Eye, Sparkles, PhoneCall, CheckCircle2, XCircle,
+    Plus, Search, MoreHorizontal, Target, ArrowRightCircle, Pencil, Trash2, Eye,
+    Sparkles, PhoneCall, CheckCircle2, XCircle,
 } from "lucide-react"
+
+type LeadStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST"
 
 interface Lead {
     id: string
     title: string
     contactName: string
     email: string
+    phone: string
     source: string
-    status: "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST"
+    status: LeadStatus
     score: number
     assignedTo: string
+    notes: string
     createdAt: string
 }
 
 const initialLeads: Lead[] = [
-    { id: "1", title: "ERP Implementation Inquiry", contactName: "Rahul Deshmukh", email: "rahul@techfirm.in", source: "Website Form", status: "NEW", score: 75, assignedTo: "Suraj M.", createdAt: "2026-03-05" },
-    { id: "2", title: "CRM for Retail Chain", contactName: "Aisha Khan", email: "aisha.k@retailgroup.ae", source: "Referral", status: "CONTACTED", score: 85, assignedTo: "Suraj M.", createdAt: "2026-03-04" },
-    { id: "3", title: "Desktop Rental Solution", contactName: "Vijay Patil", email: "vijay@edusys.com", source: "Cold Call", status: "QUALIFIED", score: 92, assignedTo: "Admin", createdAt: "2026-03-01" },
-    { id: "4", title: "Inventory Module Demo", contactName: "Sarah Johnson", email: "sarah@warehouse.us", source: "LinkedIn", status: "NEW", score: 60, assignedTo: "Suraj M.", createdAt: "2026-03-05" },
-    { id: "5", title: "GST Compliance Software", contactName: "Ankit Sharma", email: "ankit@taxfirm.in", source: "Google Ads", status: "CONVERTED", score: 98, assignedTo: "Admin", createdAt: "2026-02-20" },
-    { id: "6", title: "POS System Inquiry", contactName: "Mohammed Al-Rashid", email: "m.rashid@shopksa.sa", source: "Website Form", status: "LOST", score: 30, assignedTo: "Suraj M.", createdAt: "2026-02-15" },
+    { id: "1", title: "ERP Implementation Inquiry", contactName: "Rahul Deshmukh", email: "rahul@techfirm.in", phone: "+91 98765 43210", source: "Website Form", status: "NEW", score: 75, assignedTo: "Suraj M.", notes: "", createdAt: "2026-03-05" },
+    { id: "2", title: "CRM for Retail Chain", contactName: "Aisha Khan", email: "aisha.k@retailgroup.ae", phone: "+971 50 123 4567", source: "Referral", status: "CONTACTED", score: 85, assignedTo: "Suraj M.", notes: "", createdAt: "2026-03-04" },
+    { id: "3", title: "Desktop Rental Solution", contactName: "Vijay Patil", email: "vijay@edusys.com", phone: "+91 99887 76655", source: "Cold Call", status: "QUALIFIED", score: 92, assignedTo: "Admin", notes: "", createdAt: "2026-03-01" },
+    { id: "4", title: "Inventory Module Demo", contactName: "Sarah Johnson", email: "sarah@warehouse.us", phone: "+1 555 987 6543", source: "LinkedIn", status: "NEW", score: 60, assignedTo: "Suraj M.", notes: "", createdAt: "2026-03-05" },
+    { id: "5", title: "GST Compliance Software", contactName: "Ankit Sharma", email: "ankit@taxfirm.in", phone: "+91 88776 65544", source: "Google Ads", status: "CONVERTED", score: 98, assignedTo: "Admin", notes: "", createdAt: "2026-02-20" },
+    { id: "6", title: "POS System Inquiry", contactName: "Mohammed Al-Rashid", email: "m.rashid@shopksa.sa", phone: "+966 50 111 2222", source: "Website Form", status: "LOST", score: 30, assignedTo: "Suraj M.", notes: "Budget constraints", createdAt: "2026-02-15" },
 ]
 
-const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+const statusConfig: Record<LeadStatus, { label: string; color: string; icon: any }> = {
     NEW: { label: "New", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Sparkles },
     CONTACTED: { label: "Contacted", color: "bg-amber-500/10 text-amber-500 border-amber-500/20", icon: PhoneCall },
     QUALIFIED: { label: "Qualified", color: "bg-purple-500/10 text-purple-500 border-purple-500/20", icon: Target },
@@ -45,6 +51,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
 }
 
 export default function LeadsPage() {
+    const router = useRouter()
     const [leads, setLeads] = useState(initialLeads)
     const [searchQuery, setSearchQuery] = useState("")
     const [filterStatus, setFilterStatus] = useState<string>("all")
@@ -60,6 +67,14 @@ export default function LeadsPage() {
     const scoreColor = (score: number) =>
         score >= 80 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-red-400"
 
+    const handleDelete = (id: string) => {
+        setLeads((prev) => prev.filter((l) => l.id !== id))
+    }
+
+    const handleConvert = (id: string) => {
+        setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status: "CONVERTED" as LeadStatus } : l))
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -67,27 +82,27 @@ export default function LeadsPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
                     <p className="text-muted-foreground mt-1">Track and convert potential customers</p>
                 </div>
-                <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Lead
+                <Button size="sm" onClick={() => router.push("/crm/leads/new")}>
+                    <Plus className="h-4 w-4 mr-2" /> New Lead
                 </Button>
             </div>
 
             {/* Pipeline Stats */}
-            <div className="grid grid-cols-5 gap-3">
-                {Object.entries(statusConfig).map(([key, cfg]) => {
+            {/* Status Grid */}
+            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
+                {(Object.entries(statusConfig) as [LeadStatus, typeof statusConfig[LeadStatus]][]).map(([key, cfg]) => {
                     const count = leads.filter((l) => l.status === key).length
                     const Icon = cfg.icon
                     return (
                         <Card
                             key={key}
-                            className={`cursor-pointer transition-colors hover:bg-accent/50 ${filterStatus === key ? "ring-1 ring-primary" : ""}`}
+                            className={`cursor-pointer transition-colors hover:bg-accent/50 ${filterStatus === key ? "ring-2 ring-primary" : "border-border/50"}`}
                             onClick={() => setFilterStatus(filterStatus === key ? "all" : key)}
                         >
                             <CardContent className="pt-4 pb-3">
                                 <div className="flex items-center gap-2">
                                     <Icon className="h-4 w-4 text-muted-foreground" />
-                                    <p className="text-xs text-muted-foreground">{cfg.label}</p>
+                                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{cfg.label}</p>
                                 </div>
                                 <p className="text-2xl font-bold mt-1">{count}</p>
                             </CardContent>
@@ -134,28 +149,18 @@ export default function LeadsPage() {
                                 const StatusIcon = status.icon
                                 return (
                                     <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50">
+                                        <TableCell><span className="font-medium">{lead.title}</span></TableCell>
                                         <TableCell>
-                                            <span className="font-medium">{lead.title}</span>
+                                            <div><p className="text-sm">{lead.contactName}</p><p className="text-xs text-muted-foreground">{lead.email}</p></div>
                                         </TableCell>
-                                        <TableCell>
-                                            <div>
-                                                <p className="text-sm">{lead.contactName}</p>
-                                                <p className="text-xs text-muted-foreground">{lead.email}</p>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="text-xs">{lead.source}</Badge>
-                                        </TableCell>
+                                        <TableCell><Badge variant="outline" className="text-xs">{lead.source}</Badge></TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className={`text-xs ${status.color}`}>
-                                                <StatusIcon className="h-3 w-3 mr-1" />
-                                                {status.label}
+                                                <StatusIcon className="h-3 w-3 mr-1" />{status.label}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-center">
-                                            <span className={`font-bold text-sm ${scoreColor(lead.score)}`}>
-                                                {lead.score}
-                                            </span>
+                                            <span className={`font-bold text-sm ${scoreColor(lead.score)}`}>{lead.score}</span>
                                         </TableCell>
                                         <TableCell className="text-sm text-muted-foreground">{lead.assignedTo}</TableCell>
                                         <TableCell className="text-sm text-muted-foreground">{lead.createdAt}</TableCell>
@@ -166,10 +171,12 @@ export default function LeadsPage() {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
-                                                    <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
-                                                    <DropdownMenuItem><ArrowRightCircle className="mr-2 h-4 w-4" />Convert to Deal</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => router.push(`/crm/leads/${lead.id}/edit`)}><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                                    {lead.status !== "CONVERTED" && lead.status !== "LOST" && (
+                                                        <DropdownMenuItem onClick={() => handleConvert(lead.id)}><ArrowRightCircle className="mr-2 h-4 w-4" />Convert to Deal</DropdownMenuItem>
+                                                    )}
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-red-500"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-red-500" onClick={() => handleDelete(lead.id)}><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>

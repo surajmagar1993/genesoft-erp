@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +13,7 @@ import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import {
-    Plus, Search, MoreHorizontal, Building2, Users, Globe, MapPin, Pencil, Trash2, Eye,
+    Plus, Search, MoreHorizontal, Globe, MapPin, Users, Pencil, Trash2, Eye,
 } from "lucide-react"
 
 interface Company {
@@ -38,6 +39,7 @@ const initialCompanies: Company[] = [
 const countryFlags: Record<string, string> = { IN: "🇮🇳", AE: "🇦🇪", SA: "🇸🇦", US: "🇺🇸" }
 
 export default function CompaniesPage() {
+    const router = useRouter()
     const [companies, setCompanies] = useState(initialCompanies)
     const [searchQuery, setSearchQuery] = useState("")
 
@@ -47,6 +49,10 @@ export default function CompaniesPage() {
         c.city.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
+    const handleDelete = (id: string) => {
+        setCompanies((prev) => prev.filter((c) => c.id !== id))
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -54,14 +60,13 @@ export default function CompaniesPage() {
                     <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
                     <p className="text-muted-foreground mt-1">Manage business accounts and organizations</p>
                 </div>
-                <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Company
+                <Button size="sm" onClick={() => router.push("/crm/companies/new")}>
+                    <Plus className="h-4 w-4 mr-2" /> New Company
                 </Button>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card>
                     <CardContent className="pt-4 pb-3">
                         <p className="text-xs text-muted-foreground">Total Companies</p>
@@ -77,7 +82,7 @@ export default function CompaniesPage() {
                 <Card>
                     <CardContent className="pt-4 pb-3">
                         <p className="text-xs text-muted-foreground">Total Deal Value</p>
-                        <p className="text-2xl font-bold">₹{companies.reduce((s, c) => s + c.dealValue, 0).toLocaleString("en-IN")}</p>
+                        <p className="text-2xl font-bold text-primary">₹{companies.reduce((s, c) => s + c.dealValue, 0).toLocaleString("en-IN")}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -124,19 +129,15 @@ export default function CompaniesPage() {
                                             <div>
                                                 <span className="font-medium">{company.name}</span>
                                                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                                    <Globe className="h-3 w-3" />
-                                                    {company.website}
+                                                    <Globe className="h-3 w-3" /> {company.website}
                                                 </div>
                                             </div>
                                         </div>
                                     </TableCell>
-                                    <TableCell>
-                                        <Badge variant="outline" className="text-xs">{company.industry}</Badge>
-                                    </TableCell>
+                                    <TableCell><Badge variant="outline" className="text-xs">{company.industry}</Badge></TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                                            <MapPin className="h-3 w-3" />
-                                            {company.city} {countryFlags[company.countryCode]}
+                                            <MapPin className="h-3 w-3" /> {company.city} {countryFlags[company.countryCode]}
                                         </div>
                                     </TableCell>
                                     <TableCell>
@@ -162,9 +163,13 @@ export default function CompaniesPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuItem><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
-                                                <DropdownMenuItem><Pencil className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => router.push(`/crm/companies/${company.id}/edit`)}>
+                                                    <Pencil className="mr-2 h-4 w-4" />Edit
+                                                </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="text-red-500"><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                                <DropdownMenuItem className="text-red-500" onClick={() => handleDelete(company.id)}>
+                                                    <Trash2 className="mr-2 h-4 w-4" />Delete
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
