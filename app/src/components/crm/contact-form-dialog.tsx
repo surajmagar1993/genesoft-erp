@@ -215,7 +215,7 @@ export function ContactFormDialog({
                                 <div className="flex gap-2">
                                     <Select value={form.phoneDialCode} onValueChange={(v) => update("phoneDialCode", v)}>
                                         <SelectTrigger className="w-[100px] shrink-0">
-                                            <SelectValue />
+                                            <SelectValue placeholder="Code" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {COUNTRIES.map((c) => (
@@ -241,7 +241,7 @@ export function ContactFormDialog({
                                 <div className="flex gap-2">
                                     <Select value={form.mobileDialCode} onValueChange={(v) => update("mobileDialCode", v)}>
                                         <SelectTrigger className="w-[100px] shrink-0">
-                                            <SelectValue />
+                                            <SelectValue placeholder="Code" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {COUNTRIES.map((c) => (
