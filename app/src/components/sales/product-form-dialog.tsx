@@ -93,29 +93,17 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                 </DialogHeader>
 
                 <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 gap-2 bg-transparent h-auto p-0">
-                        <TabsTrigger
-                            value="basic"
-                            className="data-[state=active]:bg-muted data-[state=active]:shadow-sm rounded-md py-2 text-xs sm:text-sm"
-                        >
+                    <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+                        <TabsTrigger value="basic" className="py-2 text-xs sm:text-sm">
                             Basic Info
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="specs"
-                            className="data-[state=active]:bg-muted data-[state=active]:shadow-sm rounded-md py-2 text-xs sm:text-sm"
-                        >
+                        <TabsTrigger value="specs" className="py-2 text-xs sm:text-sm">
                             Specifications
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="pricing"
-                            className="data-[state=active]:bg-muted data-[state=active]:shadow-sm rounded-md py-2 text-xs sm:text-sm"
-                        >
+                        <TabsTrigger value="pricing" className="py-2 text-xs sm:text-sm">
                             Pricing & Inventory
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="meta"
-                            className="data-[state=active]:bg-muted data-[state=active]:shadow-sm rounded-md py-2 text-xs sm:text-sm"
-                        >
+                        <TabsTrigger value="meta" className="py-2 text-xs sm:text-sm">
                             Status & Meta
                         </TabsTrigger>
                     </TabsList>
