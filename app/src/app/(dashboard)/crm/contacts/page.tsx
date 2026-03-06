@@ -36,6 +36,7 @@ import {
     Receipt,
     Eye,
 } from "lucide-react"
+import { COUNTRIES } from "@/lib/constants/countries"
 import { ContactFormDialog } from "@/components/crm/contact-form-dialog"
 
 interface Contact {
@@ -126,12 +127,9 @@ const initialContacts: Contact[] = [
     },
 ]
 
-const countryFlags: Record<string, string> = {
-    IN: "🇮🇳",
-    AE: "🇦🇪",
-    SA: "🇸🇦",
-    US: "🇺🇸",
-}
+const countryFlags: Record<string, string> = Object.fromEntries(
+    COUNTRIES.map(c => [c.code, c.flag])
+)
 
 export default function ContactsPage() {
     const [contacts, setContacts] = useState<Contact[]>(initialContacts)
@@ -165,11 +163,12 @@ export default function ContactsPage() {
     }
 
     const handleSave = (data: any) => {
+        const fullPhone = `${data.phoneDialCode} ${data.phone}`.trim()
         if (editingContact) {
             setContacts((prev) =>
                 prev.map((c) =>
                     c.id === editingContact.id
-                        ? { ...c, ...data, displayName: data.displayName }
+                        ? { ...c, ...data, phone: fullPhone, displayName: data.displayName }
                         : c
                 )
             )
@@ -179,7 +178,7 @@ export default function ContactsPage() {
                 displayName: data.displayName,
                 type: data.type,
                 email: data.email,
-                phone: data.phone,
+                phone: fullPhone,
                 gstin: data.gstin || "",
                 pan: data.pan || "",
                 customerGroup: data.customerGroup,
@@ -436,10 +435,48 @@ export default function ContactsPage() {
 
             {/* Contact Form Dialog */}
             <ContactFormDialog
+                key={editingContact ? editingContact.id : "new"}
                 open={dialogOpen}
                 onOpenChange={setDialogOpen}
                 onSave={handleSave}
                 mode={editingContact ? "edit" : "create"}
+                initialData={
+                    editingContact
+                        ? {
+                            type: editingContact.type,
+                            firstName: editingContact.displayName.split(" ")[0] || "",
+                            lastName: editingContact.displayName.split(" ").slice(1).join(" "),
+                            companyName: editingContact.displayName,
+                            displayName: editingContact.displayName,
+                            email: editingContact.email,
+                            phoneDialCode: editingContact.phone.includes(" ") ? editingContact.phone.split(" ")[0] : "+91",
+                            phone: editingContact.phone.includes(" ") ? editingContact.phone.split(" ").slice(1).join(" ") : editingContact.phone,
+                            mobileDialCode: "+91",
+                            mobile: "",
+                            website: "",
+                            customerGroup: editingContact.customerGroup,
+                            countryCode: editingContact.countryCode,
+                            currencyCode: editingContact.currencyCode,
+                            gstin: editingContact.gstin || "",
+                            pan: editingContact.pan || "",
+                            cin: "",
+                            tan: "",
+                            msmeUdyam: "",
+                            trn: "",
+                            tradeLicense: "",
+                            vatNumberKsa: "",
+                            crNumber: "",
+                            ein: "",
+                            creditLimit: "",
+                            billingStreet: "",
+                            billingCity: "",
+                            billingState: "",
+                            billingZip: "",
+                            billingCountry: "",
+                            notes: "",
+                        }
+                        : undefined
+                }
             />
         </div>
     )

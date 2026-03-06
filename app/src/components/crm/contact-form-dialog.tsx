@@ -14,6 +14,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { COUNTRIES } from "@/lib/constants/countries"
 
 interface ContactFormData {
     type: "INDIVIDUAL" | "COMPANY"
@@ -22,7 +28,9 @@ interface ContactFormData {
     companyName: string
     displayName: string
     email: string
+    phoneDialCode: string
     phone: string
+    mobileDialCode: string
     mobile: string
     website: string
     customerGroup: string
@@ -60,7 +68,9 @@ const emptyForm: ContactFormData = {
     companyName: "",
     displayName: "",
     email: "",
+    phoneDialCode: "+91",
     phone: "",
+    mobileDialCode: "+91",
     mobile: "",
     website: "",
     customerGroup: "retail",
@@ -202,24 +212,52 @@ export function ContactFormDialog({
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="phone">Phone</Label>
-                                <Input
-                                    id="phone"
-                                    value={form.phone}
-                                    onChange={(e) => update("phone", e.target.value)}
-                                    placeholder="+91 98765 43210"
-                                />
+                                <div className="flex gap-2">
+                                    <Select value={form.phoneDialCode} onValueChange={(v) => update("phoneDialCode", v)}>
+                                        <SelectTrigger className="w-[100px] shrink-0">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {COUNTRIES.map((c) => (
+                                                <SelectItem key={`phone-${c.code}`} value={c.dialCode}>
+                                                    {c.flag} {c.dialCode}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Input
+                                        id="phone"
+                                        value={form.phone}
+                                        onChange={(e) => update("phone", e.target.value)}
+                                        placeholder="98765 43210"
+                                    />
+                                </div>
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="mobile">Mobile</Label>
-                                <Input
-                                    id="mobile"
-                                    value={form.mobile}
-                                    onChange={(e) => update("mobile", e.target.value)}
-                                    placeholder="+91 98765 43210"
-                                />
+                                <div className="flex gap-2">
+                                    <Select value={form.mobileDialCode} onValueChange={(v) => update("mobileDialCode", v)}>
+                                        <SelectTrigger className="w-[100px] shrink-0">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {COUNTRIES.map((c) => (
+                                                <SelectItem key={`mobile-${c.code}`} value={c.dialCode}>
+                                                    {c.flag} {c.dialCode}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <Input
+                                        id="mobile"
+                                        value={form.mobile}
+                                        onChange={(e) => update("mobile", e.target.value)}
+                                        placeholder="98765 43210"
+                                    />
+                                </div>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="website">Website</Label>
@@ -248,31 +286,59 @@ export function ContactFormDialog({
                                     ))}
                                 </div>
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 flex flex-col">
                                 <Label>Country</Label>
-                                <div className="flex gap-2">
-                                    {[
-                                        { code: "IN", flag: "🇮🇳" },
-                                        { code: "AE", flag: "🇦🇪" },
-                                        { code: "SA", flag: "🇸🇦" },
-                                        { code: "US", flag: "🇺🇸" },
-                                    ].map((c) => (
-                                        <Badge
-                                            key={c.code}
-                                            variant={form.countryCode === c.code ? "default" : "outline"}
-                                            className="cursor-pointer px-3 py-1"
-                                            onClick={() => {
-                                                update("countryCode", c.code)
-                                                const currencyMap: Record<string, string> = { IN: "INR", AE: "AED", SA: "SAR", US: "USD" }
-                                                if (currencyMap[c.code]) {
-                                                    update("currencyCode", currencyMap[c.code])
-                                                }
-                                            }}
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className={cn(
+                                                "w-full justify-between",
+                                                !form.countryCode && "text-muted-foreground"
+                                            )}
                                         >
-                                            {c.flag} {c.code}
-                                        </Badge>
-                                    ))}
-                                </div>
+                                            {form.countryCode
+                                                ? `${COUNTRIES.find((c) => c.code === form.countryCode)?.flag} ${COUNTRIES.find((c) => c.code === form.countryCode)?.name
+                                                }`
+                                                : "Select country"}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[300px] p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Search country..." />
+                                            <CommandList>
+                                                <CommandEmpty>No country found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {COUNTRIES.map((c) => (
+                                                        <CommandItem
+                                                            key={c.code}
+                                                            value={c.name}
+                                                            onSelect={() => {
+                                                                update("countryCode", c.code)
+                                                                if (c.currency) {
+                                                                    update("currencyCode", c.currency)
+                                                                }
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    c.code === form.countryCode
+                                                                        ? "opacity-100"
+                                                                        : "opacity-0"
+                                                                )}
+                                                            />
+                                                            <span className="mr-2">{c.flag}</span>
+                                                            {c.name}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                         </div>
                     </TabsContent>
@@ -470,26 +536,53 @@ export function ContactFormDialog({
                     {/* ── Financial ── */}
                     <TabsContent value="financial" className="space-y-4 mt-4">
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
+                            <div className="space-y-2 flex flex-col">
                                 <Label>Currency</Label>
-                                <div className="flex gap-2">
-                                    {["INR", "AED", "SAR", "USD"].map((curr) => (
-                                        <Badge
-                                            key={curr}
-                                            variant={form.currencyCode === curr ? "default" : "outline"}
-                                            className="cursor-pointer px-3 py-1"
-                                            onClick={() => update("currencyCode", curr)}
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            className="w-full justify-between"
                                         >
-                                            {curr}
-                                        </Badge>
-                                    ))}
-                                </div>
+                                            {form.currencyCode || "Select currency"}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-[300px] p-0">
+                                        <Command>
+                                            <CommandInput placeholder="Search currency..." />
+                                            <CommandList>
+                                                <CommandEmpty>No currency found.</CommandEmpty>
+                                                <CommandGroup>
+                                                    {Array.from(new Set(COUNTRIES.map(c => c.currency))).filter(Boolean).sort().map((curr) => (
+                                                        <CommandItem
+                                                            key={curr}
+                                                            value={curr}
+                                                            onSelect={() => update("currencyCode", curr)}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    "mr-2 h-4 w-4",
+                                                                    curr === form.currencyCode
+                                                                        ? "opacity-100"
+                                                                        : "opacity-0"
+                                                                )}
+                                                            />
+                                                            {curr}
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="creditLimit">Credit Limit</Label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-2.5 text-sm text-muted-foreground">
-                                        {{ INR: "₹", AED: "د.إ", SAR: "﷼", USD: "$" }[form.currencyCode] || "$"}
+                                        {form.currencyCode}
                                     </span>
                                     <Input
                                         id="creditLimit"
