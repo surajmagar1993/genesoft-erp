@@ -173,7 +173,6 @@ export function ContactFormDialog({
                                     id="companyName"
                                     value={form.companyName}
                                     onChange={(e) => update("companyName", e.target.value)}
-                                    placeholder="e.g. VM Edulife Private Limited"
                                 />
                             </div>
                         ) : (
@@ -184,7 +183,6 @@ export function ContactFormDialog({
                                         id="firstName"
                                         value={form.firstName}
                                         onChange={(e) => update("firstName", e.target.value)}
-                                        placeholder="Suraj"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -193,7 +191,6 @@ export function ContactFormDialog({
                                         id="lastName"
                                         value={form.lastName}
                                         onChange={(e) => update("lastName", e.target.value)}
-                                        placeholder="Magar"
                                     />
                                 </div>
                             </div>
@@ -229,7 +226,6 @@ export function ContactFormDialog({
                                         id="phone"
                                         value={form.phone}
                                         onChange={(e) => update("phone", e.target.value)}
-                                        placeholder="98765 43210"
                                     />
                                 </div>
                             </div>
@@ -255,7 +251,6 @@ export function ContactFormDialog({
                                         id="mobile"
                                         value={form.mobile}
                                         onChange={(e) => update("mobile", e.target.value)}
-                                        placeholder="98765 43210"
                                     />
                                 </div>
                             </div>
@@ -355,7 +350,6 @@ export function ContactFormDialog({
                                             id="gstin"
                                             value={form.gstin}
                                             onChange={(e) => update("gstin", e.target.value.toUpperCase())}
-                                            placeholder="27AAICG9629C1ZF"
                                             maxLength={15}
                                         />
                                     </div>
@@ -365,7 +359,6 @@ export function ContactFormDialog({
                                             id="pan"
                                             value={form.pan}
                                             onChange={(e) => update("pan", e.target.value.toUpperCase())}
-                                            placeholder="AAICG9629C"
                                             maxLength={10}
                                         />
                                     </div>
@@ -375,7 +368,6 @@ export function ContactFormDialog({
                                             id="cin"
                                             value={form.cin}
                                             onChange={(e) => update("cin", e.target.value.toUpperCase())}
-                                            placeholder="U72200MH2020PTC123456"
                                             maxLength={21}
                                         />
                                     </div>
@@ -385,7 +377,6 @@ export function ContactFormDialog({
                                             id="tan"
                                             value={form.tan}
                                             onChange={(e) => update("tan", e.target.value.toUpperCase())}
-                                            placeholder="PNEG12345F"
                                             maxLength={10}
                                         />
                                     </div>
@@ -395,7 +386,6 @@ export function ContactFormDialog({
                                             id="msmeUdyam"
                                             value={form.msmeUdyam}
                                             onChange={(e) => update("msmeUdyam", e.target.value.toUpperCase())}
-                                            placeholder="UDYAM-MH-26-0161820"
                                         />
                                     </div>
                                 </div>
@@ -412,7 +402,6 @@ export function ContactFormDialog({
                                             id="trn"
                                             value={form.trn}
                                             onChange={(e) => update("trn", e.target.value)}
-                                            placeholder="100123456789012"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -421,7 +410,6 @@ export function ContactFormDialog({
                                             id="tradeLicense"
                                             value={form.tradeLicense}
                                             onChange={(e) => update("tradeLicense", e.target.value)}
-                                            placeholder="License Number"
                                         />
                                     </div>
                                 </div>
@@ -438,7 +426,6 @@ export function ContactFormDialog({
                                             id="vatNumberKsa"
                                             value={form.vatNumberKsa}
                                             onChange={(e) => update("vatNumberKsa", e.target.value)}
-                                            placeholder="300123456789012"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -447,7 +434,6 @@ export function ContactFormDialog({
                                             id="crNumber"
                                             value={form.crNumber}
                                             onChange={(e) => update("crNumber", e.target.value)}
-                                            placeholder="CR Number"
                                         />
                                     </div>
                                 </div>
@@ -463,7 +449,6 @@ export function ContactFormDialog({
                                         id="ein"
                                         value={form.ein}
                                         onChange={(e) => update("ein", e.target.value)}
-                                        placeholder="12-3456789"
                                     />
                                 </div>
                             </>
@@ -479,7 +464,6 @@ export function ContactFormDialog({
                                 id="billingStreet"
                                 value={form.billingStreet}
                                 onChange={(e) => update("billingStreet", e.target.value)}
-                                placeholder="123, Business Park Road"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -489,7 +473,6 @@ export function ContactFormDialog({
                                     id="billingCity"
                                     value={form.billingCity}
                                     onChange={(e) => update("billingCity", e.target.value)}
-                                    placeholder="Pune"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -498,7 +481,6 @@ export function ContactFormDialog({
                                     id="billingState"
                                     value={form.billingState}
                                     onChange={(e) => update("billingState", e.target.value)}
-                                    placeholder="Maharashtra"
                                 />
                             </div>
                         </div>
@@ -509,7 +491,6 @@ export function ContactFormDialog({
                                     id="billingZip"
                                     value={form.billingZip}
                                     onChange={(e) => update("billingZip", e.target.value)}
-                                    placeholder="411001"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -590,7 +571,6 @@ export function ContactFormDialog({
                                         className="pl-8"
                                         value={form.creditLimit}
                                         onChange={(e) => update("creditLimit", e.target.value)}
-                                        placeholder="50000"
                                     />
                                 </div>
                                 <p className="text-xs text-muted-foreground">
