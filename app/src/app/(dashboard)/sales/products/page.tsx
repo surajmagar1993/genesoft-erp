@@ -22,9 +22,16 @@ const initialProducts: ProductFormData[] = [
         id: "1",
         type: "SERVICE",
         name: "Custom Website Development",
+        category: "Software Development",
+        brand: "In-House",
+        modelNo: "",
         sku: "SRV-WEB-001",
         hsnSacCode: "998311",
         description: "Corporate website design and development with CMS.",
+        customAttributes: [
+            { key: "Platform", value: "Next.js" },
+            { key: "Hosting", value: "Vercel" }
+        ],
         unitPrice: 50000,
         currency: "INR",
         unit: "Project",
@@ -36,9 +43,18 @@ const initialProducts: ProductFormData[] = [
         id: "2",
         type: "PRODUCT",
         name: "Dell OptiPlex 3000 Desktop",
+        category: "Laptops & Computers",
+        brand: "Dell",
+        modelNo: "OptiPlex 3000",
         sku: "HW-PC-DEL-01",
         hsnSacCode: "84714190",
         description: "Intel Core i5, 8GB RAM, 256GB SSD Desktop PC",
+        customAttributes: [
+            { key: "Processor", value: "Intel Core i5-12500" },
+            { key: "RAM", value: "8GB DDR4" },
+            { key: "Storage", value: "256GB NVMe SSD" },
+            { key: "OS", value: "Windows 11 Pro" }
+        ],
         unitPrice: 42000,
         currency: "INR",
         unit: "Nos",
@@ -50,9 +66,13 @@ const initialProducts: ProductFormData[] = [
         id: "3",
         type: "SERVICE",
         name: "Cloud Hosting & Maintenance",
+        category: "IT Support",
+        brand: "AWS",
+        modelNo: "",
         sku: "SRV-HST-AMC",
         hsnSacCode: "998314",
         description: "Annual maintenance and AWS cloud hosting service.",
+        customAttributes: [],
         unitPrice: 25000,
         currency: "INR",
         unit: "Year",
@@ -64,9 +84,17 @@ const initialProducts: ProductFormData[] = [
         id: "4",
         type: "PRODUCT",
         name: "Ubiquiti UniFi AP AC Pro",
+        category: "Networking",
+        brand: "Ubiquiti",
+        modelNo: "UAP-AC-PRO",
         sku: "HW-NW-UBI-05",
         hsnSacCode: "85176290",
         description: "Enterprise Wi-Fi Access Point",
+        customAttributes: [
+            { key: "Band", value: "Dual-Band 2.4/5 GHz" },
+            { key: "Throughput", value: "1300 Mbps" },
+            { key: "PoE", value: "Yes" }
+        ],
         unitPrice: 12500,
         currency: "INR",
         unit: "Nos",
@@ -165,6 +193,7 @@ export default function ProductsPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Item Details</TableHead>
+                            <TableHead>Category/Brand</TableHead>
                             <TableHead>Type</TableHead>
                             <TableHead>SKU / HSN</TableHead>
                             <TableHead className="text-right">Unit Price</TableHead>
@@ -189,6 +218,12 @@ export default function ProductsPage() {
                                             <span className="text-xs text-muted-foreground truncate max-w-[250px]" title={item.description}>
                                                 {item.description || "-"}
                                             </span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col gap-0.5 text-sm">
+                                            <span className="font-medium text-foreground">{item.category || "—"}</span>
+                                            <span className="text-xs text-muted-foreground">{item.brand || "—"}</span>
                                         </div>
                                     </TableCell>
                                     <TableCell>

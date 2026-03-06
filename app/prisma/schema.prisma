@@ -220,9 +220,13 @@ model Product {
   tenantId     String      @map("tenant_id")
   type         ProductType @default(PRODUCT)
   name         String
+  category     String?
+  brand        String?
+  modelNo      String?      @map("model_no")
   sku          String?
   hsnSacCode   String?     @map("hsn_sac_code")
   description  String?
+  customAttributes Json?     @default("{}") @map("custom_attributes")
   unitPrice    Decimal     @default(0) @db.Decimal(15, 2)
   currency     String      @default("INR")
   unit         String      @default("Nos") // Nos, Kg, Ltr, Hr, etc.

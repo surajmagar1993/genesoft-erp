@@ -20,9 +20,13 @@ export interface ProductFormData {
     id?: string
     type: "PRODUCT" | "SERVICE"
     name: string
+    category: string
+    brand: string
+    modelNo: string
     sku: string
     hsnSacCode: string
     description: string
+    customAttributes: { key: string; value: string }[]
     unitPrice: number
     currency: string
     unit: string
@@ -34,9 +38,13 @@ export interface ProductFormData {
 const defaultForm: ProductFormData = {
     type: "PRODUCT",
     name: "",
+    category: "",
+    brand: "",
+    modelNo: "",
     sku: "",
     hsnSacCode: "",
     description: "",
+    customAttributes: [],
     unitPrice: 0,
     currency: "INR",
     unit: "Nos",
@@ -83,8 +91,9 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                 </DialogHeader>
 
                 <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                        <TabsTrigger value="specs">Specifications</TabsTrigger>
                         <TabsTrigger value="pricing">Pricing & Inventory</TabsTrigger>
                         <TabsTrigger value="meta">Status & Meta</TabsTrigger>
                     </TabsList>
@@ -107,13 +116,45 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                             </div>
                         </div>
 
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Name *</Label>
-                            <Input
-                                id="name"
-                                value={form.name}
-                                onChange={(e) => update("name", e.target.value)}
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Name *</Label>
+                                <Input
+                                    id="name"
+                                    value={form.name}
+                                    onChange={(e) => update("name", e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="category">Category</Label>
+                                <Input
+                                    id="category"
+                                    value={form.category}
+                                    onChange={(e) => update("category", e.target.value)}
+                                    placeholder="e.g. Laptops, Routers"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="brand">Brand</Label>
+                                <Input
+                                    id="brand"
+                                    value={form.brand}
+                                    onChange={(e) => update("brand", e.target.value)}
+                                    placeholder="e.g. Dell, Cisco"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="modelNo">Model Number</Label>
+                                <Input
+                                    id="modelNo"
+                                    value={form.modelNo}
+                                    onChange={(e) => update("modelNo", e.target.value)}
+                                    placeholder="e.g. XPS 15"
+                                />
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -143,6 +184,62 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                                 onChange={(e) => update("description", e.target.value)}
                                 rows={3}
                             />
+                        </div>
+                    </TabsContent>
+
+                    {/* ── Specifications (Dynamic Attributes) ── */}
+                    <TabsContent value="specs" className="space-y-4 mt-4">
+                        <div className="space-y-2">
+                            <Label>Custom Attributes</Label>
+                            <p className="text-sm text-muted-foreground pb-2">
+                                Add individual specifications based on the product requirement (e.g., Processor, RAM for Laptops).
+                            </p>
+
+                            {form.customAttributes.map((attr, index) => (
+                                <div key={index} className="flex items-center gap-2 mb-2">
+                                    <Input
+                                        placeholder="Key (e.g. RAM)"
+                                        value={attr.key}
+                                        onChange={(e) => {
+                                            const newAttrs = [...form.customAttributes]
+                                            newAttrs[index].key = e.target.value
+                                            update("customAttributes", newAttrs)
+                                        }}
+                                        className="w-1/3"
+                                    />
+                                    <Input
+                                        placeholder="Value (e.g. 16GB)"
+                                        value={attr.value}
+                                        onChange={(e) => {
+                                            const newAttrs = [...form.customAttributes]
+                                            newAttrs[index].value = e.target.value
+                                            update("customAttributes", newAttrs)
+                                        }}
+                                        className="flex-1"
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={() => {
+                                            const newAttrs = form.customAttributes.filter((_, i) => i !== index)
+                                            update("customAttributes", newAttrs)
+                                        }}
+                                    >
+                                        &times;
+                                    </Button>
+                                </div>
+                            ))}
+
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                className="mt-2"
+                                onClick={() => {
+                                    update("customAttributes", [...form.customAttributes, { key: "", value: "" }])
+                                }}
+                            >
+                                + Add Attribute
+                            </Button>
                         </div>
                     </TabsContent>
 
