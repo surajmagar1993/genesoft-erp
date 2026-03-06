@@ -87,12 +87,12 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>{mode === "create" ? "New Product or Service" : "Edit Item"}</DialogTitle>
                 </DialogHeader>
 
-                <Tabs defaultValue="basic" className="w-full">
+                <Tabs defaultValue="basic" className="w-full flex-1 flex flex-col min-h-0">
                     <TabsList className="w-full h-auto p-1">
                         <TabsTrigger value="basic" className="flex-1 py-2 px-3 text-xs sm:text-sm">
                             Basic Info
@@ -109,7 +109,7 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                     </TabsList>
 
                     {/* ── Basic Info ── */}
-                    <TabsContent value="basic" className="space-y-4 mt-4">
+                    <TabsContent value="basic" className="space-y-4 mt-4 flex-1 overflow-y-auto">
                         <div className="space-y-2">
                             <Label>Item Type</Label>
                             <div className="flex gap-2">
@@ -210,7 +210,7 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                     </TabsContent>
 
                     {/* ── Specifications (Dynamic Attributes) ── */}
-                    <TabsContent value="specs" className="space-y-4 mt-4">
+                    <TabsContent value="specs" className="space-y-4 mt-4 flex-1 overflow-y-auto">
                         <div className="space-y-2">
                             <Label>Custom Attributes</Label>
                             <p className="text-sm text-muted-foreground pb-2">
@@ -266,7 +266,7 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                     </TabsContent>
 
                     {/* ── Pricing & Inventory ── */}
-                    <TabsContent value="pricing" className="space-y-4 mt-4">
+                    <TabsContent value="pricing" className="space-y-4 mt-4 flex-1 overflow-y-auto">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="unitPrice">Unit Price</Label>
@@ -318,7 +318,7 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                     </TabsContent>
 
                     {/* ── Status & Meta ── */}
-                    <TabsContent value="meta" className="space-y-4 mt-4">
+                    <TabsContent value="meta" className="space-y-4 mt-4 flex-1 overflow-y-auto">
                         <div className="flex items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
                                 <Label className="text-base">Active Status</Label>
