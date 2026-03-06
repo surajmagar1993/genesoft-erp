@@ -81,6 +81,7 @@ const navigation = [
             { name: "Quotations", href: "/sales/quotes", icon: FileText },
             { name: "Orders", href: "/sales/orders", icon: ShoppingCart },
             { name: "Invoices", href: "/sales/invoices", icon: Receipt },
+            { name: "Rental", href: "/sales/rental", icon: Home },
         ],
     },
     {
@@ -90,7 +91,6 @@ const navigation = [
             { name: "Finance", href: "/finance", icon: DollarSign },
             { name: "HR", href: "/hr", icon: UserCog },
             { name: "Projects", href: "/projects", icon: FolderKanban },
-            { name: "Rental", href: "/rental", icon: Home },
         ],
     },
     {

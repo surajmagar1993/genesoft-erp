@@ -274,7 +274,7 @@ export function ContactFormDialog({
                             <div className="space-y-2">
                                 <Label>Customer Group</Label>
                                 <div className="flex gap-2">
-                                    {["retail", "wholesale", "vip"].map((g) => (
+                                    {["retail", "dealer"].map((g) => (
                                         <Badge
                                             key={g}
                                             variant={form.customerGroup === g ? "default" : "outline"}
