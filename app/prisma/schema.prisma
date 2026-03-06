@@ -223,6 +223,7 @@ model Product {
   category     String?
   brand        String?
   modelNo      String?      @map("model_no")
+  serialNo     String?      @map("serial_no")
   sku          String?
   hsnSacCode   String?     @map("hsn_sac_code")
   description  String?

@@ -23,6 +23,7 @@ export interface ProductFormData {
     category: string
     brand: string
     modelNo: string
+    serialNo: string
     sku: string
     hsnSacCode: string
     description: string
@@ -41,6 +42,7 @@ const defaultForm: ProductFormData = {
     category: "",
     brand: "",
     modelNo: "",
+    serialNo: "",
     sku: "",
     hsnSacCode: "",
     description: "",
@@ -85,7 +87,7 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{mode === "create" ? "New Product or Service" : "Edit Item"}</DialogTitle>
                 </DialogHeader>
@@ -159,6 +161,15 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
+                                <Label htmlFor="serialNo">Serial Number</Label>
+                                <Input
+                                    id="serialNo"
+                                    value={form.serialNo}
+                                    onChange={(e) => update("serialNo", e.target.value)}
+                                    placeholder="e.g. SN-123456789"
+                                />
+                            </div>
+                            <div className="space-y-2">
                                 <Label htmlFor="sku">SKU / Item Code</Label>
                                 <Input
                                     id="sku"
@@ -166,6 +177,9 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                                     onChange={(e) => update("sku", e.target.value)}
                                 />
                             </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="hsnSacCode">HSN / SAC Code</Label>
                                 <Input
