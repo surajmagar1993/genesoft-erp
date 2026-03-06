@@ -125,6 +125,7 @@ model Contact {
   countryCode     String?      @map("country_code")
   
   // Financial
+  currencyCode    String       @default("INR") @map("currency_code")
   creditLimit     Decimal?     @map("credit_limit") @db.Decimal(15, 2)
   balance         Decimal      @default(0) @db.Decimal(15, 2)
   

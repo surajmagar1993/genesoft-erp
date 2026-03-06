@@ -42,6 +42,7 @@ interface ContactFormData {
     // USA
     ein: string
     // Financial
+    currencyCode: string
     creditLimit: string
     // Address
     billingStreet: string
@@ -74,6 +75,7 @@ const emptyForm: ContactFormData = {
     vatNumberKsa: "",
     crNumber: "",
     ein: "",
+    currencyCode: "INR",
     creditLimit: "",
     billingStreet: "",
     billingCity: "",
@@ -259,7 +261,13 @@ export function ContactFormDialog({
                                             key={c.code}
                                             variant={form.countryCode === c.code ? "default" : "outline"}
                                             className="cursor-pointer px-3 py-1"
-                                            onClick={() => update("countryCode", c.code)}
+                                            onClick={() => {
+                                                update("countryCode", c.code)
+                                                const currencyMap: Record<string, string> = { IN: "INR", AE: "AED", SA: "SAR", US: "USD" }
+                                                if (currencyMap[c.code]) {
+                                                    update("currencyCode", currencyMap[c.code])
+                                                }
+                                            }}
                                         >
                                             {c.flag} {c.code}
                                         </Badge>
@@ -461,22 +469,41 @@ export function ContactFormDialog({
 
                     {/* ── Financial ── */}
                     <TabsContent value="financial" className="space-y-4 mt-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="creditLimit">Credit Limit</Label>
-                            <div className="relative">
-                                <span className="absolute left-3 top-2.5 text-sm text-muted-foreground">₹</span>
-                                <Input
-                                    id="creditLimit"
-                                    type="number"
-                                    className="pl-7"
-                                    value={form.creditLimit}
-                                    onChange={(e) => update("creditLimit", e.target.value)}
-                                    placeholder="50000"
-                                />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Currency</Label>
+                                <div className="flex gap-2">
+                                    {["INR", "AED", "SAR", "USD"].map((curr) => (
+                                        <Badge
+                                            key={curr}
+                                            variant={form.currencyCode === curr ? "default" : "outline"}
+                                            className="cursor-pointer px-3 py-1"
+                                            onClick={() => update("currencyCode", curr)}
+                                        >
+                                            {curr}
+                                        </Badge>
+                                    ))}
+                                </div>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                Maximum outstanding balance allowed for this contact
-                            </p>
+                            <div className="space-y-2">
+                                <Label htmlFor="creditLimit">Credit Limit</Label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-2.5 text-sm text-muted-foreground">
+                                        {{ INR: "₹", AED: "د.إ", SAR: "﷼", USD: "$" }[form.currencyCode] || "$"}
+                                    </span>
+                                    <Input
+                                        id="creditLimit"
+                                        type="number"
+                                        className="pl-8"
+                                        value={form.creditLimit}
+                                        onChange={(e) => update("creditLimit", e.target.value)}
+                                        placeholder="50000"
+                                    />
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                    Maximum outstanding balance allowed
+                                </p>
+                            </div>
                         </div>
                     </TabsContent>
                 </Tabs>

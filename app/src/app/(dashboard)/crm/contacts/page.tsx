@@ -48,6 +48,7 @@ interface Contact {
     pan: string
     customerGroup: string
     countryCode: string
+    currencyCode: string
     balance: number
     isActive: boolean
 }
@@ -63,6 +64,7 @@ const initialContacts: Contact[] = [
         pan: "AAECV5149A",
         customerGroup: "wholesale",
         countryCode: "IN",
+        currencyCode: "INR",
         balance: 52500,
         isActive: true,
     },
@@ -76,6 +78,7 @@ const initialContacts: Contact[] = [
         pan: "BKMPK1234A",
         customerGroup: "retail",
         countryCode: "IN",
+        currencyCode: "INR",
         balance: 0,
         isActive: true,
     },
@@ -89,6 +92,7 @@ const initialContacts: Contact[] = [
         pan: "",
         customerGroup: "wholesale",
         countryCode: "AE",
+        currencyCode: "AED",
         balance: 125000,
         isActive: true,
     },
@@ -102,6 +106,7 @@ const initialContacts: Contact[] = [
         pan: "CLMPS9876B",
         customerGroup: "vip",
         countryCode: "IN",
+        currencyCode: "INR",
         balance: 15750,
         isActive: true,
     },
@@ -115,6 +120,7 @@ const initialContacts: Contact[] = [
         pan: "AAICG9629C",
         customerGroup: "wholesale",
         countryCode: "IN",
+        currencyCode: "INR",
         balance: 0,
         isActive: true,
     },
@@ -178,6 +184,7 @@ export default function ContactsPage() {
                 pan: data.pan || "",
                 customerGroup: data.customerGroup,
                 countryCode: data.countryCode,
+                currencyCode: data.currencyCode,
                 balance: 0,
                 isActive: true,
             }
@@ -369,8 +376,8 @@ export default function ContactsPage() {
                                             <Badge
                                                 variant="secondary"
                                                 className={`capitalize text-xs ${contact.customerGroup === "vip"
-                                                        ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                                                        : ""
+                                                    ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                                    : ""
                                                     }`}
                                             >
                                                 {contact.customerGroup}
@@ -379,10 +386,13 @@ export default function ContactsPage() {
                                         <TableCell className="text-right font-medium">
                                             {contact.balance > 0 ? (
                                                 <span className="text-red-400">
-                                                    ₹{contact.balance.toLocaleString("en-IN")}
+                                                    {{ INR: "₹", AED: "د.إ", SAR: "﷼", USD: "$" }[contact.currencyCode] || "$"}
+                                                    {contact.balance.toLocaleString("en-US")}
                                                 </span>
                                             ) : (
-                                                <span className="text-emerald-400">₹0</span>
+                                                <span className="text-emerald-400">
+                                                    {{ INR: "₹", AED: "د.إ", SAR: "﷼", USD: "$" }[contact.currencyCode] || "$"}0
+                                                </span>
                                             )}
                                         </TableCell>
                                         <TableCell>
