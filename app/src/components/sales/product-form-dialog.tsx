@@ -93,17 +93,17 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                 </DialogHeader>
 
                 <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 h-auto p-1">
-                        <TabsTrigger value="basic" className="py-2 text-xs sm:text-sm">
+                    <TabsList className="w-full h-auto p-1">
+                        <TabsTrigger value="basic" className="flex-1 py-2 px-3 text-xs sm:text-sm">
                             Basic Info
                         </TabsTrigger>
-                        <TabsTrigger value="specs" className="py-2 text-xs sm:text-sm">
+                        <TabsTrigger value="specs" className="flex-1 py-2 px-3 text-xs sm:text-sm">
                             Specifications
                         </TabsTrigger>
-                        <TabsTrigger value="pricing" className="py-2 text-xs sm:text-sm">
+                        <TabsTrigger value="pricing" className="flex-1 py-2 px-3 text-xs sm:text-sm">
                             Pricing & Inventory
                         </TabsTrigger>
-                        <TabsTrigger value="meta" className="py-2 text-xs sm:text-sm">
+                        <TabsTrigger value="meta" className="flex-1 py-2 px-3 text-xs sm:text-sm">
                             Status & Meta
                         </TabsTrigger>
                     </TabsList>
