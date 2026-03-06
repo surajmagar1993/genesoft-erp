@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Search, Plus, Pencil, Trash2, Send, FileText, CheckCircle2, XCircle, Clock } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -14,12 +15,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-
-import {
-    QuoteFormDialog,
-    QuoteFormData,
-    QuoteStatus,
-} from "@/components/sales/quote-form-dialog"
+import { QuoteFormData, QuoteStatus } from "@/components/sales/quote-form"
 
 /* ── Status config ── */
 const statusConfig: Record<QuoteStatus, { label: string; variant: "default" | "secondary" | "outline" | "destructive"; icon: React.ComponentType<{ className?: string }> }> = {
@@ -138,11 +134,10 @@ const formatDate = (dateStr: string) => {
 }
 
 export default function QuotesPage() {
+    const router = useRouter()
     const [quotes, setQuotes] = useState<QuoteFormData[]>(initialQuotes)
     const [searchQuery, setSearchQuery] = useState("")
     const [filterStatus, setFilterStatus] = useState<"all" | QuoteStatus>("all")
-    const [dialogOpen, setDialogOpen] = useState(false)
-    const [editingQuote, setEditingQuote] = useState<QuoteFormData | null>(null)
 
     const filteredQuotes = quotes.filter((q) => {
         const matchesSearch =
@@ -152,29 +147,8 @@ export default function QuotesPage() {
         return matchesSearch && matchesStatus
     })
 
-    const handleCreate = () => {
-        setEditingQuote(null)
-        setDialogOpen(true)
-    }
-
-    const handleEdit = (quote: QuoteFormData) => {
-        setEditingQuote(quote)
-        setDialogOpen(true)
-    }
-
     const handleDelete = (id: string) => {
         setQuotes((prev) => prev.filter((q) => q.id !== id))
-    }
-
-    const handleSave = (data: QuoteFormData) => {
-        if (editingQuote) {
-            setQuotes((prev) =>
-                prev.map((q) => (q.id === editingQuote.id ? { ...q, ...data } : q))
-            )
-        } else {
-            const newQuote: QuoteFormData = { ...data, id: Date.now().toString() }
-            setQuotes((prev) => [newQuote, ...prev])
-        }
     }
 
     return (
@@ -182,7 +156,7 @@ export default function QuotesPage() {
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Quotations</h2>
                 <div className="flex items-center space-x-2">
-                    <Button onClick={handleCreate}>
+                    <Button onClick={() => router.push("/sales/quotes/new")}>
                         <Plus className="mr-2 h-4 w-4" /> New Quote
                     </Button>
                 </div>
@@ -270,7 +244,7 @@ export default function QuotesPage() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="icon" onClick={() => handleEdit(q)}>
+                                            <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/quotes/${q.id}/edit`)}>
                                                 <Pencil className="h-4 w-4 text-muted-foreground" />
                                             </Button>
                                             <Button variant="ghost" size="icon" onClick={() => handleDelete(q.id!)}>
@@ -284,13 +258,6 @@ export default function QuotesPage() {
                     </TableBody>
                 </Table>
             </div>
-
-            <QuoteFormDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                initialData={editingQuote}
-                onSave={handleSave}
-            />
         </div>
     )
 }

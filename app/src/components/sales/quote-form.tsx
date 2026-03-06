@@ -1,21 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Plus, Trash2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 
-import {
-    Dialog,
-    DialogContent,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 /* ── Types ── */
 export interface QuoteLineItem {
@@ -45,7 +39,7 @@ export interface QuoteFormData {
     discountType: "PERCENT" | "FIXED"
 }
 
-const defaultForm: QuoteFormData = {
+export const defaultQuoteForm: QuoteFormData = {
     quoteNumber: "",
     customerName: "",
     customerEmail: "",
@@ -77,27 +71,21 @@ function lineTax(item: QuoteLineItem) {
     return lineTotal(item) * (item.taxPercent / 100)
 }
 
-interface QuoteFormDialogProps {
-    open: boolean
-    onOpenChange: (open: boolean) => void
+interface QuoteFormProps {
     initialData?: QuoteFormData | null
     onSave: (data: QuoteFormData) => void
 }
 
-export function QuoteFormDialog({
-    open,
-    onOpenChange,
-    initialData,
-    onSave,
-}: QuoteFormDialogProps) {
+export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
+    const router = useRouter()
     const mode = initialData ? "edit" : "create"
-    const [form, setForm] = useState<QuoteFormData>(defaultForm)
+    const [form, setForm] = useState<QuoteFormData>(
+        initialData || { ...defaultQuoteForm, quoteNumber: `QTN-${Date.now().toString().slice(-6)}` }
+    )
 
     useEffect(() => {
-        if (open) {
-            setForm(initialData || { ...defaultForm, quoteNumber: `QTN-${Date.now().toString().slice(-6)}` })
-        }
-    }, [open, initialData])
+        if (initialData) setForm(initialData)
+    }, [initialData])
 
     const update = <K extends keyof QuoteFormData>(field: K, value: QuoteFormData[K]) => {
         setForm((prev) => ({ ...prev, [field]: value }))
@@ -112,9 +100,7 @@ export function QuoteFormDialog({
     const updateLineItem = (id: string, field: keyof QuoteLineItem, value: any) => {
         update(
             "lineItems",
-            form.lineItems.map((li) =>
-                li.id === id ? { ...li, [field]: value } : li
-            )
+            form.lineItems.map((li) => (li.id === id ? { ...li, [field]: value } : li))
         )
     }
 
@@ -126,10 +112,11 @@ export function QuoteFormDialog({
     const subtotal = form.lineItems.reduce((sum, li) => sum + lineTotal(li), 0)
     const totalTax = form.lineItems.reduce((sum, li) => sum + lineTax(li), 0)
     const discountAmount =
-        form.discountType === "PERCENT"
-            ? subtotal * (form.discount / 100)
-            : form.discount
+        form.discountType === "PERCENT" ? subtotal * (form.discount / 100) : form.discount
     const grandTotal = subtotal + totalTax - discountAmount
+
+    const formatCurrency = (amount: number) =>
+        new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
 
     const handleSave = () => {
         if (!form.customerName.trim()) {
@@ -141,23 +128,32 @@ export function QuoteFormDialog({
             return
         }
         onSave(form)
-        onOpenChange(false)
+        router.push("/sales/quotes")
     }
 
-    const formatCurrency = (amount: number) =>
-        new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
-
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
-                <DialogHeader>
-                    <DialogTitle>
+        <div className="flex-1 space-y-6 p-8 pt-6">
+            {/* Header */}
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => router.push("/sales/quotes")}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight">
                         {mode === "create" ? "New Quotation" : "Edit Quotation"}
-                    </DialogTitle>
-                </DialogHeader>
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        {mode === "create"
+                            ? "Create a new quotation for a customer"
+                            : `Editing: ${form.quoteNumber} — ${form.customerName}`}
+                    </p>
+                </div>
+            </div>
 
-                <Tabs defaultValue="details" className="w-full flex-1 flex flex-col min-h-0">
-                    <TabsList className="w-full h-auto p-1">
+            {/* Form Card */}
+            <div className="rounded-lg border bg-card p-6">
+                <Tabs defaultValue="details" className="w-full">
+                    <TabsList className="w-full h-auto p-1 mb-6">
                         <TabsTrigger value="details" className="flex-1 py-2 px-3 text-xs sm:text-sm">
                             Customer & Details
                         </TabsTrigger>
@@ -170,7 +166,7 @@ export function QuoteFormDialog({
                     </TabsList>
 
                     {/* ── Tab 1: Customer & Details ── */}
-                    <TabsContent value="details" className="space-y-4 mt-4 flex-1 overflow-y-auto">
+                    <TabsContent value="details" className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="quoteNumber">Quote Number</Label>
@@ -264,7 +260,7 @@ export function QuoteFormDialog({
                     </TabsContent>
 
                     {/* ── Tab 2: Line Items ── */}
-                    <TabsContent value="items" className="space-y-4 mt-4 flex-1 overflow-y-auto">
+                    <TabsContent value="items" className="space-y-4">
                         <div className="flex items-center justify-between">
                             <Label className="text-base">Items</Label>
                             <Button size="sm" variant="outline" onClick={addLineItem}>
@@ -273,9 +269,9 @@ export function QuoteFormDialog({
                         </div>
 
                         {form.lineItems.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-10 text-center">
                                 <p className="text-sm text-muted-foreground mb-3">
-                                    No items added yet. Click "Add Item" to start building the quote.
+                                    No items added yet. Click &quot;Add Item&quot; to start building the quote.
                                 </p>
                                 <Button size="sm" onClick={addLineItem}>
                                     <Plus className="h-4 w-4 mr-1" /> Add First Item
@@ -283,47 +279,47 @@ export function QuoteFormDialog({
                             </div>
                         ) : (
                             <div className="space-y-3">
-                                {/* Header Row */}
-                                <div className="grid grid-cols-[2fr_1fr_0.8fr_0.8fr_0.8fr_1fr_auto] gap-2 text-xs font-medium text-muted-foreground px-1">
+                                {/* Header */}
+                                <div className="grid grid-cols-[2fr_1.5fr_0.8fr_1fr_0.8fr_1fr_auto] gap-3 text-xs font-medium text-muted-foreground px-1">
                                     <span>Product / Service</span>
                                     <span>Description</span>
                                     <span className="text-center">Qty</span>
                                     <span className="text-right">Unit Price</span>
                                     <span className="text-center">Tax %</span>
                                     <span className="text-right">Amount</span>
-                                    <span className="w-8" />
+                                    <span className="w-9" />
                                 </div>
 
                                 {form.lineItems.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="grid grid-cols-[2fr_1fr_0.8fr_0.8fr_0.8fr_1fr_auto] gap-2 items-center rounded-md border p-2"
+                                        className="grid grid-cols-[2fr_1.5fr_0.8fr_1fr_0.8fr_1fr_auto] gap-3 items-center rounded-md border p-3"
                                     >
                                         <Input
                                             value={item.productName}
                                             onChange={(e) => updateLineItem(item.id, "productName", e.target.value)}
                                             placeholder="Product name"
-                                            className="text-sm h-9"
+                                            className="text-sm"
                                         />
                                         <Input
                                             value={item.description}
                                             onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
                                             placeholder="Details"
-                                            className="text-sm h-9"
+                                            className="text-sm"
                                         />
                                         <Input
                                             type="number"
                                             min={1}
                                             value={item.qty}
                                             onChange={(e) => updateLineItem(item.id, "qty", Number(e.target.value))}
-                                            className="text-sm h-9 text-center"
+                                            className="text-sm text-center"
                                         />
                                         <Input
                                             type="number"
                                             min={0}
                                             value={item.unitPrice}
                                             onChange={(e) => updateLineItem(item.id, "unitPrice", Number(e.target.value))}
-                                            className="text-sm h-9 text-right"
+                                            className="text-sm text-right"
                                         />
                                         <Input
                                             type="number"
@@ -331,7 +327,7 @@ export function QuoteFormDialog({
                                             max={100}
                                             value={item.taxPercent}
                                             onChange={(e) => updateLineItem(item.id, "taxPercent", Number(e.target.value))}
-                                            className="text-sm h-9 text-center"
+                                            className="text-sm text-center"
                                         />
                                         <div className="text-sm font-medium text-right pr-1">
                                             {formatCurrency(lineTotal(item) + lineTax(item))}
@@ -339,7 +335,7 @@ export function QuoteFormDialog({
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8"
+                                            className="h-9 w-9"
                                             onClick={() => removeLineItem(item.id)}
                                         >
                                             <Trash2 className="h-4 w-4 text-destructive" />
@@ -348,8 +344,8 @@ export function QuoteFormDialog({
                                 ))}
 
                                 {/* Totals */}
-                                <div className="flex justify-end pt-2">
-                                    <div className="w-64 space-y-1.5 text-sm">
+                                <div className="flex justify-end pt-3">
+                                    <div className="w-72 space-y-2 text-sm">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Subtotal</span>
                                             <span>{formatCurrency(subtotal)}</span>
@@ -364,7 +360,7 @@ export function QuoteFormDialog({
                                                 <span>-{formatCurrency(discountAmount)}</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between border-t pt-1.5 font-semibold text-base">
+                                        <div className="flex justify-between border-t pt-2 font-semibold text-base">
                                             <span>Total</span>
                                             <span>{formatCurrency(grandTotal)}</span>
                                         </div>
@@ -375,7 +371,7 @@ export function QuoteFormDialog({
                     </TabsContent>
 
                     {/* ── Tab 3: Terms & Summary ── */}
-                    <TabsContent value="terms" className="space-y-4 mt-4 flex-1 overflow-y-auto">
+                    <TabsContent value="terms" className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="discount">Discount</Label>
@@ -415,9 +411,9 @@ export function QuoteFormDialog({
                         </div>
 
                         {/* Summary card */}
-                        <div className="rounded-lg border p-4 space-y-2">
-                            <h4 className="font-medium text-sm">Quote Summary</h4>
-                            <div className="grid grid-cols-2 gap-y-1.5 text-sm">
+                        <div className="rounded-lg border p-5 space-y-2">
+                            <h4 className="font-medium text-sm mb-3">Quote Summary</h4>
+                            <div className="grid grid-cols-2 gap-y-2 text-sm">
                                 <span className="text-muted-foreground">Customer</span>
                                 <span className="text-right font-medium">{form.customerName || "—"}</span>
                                 <span className="text-muted-foreground">Quote #</span>
@@ -434,24 +430,25 @@ export function QuoteFormDialog({
                                         <span className="text-right text-green-500">-{formatCurrency(discountAmount)}</span>
                                     </>
                                 )}
-                                <span className="text-muted-foreground font-semibold border-t pt-1.5">Grand Total</span>
-                                <span className="text-right font-semibold text-base border-t pt-1.5">
+                                <span className="text-muted-foreground font-semibold border-t pt-2">Grand Total</span>
+                                <span className="text-right font-semibold text-base border-t pt-2">
                                     {formatCurrency(grandTotal)}
                                 </span>
                             </div>
                         </div>
                     </TabsContent>
                 </Tabs>
+            </div>
 
-                <DialogFooter className="mt-4">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
-                        Cancel
-                    </Button>
-                    <Button onClick={handleSave}>
-                        {mode === "create" ? "Save Quote" : "Update Quote"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+            {/* Footer Actions */}
+            <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => router.push("/sales/quotes")}>
+                    Cancel
+                </Button>
+                <Button onClick={handleSave}>
+                    {mode === "create" ? "Save Quote" : "Update Quote"}
+                </Button>
+            </div>
+        </div>
     )
 }

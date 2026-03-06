@@ -1,13 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog"
+import { useRouter } from "next/navigation"
+import { ArrowLeft } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -36,7 +32,7 @@ export interface ProductFormData {
     isActive: boolean
 }
 
-const defaultForm: ProductFormData = {
+export const defaultProductForm: ProductFormData = {
     type: "PRODUCT",
     name: "",
     category: "",
@@ -55,22 +51,19 @@ const defaultForm: ProductFormData = {
     isActive: true,
 }
 
-interface ProductFormDialogProps {
-    open: boolean
-    onOpenChange: (open: boolean) => void
+interface ProductFormProps {
     initialData?: ProductFormData | null
     onSave: (data: ProductFormData) => void
 }
 
-export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: ProductFormDialogProps) {
-    const [form, setForm] = useState<ProductFormData>(defaultForm)
+export function ProductForm({ initialData, onSave }: ProductFormProps) {
+    const router = useRouter()
     const mode = initialData ? "edit" : "create"
+    const [form, setForm] = useState<ProductFormData>(initialData || defaultProductForm)
 
     useEffect(() => {
-        if (open) {
-            setForm(initialData || defaultForm)
-        }
-    }, [open, initialData])
+        if (initialData) setForm(initialData)
+    }, [initialData])
 
     const update = (field: keyof ProductFormData, value: any) => {
         setForm((prev) => ({ ...prev, [field]: value }))
@@ -82,18 +75,32 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
             return
         }
         onSave(form)
-        onOpenChange(false)
+        router.push("/sales/products")
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-                <DialogHeader>
-                    <DialogTitle>{mode === "create" ? "New Product or Service" : "Edit Item"}</DialogTitle>
-                </DialogHeader>
+        <div className="flex-1 space-y-6 p-8 pt-6">
+            {/* Header */}
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => router.push("/sales/products")}>
+                    <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight">
+                        {mode === "create" ? "New Product or Service" : "Edit Item"}
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        {mode === "create"
+                            ? "Add a new product or service to your catalog"
+                            : `Editing: ${form.name}`}
+                    </p>
+                </div>
+            </div>
 
-                <Tabs defaultValue="basic" className="w-full flex-1 flex flex-col min-h-0">
-                    <TabsList className="w-full h-auto p-1">
+            {/* Form Card */}
+            <div className="rounded-lg border bg-card p-6">
+                <Tabs defaultValue="basic" className="w-full">
+                    <TabsList className="w-full h-auto p-1 mb-6">
                         <TabsTrigger value="basic" className="flex-1 py-2 px-3 text-xs sm:text-sm">
                             Basic Info
                         </TabsTrigger>
@@ -109,7 +116,7 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                     </TabsList>
 
                     {/* ── Basic Info ── */}
-                    <TabsContent value="basic" className="space-y-4 mt-4 flex-1 overflow-y-auto">
+                    <TabsContent value="basic" className="space-y-4">
                         <div className="space-y-2">
                             <Label>Item Type</Label>
                             <div className="flex gap-2">
@@ -209,8 +216,8 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                         </div>
                     </TabsContent>
 
-                    {/* ── Specifications (Dynamic Attributes) ── */}
-                    <TabsContent value="specs" className="space-y-4 mt-4 flex-1 overflow-y-auto">
+                    {/* ── Specifications ── */}
+                    <TabsContent value="specs" className="space-y-4">
                         <div className="space-y-2">
                             <Label>Custom Attributes</Label>
                             <p className="text-sm text-muted-foreground pb-2">
@@ -266,7 +273,7 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                     </TabsContent>
 
                     {/* ── Pricing & Inventory ── */}
-                    <TabsContent value="pricing" className="space-y-4 mt-4 flex-1 overflow-y-auto">
+                    <TabsContent value="pricing" className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="unitPrice">Unit Price</Label>
@@ -318,7 +325,7 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                     </TabsContent>
 
                     {/* ── Status & Meta ── */}
-                    <TabsContent value="meta" className="space-y-4 mt-4 flex-1 overflow-y-auto">
+                    <TabsContent value="meta" className="space-y-4">
                         <div className="flex items-center justify-between rounded-lg border p-4">
                             <div className="space-y-0.5">
                                 <Label className="text-base">Active Status</Label>
@@ -333,16 +340,17 @@ export function ProductFormDialog({ open, onOpenChange, initialData, onSave }: P
                         </div>
                     </TabsContent>
                 </Tabs>
+            </div>
 
-                <DialogFooter className="mt-4">
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
-                        Cancel
-                    </Button>
-                    <Button onClick={handleSave}>
-                        {mode === "create" ? "Save Product" : "Update Changes"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+            {/* Footer Actions */}
+            <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => router.push("/sales/products")}>
+                    Cancel
+                </Button>
+                <Button onClick={handleSave}>
+                    {mode === "create" ? "Save Product" : "Update Changes"}
+                </Button>
+            </div>
+        </div>
     )
 }

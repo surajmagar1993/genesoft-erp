@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Search, Plus, Pencil, Trash2, Package, Wrench } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
@@ -14,8 +15,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-
-import { ProductFormDialog, ProductFormData } from "@/components/sales/product-form-dialog"
+import { ProductFormData } from "@/components/sales/product-form"
 
 const initialProducts: ProductFormData[] = [
     {
@@ -109,11 +109,10 @@ const initialProducts: ProductFormData[] = [
 ]
 
 export default function ProductsPage() {
+    const router = useRouter()
     const [products, setProducts] = useState<ProductFormData[]>(initialProducts)
     const [searchQuery, setSearchQuery] = useState("")
     const [filterType, setFilterType] = useState<"all" | "PRODUCT" | "SERVICE">("all")
-    const [dialogOpen, setDialogOpen] = useState(false)
-    const [editingProduct, setEditingProduct] = useState<ProductFormData | null>(null)
 
     const filteredProducts = products.filter((p) => {
         const matchesSearch =
@@ -124,36 +123,8 @@ export default function ProductsPage() {
         return matchesSearch && matchesType
     })
 
-    const handleCreate = () => {
-        setEditingProduct(null)
-        setDialogOpen(true)
-    }
-
-    const handleEdit = (product: ProductFormData) => {
-        setEditingProduct(product)
-        setDialogOpen(true)
-    }
-
     const handleDelete = (id: string) => {
         setProducts((prev) => prev.filter((p) => p.id !== id))
-    }
-
-    const handleSave = (data: ProductFormData) => {
-        if (editingProduct) {
-            setProducts((prev) =>
-                prev.map((p) =>
-                    p.id === editingProduct.id
-                        ? { ...p, ...data }
-                        : p
-                )
-            )
-        } else {
-            const newProduct: ProductFormData = {
-                ...data,
-                id: Date.now().toString(),
-            }
-            setProducts((prev) => [newProduct, ...prev])
-        }
     }
 
     return (
@@ -161,7 +132,7 @@ export default function ProductsPage() {
             <div className="flex items-center justify-between space-y-2">
                 <h2 className="text-3xl font-bold tracking-tight">Products & Services</h2>
                 <div className="flex items-center space-x-2">
-                    <Button onClick={handleCreate}>
+                    <Button onClick={() => router.push("/sales/products/new")}>
                         <Plus className="mr-2 h-4 w-4" /> Add Item
                     </Button>
                 </div>
@@ -209,7 +180,7 @@ export default function ProductsPage() {
                     <TableBody>
                         {filteredProducts.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
                                     No items found.
                                 </TableCell>
                             </TableRow>
@@ -267,7 +238,7 @@ export default function ProductsPage() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => handleEdit(item)}
+                                            onClick={() => router.push(`/sales/products/${item.id}/edit`)}
                                         >
                                             <Pencil className="h-4 w-4 text-muted-foreground" />
                                         </Button>
@@ -285,13 +256,6 @@ export default function ProductsPage() {
                     </TableBody>
                 </Table>
             </div>
-
-            <ProductFormDialog
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                initialData={editingProduct}
-                onSave={handleSave}
-            />
         </div>
     )
 }
