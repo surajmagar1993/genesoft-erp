@@ -1,5 +1,7 @@
 "use client"
 
+import { LogoutMenuItem } from '@/components/auth/logout-button'
+
 import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -22,7 +24,7 @@ import {
     FolderKanban,
     Home,
     ChevronDown,
-    LogOut,
+
     Bell,
     Search,
     Moon,
@@ -204,10 +206,7 @@ function AppSidebar() {
                                     Settings
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-500 focus:text-red-500">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    Log out
-                                </DropdownMenuItem>
+                                <LogoutMenuItem />
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </SidebarMenuItem>
