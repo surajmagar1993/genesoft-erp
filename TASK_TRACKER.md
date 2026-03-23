@@ -50,7 +50,10 @@
 - [x] **Deals / Opportunities** — page live, Supabase-connected
 - [ ] Tasks & Activities
 - [ ] Notes & Communication Log
-- [ ] CRUD forms (create/edit/delete) for all CRM entities
+- [x] **CRUD forms (create/edit/delete)** — Contacts, Leads, Deals, Companies all have NEW + EDIT pages with Supabase server actions
+- [x] **Company interface type-safety fix** — added optional `gstin`, `country_code` fields
+- [x] **Git commit & push** — all CRM changes pushed to `main` on GitHub (commit `bc3ce3c`)
+- [x] **Vercel env prep** — `.env.local` exported as `env_vercel.txt` on Desktop for deployment
 - [ ] Dashboard KPI cards connected to live Supabase counts
 - [ ] Tenant-scoped RLS policies (filter by `tenant_id`)
 
