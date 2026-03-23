@@ -70,7 +70,15 @@
 - [x] **Services Catalog** 
 - [x] **Quotations / Estimates**
 - [ ] Sales Orders
-- [/] **Invoicing** (Scaffolding layout)
+- [x] **Invoicing** — Full CRUD live, tenant-scoped, Supabase-connected
+  - `invoices` + `invoice_line_items` tables with RLS (tenant-scoped via `my_tenant_id()`)
+  - `updated_at` auto-trigger applied and verified
+  - Server actions: `getInvoices`, `getInvoiceById`, `createInvoice`, `updateInvoice`, `deleteInvoice`
+  - List page: stats cards, search, status filter, table with actions
+  - New invoice page wired to `createInvoice` action
+  - Edit invoice page: server shell fetches by ID, client adapter maps DB ↔ form
+  - All mock data removed — 100% live Supabase data
+  - DB migration verified via Supabase MCP (all columns, policies, triggers confirmed)
 - [ ] Payment Tracking
 
 ### Finance & Accounting (Core)
