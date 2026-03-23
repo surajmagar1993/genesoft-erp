@@ -54,8 +54,9 @@
 - [x] **Company interface type-safety fix** — added optional `gstin`, `country_code` fields
 - [x] **Git commit & push** — all CRM changes pushed to `main` on GitHub (commit `bc3ce3c`)
 - [x] **Vercel env prep** — `.env.local` exported as `env_vercel.txt` on Desktop for deployment
-- [ ] Dashboard KPI cards connected to live Supabase counts
-- [ ] Tenant-scoped RLS policies (filter by `tenant_id`)
+- [x] **Dashboard KPI cards** — connected to live Supabase counts (commit `c509ff8`); recent leads/deals feed + pipeline summary added
+- [x] **Tenant-scoped RLS** — `get-tenant-id.ts` helper; all 4 CRM actions scope reads/writes by `tenant_id`; `rls_tenant_migration.sql` generated with `my_tenant_id()` function, auto-provision signup trigger, and backfill block (commit `e71517b`) — ⚠️ SQL must be run in Supabase dashboard
+- [x] **`getById` helpers** — `getLeadById`, `getDealById`, `getContactById`, `getCompanyById` added (tenant-guarded)
 
 ### Retail / Individual Customer Management
 - [x] **Customer Types (B2B / B2C)**
