@@ -71,13 +71,30 @@ export function DealForm({ initialData, mode }: DealFormProps) {
         }
 
         setIsSubmitting(true)
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 400))
 
-        console.log("Saving deal:", form)
+        const payload = {
+            title: form.title,
+            contact_name: form.contactName,
+            company: form.company,
+            value: form.value,
+            stage: form.stage,
+            probability: form.probability,
+            expected_close: form.expectedClose || "",
+            assigned_to: form.assignedTo,
+            notes: form.notes,
+        }
 
-        setIsSubmitting(false)
-        router.push("/crm/deals")
+        const { createDeal, updateDeal } = await import("@/app/actions/crm/deals")
+        const result = mode === "create"
+            ? await createDeal(payload)
+            : await updateDeal(form.id!, payload)
+
+        if (result.error) {
+            alert(result.error)
+            setIsSubmitting(false)
+        } else {
+            router.push("/crm/deals")
+        }
     }
 
     return (

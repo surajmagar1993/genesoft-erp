@@ -1,20 +1,31 @@
-import { LeadForm, defaultLeadForm } from "@/components/crm/lead-form"
+import { createClient } from "@/lib/supabase/server"
+import { LeadForm, defaultLeadForm, type LeadFormData } from "@/components/crm/lead-form"
+import { notFound } from "next/navigation"
 
-export default function EditLeadPage({ params }: { params: { id: string } }) {
-    // Mock data for edit view
-    const mockData = {
+export default async function EditLeadPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", id)
+        .single()
+
+    if (error || !data) notFound()
+
+    const initialData: LeadFormData = {
         ...defaultLeadForm,
-        id: params.id,
-        title: "ERP Implementation Inquiry",
-        contactName: "Rahul Deshmukh",
-        email: "rahul@techfirm.in",
-        phone: "+91 98765 43210",
-        source: "Website Form",
-        status: "NEW" as const,
-        score: 75,
-        assignedTo: "Suraj M.",
-        notes: "",
+        id: data.id,
+        title: data.title ?? "",
+        contactName: data.contact_name ?? "",
+        email: data.email ?? "",
+        phone: data.phone ?? "",
+        source: data.source ?? "",
+        status: data.status ?? "NEW",
+        score: data.score ?? 50,
+        assignedTo: data.assigned_to ?? "",
+        notes: data.notes ?? "",
     }
 
-    return <LeadForm mode="edit" initialData={mockData} />
+    return <LeadForm mode="edit" initialData={initialData} />
 }

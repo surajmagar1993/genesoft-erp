@@ -1,23 +1,35 @@
+import { createClient } from "@/lib/supabase/server"
 import { ContactForm, emptyContactForm } from "@/components/crm/contact-form"
+import { notFound } from "next/navigation"
 
-export default function EditContactPage({ params }: { params: { id: string } }) {
-    // In a real app, you would fetch the contact data using the params.id
-    // Here we're using a mock structure based on what was in the list page
-    const mockData = {
+export default async function EditContactPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from("contacts")
+        .select("*")
+        .eq("id", id)
+        .single()
+
+    if (error || !data) notFound()
+
+    const initialData = {
         ...emptyContactForm,
-        id: params.id,
-        displayName: "VM Edulife Private Limited",
-        type: "COMPANY" as const,
-        companyName: "VM Edulife Private Limited",
-        email: "info@vmedulife.com",
-        phoneDialCode: "+91",
-        phone: "20 1234 5678",
-        gstin: "27AAECV5149A1ZH",
-        pan: "AAECV5149A",
-        customerGroup: "dealer",
-        countryCode: "IN",
-        currencyCode: "INR",
+        id: data.id,
+        type: (data.type ?? "COMPANY") as "INDIVIDUAL" | "COMPANY",
+        displayName: data.display_name ?? "",
+        companyName: data.type === "COMPANY" ? (data.display_name ?? "") : "",
+        firstName: data.type === "INDIVIDUAL" ? (data.display_name?.split(" ")[0] ?? "") : "",
+        lastName: data.type === "INDIVIDUAL" ? (data.display_name?.split(" ").slice(1).join(" ") ?? "") : "",
+        email: data.email ?? "",
+        phone: data.phone ?? "",
+        gstin: data.gstin ?? "",
+        pan: data.pan ?? "",
+        customerGroup: data.customer_group ?? "general",
+        countryCode: data.country_code ?? "IN",
+        currencyCode: data.currency_code ?? "INR",
+        creditLimit: String(data.credit_limit ?? ""),
     }
 
-    return <ContactForm mode="edit" initialData={mockData} />
+    return <ContactForm mode="edit" initialData={initialData} />
 }

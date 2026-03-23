@@ -1,20 +1,31 @@
+import { createClient } from "@/lib/supabase/server"
 import { DealForm, defaultDealForm } from "@/components/crm/deal-form"
+import { notFound } from "next/navigation"
 
-export default function EditDealPage({ params }: { params: { id: string } }) {
-    // Mock data for edit view
-    const mockData = {
+export default async function EditDealPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from("deals")
+        .select("*")
+        .eq("id", id)
+        .single()
+
+    if (error || !data) notFound()
+
+    const initialData = {
         ...defaultDealForm,
-        id: params.id,
-        title: "ERP Annual License",
-        contactName: "Rahul Deshmukh",
-        company: "TechFirm India",
-        value: 350000,
-        stage: "PROPOSAL" as const,
-        probability: 60,
-        expectedClose: "2026-04-15",
-        assignedTo: "Suraj M.",
-        notes: "",
+        id: data.id,
+        title: data.title ?? "",
+        contactName: data.contact_name ?? "",
+        company: data.company ?? "",
+        value: data.value ?? 0,
+        stage: data.stage ?? "PROSPECTING",
+        probability: data.probability ?? 20,
+        expectedClose: data.expected_close ?? "",
+        assignedTo: data.assigned_to ?? "",
+        notes: data.notes ?? "",
     }
 
-    return <DealForm mode="edit" initialData={mockData} />
+    return <DealForm mode="edit" initialData={initialData} />
 }

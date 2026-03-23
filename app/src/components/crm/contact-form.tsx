@@ -2,15 +2,16 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Save, X } from "lucide-react"
+import { ArrowLeft, Save, X, Loader2 } from "lucide-react"
 import { COUNTRIES } from "@/lib/constants/countries"
+import { createContact, updateContact } from "@/app/actions/crm/contacts"
 
 export interface ContactFormData {
     type: "INDIVIDUAL" | "COMPANY"
@@ -26,24 +27,18 @@ export interface ContactFormData {
     website: string
     customerGroup: string
     countryCode: string
-    // India
     gstin: string
     pan: string
     cin: string
     tan: string
     msmeUdyam: string
-    // UAE
     trn: string
     tradeLicense: string
-    // KSA
     vatNumberKsa: string
     crNumber: string
-    // USA
     ein: string
-    // Financial
     currencyCode: string
     creditLimit: string
-    // Address
     billingStreet: string
     billingCity: string
     billingState: string
@@ -87,7 +82,7 @@ export const emptyContactForm: ContactFormData = {
 }
 
 interface ContactFormProps {
-    initialData?: ContactFormData
+    initialData?: ContactFormData & { id?: string }
     mode: "create" | "edit"
 }
 
@@ -95,24 +90,45 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
     const router = useRouter()
     const [form, setForm] = useState<ContactFormData>(initialData || emptyContactForm)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [saveError, setSaveError] = useState<string | null>(null)
 
     const update = (key: keyof ContactFormData, value: string) =>
         setForm((prev) => ({ ...prev, [key]: value }))
 
     const handleSave = async () => {
         setIsSubmitting(true)
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        setSaveError(null)
 
         const displayName =
             form.type === "COMPANY"
                 ? form.companyName
                 : `${form.firstName} ${form.lastName}`.trim()
 
-        console.log("Saving contact:", { ...form, displayName })
+        const payload = {
+            display_name: displayName || form.displayName,
+            type: form.type,
+            email: form.email,
+            phone: `${form.phoneDialCode} ${form.phone}`.trim(),
+            gstin: form.gstin,
+            pan: form.pan,
+            customer_group: form.customerGroup,
+            country_code: form.countryCode,
+            currency_code: form.currencyCode,
+            balance: 0,
+            is_active: true,
+        }
 
-        setIsSubmitting(false)
-        router.push("/crm/contacts")
+        const result = mode === "create"
+            ? await createContact(payload)
+            : await updateContact(initialData!.id!, payload)
+
+        if (result.error) {
+            setSaveError(result.error)
+            setIsSubmitting(false)
+        } else {
+            router.push("/crm/contacts")
+            router.refresh()
+        }
     }
 
     return (

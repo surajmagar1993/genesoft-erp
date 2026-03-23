@@ -22,6 +22,15 @@
 - [x] Build app shell (sidebar, navigation, layout)
 - [x] Push initial codebase to GitHub repository
 
+## Supabase Integration & Live Testing ✅
+- [x] Unified Supabase client (`src/lib/supabase/client.ts`) and server (`src/lib/supabase/server.ts`) utilities
+- [x] Created `crm_migration.sql` — tenants, profiles, contacts, leads, deals tables with RLS
+- [x] Fixed missing `companies` table (was absent from original migration SQL)
+- [x] Applied full migration to Supabase — all 6 tables confirmed live
+- [x] Supabase Auth: email confirmation disabled for dev; login working end-to-end
+- [x] Live browser verified: Dashboard, Contacts, Companies, Leads, Deals pages all load error-free
+- [x] User account `suraj.magar1993@gmail.com` created and login confirmed
+
 ## Global UI Alignment & Standardization ✅
 - [x] Standardize page wrappers (remove redundant padding in Sales pages)
 - [x] Unified heading styles (convert h2 to h1 across all modules)
@@ -35,12 +44,15 @@
 ## 🔴 P1 — MVP Launch (Month 1-3)
 
 ### CRM — Customer Relationship Management
-- [x] **Contacts Management**
-- [x] **Company/Organization Management**
-- [x] **Lead Management**
-- [x] **Deals / Opportunities**
+- [x] **Contacts Management** — page live, Supabase-connected
+- [x] **Company/Organization Management** — page live, migration fix applied
+- [x] **Lead Management** — page live, Supabase-connected
+- [x] **Deals / Opportunities** — page live, Supabase-connected
 - [ ] Tasks & Activities
 - [ ] Notes & Communication Log
+- [ ] CRUD forms (create/edit/delete) for all CRM entities
+- [ ] Dashboard KPI cards connected to live Supabase counts
+- [ ] Tenant-scoped RLS policies (filter by `tenant_id`)
 
 ### Retail / Individual Customer Management
 - [x] **Customer Types (B2B / B2C)**

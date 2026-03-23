@@ -49,13 +49,29 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
         }
 
         setIsSubmitting(true)
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 400))
 
-        console.log("Saving company:", form)
+        const payload = {
+            name: form.name,
+            industry: form.industry,
+            website: form.website,
+            phone: form.phone,
+            city: form.city,
+            gstin: form.gstin,
+            country_code: form.countryCode,
+            is_active: true,
+        }
 
-        setIsSubmitting(false)
-        router.push("/crm/companies")
+        const { createCompany, updateCompany } = await import("@/app/actions/crm/companies")
+        const result = mode === "create"
+            ? await createCompany(payload)
+            : await updateCompany(form.id!, payload)
+
+        if (result.error) {
+            alert(result.error)
+            setIsSubmitting(false)
+        } else {
+            router.push("/crm/companies")
+        }
     }
 
     return (

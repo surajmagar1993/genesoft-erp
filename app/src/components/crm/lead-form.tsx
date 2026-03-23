@@ -56,13 +56,30 @@ export function LeadForm({ initialData, mode }: LeadFormProps) {
         }
 
         setIsSubmitting(true)
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 400))
 
-        console.log("Saving lead:", form)
+        const payload = {
+            title: form.title,
+            contact_name: form.contactName,
+            email: form.email,
+            phone: form.phone,
+            source: form.source,
+            status: form.status,
+            score: form.score,
+            assigned_to: form.assignedTo,
+            notes: form.notes,
+        }
 
-        setIsSubmitting(false)
-        router.push("/crm/leads")
+        const { createLead, updateLead } = await import("@/app/actions/crm/leads")
+        const result = mode === "create"
+            ? await createLead(payload)
+            : await updateLead(form.id!, payload)
+
+        if (result.error) {
+            alert(result.error)
+            setIsSubmitting(false)
+        } else {
+            router.push("/crm/leads")
+        }
     }
 
     return (
