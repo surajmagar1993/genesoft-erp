@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { InvoiceForm, InvoiceFormData } from "@/components/sales/invoice-form"
 import { updateInvoice, InvoiceDB } from "@/app/actions/sales/invoices"
+import { computeLineItemGst, getSupplyType, GstRate } from "@/lib/gst-engine"
 
 interface Props {
     invoice: InvoiceDB
@@ -25,17 +26,25 @@ export default function EditInvoiceClient({ invoice }: Props) {
         discountType: invoice.discount_type,
         notes: invoice.notes,
         termsAndConditions: invoice.terms_and_conditions,
+        // GST header
+        supplierGstin: invoice.supplier_gstin ?? "",
+        customerGstin: invoice.customer_gstin ?? "",
+        supplierState: invoice.supplier_state ?? "",
+        placeOfSupply: invoice.place_of_supply ?? "",
         lineItems: (invoice.invoice_line_items ?? []).map((li) => ({
             id: li.id,
             productName: li.product_name,
             description: li.description,
             qty: li.qty,
             unitPrice: li.unit_price,
-            taxPercent: li.tax_percent,
+            gstRate: (li.tax_percent ?? 18) as GstRate,
+            hsnSac: li.hsn_sac ?? "",
         })),
     }
 
     const handleSave = async (data: InvoiceFormData) => {
+        const supplyType = getSupplyType(data.supplierState, data.placeOfSupply)
+
         const { error } = await updateInvoice({
             id: invoice.id,
             invoice_number: data.invoiceNumber,
@@ -49,13 +58,29 @@ export default function EditInvoiceClient({ invoice }: Props) {
             discount_type: data.discountType,
             notes: data.notes,
             terms_and_conditions: data.termsAndConditions,
-            line_items: data.lineItems.map((li) => ({
-                product_name: li.productName,
-                description: li.description,
-                qty: li.qty,
-                unit_price: li.unitPrice,
-                tax_percent: li.taxPercent,
-            })),
+            // GST header
+            supplier_gstin: data.supplierGstin,
+            customer_gstin: data.customerGstin,
+            supplier_state: data.supplierState,
+            place_of_supply: data.placeOfSupply,
+            supply_type: supplyType,
+            line_items: data.lineItems.map((li) => {
+                const gst = computeLineItemGst(li.qty, li.unitPrice, li.gstRate, supplyType)
+                return {
+                    product_name: li.productName,
+                    description: li.description,
+                    qty: li.qty,
+                    unit_price: li.unitPrice,
+                    tax_percent: li.gstRate,
+                    hsn_sac: li.hsnSac,
+                    cgst_percent: gst.cgstPercent,
+                    sgst_percent: gst.sgstPercent,
+                    igst_percent: gst.igstPercent,
+                    cgst_amount: gst.cgstAmount,
+                    sgst_amount: gst.sgstAmount,
+                    igst_amount: gst.igstAmount,
+                }
+            }),
         })
 
         if (!error) {

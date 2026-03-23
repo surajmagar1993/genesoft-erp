@@ -14,7 +14,14 @@ export interface InvoiceLineItemDB {
   description: string
   qty: number
   unit_price: number
-  tax_percent: number
+  tax_percent: number  // legacy — kept for backwards-compat
+  hsn_sac: string
+  cgst_percent: number
+  sgst_percent: number
+  igst_percent: number
+  cgst_amount: number
+  sgst_amount: number
+  igst_amount: number
   tenant_id: string
 }
 
@@ -31,6 +38,12 @@ export interface InvoiceDB {
   discount_type: "PERCENT" | "FIXED"
   notes: string
   terms_and_conditions: string
+  // GST fields
+  supplier_gstin: string
+  customer_gstin: string
+  supplier_state: string
+  place_of_supply: string
+  supply_type: "intra" | "inter"
   tenant_id: string
   created_at: string
   updated_at: string
@@ -87,12 +100,25 @@ export interface CreateInvoicePayload {
   discount_type: "PERCENT" | "FIXED"
   notes: string
   terms_and_conditions: string
+  // GST header fields
+  supplier_gstin: string
+  customer_gstin: string
+  supplier_state: string
+  place_of_supply: string
+  supply_type: "intra" | "inter"
   line_items: Array<{
     product_name: string
     description: string
     qty: number
     unit_price: number
-    tax_percent: number
+    tax_percent: number  // legacy — equals gst_rate
+    hsn_sac: string
+    cgst_percent: number
+    sgst_percent: number
+    igst_percent: number
+    cgst_amount: number
+    sgst_amount: number
+    igst_amount: number
   }>
 }
 
