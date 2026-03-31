@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Search, Plus, Pencil, Trash2, Send, FileText, CheckCircle2, XCircle, Clock, FileBarChart2 } from "lucide-react"
+import { Search, Plus, Pencil, Trash2, Send, FileText, CheckCircle2, XCircle, Clock, FileBarChart2, Download, Loader2 } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { InvoiceStatus } from "@/components/sales/invoice-form"
-import { InvoiceDB, deleteInvoice } from "@/app/actions/sales/invoices"
+import { InvoiceDB, deleteInvoice, sendInvoiceEmail } from "@/app/actions/sales/invoices"
 
 /* ── Status config ── */
 const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "outline" | "destructive"; icon: React.ComponentType<{ className?: string }> }> = {
@@ -71,6 +71,28 @@ export default function InvoicesClient({ invoices: initialInvoices }: Props) {
                 setInvoices((prev) => prev.filter((inv) => inv.id !== id))
             }
         })
+    }
+
+    const handleDownload = (id: string, invoiceNumber: string) => {
+        const a = document.createElement("a")
+        a.href = `/api/invoices/${id}/pdf`
+        a.download = `Invoice-${invoiceNumber}.pdf`
+        a.click()
+    }
+
+    const [sendingId, setSendingId] = useState<string | null>(null)
+
+    const handleSendEmail = async (id: string) => {
+        setSendingId(id)
+        const { error } = await sendInvoiceEmail(id)
+        setSendingId(null)
+        if (error) {
+            alert(`Failed to send: ${error}`)
+        } else {
+            setInvoices((prev) =>
+                prev.map((inv) => (inv.id === id ? { ...inv, status: "SENT" as const } : inv))
+            )
+        }
     }
 
     const totalInvoices = invoices.length
@@ -217,6 +239,25 @@ export default function InvoicesClient({ invoices: initialInvoices }: Props) {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Download PDF"
+                                                        onClick={() => handleDownload(inv.id, inv.invoice_number)}
+                                                    >
+                                                        <Download className="h-4 w-4 text-muted-foreground" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Send to customer"
+                                                        disabled={sendingId === inv.id}
+                                                        onClick={() => handleSendEmail(inv.id)}
+                                                    >
+                                                        {sendingId === inv.id
+                                                            ? <Loader2 className="h-4 w-4 animate-spin" />
+                                                            : <Send className="h-4 w-4 text-blue-500" />}
+                                                    </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"

@@ -100,22 +100,27 @@ const formatCurrency = (amount: number) =>
 /* ── Props ──────────────────────────────────────────────────────────────────── */
 interface InvoiceFormProps {
   initialData?: InvoiceFormData | null
+  nextInvoiceNumber?: string
   onSave: (data: InvoiceFormData) => void
 }
 
-export function InvoiceForm({ initialData, onSave }: InvoiceFormProps) {
+export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceFormProps) {
   const router = useRouter()
   const mode = initialData ? "edit" : "create"
   const [form, setForm] = useState<InvoiceFormData>(
     initialData || {
       ...defaultInvoiceForm,
-      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
+      invoiceNumber: nextInvoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
     }
   )
 
   useEffect(() => {
-    if (initialData) setForm(initialData)
-  }, [initialData])
+    if (initialData) {
+      setForm(initialData)
+    } else if (nextInvoiceNumber && form.invoiceNumber.startsWith("INV") && form.invoiceNumber.length < 15) {
+      setForm((prev) => ({ ...prev, invoiceNumber: nextInvoiceNumber }))
+    }
+  }, [initialData, nextInvoiceNumber])
 
   const update = <K extends keyof InvoiceFormData>(field: K, value: InvoiceFormData[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }))

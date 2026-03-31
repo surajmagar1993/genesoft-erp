@@ -36,6 +36,7 @@ model Tenant {
   contacts     Contact[]
   products     Product[]
   invoices     Invoice[]
+  quotes       Quote[]
   taxGroups    TaxGroup[]
 
   @@map("tenants")
@@ -139,6 +140,7 @@ model Contact {
   leads           Lead[]
   deals           Deal[]
   invoices        Invoice[]
+  quotes          Quote[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -385,4 +387,78 @@ model InvoiceItem {
   product     Product? @relation(fields: [productId], references: [id])
 
   @@map("invoice_items")
+}
+
+// ============================================
+// QUOTATIONS
+// ============================================
+
+model Quote {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String        @map("tenant_id") @db.Uuid
+  contactId       String?       @map("contact_id") @db.Uuid // Optional link to contact
+  quoteNumber     String        @map("quote_number")
+  status          QuoteStatus   @default(DRAFT)
+  
+  // Basic Info
+  customerName    String        @map("customer_name")
+  customerEmail   String        @map("customer_email")
+  quoteDate       DateTime      @default(now()) @map("quote_date")
+  validUntil      DateTime?     @map("valid_until")
+  reference       String?       
+  
+  // Amounts
+  subtotal        Decimal       @default(0) @db.Decimal(15, 2)
+  taxAmount       Decimal       @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  discount        Decimal       @default(0) @db.Decimal(15, 2)
+  discountType    DiscountType  @default(PERCENT) @map("discount_type")
+  total           Decimal       @default(0) @db.Decimal(15, 2)
+  currencyCode    String        @default("INR") @map("currency_code")
+  
+  // Terms & Notes
+  notes           String?
+  termsAndConditions String?    @map("terms_and_conditions")
+  
+  // Meta
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  tenant          Tenant        @relation(fields: [tenantId], references: [id])
+  contact         Contact?      @relation(fields: [contactId], references: [id])
+  items           QuoteItem[]
+
+  @@unique([tenantId, quoteNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("quotes")
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
+model QuoteItem {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteId     String  @map("quote_id") @db.Uuid
+  productName String  @map("product_name")
+  description String?
+  qty         Decimal @db.Decimal(15, 2)
+  unitPrice   Decimal @map("unit_price") @db.Decimal(15, 2)
+  taxPercent  Decimal @default(18) @map("tax_percent") @db.Decimal(5, 2)
+  lineTotal   Decimal @map("line_total") @db.Decimal(15, 2)
+
+  // Relations
+  quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@map("quote_items")
 }

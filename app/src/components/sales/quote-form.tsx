@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,6 +38,7 @@ export interface QuoteFormData {
     termsAndConditions: string
     discount: number
     discountType: "PERCENT" | "FIXED"
+    contactId?: string | null
 }
 
 export const defaultQuoteForm: QuoteFormData = {
@@ -52,6 +54,7 @@ export const defaultQuoteForm: QuoteFormData = {
     termsAndConditions: "1. Payment due within 30 days of invoice date.\n2. Prices are exclusive of applicable taxes unless otherwise stated.\n3. This quotation is valid for the period mentioned above.",
     discount: 0,
     discountType: "PERCENT",
+    contactId: null,
 }
 
 const emptyLineItem: QuoteLineItem = {
@@ -120,15 +123,14 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
 
     const handleSave = () => {
         if (!form.customerName.trim()) {
-            alert("Customer Name is required.")
+            toast.error("Customer Name is required.")
             return
         }
         if (form.lineItems.length === 0) {
-            alert("Add at least one line item.")
+            toast.error("Add at least one line item.")
             return
         }
         onSave(form)
-        router.push("/sales/quotes")
     }
 
     return (

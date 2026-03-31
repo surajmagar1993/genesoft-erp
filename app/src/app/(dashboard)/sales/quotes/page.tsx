@@ -1,6 +1,7 @@
 "use client"
-
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { getQuotes, deleteQuote } from "@/app/actions/sales/quotes"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { Search, Plus, Pencil, Trash2, Send, FileText, CheckCircle2, XCircle, Clock, FileBarChart2 } from "lucide-react"
 
@@ -27,96 +28,7 @@ const statusConfig: Record<QuoteStatus, { label: string; variant: "default" | "s
     EXPIRED: { label: "Expired", variant: "secondary", icon: Clock },
 }
 
-/* ── Mock data ── */
-const initialQuotes: QuoteFormData[] = [
-    {
-        id: "1",
-        quoteNumber: "QTN-001",
-        customerName: "Acme Corporation",
-        customerEmail: "procurement@acme.com",
-        quoteDate: "2026-03-01",
-        validUntil: "2026-03-31",
-        reference: "PO-2026-100",
-        status: "SENT",
-        lineItems: [
-            { id: "l1", productName: "Dell OptiPlex 3000 Desktop", description: "Intel Core i5, 8GB RAM, 256GB SSD", qty: 5, unitPrice: 42000, taxPercent: 18 },
-            { id: "l2", productName: "Cloud Hosting & Maintenance", description: "Annual AWS hosting", qty: 1, unitPrice: 25000, taxPercent: 18 },
-        ],
-        notes: "Priority order — customer needs delivery by month-end.",
-        termsAndConditions: "Payment due within 30 days.",
-        discount: 5,
-        discountType: "PERCENT",
-    },
-    {
-        id: "2",
-        quoteNumber: "QTN-002",
-        customerName: "Nexora Tech Pvt Ltd",
-        customerEmail: "it@nexora.in",
-        quoteDate: "2026-03-03",
-        validUntil: "2026-04-03",
-        reference: "",
-        status: "DRAFT",
-        lineItems: [
-            { id: "l3", productName: "Ubiquiti UniFi AP AC Pro", description: "Enterprise Wi-Fi AP", qty: 10, unitPrice: 12500, taxPercent: 18 },
-        ],
-        notes: "",
-        termsAndConditions: "Standard terms apply.",
-        discount: 0,
-        discountType: "PERCENT",
-    },
-    {
-        id: "3",
-        quoteNumber: "QTN-003",
-        customerName: "StarLane Interiors",
-        customerEmail: "finance@starlane.in",
-        quoteDate: "2026-02-15",
-        validUntil: "2026-03-15",
-        reference: "SL-RFQ-22",
-        status: "ACCEPTED",
-        lineItems: [
-            { id: "l4", productName: "Custom Website Development", description: "Corporate site with CMS", qty: 1, unitPrice: 50000, taxPercent: 18 },
-            { id: "l5", productName: "Cloud Hosting & Maintenance", description: "1 year hosting", qty: 1, unitPrice: 25000, taxPercent: 18 },
-        ],
-        notes: "Site should be live by April.",
-        termsAndConditions: "50% advance, 50% on delivery.",
-        discount: 10000,
-        discountType: "FIXED",
-    },
-    {
-        id: "4",
-        quoteNumber: "QTN-004",
-        customerName: "BluePeak Solutions",
-        customerEmail: "admin@bluepeak.io",
-        quoteDate: "2026-01-20",
-        validUntil: "2026-02-20",
-        reference: "",
-        status: "EXPIRED",
-        lineItems: [
-            { id: "l6", productName: "Dell OptiPlex 3000 Desktop", description: "Desktop PC", qty: 3, unitPrice: 42000, taxPercent: 18 },
-        ],
-        notes: "",
-        termsAndConditions: "Standard terms.",
-        discount: 0,
-        discountType: "PERCENT",
-    },
-    {
-        id: "5",
-        quoteNumber: "QTN-005",
-        customerName: "GreenField Agro",
-        customerEmail: "ops@greenfield.co",
-        quoteDate: "2026-03-05",
-        validUntil: "2026-04-05",
-        reference: "GF-IT-2026",
-        status: "REJECTED",
-        lineItems: [
-            { id: "l7", productName: "Custom Website Development", description: "E-commerce platform", qty: 1, unitPrice: 80000, taxPercent: 18 },
-        ],
-        notes: "Customer went with a competitor.",
-        termsAndConditions: "Standard terms.",
-        discount: 0,
-        discountType: "PERCENT",
-    },
-]
+// initialQuotes removed
 
 /* ── Helpers ── */
 function calcQuoteTotal(q: QuoteFormData) {
@@ -136,9 +48,50 @@ const formatDate = (dateStr: string) => {
 
 export default function QuotesPage() {
     const router = useRouter()
-    const [quotes, setQuotes] = useState<QuoteFormData[]>(initialQuotes)
+    const [quotes, setQuotes] = useState<any[]>([])
+    const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState("")
     const [filterStatus, setFilterStatus] = useState<"all" | QuoteStatus>("all")
+
+    useEffect(() => {
+        fetchQuotes()
+    }, [])
+
+    const fetchQuotes = async () => {
+        setLoading(true)
+        try {
+            const data = await getQuotes()
+            // Map DB fields to Component expected fields if necessary
+            const mapped = data.map(q => ({
+                id: q.id,
+                quoteNumber: q.quote_number,
+                customerName: q.customer_name,
+                customerEmail: q.customer_email,
+                quoteDate: q.quote_date,
+                validUntil: q.valid_until || "",
+                reference: q.reference || "",
+                status: q.status,
+                lineItems: q.quote_items?.map(li => ({
+                    id: li.id,
+                    productName: li.product_name,
+                    description: li.description || "",
+                    qty: li.qty,
+                    unitPrice: li.unit_price,
+                    taxPercent: li.tax_percent
+                })) || [],
+                notes: q.notes || "",
+                termsAndConditions: q.terms_and_conditions || "",
+                discount: Number(q.discount),
+                discountType: q.discount_type,
+                total: Number(q.total)
+            }))
+            setQuotes(mapped)
+        } catch (error) {
+            toast.error("Failed to fetch quotes")
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const filteredQuotes = quotes.filter((q) => {
         const matchesSearch =
@@ -148,8 +101,15 @@ export default function QuotesPage() {
         return matchesSearch && matchesStatus
     })
 
-    const handleDelete = (id: string) => {
-        setQuotes((prev) => prev.filter((q) => q.id !== id))
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this quotation?")) return
+        const { error } = await deleteQuote(id)
+        if (error) {
+            toast.error(error)
+        } else {
+            toast.success("Quote deleted")
+            fetchQuotes()
+        }
     }
 
     const totalQuotes = quotes.length
@@ -270,7 +230,7 @@ export default function QuotesPage() {
                                     </TableRow>
                                 ) : (
                                     filteredQuotes.map((q) => {
-                                        const cfg = statusConfig[q.status]
+                                        const cfg = statusConfig[q.status as QuoteStatus]
                                         const StatusIcon = cfg.icon
                                         return (
                                             <TableRow key={q.id}>
@@ -285,7 +245,7 @@ export default function QuotesPage() {
                                                 <TableCell className="text-sm">{formatDate(q.validUntil)}</TableCell>
                                                 <TableCell className="text-center font-mono">{q.lineItems.length}</TableCell>
                                                 <TableCell className="text-right font-medium">
-                                                    {formatCurrency(calcQuoteTotal(q))}
+                                                    {formatCurrency(q.total || calcQuoteTotal(q))}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant={cfg.variant} className="flex w-fit items-center gap-1.5">

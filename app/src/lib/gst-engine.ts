@@ -196,6 +196,52 @@ export function computeInvoiceGstSummary(
   }
 }
 
+// ── HSN Summary ──────────────────────────────────────────────────────────────
+export interface HsnSummaryItem {
+  hsnSac: string
+  taxableAmount: number
+  cgstAmount: number
+  sgstAmount: number
+  igstAmount: number
+  totalTaxAmount: number
+}
+
+export interface HsnSummaryLineItem extends SummaryLineItem {
+  hsnSac?: string | null
+}
+
+export function computeHsnSummary(
+  lineItems: HsnSummaryLineItem[],
+  supplyType: SupplyType
+): HsnSummaryItem[] {
+  const map = new Map<string, HsnSummaryItem>()
+
+  for (const item of lineItems) {
+    const hsn = item.hsnSac || "Unspecified"
+    const gst = computeLineItemGst(item.qty, item.unitPrice, item.gstRate, supplyType)
+
+    const existing = map.get(hsn)
+    if (existing) {
+      existing.taxableAmount = parseFloat((existing.taxableAmount + gst.taxableAmount).toFixed(2))
+      existing.cgstAmount = parseFloat((existing.cgstAmount + gst.cgstAmount).toFixed(2))
+      existing.sgstAmount = parseFloat((existing.sgstAmount + gst.sgstAmount).toFixed(2))
+      existing.igstAmount = parseFloat((existing.igstAmount + gst.igstAmount).toFixed(2))
+      existing.totalTaxAmount = parseFloat((existing.totalTaxAmount + gst.totalTaxAmount).toFixed(2))
+    } else {
+      map.set(hsn, {
+        hsnSac: hsn,
+        taxableAmount: gst.taxableAmount,
+        cgstAmount: gst.cgstAmount,
+        sgstAmount: gst.sgstAmount,
+        igstAmount: gst.igstAmount,
+        totalTaxAmount: gst.totalTaxAmount,
+      })
+    }
+  }
+
+  return Array.from(map.values())
+}
+
 // ── GSTIN Validator ──────────────────────────────────────────────────────────
 /**
  * Basic GSTIN format validation: 15 chars, pattern 22ABCDE1234F1Z5

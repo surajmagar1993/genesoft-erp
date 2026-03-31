@@ -1,12 +1,22 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { InvoiceForm, InvoiceFormData } from "@/components/sales/invoice-form"
-import { createInvoice } from "@/app/actions/sales/invoices"
+import { createInvoice, getNextInvoiceNumber } from "@/app/actions/sales/invoices"
 import { computeLineItemGst, getSupplyType } from "@/lib/gst-engine"
 
 export default function NewInvoicePage() {
+    return <NewInvoiceFormWrapper />
+}
+
+function NewInvoiceFormWrapper() {
     const router = useRouter()
+    const [nextInvoiceNum, setNextInvoiceNum] = useState<string>("")
+
+    useEffect(() => {
+        getNextInvoiceNumber().then(setNextInvoiceNum)
+    }, [])
 
     const handleSave = async (data: InvoiceFormData) => {
         const supplyType = getSupplyType(data.supplierState, data.placeOfSupply)
@@ -53,5 +63,5 @@ export default function NewInvoicePage() {
         }
     }
 
-    return <InvoiceForm onSave={handleSave} />
+    return <InvoiceForm onSave={handleSave} nextInvoiceNumber={nextInvoiceNum} />
 }
