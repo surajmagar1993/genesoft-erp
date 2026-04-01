@@ -36,24 +36,23 @@ export interface BillData {
 /**
  * Fetch all bills for the current tenant
  */
-export async function getBills() {
+export async function getBills(page: number = 1, limit: number = 10) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  const { data, count, error } = await supabase
     .from("bills")
-    .select(`
-      *,
-      contact:contacts(display_name, company_name)
-    `)
+    .select("*, bill_items(*)", { count: "exact" })
     .eq("tenant_id", tenantId)
-    .order("bill_date", { ascending: false })
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (error) {
-    console.error("getBills error:", error.message)
-    return []
+    console.error("Error fetching bills:", error.message)
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 /* ── Read Single Bill ── */
@@ -175,8 +174,10 @@ export async function createBill(data: BillData) {
 
   if (itemsError) {
     console.error("Error creating bill items:", itemsError)
-    // Consider deleting the bill header here if items fail (transactional)
-    await supabase.from("bills").delete().eq("id", bill.id)
+    // 3. Cleanup: Delete the bill header if items fail. 
+    // We already have the bill.id from the successful insert in the same session.
+    // Adding tenant_id check for extra safety against race conditions.
+    await supabase.from("bills").delete().eq("id", bill.id).eq("tenant_id", tenantId)
     throw new Error("Failed to create bill items")
   }
 
@@ -216,8 +217,21 @@ export async function updateBill(id: string, data: Partial<BillData>) {
     throw new Error("Failed to update bill")
   }
 
-  // Update items if provided (Delete and recreate is simplest for MVP)
+  // Update items if provided (Delete and recreate is safest IF ownership is verified)
   if (data.items) {
+    // 1. Verify existence/ownership to prevent IDOR on items
+    const { data: existingBill, error: verifyError } = await supabase
+      .from("bills")
+      .select("id")
+      .eq("id", id)
+      .eq("tenant_id", tenantId)
+      .single()
+
+    if (verifyError || !existingBill) {
+      throw new Error("Unauthorized: Bill not found or access denied")
+    }
+
+    // 2. Safely delete items
     await supabase.from("bill_items").delete().eq("bill_id", id)
     
     const billItems = data.items.map(item => ({
@@ -297,7 +311,7 @@ export async function updateBillStatus(id: string, status: BillStatus) {
 /**
  * Fetch vendors for the bill form
  */
-export async function getVendors() {
+export async function getVendors(limit: number = 100) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
@@ -308,6 +322,7 @@ export async function getVendors() {
     // .eq("type", "VENDOR") // Optional: filtering by type if enforced
     .eq("is_active", true)
     .order("display_name")
+    .limit(limit)
 
   if (error) throw new Error("Failed to fetch vendors")
   return data
@@ -316,7 +331,7 @@ export async function getVendors() {
 /**
  * Fetch products for the bill form
  */
-export async function getProducts() {
+export async function getProducts(limit: number = 100) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
@@ -326,6 +341,7 @@ export async function getProducts() {
     .eq("tenant_id", tenantId)
     .eq("is_active", true)
     .order("name")
+    .limit(limit)
 
   if (error) throw new Error("Failed to fetch products")
   return data

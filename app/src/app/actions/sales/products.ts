@@ -32,7 +32,7 @@ export interface ProductDB {
 }
 
 /* ── Read All ── */
-export async function getProducts(): Promise<ProductDB[]> {
+export async function getProducts(page: number = 1, limit: number = 10): Promise<ProductDB[]> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
@@ -40,6 +40,7 @@ export async function getProducts(): Promise<ProductDB[]> {
     .from("products")
     .select("*")
     .eq("tenant_id", tenantId)
+    .range((page - 1) * limit, page * limit - 1)
     .order("name", { ascending: true })
 
   if (error) {
@@ -164,8 +165,22 @@ export async function deleteProduct(id: string): Promise<{ error: string | null 
 }
 
 /* ── Import / Export ── */
-export async function exportProducts(): Promise<ProductDB[]> {
-  return getProducts()
+export async function exportProducts(limit: number = 1000): Promise<ProductDB[]> {
+  const supabase = await createClient()
+  const tenantId = await getTenantId()
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("tenant_id", tenantId)
+    .limit(limit)
+    .order("name", { ascending: true })
+
+  if (error) {
+    console.error("exportProducts error:", error.message)
+    return []
+  }
+  return data ?? []
 }
 
 export async function importProducts(

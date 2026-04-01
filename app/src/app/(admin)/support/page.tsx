@@ -94,10 +94,12 @@ export default async function SupportInboxPage() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right pr-6">
-                                            <Button variant="ghost" size="sm" className="h-8 gap-2 font-bold group-hover:bg-primary group-hover:text-white transition-all">
-                                                Respond
-                                                <ChevronRight className="h-3.5 w-3.5" />
-                                            </Button>
+                                            <Link href={`/support/${ticket.id}`}>
+                                                <Button variant="ghost" size="sm" className="h-8 gap-2 font-bold group-hover:bg-primary group-hover:text-white transition-all">
+                                                    Respond
+                                                    <ChevronRight className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </Link>
                                         </TableCell>
                                     </TableRow>
                                 ))

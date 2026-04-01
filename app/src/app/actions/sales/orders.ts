@@ -43,21 +43,37 @@ export interface SalesOrderDB {
 }
 
 /* ── Read All ── */
-export async function getOrders(): Promise<SalesOrderDB[]> {
+export async function getOrders(
+    page: number = 1, 
+    limit: number = 10,
+    filters?: { status?: SalesOrderStatus; search?: string }
+): Promise<{ data: SalesOrderDB[]; total: number }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("sales_orders")
-    .select("*, sales_order_items(*)")
+    .select("*, sales_order_items(*)", { count: "exact" })
     .eq("tenant_id", tenantId)
+
+  if (filters?.status) {
+    query = query.eq("status", filters.status)
+  }
+
+  if (filters?.search) {
+    query = query.or(`order_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`)
+  }
+
+  const { data, count, error } = await query
+    .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false })
 
   if (error) {
     console.error("getOrders error:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 /* ── Read One ── */

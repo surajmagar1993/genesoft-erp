@@ -7,6 +7,8 @@ import { Building2, Calendar, MoreHorizontal, UserCheck, UserX, Clock, ChevronRi
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 
+export const dynamic = "force-dynamic"
+
 export default async function PricingPage() {
     const plans = await getPricingPlans()
 

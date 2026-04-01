@@ -6,7 +6,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Building2, Calendar, MoreHorizontal, UserCheck, UserX, Clock, ChevronRight, CreditCard } from "lucide-react"
 import { format } from "date-fns"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Role, Plan } from "@prisma/client"
+
+export const dynamic = "force-dynamic"
 
 export default async function TenantsPage() {
     const tenants = await getTenants()

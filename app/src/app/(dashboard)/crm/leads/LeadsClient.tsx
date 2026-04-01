@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useTransition, useEffect } from "react"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,23 +28,46 @@ const statusConfig: Record<LeadStatus, { label: string; color: string; icon: Rea
 
 interface Props {
     initialLeads: Lead[]
+    total: number
 }
 
-export default function LeadsClient({ initialLeads }: Props) {
+export default function LeadsClient({ initialLeads, total }: Props) {
     const router = useRouter()
-    const [leads, setLeads] = useState<Lead[]>(initialLeads)
-    const [searchQuery, setSearchQuery] = useState("")
-    const [filterStatus, setFilterStatus] = useState<string>("all")
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const [isPending, startTransition] = useTransition()
+    
+    // Sync state with URL params
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "")
+    const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("status") || "all")
     const [pendingId, setPendingId] = useState<string | null>(null)
-    const [, startTransition] = useTransition()
 
-    const filtered = leads.filter((l) => {
-        const matchesSearch =
-            l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            l.contact_name.toLowerCase().includes(searchQuery.toLowerCase())
-        const matchesStatus = filterStatus === "all" || l.status === filterStatus
-        return matchesSearch && matchesStatus
-    })
+    // Update URL when filters change
+    const updateUrl = (newParams: Record<string, string | number | null>) => {
+        const params = new URLSearchParams(searchParams.toString())
+        Object.entries(newParams).forEach(([key, value]) => {
+            if (value === null || value === "all") {
+                params.delete(key)
+            } else {
+                params.set(key, value.toString())
+            }
+        })
+        // Reset to page 1 if search/status changes, unless specifically setting a page
+        if (!newParams.page && (newParams.search !== undefined || newParams.status !== undefined)) {
+            params.set("page", "1")
+        }
+        router.push(`${pathname}?${params.toString()}`)
+    }
+
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchQuery !== (searchParams.get("search") || "")) {
+                updateUrl({ search: searchQuery })
+            }
+        }, 500)
+        return () => clearTimeout(timer)
+    }, [searchQuery])
 
     const scoreColor = (score: number) =>
         score >= 80 ? "text-emerald-400" : score >= 50 ? "text-amber-400" : "text-red-400"
@@ -53,7 +76,7 @@ export default function LeadsClient({ initialLeads }: Props) {
         setPendingId(id)
         startTransition(async () => {
             const { error } = await deleteLead(id)
-            if (!error) setLeads((prev) => prev.filter((l) => l.id !== id))
+            if (!error) router.refresh() 
             setPendingId(null)
         })
     }
@@ -62,7 +85,7 @@ export default function LeadsClient({ initialLeads }: Props) {
         setPendingId(id)
         startTransition(async () => {
             const { error } = await updateLead(id, { status: "CONVERTED" })
-            if (!error) setLeads((prev) => prev.map((l) => l.id === id ? { ...l, status: "CONVERTED" } : l))
+            if (!error) router.refresh()
             setPendingId(null)
         })
     }
@@ -82,20 +105,26 @@ export default function LeadsClient({ initialLeads }: Props) {
             {/* Status Grid */}
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">
                 {(Object.entries(statusConfig) as [LeadStatus, typeof statusConfig[LeadStatus]][]).map(([key, cfg]) => {
-                    const count = leads.filter((l) => l.status === key).length
                     const Icon = cfg.icon
+                    const isActive = filterStatus === key
                     return (
                         <Card
                             key={key}
-                            className={`cursor-pointer transition-colors hover:bg-accent/50 ${filterStatus === key ? "ring-2 ring-primary" : "border-border/50"}`}
-                            onClick={() => setFilterStatus(filterStatus === key ? "all" : key)}
+                            className={`cursor-pointer transition-colors hover:bg-accent/50 ${isActive ? "ring-2 ring-primary border-primary" : "border-border/50"}`}
+                            onClick={() => {
+                                const newStatus = isActive ? "all" : key
+                                setFilterStatus(newStatus)
+                                updateUrl({ status: newStatus })
+                            }}
                         >
                             <CardContent className="pt-4 pb-3">
                                 <div className="flex items-center gap-2">
                                     <Icon className="h-4 w-4 text-muted-foreground" />
                                     <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{cfg.label}</p>
                                 </div>
-                                <p className="text-2xl font-bold mt-1">{count}</p>
+                                <p className="text-2xl font-bold mt-1">
+                                    {isActive ? total : initialLeads.filter(l => l.status === key).length}
+                                </p>
                             </CardContent>
                         </Card>
                     )
@@ -106,8 +135,17 @@ export default function LeadsClient({ initialLeads }: Props) {
             <Card>
                 <CardContent className="pt-6">
                     <div className="relative max-w-sm">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search leads..." className="pl-8" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                        {isPending ? (
+                            <Loader2 className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground animate-spin" />
+                        ) : (
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        )}
+                        <Input 
+                            placeholder="Search leads..." 
+                            className="pl-8" 
+                            value={searchQuery} 
+                            onChange={(e) => setSearchQuery(e.target.value)} 
+                        />
                     </div>
                 </CardContent>
             </Card>
@@ -117,7 +155,7 @@ export default function LeadsClient({ initialLeads }: Props) {
                 <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-base">All Leads</CardTitle>
-                        <CardDescription>{filtered.length} leads</CardDescription>
+                        <CardDescription>{total} leads found</CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -135,11 +173,11 @@ export default function LeadsClient({ initialLeads }: Props) {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {filtered.length === 0 ? (
+                            {initialLeads.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">No leads found.</TableCell>
                                 </TableRow>
-                            ) : filtered.map((lead) => {
+                            ) : initialLeads.map((lead) => {
                                 const status = statusConfig[lead.status]
                                 const StatusIcon = status.icon
                                 return (

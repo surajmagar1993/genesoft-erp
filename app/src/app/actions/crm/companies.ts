@@ -23,21 +23,23 @@ export interface Company {
   created_at: string
 }
 
-export async function getCompanies(): Promise<Company[]> {
+export async function getCompanies(page: number = 1, limit: number = 10): Promise<{ data: Company[]; total: number }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  const { data, count, error } = await supabase
     .from("companies")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
+    .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false })
 
   if (error) {
     console.error("Error fetching companies:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 export async function getCompanyById(id: string): Promise<Company | null> {

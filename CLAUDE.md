@@ -1,4 +1,4 @@
-# Genesoft ERP & CRM — Root Context
+> **Last Updated:** 2026-04-01 | **Active Block:** Bulk Import / Export (Contacts & Products) Completed ✅
 
 ## 🎯 Project Overview
 Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Prisma, and Supabase.
@@ -10,6 +10,7 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
 - **`TASK_TRACKER.md`**: Active development progress.
 - **`.memory/`**: Architectural decisions and patterns history.
 
+
 ## 🛠 Tech Stack
 - **Next.js 15** (App Router)
 - **TypeScript**
@@ -17,6 +18,8 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
 - **Prisma + PostgreSQL**
 - **Supabase** (Auth & Storage)
 - **tRPC + React Query**
+- **Resend** (Transactional Email)
+- **@react-pdf/renderer** (Invoice PDF)
 
 ## 🚦 Project Navigation
 - `app/`: Main Next.js application directory.

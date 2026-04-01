@@ -23,21 +23,37 @@ export interface Lead {
   estimated_value?: number
 }
 
-export async function getLeads(): Promise<Lead[]> {
+export async function getLeads(
+  page: number = 1, 
+  limit: number = 10,
+  filters?: { status?: LeadStatus; search?: string }
+) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("leads")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
+
+  if (filters?.status) {
+    query = query.eq("status", filters.status)
+  }
+
+  if (filters?.search) {
+    query = query.or(`title.ilike.%${filters.search}%,contact_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`)
+  }
+
+  const { data, count, error } = await query
     .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (error) {
     console.error("Error fetching leads:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 export async function getLeadById(id: string): Promise<Lead | null> {

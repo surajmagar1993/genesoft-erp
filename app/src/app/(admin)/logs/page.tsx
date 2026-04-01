@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Terminal, Database, ShieldAlert, Activity, Clock, Filter, AlertTriangle, AlertCircle, Building2, CheckCircle2 as CheckCircleIcon } from "lucide-react"
 import { formatDistanceToNow, format } from "date-fns"
+import { PruneLogsButton } from "@/components/admin/prune-logs-button"
 
 export default async function SystemLogsPage() {
     const logs = await getRecentSystemLogs()
@@ -29,7 +30,8 @@ export default async function SystemLogsPage() {
                         Real-time platform-wide infrastructure and application health logs.
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                    <PruneLogsButton />
                     <div className="flex h-10 items-center justify-center rounded-lg border border-primary/10 bg-muted/20 px-4 text-xs font-bold uppercase tracking-widest gap-2">
                         <Activity className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
                         Live Feed Active

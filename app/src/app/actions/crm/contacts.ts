@@ -21,7 +21,7 @@ export interface Contact {
   created_at: string
 }
 
-export async function getContacts(): Promise<Contact[]> {
+export async function getContacts(page: number = 1, limit: number = 10): Promise<Contact[]> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
@@ -29,6 +29,7 @@ export async function getContacts(): Promise<Contact[]> {
     .from("contacts")
     .select("*")
     .eq("tenant_id", tenantId)
+    .range((page - 1) * limit, page * limit - 1)
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -101,7 +102,7 @@ export async function deleteContact(id: string): Promise<{ error: string | null 
   return { error: null }
 }
 
-export async function exportContacts(): Promise<Contact[]> {
+export async function exportContacts(limit: number = 1000): Promise<Contact[]> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
@@ -109,6 +110,7 @@ export async function exportContacts(): Promise<Contact[]> {
     .from("contacts")
     .select("*")
     .eq("tenant_id", tenantId)
+    .limit(limit)
     .order("created_at", { ascending: false })
 
   if (error) {

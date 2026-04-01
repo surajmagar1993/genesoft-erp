@@ -107,7 +107,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
 
     const handleDeletePayment = (paymentId: string) => {
         startTransition(async () => {
-            const { error } = await deletePayment(paymentId, invoice.id)
+            const { error } = await deletePayment(paymentId)
             if (error) {
                 alert(`Error deleting payment: ${error}`)
             } else {

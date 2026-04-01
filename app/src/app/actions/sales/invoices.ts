@@ -1,5 +1,6 @@
 "use server"
 
+import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -7,6 +8,7 @@ import { Resend } from "resend"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
 import { COMPANY } from "@/lib/constants/company"
 import { computeInvoiceGstSummary } from "@/lib/gst-engine"
+import { recordTransaction } from "@/app/actions/crm/ledger"
 
 /* ── Types ── */
 export type InvoiceStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED"
@@ -73,21 +75,38 @@ export interface InvoiceDB {
 }
 
 /* ── Read All ── */
-export async function getInvoices(): Promise<InvoiceDB[]> {
+export async function getInvoices(
+    page: number = 1, 
+    limit: number = 10,
+    filters?: { status?: InvoiceStatus; search?: string }
+) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("invoices")
-    .select("*, invoice_line_items(*), tenants(*)")
+    .select("*, invoice_line_items(*)", { count: "exact" })
     .eq("tenant_id", tenantId)
+
+  if (filters?.status) {
+    query = query.eq("status", filters.status)
+  }
+
+  if (filters?.search) {
+    query = query.or(`invoice_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`)
+  }
+
+  const { data, count, error } = await query
     .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (error) {
     console.error("getInvoices error:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+
+  return { data, total: count || 0 }
 }
 
 /* ── Read One ── */
@@ -177,6 +196,7 @@ export interface CreateInvoicePayload {
   supplier_state: string
   place_of_supply: string
   supply_type: "intra" | "inter"
+  contact_id: string
   line_items: Array<{
     product_name: string
     description: string
@@ -232,6 +252,37 @@ export async function createInvoice(
     }
   }
 
+  // ─── LEDGER INTEGRATION ───
+  // If invoice is created as SENT or ACCEPTED, record it in the customer ledger
+  if (payload.status !== "DRAFT" && payload.contact_id) {
+    try {
+        // Compute grand total
+        const items = payload.line_items.map((li) => ({
+            qty: li.qty,
+            unitPrice: li.unit_price,
+            gstRate: li.tax_percent,
+        }))
+        const summary = computeInvoiceGstSummary(
+            items,
+            headerFields.supply_type || "intra",
+            headerFields.discount || 0,
+            headerFields.discount_type || "PERCENT"
+        )
+        
+        await recordTransaction({
+            contactId: payload.contact_id,
+            type: "INVOICE",
+            amount: summary.grandTotal, // Debit
+            referenceId: invoice.id,
+            description: `Invoice ${payload.invoice_number} created`,
+            date: new Date(payload.invoice_date)
+        })
+    } catch (ledgerError) {
+        console.error("Ledger recording failed:", ledgerError)
+        // We don't fail the whole invoice create if ledger fails, but we should log it
+    }
+  }
+
   revalidatePath("/sales/invoices")
   return { id: invoice.id, error: null }
 }
@@ -264,11 +315,12 @@ export async function updateInvoice(
     return { error: headerError.message }
   }
 
-  // Replace all line items: delete old → insert new
+  // Replace all line items: delete old → insert new (Adding tenant_id filter for safety)
   const { error: deleteError } = await supabase
     .from("invoice_line_items")
     .delete()
     .eq("invoice_id", id)
+    .eq("tenant_id", tenantId)
 
   if (deleteError) {
     console.error("updateInvoice delete items error:", deleteError.message)
@@ -308,6 +360,27 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
   if (error) {
     console.error("deleteInvoice error:", error.message)
     return { error: error.message }
+  }
+
+  // ─── LEDGER INTEGRATION ───
+  try {
+    const entry = await prisma.ledgerEntry.findFirst({
+        where: { referenceId: id, tenantId }
+    })
+    
+    if (entry) {
+        await prisma.$transaction(async (tx) => {
+            // Adjust balance: CurrentBalance - EntryAmount
+            await tx.contact.update({
+                where: { id: entry.contactId },
+                data: { balance: { decrement: entry.amount } }
+            })
+            // Delete entry
+            await tx.ledgerEntry.delete({ where: { id: entry.id } })
+        })
+    }
+  } catch (ledgerError) {
+    console.error("Ledger cleanup failed for invoice:", ledgerError)
   }
 
   revalidatePath("/sales/invoices")

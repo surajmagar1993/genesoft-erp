@@ -27,21 +27,37 @@ export interface Deal {
   created_at: string
 }
 
-export async function getDeals(): Promise<Deal[]> {
+export async function getDeals(
+    page: number = 1, 
+    limit: number = 10,
+    filters?: { stage?: DealStage; search?: string }
+): Promise<{ data: Deal[]; total: number }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("deals")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
+
+  if (filters?.stage) {
+    query = query.eq("stage", filters.stage)
+  }
+
+  if (filters?.search) {
+    query = query.or(`title.ilike.%${filters.search}%,company.ilike.%${filters.search}%,contact_name.ilike.%${filters.search}%`)
+  }
+
+  const { data, count, error } = await query
+    .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false })
 
   if (error) {
     console.error("Error fetching deals:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 export async function getDealById(id: string): Promise<Deal | null> {

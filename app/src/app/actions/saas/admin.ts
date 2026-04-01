@@ -67,10 +67,12 @@ export async function getPlatformStats() {
     }
 }
 
-export async function getTenants() {
+export async function getTenants(page: number = 1, limit: number = 10) {
     await ensureSuperAdmin()
 
     return await prisma.tenant.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
         orderBy: { createdAt: "desc" },
         include: {
             users: {
@@ -142,10 +144,12 @@ export async function updatePricingPlan(id: string, data: { amount: number, isAc
     })
 }
 
-export async function getSupportTickets() {
+export async function getSupportTickets(page: number = 1, limit: number = 15) {
     await ensureSuperAdmin()
 
     return await prisma.supportTicket.findMany({
+        skip: (page - 1) * limit,
+        take: limit,
         orderBy: { createdAt: "desc" },
         include: {
             tenant: {
@@ -180,17 +184,18 @@ export async function replyToTicket(ticketId: string, content: string) {
     // Update ticket status to PENDING (waiting for user response)
     await prisma.supportTicket.update({
         where: { id: ticketId },
-        data: { status: "PENDING" }
+        data: { status: "IN_PROGRESS" }
     })
 
     return message
 }
 
-export async function getRecentSystemLogs() {
+export async function getRecentSystemLogs(page: number = 1, limit: number = 20) {
     await ensureSuperAdmin()
 
     return await prisma.systemLog.findMany({
-        take: 10,
+        skip: (page - 1) * limit,
+        take: limit,
         orderBy: { timestamp: "desc" },
         include: {
             tenant: {
@@ -198,4 +203,56 @@ export async function getRecentSystemLogs() {
             }
         }
     })
+}
+
+/**
+ * Fetch database health stats and system metrics.
+ */
+export async function getDatabaseHealth() {
+    await ensureSuperAdmin()
+
+    const start = Date.now()
+    try {
+        // 1. Check Connectivity & Latency
+        await prisma.$queryRaw`SELECT 1`
+        const latency = Date.now() - start
+
+        // 2. Get Database Size (Postgres specific)
+        const dbSizeResult: any[] = await prisma.$queryRaw`SELECT pg_size_pretty(pg_database_size(current_database())) as size`
+        const dbSize = dbSizeResult[0]?.size || "Unknown"
+
+        // 3. Row Counts for Growth Metrics
+        const [tenantCount, userCount, logCount] = await Promise.all([
+            prisma.tenant.count(),
+            prisma.user.count(),
+            prisma.systemLog.count()
+        ])
+
+        return {
+            status: "HEALTHY",
+            latency: `${latency}ms`,
+            databaseSize: dbSize,
+            metrics: {
+                tenants: tenantCount,
+                users: userCount,
+                logs: logCount
+            },
+            timestamp: new Date().toISOString()
+        }
+    } catch (err) {
+        console.error("Health check failed:", err)
+        return {
+            status: "UNHEALTHY",
+            error: err instanceof Error ? err.message : "Database connection failed",
+            timestamp: new Date().toISOString()
+        }
+    }
+}
+
+/**
+ * Truncate all system logs (Maintenance).
+ */
+export async function clearSystemLogs() {
+    await ensureSuperAdmin()
+    return await prisma.systemLog.deleteMany({})
 }

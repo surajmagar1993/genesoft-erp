@@ -1,8 +1,10 @@
 "use server"
 
+import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { recordTransaction } from "@/app/actions/crm/ledger"
 
 export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "CREDIT_CARD" | "DEBIT_CARD" | "UPI" | "CHEQUE" | "STRIPE" | "PAYPAL" | "OTHER"
 
@@ -98,7 +100,26 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<{ id
     return { id: null, error: paymentError?.message ?? "Failed to create payment" }
   }
 
-  // 2. Recalculate Status
+  // 2. Ledger Integration
+  if (payment.id) {
+    const isInbound = (payload.type === "INBOUND" || (!payload.type && !!payload.invoice_id))
+    if (isInbound && payload.contact_id) {
+        try {
+            await recordTransaction({
+                contactId: payload.contact_id,
+                type: "PAYMENT",
+                amount: -Math.abs(payload.amount), // Credit (-)
+                referenceId: payment.id,
+                description: `Payment received via ${payload.payment_method}`,
+                date: new Date(payload.payment_date)
+            })
+        } catch (ledgerError) {
+            console.error("Ledger recording failed during payment:", ledgerError)
+        }
+    }
+  }
+
+  // 3. Recalculate Status
   if (payload.invoice_id) {
     await syncInvoiceStatus(payload.invoice_id)
     revalidatePath("/sales/invoices")
@@ -148,6 +169,28 @@ export async function deletePayment(id: string): Promise<{ error: string | null 
     await syncBillStatus(p.bill_id)
     revalidatePath("/finance/bills")
     revalidatePath(`/finance/bills/${p.bill_id}`)
+  }
+
+  // ─── LEDGER INTEGRATION ───
+  try {
+    const entry = await prisma.ledgerEntry.findFirst({
+        where: { referenceId: id, tenantId }
+    })
+    
+    if (entry) {
+        await prisma.$transaction(async (tx) => {
+            // Adjust balance: CurrentBalance - EntryAmount
+            // Since Payment amount was negative, decrementing it will increase the balance back.
+            await tx.contact.update({
+                where: { id: entry.contactId },
+                data: { balance: { decrement: entry.amount } }
+            })
+            // Delete entry
+            await tx.ledgerEntry.delete({ where: { id: entry.id } })
+        })
+    }
+  } catch (ledgerError) {
+    console.error("Ledger cleanup failed for payment:", ledgerError)
   }
 
   revalidatePath("/finance/payments")

@@ -1,7 +1,15 @@
 import { PrismaClient } from "@prisma/client"
+import { PrismaPg } from "@prisma/adapter-pg"
+import { Pool } from "pg"
 
 const prismaClientSingleton = () => {
-  return new PrismaClient()
+  // Use a fallback for build time static analysis if DATABASE_URL is missing
+  const connectionString = process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/postgres"
+  
+  const pool = new Pool({ connectionString })
+  const adapter = new PrismaPg(pool)
+  
+  return new PrismaClient({ adapter })
 }
 
 declare global {

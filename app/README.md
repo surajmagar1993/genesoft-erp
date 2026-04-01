@@ -8,6 +8,7 @@ Genesoft is a modern, enterprise-grade ERP and CRM platform built with Next.js, 
 - **Leads & Deals**: Track sales pipeline from prospect to conversion.
 - **Contacts & Companies**: Centralized repository for all business partners.
 - **Tasks**: Activity management and follow-ups.
+- **Customer Ledger**: Real-time account history with debit/credit tracking and automatic balance sync.
 
 ### 💰 Finance & Accounting
 - **Accounts Payable**: Manage vendor bills, payments, and aging.

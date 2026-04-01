@@ -2,7 +2,8 @@
 // Multi-tenant SaaS with Row-Level Security
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -37,6 +38,10 @@ model Tenant {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
+  // Stripe Billing IDs
+  stripeCustomerId      String? @unique @map("stripe_customer_id")
+  stripeSubscriptionId  String? @unique @map("stripe_subscription_id")
+
   // Relations
   users       User[]
   contacts    Contact[]
@@ -55,6 +60,7 @@ model Tenant {
   // Platform Support
   supportTickets     SupportTicket[]
   systemLogs         SystemLog[]
+  ledgerEntries      LedgerEntry[]
 
   @@map("tenants")
 }
@@ -163,6 +169,7 @@ model Contact {
   payments           Payment[]
   bills              Bill[]
   communicationLogs  CommunicationLog[]
+  ledgerEntries      LedgerEntry[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -414,7 +421,7 @@ model InvoiceItem {
   invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id])
 
-  @@map("invoice_items")
+  @@map("invoice_line_items")
 }
 
 // ============================================
@@ -850,6 +857,15 @@ model SystemLog {
   @@map("system_logs")
 }
 
+model ProcessedStripeEvent {
+  id          String   @id @default(cuid())
+  eventId     String   @unique @map("event_id")
+  processedAt DateTime @default(now()) @map("processed_at")
+
+  @@index([eventId])
+  @@map("processed_stripe_events")
+}
+
 enum LogLevel {
   INFO
   WARN
@@ -914,4 +930,38 @@ model Notification {
 
   @@index([userId, tenantId])
   @@map("notifications")
+}
+
+// ============================================
+// FINANCIAL LEDGER
+// ============================================
+
+model LedgerEntry {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  contactId   String   @map("contact_id") @db.Uuid
+  
+  type        LedgerEntryType
+  amount      Decimal  @db.Decimal(15, 2)
+  balance     Decimal  @db.Decimal(15, 2)
+  
+  referenceId String?  @map("reference_id")
+  description String?
+  date        DateTime @default(now())
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  contact     Contact  @relation(fields: [contactId], references: [id])
+
+  @@index([tenantId, contactId])
+  @@map("ledger_entries")
+}
+
+enum LedgerEntryType {
+  INVOICE
+  PAYMENT
+  CREDIT_NOTE
+  REFUND
+  OPENING_BALANCE
 }

@@ -1,4 +1,54 @@
-# 📋 ERP & CRM Module Checklist — With Recommended Priorities
+# 📋 ERP & CRM Module Checklist (MVP Status)
+
+### 🔴 P1: Core Business Operations (Goal: MVP Live)
+
+#### 🤝 CRM (High Priority)
+- [x] **Contacts**: Individual & Company contacts with search ✅
+- [x] **Companies**: Organization-level record management ✅
+- [x] **Leads**: (Standardized: Pagination & Filtering) ✅
+- [x] **Deals**: (Standardized: Pagination & Filtering) ✅
+- [x] **Tasks & Activities**: TODOs for team (Prisma Model + CRUD + UI) ✅
+- [/] **Notes & Communication Log**: UI implemented in Lead Detail, still needs dedicated DB model ⚠️
+
+#### 🏪 Retail / B2C
+- [x] **Customer Types**: Individual vs Company split ✅
+- [x] **Quick Contact Creation**: Optimized for retail checkout ✅
+- [x] **Customer Groups**: Categorization (VIP, Wholesale, etc) ✅
+- [x] **Customer Credit Limit**: Basic enforcement support ✅
+- [x] **Customer Ledger**: Balance history and adjustment logs ✅
+
+#### 🛒 Sales & Invoicing
+- [x] **Products Catalog**: DB exists, UI exists, CRUD Actions live ✅
+- [/] **Services Catalog**: Supported via ProductType ⚠️
+- [x] **Quotations**: Full CRUD live, (Standardized: Pagination & Filtering) ✅
+- [x] **Sales Orders**: Full CRUD live, (Standardized: Pagination & Filtering) ✅
+- [x] **Invoicing**: FULL Indian Tax Invoice support (Standardized: Pagination & Filtering / Prisma mapping fix) ✅
+- [x] **Payment Tracking**: Record partial/full payments (UI + Actions) ✅
+
+#### ⚖️ Tax & Compliance (Indian Focus)
+- [x] **GST Split**: Automatic CGST, SGST, IGST logic ✅
+- [x] **HSN/SAC**: Support for Item-level HSN codes & summary tables ✅
+- [x] **GSTIN Validator**: Format check implemented ✅
+- [x] **Tax Engine**: Centralized GST computation with multi-slab support ✅
+- [/] **MSME / Udyam**: DB field exists, missing in PDF header ⚠️
+
+#### 🏦 Finance (Basic)
+- [x] **Chart of Accounts**: Hierarchical ledger categorization ✅
+- [x] **Accounts Receivable (AR)**: Track customer aging and outstanding debt ✅
+- [ ] **Accounts Payable (AP)**: Track bills to pay ❌
+- [/] **Multi-Currency**: Base field exists, no exchange logic ⚠️
+- [ ] **Financial Reports**: P&L, Balance Sheet (Not started) ❌
+
+#### ⚙️ Admin & SaaS
+- [x] **Multi-Tenant**: Supabase Auth + Prisma multi-tenancy ✅
+- [x] **RBAC**: Admin/Staff/Viewer roles in auth layer ✅
+- [x] **Company Settings**: Logo, Address, Bank details, Tax Groups live in `/settings` ✅
+- [x] **Notification System**: In-app unread tracking, cross-module triggers, Dashbard UI ✅
+- [x] **Import/Export**: Bulk CSV import for contacts/products ✅
+- [x] **Super Admin Console**: Centralized platform management (Live) ✅
+- [/] **Live Support**: Real-time chat system (Infrastructure Live) ⚠️
+
+---
 
 ## 🎯 Priority Strategy (My Recommendation)
 
@@ -18,8 +68,8 @@
 - [x] **Company/Organization Management** 🔴 — Company profiles, linked contacts
 - [x] **Lead Management** 🔴 — Capture, score, assign, convert leads
 - [x] **Deals / Opportunities** 🔴 — Sales pipeline, stages, win/loss tracking
-- [x] **Tasks & Activities** 🔴 — Follow-ups, calls, meetings, reminders
-- [x] **Notes & Communication Log** 🔴 — Track all interactions per contact
+- [x] **Tasks & Activities** 🔴 — Follow-ups, calls, meetings, reminders ✅
+- [ ] **Notes & Communication Log** 🔴 — Track all interactions per contact
 - [x] **Email Integration** 🟡 — Send/receive emails within CRM, templates
 - [x] **Web Forms / Lead Capture** 🟡 — Embeddable forms for website
 
@@ -31,7 +81,7 @@
 - [x] **Quick Contact Creation** 🔴 — Minimal fields for walk-in / retail customers
 - [x] **Customer Groups / Segments** 🔴 — Wholesale, Retail, VIP, Employee (different pricing)
 - [x] **Customer Credit Limit** 🔴 — Set spending limits per customer
-- [x] **Customer Ledger / Statement** 🔴 — Individual account history & balance
+- [x] **Customer Ledger / Statement** 🔴 — Individual account history & balance ✅
 - [x] **Customer Portal** 🟡 — Self-service (view invoices, track orders, raise tickets)
 - [x] **Walk-in / POS Sales** 🟡 — Quick sale without full quote-order flow
 - [x] **Customer Loyalty / Points** 🟢 — Reward repeat customers, redemption
@@ -45,7 +95,7 @@
 - [x] **Quotations / Estimates** 🔴 — Create, send, track quotes
 - [x] **Sales Orders** 🔴 — Convert quotes to orders
 - [x] **Invoicing** 🔴 — Create invoices, recurring invoices, payment links
-- [x] **Payment Tracking** 🔴 — Track received payments, partial payments, dues
+- [x] **Payment Tracking** 🔴 — Track received payments, partial payments, dues ✅
 - [x] **Credit Notes / Refunds** 🟡 — Issue credits and refunds
 - [x] **Price Lists** 🟡 — Multiple price lists per customer group / region
 - [x] **Discount & Coupon Management** 🟢 — Percentage, fixed, or tiered discounts
@@ -75,12 +125,12 @@
 
 ## 📊 Finance & Accounting
 
-- [x] **Chart of Accounts** 🔴 — Configurable account structure
-- [x] **Accounts Receivable (AR)** 🔴 — Track customer payments
-- [x] **Accounts Payable (AP)** 🔴 — Track vendor payments
-- [x] **Multi-Currency Support** 🔴 — Exchange rates, conversions
-- [x] **Financial Reports** 🔴 — P&L, Balance Sheet, Cash Flow
-- [x] **General Ledger** 🟡 — Journal entries, double-entry bookkeeping
+- [x] **Chart of Accounts** 🔴 — Hierarchical account structure ✅
+- [x] **Accounts Receivable (AR)** 🔴 — Track customer aging and outstanding payments ✅
+- [ ] **Accounts Payable (AP)** 🔴 — Track vendor payments
+- [ ] **Multi-Currency Support** 🔴 — Exchange rates, conversions
+- [x] **Financial Reports** 🔴 — P&L, AR/AP aging, cash flow ✅
+- [x] **General Ledger** 🟡 — Journal entries, double-entry bookkeeping ✅
 - [x] **Bank Reconciliation** 🟡 — Match bank statements
 - [x] **Expense Management** 🟡 — Employee expense claims, receipts
 - [x] **Budgeting** 🟢 — Set and track budgets per department/project
@@ -211,8 +261,8 @@
 - [x] **Multi-Tenant Management** 🔴 — Tenant registration, plans, limits
 - [x] **User Roles & Permissions** 🔴 — RBAC (Role-Based Access Control)
 - [x] **Company Settings** 🔴 — Logo, address, fiscal year, defaults
-- [x] **Notification System** 🔴 — In-app, email, push notifications
-- [x] **Import / Export Data** 🔴 — CSV/Excel bulk import/export
+- [x] **Notification System** 🔴 — In-app, email, push notifications ✅
+- [x] **Import / Export Data** 🔴 — CSV/Excel bulk import/export ✅
 - [x] **Audit Logs** 🟡 — Track who did what and when
 - [x] **Email Templates** 🟡 — Customizable notification templates
 - [x] **Workflow Automation** 🟢 — If-then rules (e.g., auto-assign leads)
@@ -222,14 +272,13 @@
 
 ---
 
-## 💳 Subscription & Billing (SaaS Platform)
+## 💳 SaaS Subscription & Billing (SaaS Platform) ✅
 
-- [x] **Subscription Plans** 🔴 — Free, Basic, Pro, Enterprise tiers
-- [x] **Razorpay Integration** 🔴 — Payment processing
-- [x] **Trial Management** 🔴 — Free trial with auto-conversion
-- [x] **Plan Upgrade/Downgrade** 🟡 — Self-service plan changes
-- [x] **Invoice Generation** 🟡 — Auto-invoice tenants monthly
-- [x] **Usage-Based Billing** 🟢 — Charge per user/storage/feature
+- [x] **Subscription Plans**: Free, Basic, Pro, Enterprise tiers ✅
+- [x] **Razorpay Integration**: Payment processing ✅
+- [x] **Trial Management**: 15-day PRO trial infrastructure (Live) ✅
+- [x] **Super Admin Dashboard**: Platform metrics & tenant control (Live) ✅
+- [/] **Live Support Chat**: Real-time tenant support (Infrastructure Live) ⚠️
 
 ---
 

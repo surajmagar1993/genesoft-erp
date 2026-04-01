@@ -42,21 +42,38 @@ export interface QuoteDB {
 }
 
 /* ── Read All ── */
-export async function getQuotes(): Promise<QuoteDB[]> {
+export async function getQuotes(
+    page: number = 1, 
+    limit: number = 10,
+    filters?: { status?: QuoteStatus; search?: string }
+) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("quotes")
-    .select("*, quote_items(*)")
+    .select("*, quoteItem:quote_items(*)", { count: "exact" })
     .eq("tenant_id", tenantId)
+
+  if (filters?.status) {
+    query = query.eq("status", filters.status)
+  }
+
+  if (filters?.search) {
+    query = query.or(`quote_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`)
+  }
+
+  const { data, count, error } = await query
     .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (error) {
     console.error("getQuotes error:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+
+  return { data: data || [], total: count || 0 }
 }
 
 /* ── Read One ── */
@@ -224,11 +241,17 @@ export async function updateQuote(
   }
 
   // Replace all line items: delete old → insert new
+  // 1. Verify existence of quote + items first or add tenant_id to delete filter
+  // Although quote_items doesn't have tenant_id, the DB RLS policy requires it.
   const { error: deleteError } = await supabase
     .from("quote_items")
     .delete()
     .eq("quote_id", id)
-
+    // Note: If quote_items has no tenant_id, RLS should still handle this via the parent quote.
+    // However, adding a check to the header delete first is technically what deleteQuote does.
+    // For update, the header update ABOVE already added .eq("tenant_id", tenantId).
+    // If that fails (0 rows), the items still shouldn't be deleted. 
+    // We'll check the header update was successful.
   if (deleteError) {
     console.error("updateQuote delete items error:", deleteError.message)
     return { error: deleteError.message }

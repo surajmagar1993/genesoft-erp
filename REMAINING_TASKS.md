@@ -1,54 +1,59 @@
 # 🚀 Remaining Tasks Tracker
-*(Auto-updated to show only pending modules across phases)*
+*(Auto-updated — pending modules only)*
+
+> **Last Updated:** 2026-04-01 | **Current Focus:** P1 Performance Standardization (CRM/Sales)
 
 ## 🔴 P1 — MVP Launch (Pending)
 
-**CRM**
-- [ ] Tasks & Activities
-- [ ] Notes & Communication Log
+- [x] Leads (Standardized: Pagination & Filtering) ✅ Done
+- [x] Tasks & Activities ✅ Done
+- [x] Notes & Communication Log ✅ Done
 
 **Retail & Customers**
-- [ ] Customer Ledger / Statement
+- [x] Customer Ledger / Statement ✅ Done
 
 **Sales & Commerce**
-- [ ] Sales Orders
-- [ ] Payment Tracking
+- [x] Sales Orders ✅ Done
+- [x] Payment Tracking ✅ Done
 
 **Finance & Accounting (Core)**
-- [ ] Chart of Accounts
-- [ ] Accounts Receivable (AR)
-- [ ] Accounts Payable (AP)
+- [x] Chart of Accounts ✅ Done
+- [x] Accounts Receivable (AR) — Dashboard, aging, top debtors ✅ Done
+- [x] Accounts Payable (AP) — Bills CRUD, vendor payments, AP dashboard, bill edit ✅ Done
+- [x] Financial Reports (Basic) — P&L, Revenue Trend, Cash Flow, Working Capital ✅ Done
 - [ ] Multi-Currency Support (Started in UI)
-- [ ] Financial Reports (Basic)
 
 **Tax & Compliance (India)**
-- [ ] GST (CGST + SGST + IGST) Logic & Engine
-- [ ] GSTIN Validation
-- [ ] Place of Supply Rules
-- [ ] MSME / Udyam Display
+- ~~GST Engine (CGST/SGST/IGST)~~ ✅ Done
+- ~~GSTIN Validation~~ ✅ Done
+- ~~Place of Supply Rules~~ ✅ Done
+- ~~HSN/SAC Codes~~ ✅ Done
+- ~~MSME / Udyam Display on Invoice~~ ✅ Done
 
-**Invoice Design & Features**
-- [ ] Tax Invoice PDF Template
-- [ ] Company Header
-- [ ] Bill To / Ship To Formatting
-- [ ] HSN/SAC Column
-- [ ] Split Tax Columns
-- [ ] HSN/SAC Summary Table
-- [ ] Total In Words
-- [ ] Payment Bank Details
-- [ ] Invoice Numbering Sequence
-- [ ] PDF Generation
-- [ ] Email Invoice
+**🔥 Invoice Design & PDF — NEXT ACTIVE BLOCK**
+- ~~Tax Invoice PDF Template~~ ✅ Done
+- ~~Company Header~~ ✅ Done
+- ~~Bill To / Ship To Formatting~~ ✅ Done
+- ~~HSN/SAC Column~~ ✅ Done
+- ~~Split Tax Columns~~ ✅ Done
+- ~~HSN/SAC Summary Table~~ ✅ Done
+- ~~Total In Words~~ ✅ Done
+- ~~Payment / Bank Details section~~ ✅ Done
+- ~~Invoice Numbering Sequence~~ ✅ Done
+- ~~PDF Generation & Supabase Storage upload~~ ✅ Done
+- ~~Email Invoice~~ ✅ Done
 
-**Administration & Settings**
-- [ ] Company Settings (UI)
-- [ ] Notification System (Base UI - requires backend)
-- [ ] Import / Export Data
+- [x] Notification System (In-app, unread tracking, module triggers) ✅ Done
+- [x] Import / Export Data (Contacts & Products) ✅ Done
 
-**Subscription & Billing**
-- [ ] Subscription Plans Definition
-- [ ] Razorpay Integration
-- [ ] Trial Management
+**Subscription & Billing (SaaS Platform)**
+- [x] Subscription Plans Definition (IN, US, AE, SA, UK, AU) ✅ Done
+- [x] Razorpay Flow ✅ Done
+- [ ] Stripe Integration
+- [x] 15-Day PRO Trial Management ✅ Done
+- [x] Super Admin Console ✅ Done
+- [/] Live Support Chat System (In Progress - Infrastructure Live)
+- [x] System Health & Audit Logging ✅ Done
 
 ---
 

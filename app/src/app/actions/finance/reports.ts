@@ -73,25 +73,37 @@ export async function getPnlReport(
     0
   )
 
-  // Expenses: from bills (OPEN, PARTIALLY_PAID, PAID) in period
-  const { data: bills } = await supabase
+  // 2. Fetch all bills in period WITH items and products
+  const { data: billsWithItems } = await supabase
     .from("bills")
-    .select("subtotal, total, status")
+    .select(`
+      id,
+      bill_items (
+        line_total,
+        product_id,
+        products (type)
+      )
+    `)
     .eq("tenant_id", tenantId)
     .in("status", ["OPEN", "PARTIALLY_PAID", "PAID"])
     .gte("bill_date", startDate)
     .lte("bill_date", endDate)
 
-  const totalBillExpenses = (bills ?? []).reduce(
-    (sum, b) => sum + Number(b.subtotal ?? b.total ?? 0),
-    0
-  )
+  let cogs = 0
+  let operating = 0
 
-  // For MVP: COGS = 60% of vendor bills, Operating = 40%
-  // In a full double-entry system, this would be split by account type
-  const cogs = totalBillExpenses * 0.6
-  const operating = totalBillExpenses * 0.4
+  for (const bill of billsWithItems ?? []) {
+    for (const item of bill.bill_items as any[]) {
+      const amount = Number(item.line_total || 0)
+      if (item.products?.type === "PRODUCT") {
+        cogs += amount
+      } else {
+        operating += amount // Services or miscellaneous are operating expenses
+      }
+    }
+  }
 
+  const totalBillExpenses = cogs + operating
   const grossProfit = salesRevenue - cogs
   const netProfit = grossProfit - operating
   const profitMargin = salesRevenue > 0 ? (netProfit / salesRevenue) * 100 : 0

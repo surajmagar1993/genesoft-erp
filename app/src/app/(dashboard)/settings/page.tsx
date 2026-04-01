@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Globe, ShieldCheck, Mail, MapPin } from "lucide-react"
+import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard } from "lucide-react"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
 import TaxConfigClient from "./tax-config-client"
+import BillingTab from "./billing-tab"
 
 export default async function SettingsPage() {
     const settings = await getTenantSettings()
@@ -26,6 +27,9 @@ export default async function SettingsPage() {
                     </TabsTrigger>
                     <TabsTrigger value="account" className="flex items-center gap-2">
                         <Globe className="h-4 w-4" /> Regional
+                    </TabsTrigger>
+                    <TabsTrigger value="billing" className="flex items-center gap-2">
+                        <CreditCard className="h-4 w-4" /> Billing
                     </TabsTrigger>
                 </TabsList>
 
@@ -141,6 +145,11 @@ export default async function SettingsPage() {
                             </div>
                         </CardContent>
                     </Card>
+                </TabsContent>
+
+                {/* Billing Settings */}
+                <TabsContent value="billing">
+                    <BillingTab settings={settings as any} />
                 </TabsContent>
             </Tabs>
         </div>

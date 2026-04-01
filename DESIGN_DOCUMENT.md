@@ -2,8 +2,7 @@
 
 **Project:** Multi-Platform SaaS ERP & CRM
 **Company:** Genesoft Infotech Private Limited
-**Date:** 2026-03-06
-**Status:** Approved (Brainstorming Complete)
+**Date:** 2026-04-01 | **Status:** In Development (P1 MVP — CRM/Sales Standardization Complete)
 
 ---
 
@@ -180,6 +179,8 @@ User Login (email/password, Google, magic link)
 | **Layer 2** | API calls (return 401) | tRPC Context |
 | **Layer 3** | Data (tenant isolation) | Supabase RLS |
 
+**Last Updated:** 2026-03-31 | **Active Block:** SaaS Platform Layer & Super Admin
+
 ### 4.4 Invoice PDF Generation Flow
 
 ```
@@ -197,6 +198,13 @@ User clicks "Generate Invoice"
          │
     Return download URL + optional email via Resend
 ```
+
+### 4.5 Pagination & Performance Standards
+To ensure the platform handles growing datasets, all core listing pages follow a standardized pattern:
+- **Server-Side Pagination**: Uses `limit` and `offset` logic, controlled by URL `page` parameters.
+- **Server-Side Filtering**: Search and status filters are applied at the database level (Prisma/Supabase) to minimize payload sizes.
+- **Debounced Interaction**: Client-side search inputs use a 500ms debounce before triggering a server-side re-fetch.
+- **Architectural Split**: Data fetching is isolated in Server Components, while UI state is managed in Client Components (`*Client.tsx`).
 
 ---
 
@@ -223,7 +231,19 @@ users
 ├── role (admin/manager/user/viewer)
 ├── first_name, last_name, email
 ├── avatar_url
-└── is_active
+├── is_active
+└── created_at
+
+notifications
+├── id (UUID, PK)
+├── tenant_id (FK → tenants)
+├── user_id (FK → users)
+├── type (INFO, SUCCESS, WARNING, ERROR, LEAD, DEAL, INVOICE, BILL, PAYMENT, TASK)
+├── title
+├── message
+├── link (optional URL)
+├── is_read (Default: false)
+└── created_at
 ```
 
 ### 5.2 CRM & Customers
@@ -275,7 +295,29 @@ deals
 ├── title, value, currency
 ├── stage (prospecting/proposal/negotiation/won/lost)
 ├── expected_close_date
-└── assigned_to
+├── assigned_to
+└── expected_close_date
+
+tasks
+├── id, tenant_id
+├── title, description
+├── status (todo/in_progress/completed/cancelled)
+├── priority (low/medium/high)
+├── due_date
+├── contact_id, lead_id, deal_id (optional FKs)
+├── assigned_to
+├── created_at
+└── updated_at
+
+ledger_entries
+├── id, tenant_id
+├── contact_id (FK → contacts)
+├── type (INVOICE, PAYMENT, CREDIT_NOTE, REFUND)
+├── amount (Decimal) # Positive = Debit, Negative = Credit
+├── balance (Decimal) # Running balance for the contact
+├── reference_id (String, optional) # ID of Invoice or Payment
+├── description (String, optional)
+└── date (DateTime)
 ```
 
 ### 5.3 Products & Invoicing
@@ -343,6 +385,43 @@ place_of_supply_rules
 └── country_code
 ```
 
+### 5.5 SaaS Platform & Support
+
+```
+pricing_plans
+├── id (CUID, PK)
+├── region_code (IN, US, AE, SA, UK, AU)
+├── tier (FREE, BASIC, PRO, ENTERPRISE)
+├── amount (Decimal)
+├── currency (INR, USD, AED, SAR)
+├── gateway (RAZORPAY, STRIPE)
+└── is_active
+
+system_logs
+├── id (CUID, PK)
+├── tenant_id (FK → tenants, optional)
+├── level (INFO, WARN, ERROR, FATAL)
+├── message
+├── path
+├── stack (Error trace)
+└── timestamp
+
+support_tickets
+├── id (CUID, PK)
+├── tenant_id (FK → tenants)
+├── subject
+├── status (OPEN, IN_PROGRESS, RESOLVED, CLOSED)
+└── priority
+
+support_messages
+├── id (CUID, PK)
+├── ticket_id (FK → support_tickets)
+├── sender_id (user_id or admin_id)
+├── content
+├── is_from_admin
+└── created_at
+```
+
 ---
 
 ## 6. Module Roadmap
@@ -353,15 +432,15 @@ place_of_supply_rules
 
 | Category | Key Modules |
 |---|---|
-| **CRM** | Contacts, Companies, Leads, Deals, Tasks, Notes |
-| **Retail/B2C** | Customer Types, Groups, Credit Limits, Ledger |
+| **CRM** | Contacts, Companies, Leads, Deals, Tasks (Completed), Notes |
+| **Retail/B2C** | Customer Types, Groups, Credit Limits, Ledger (Completed) |
 | **Sales** | Products, Services, Quotes, Orders, Invoices, Payments |
-| **Finance** | Chart of Accounts, AR, AP, Multi-Currency, Reports |
+| **Finance** | Chart of Accounts (Complete), AR (Complete), AP (Next), Multi-Currency, Reports |
 | **Tax (India)** | GST, HSN/SAC, GSTIN, Place of Supply, MSME |
 | **Tax (General)** | Tax Engine, Tax Groups, Auto-Detection |
 | **Invoice** | Tax Invoice, PDF, Email, Numbering, Bank Details, HSN Summary |
 | **Reports** | Dashboard, Sales Reports, Financial Reports, Export |
-| **Admin** | Multi-Tenant, RBAC, Company Settings, Notifications, Import/Export |
+| **Admin** | Multi-Tenant, RBAC, Company Settings, Notifications (Completed), Import/Export |
 | **SaaS Billing** | Subscription Plans, Razorpay, Trial Management |
 
 ### 🟡 P2 — Growth (Month 4-6) — ~42 modules
@@ -426,6 +505,9 @@ place_of_supply_rules
 | 10 | **India-first tax** | All countries simultaneously | Home market. Fastest revenue. Expand to UAE/KSA in P2 |
 | 11 | **Free hosting stack** | Paid from day one | $0 until paying customers. Scale costs with revenue |
 | 12 | **B2B + B2C customer types** | B2B only | General-purpose ERP must serve retail + enterprise |
+| 13 | **Unified Super Admin Route** | Separate App | Fastest MVP for 50–500 tenants; easy to migrate later. |
+| 14 | **Metadata-Only Admin View** | Full Data Access | Prioritizes tenant privacy and data security. |
+| 15 | **Database-Backed Pricing** | Hardcoded Constants | Allows instant price changes via dashboard for 6+ regions. |
 
 ---
 
@@ -515,4 +597,4 @@ genesoft-erp/
 
 ---
 
-*Document Version: 1.0 | Last Updated: 2026-03-06*
+*Document Version: 1.5 | Last Updated: 2026-04-01*

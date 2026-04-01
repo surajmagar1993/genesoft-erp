@@ -27,21 +27,23 @@ export interface Account {
 }
 
 /* ── Read All ── */
-export async function getAccounts(): Promise<Account[]> {
+export async function getAccounts(page: number = 1, limit: number = 100): Promise<{ data: Account[]; total: number }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  const { data, count, error } = await supabase
     .from("accounts")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
+    .range(offset, offset + limit - 1)
     .order("code", { ascending: true })
 
   if (error) {
     console.error("Error fetching accounts:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 /* ── Get By ID ── */
@@ -103,12 +105,13 @@ export async function deleteAccount(id: string): Promise<{ error: string | null 
   // Check if system account
   const { data: account } = await supabase
     .from("accounts")
-    .select("is_system, is_group")
+    .select("is_system, is_group, balance")
     .eq("id", id)
     .eq("tenant_id", tenantId)
     .single()
 
   if (account?.is_system) return { error: "Cannot delete system accounts" }
+  if (Number(account?.balance || 0) !== 0) return { error: "Cannot delete account with a non-zero balance" }
 
   // Check if has children
   const { data: children } = await supabase

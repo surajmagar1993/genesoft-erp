@@ -66,6 +66,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { useTheme } from "next-themes"
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
+import Script from "next/script"
 
 const navigation = [
     {
@@ -280,6 +281,7 @@ export default function DashboardLayout({
 }) {
     return (
         <SidebarProvider>
+            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
             <AppSidebar />
             <SidebarInset>
                 <TopBar />

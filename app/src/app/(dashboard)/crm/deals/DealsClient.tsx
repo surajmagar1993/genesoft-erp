@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useTransition, useEffect } from "react"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -18,6 +18,7 @@ import {
     ArrowRight, Calendar, LayoutGrid, List, Loader2,
 } from "lucide-react"
 import { deleteDeal, updateDeal, type Deal, type DealStage } from "@/app/actions/crm/deals"
+import { toast } from "sonner"
 
 const stages: { key: DealStage; label: string; color: string; dotColor: string }[] = [
     { key: "PROSPECTING", label: "Prospecting", color: "from-slate-500 to-slate-600", dotColor: "bg-slate-500" },
@@ -36,49 +37,79 @@ const formatCurrency = (v: number) => `₹${v.toLocaleString("en-IN")}`
 
 interface Props {
     initialDeals: Deal[]
+    total: number
 }
 
-export default function DealsClient({ initialDeals }: Props) {
+export default function DealsClient({ initialDeals, total }: Props) {
     const router = useRouter()
-    const [deals, setDeals] = useState<Deal[]>(initialDeals)
-    const [searchQuery, setSearchQuery] = useState("")
-    const [viewMode, setViewMode] = useState<"table" | "kanban">("table")
+    const pathname = usePathname()
+    const searchParams = useSearchParams()
+    const [isPending, startTransition] = useTransition()
+
+    // Sync state with URL params
+    const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "")
+    const [filterStage, setFilterStage] = useState<string>(searchParams.get("stage") || "all")
+    const [viewMode, setViewMode] = useState<"table" | "kanban">((searchParams.get("view") as any) || "table")
     const [pendingId, setPendingId] = useState<string | null>(null)
-    const [, startTransition] = useTransition()
 
-    const filtered = deals.filter((d) =>
-        d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.company.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    // Update URL when filters change
+    const updateUrl = (newParams: Record<string, string | number | null>) => {
+        const params = new URLSearchParams(searchParams.toString())
+        Object.entries(newParams).forEach(([key, value]) => {
+            if (value === null || value === "all") {
+                params.delete(key)
+            } else {
+                params.set(key, value.toString())
+            }
+        })
+        if (!newParams.page && (newParams.search !== undefined || newParams.stage !== undefined)) {
+            params.set("page", "1")
+        }
+        router.push(`${pathname}?${params.toString()}`)
+    }
 
-    const stageDeals = (stageKey: DealStage) => filtered.filter((d) => d.stage === stageKey)
-    const totalPipeline = deals.filter((d) => !["CLOSED_WON", "CLOSED_LOST"].includes(d.stage)).reduce((s, d) => s + d.value, 0)
-    const totalWon = deals.filter((d) => d.stage === "CLOSED_WON").reduce((s, d) => s + d.value, 0)
-    const weightedPipeline = deals.filter((d) => !["CLOSED_WON", "CLOSED_LOST"].includes(d.stage)).reduce((s, d) => s + d.value * (d.probability / 100), 0)
+    // Debounce search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (searchQuery !== (searchParams.get("search") || "")) {
+                updateUrl({ search: searchQuery })
+            }
+        }, 500)
+        return () => clearTimeout(timer)
+    }, [searchQuery])
 
     const moveStage = (dealId: string, newStage: DealStage) => {
         const newProbability = stageProbability[newStage]
-        // Optimistic update
-        setDeals((prev) => prev.map((d) => d.id === dealId ? { ...d, stage: newStage, probability: newProbability } : d))
+        setPendingId(dealId)
         startTransition(async () => {
             const { error } = await updateDeal(dealId, { stage: newStage, probability: newProbability })
-            if (error) {
-                // Rollback on error
-                setDeals(initialDeals)
+            if (error) toast.error(error)
+            else {
+                toast.success(`Deal moved to ${newStage.replace('_', ' ')}`)
+                router.refresh()
             }
+            setPendingId(null)
         })
     }
 
     const handleDelete = (id: string) => {
+        if (!confirm("Are you sure?")) return
         setPendingId(id)
         startTransition(async () => {
             const { error } = await deleteDeal(id)
-            if (!error) setDeals((prev) => prev.filter((d) => d.id !== id))
+            if (error) toast.error(error)
+            else {
+                toast.success("Deal deleted")
+                router.refresh()
+            }
             setPendingId(null)
         })
     }
 
     const getStageInfo = (key: DealStage) => stages.find((s) => s.key === key)!
+
+    const activePipelineVal = initialDeals.filter((d) => !["CLOSED_WON", "CLOSED_LOST"].includes(d.stage)).reduce((s, d) => s + d.value, 0)
+    const closedWonVal = initialDeals.filter((d) => d.stage === "CLOSED_WON").reduce((s, d) => s + d.value, 0)
 
     const DealActions = ({ deal }: { deal: Deal }) => (
         <DropdownMenu>
@@ -90,7 +121,7 @@ export default function DealsClient({ initialDeals }: Props) {
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-                <DropdownMenuItem><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push(`/crm/deals/${deal.id}`)}><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => router.push(`/crm/deals/${deal.id}/edit`)}>
                     <Pencil className="mr-2 h-4 w-4" />Edit
                 </DropdownMenuItem>
@@ -120,12 +151,12 @@ export default function DealsClient({ initialDeals }: Props) {
                     <p className="text-muted-foreground mt-1">Track your sales pipeline and revenue</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="flex gap-1 rounded-md border p-0.5">
-                        <Button variant={viewMode === "table" ? "default" : "ghost"} size="icon" className="h-8 w-8" onClick={() => setViewMode("table")}>
-                            <List className="h-4 w-4" />
+                    <div className="flex gap-1 rounded-md border p-0.5 bg-background">
+                        <Button variant={viewMode === "table" ? "secondary" : "ghost"} size="sm" className="h-8 px-2" onClick={() => { setViewMode("table"); updateUrl({ view: "table" }) }}>
+                            <List className="h-4 w-4 mr-1.5" /> Table
                         </Button>
-                        <Button variant={viewMode === "kanban" ? "default" : "ghost"} size="icon" className="h-8 w-8" onClick={() => setViewMode("kanban")}>
-                            <LayoutGrid className="h-4 w-4" />
+                        <Button variant={viewMode === "kanban" ? "secondary" : "ghost"} size="sm" className="h-8 px-2" onClick={() => { setViewMode("kanban"); updateUrl({ view: "kanban" }) }}>
+                            <LayoutGrid className="h-4 w-4 mr-1.5" /> Kanban
                         </Button>
                     </div>
                     <Button size="sm" onClick={() => router.push("/crm/deals/new")}>
@@ -138,41 +169,53 @@ export default function DealsClient({ initialDeals }: Props) {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 <Card>
                     <CardContent className="pt-4 pb-3">
-                        <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Active Pipeline</p>
-                        </div>
-                        <p className="text-2xl font-bold mt-1 text-emerald-500">{formatCurrency(totalPipeline)}</p>
+                        <div className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground font-medium uppercase">Active Pipeline</p></div>
+                        <p className="text-2xl font-bold mt-1 text-emerald-500">{formatCurrency(activePipelineVal)}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-4 pb-3">
-                        <div className="flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Weighted Value</p>
-                        </div>
-                        <p className="text-2xl font-bold mt-1">{formatCurrency(Math.round(weightedPipeline))}</p>
+                        <div className="flex items-center gap-2"><DollarSign className="h-4 w-4 text-emerald-400" /><p className="text-xs text-muted-foreground font-medium uppercase">Closed Won</p></div>
+                        <p className="text-2xl font-bold text-primary mt-1">{formatCurrency(closedWonVal)}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-4 pb-3">
-                        <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-emerald-400" />
-                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Closed Won</p>
-                        </div>
-                        <p className="text-2xl font-bold text-primary mt-1">{formatCurrency(totalWon)}</p>
+                        <div className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-muted-foreground" /><p className="text-xs text-muted-foreground font-medium uppercase">Total Deals</p></div>
+                        <p className="text-2xl font-bold mt-1 uppercase">{total}</p>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Search */}
-            <div className="relative max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search deals..." className="pl-8" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            {/* Search & Stage Filters */}
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+                <div className="relative max-w-sm w-full">
+                    {isPending ? <Loader2 className="absolute left-2.5 top-2.5 h-4 w-4 animate-spin text-muted-foreground" /> : <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />}
+                    <Input placeholder="Search deals..." className="pl-8" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <Badge
+                        variant={filterStage === "all" ? "default" : "outline"}
+                        className="cursor-pointer px-3 py-1"
+                        onClick={() => { setFilterStage("all"); updateUrl({ stage: "all" }) }}
+                    >
+                        All
+                    </Badge>
+                    {stages.map((s) => (
+                        <Badge
+                            key={s.key}
+                            variant={filterStage === s.key ? "default" : "outline"}
+                            className="cursor-pointer px-3 py-1"
+                            onClick={() => { setFilterStage(s.key); updateUrl({ stage: s.key }) }}
+                        >
+                            {s.label}
+                        </Badge>
+                    ))}
+                </div>
             </div>
 
-            {/* TABLE VIEW */}
-            {viewMode === "table" && (
+            {/* VIEWS */}
+            {viewMode === "table" ? (
                 <Card>
                     <CardContent className="pt-6">
                         <Table>
@@ -184,14 +227,13 @@ export default function DealsClient({ initialDeals }: Props) {
                                     <TableHead className="text-right">Value</TableHead>
                                     <TableHead className="text-center">Probability</TableHead>
                                     <TableHead>Close Date</TableHead>
-                                    <TableHead>Owner</TableHead>
                                     <TableHead className="w-10"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filtered.length === 0 ? (
-                                    <TableRow><TableCell colSpan={8} className="h-24 text-center text-muted-foreground">No deals found.</TableCell></TableRow>
-                                ) : filtered.map((deal) => {
+                                {initialDeals.length === 0 ? (
+                                    <TableRow><TableCell colSpan={7} className="h-24 text-center">No deals found.</TableCell></TableRow>
+                                ) : initialDeals.map((deal) => {
                                     const si = getStageInfo(deal.stage)
                                     return (
                                         <TableRow key={deal.id} className="hover:bg-muted/50">
@@ -214,7 +256,6 @@ export default function DealsClient({ initialDeals }: Props) {
                                                     {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString() : "—"}
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-sm">{deal.assigned_to}</TableCell>
                                             <TableCell><DealActions deal={deal} /></TableCell>
                                         </TableRow>
                                     )
@@ -223,16 +264,13 @@ export default function DealsClient({ initialDeals }: Props) {
                         </Table>
                     </CardContent>
                 </Card>
-            )}
-
-            {/* KANBAN VIEW */}
-            {viewMode === "kanban" && (
-                <div className="flex gap-4 overflow-x-auto pb-4 pt-2">
+            ) : (
+                <div className="flex gap-4 overflow-x-auto pb-4 pt-2 min-h-[600px]">
                     {stages.map((stage) => {
-                        const colDeals = stageDeals(stage.key)
+                        const colDeals = initialDeals.filter(d => d.stage === stage.key)
                         const colTotal = colDeals.reduce((s, d) => s + d.value, 0)
                         return (
-                            <div key={stage.key} className="flex flex-col w-[320px] shrink-0">
+                            <div key={stage.key} className="flex flex-col w-[300px] shrink-0">
                                 <div className="flex items-center justify-between mb-3 px-1">
                                     <div className="flex items-center gap-2">
                                         <div className={`h-2.5 w-2.5 rounded-full ${stage.dotColor}`} />
@@ -241,22 +279,20 @@ export default function DealsClient({ initialDeals }: Props) {
                                     </div>
                                     <span className="text-xs font-medium text-muted-foreground">{formatCurrency(colTotal)}</span>
                                 </div>
-                                <div className="flex-1 bg-muted/30 rounded-lg p-2 space-y-3 min-h-[500px]">
+                                <div className="flex-1 bg-muted/20 border border-dashed rounded-lg p-2 space-y-3">
                                     {colDeals.map((deal) => (
-                                        <Card key={deal.id} className="cursor-pointer hover:border-primary/50 transition-colors shadow-sm">
+                                        <Card key={deal.id} className="group cursor-pointer hover:border-primary/50 transition-all shadow-sm">
                                             <CardContent className="p-3">
-                                                <div className="flex justify-between items-start mb-2">
+                                                <div className="flex justify-between items-start mb-1">
                                                     <p className="font-medium text-sm leading-tight line-clamp-2">{deal.title}</p>
                                                     <DealActions deal={deal} />
                                                 </div>
-                                                <p className="text-xs text-muted-foreground mb-3">{deal.company}</p>
-                                                <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/50">
+                                                <p className="text-[11px] text-muted-foreground mb-3">{deal.company}</p>
+                                                <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/30">
                                                     <span className="font-bold text-sm text-primary">{formatCurrency(deal.value)}</span>
-                                                    <div className="flex items-center gap-1.5 bg-background border px-1.5 py-0.5 rounded text-[10px] font-medium text-muted-foreground">
+                                                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                                         <Calendar className="h-3 w-3" />
-                                                        {deal.expected_close
-                                                            ? new Date(deal.expected_close).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-                                                            : "—"}
+                                                        {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "—"}
                                                     </div>
                                                 </div>
                                                 <div className="w-full bg-secondary h-1.5 rounded-full mt-3 overflow-hidden">
@@ -266,9 +302,7 @@ export default function DealsClient({ initialDeals }: Props) {
                                         </Card>
                                     ))}
                                     {colDeals.length === 0 && (
-                                        <div className="h-24 border-2 border-dashed border-border/50 rounded-lg flex items-center justify-center text-xs text-muted-foreground">
-                                            No deals
-                                        </div>
+                                        <div className="h-20 border border-dashed rounded-md flex items-center justify-center text-[10px] text-muted-foreground/50 uppercase tracking-widest">Empty Stage</div>
                                     )}
                                 </div>
                             </div>

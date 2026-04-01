@@ -21,18 +21,23 @@ export interface CommunicationLog {
   updated_at: string
 }
 
-export async function getCommunicationLogs(filters?: {
-  contact_id?: string
-  lead_id?: string
-  deal_id?: string
-  type?: CommunicationType
-}): Promise<CommunicationLog[]> {
+export async function getCommunicationLogs(
+  page: number = 1,
+  limit: number = 20,
+  filters?: {
+    contact_id?: string
+    lead_id?: string
+    deal_id?: string
+    type?: CommunicationType
+  }
+): Promise<{ data: CommunicationLog[]; total: number }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
   let query = supabase
     .from("communication_logs")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
 
   if (filters?.contact_id) query = query.eq("contact_id", filters.contact_id)
@@ -40,13 +45,15 @@ export async function getCommunicationLogs(filters?: {
   if (filters?.deal_id) query = query.eq("deal_id", filters.deal_id)
   if (filters?.type) query = query.eq("type", filters.type)
 
-  const { data, error } = await query.order("logged_at", { ascending: false })
+  const { data, count, error } = await query
+    .order("logged_at", { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (error) {
     console.error("Error fetching communication logs:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 export async function createCommunicationLog(

@@ -1,5 +1,7 @@
 # ERP & CRM Multi-Platform SaaS — Master Task Tracker
 
+> **Last Updated:** 2026-04-01 (v4) | **Latest Commit:** `bc3ce3c` | **Branch:** `main`
+
 ## Brainstorming Phase ✅
 - [x] Define purpose & scale
 - [x] Choose cross-platform strategy
@@ -46,16 +48,17 @@
 ### CRM — Customer Relationship Management
 - [x] **Contacts Management** — page live, Supabase-connected
 - [x] **Company/Organization Management** — page live, migration fix applied
-- [x] **Lead Management** — page live, Supabase-connected
-- [x] **Deals / Opportunities** — page live, Supabase-connected
-- [ ] Tasks & Activities
-- [ ] Notes & Communication Log
+- [x] **Deals / Opportunities** — (Standardized: Pagination & Filtering) ✅ Done
+- [x] **Lead Management** — (Standardized: Pagination & Filtering) ✅ Done
+- [x] **Tasks & Activities** — Prisma model, server actions, and shared component ✅
+- [x] **Notes & Communication Log** — CommunicationLog model, server actions, EntityCommunications timeline UI ✅
 - [x] **CRUD forms (create/edit/delete)** — Contacts, Leads, Deals, Companies all have NEW + EDIT pages with Supabase server actions
 - [x] **Company interface type-safety fix** — added optional `gstin`, `country_code` fields
 - [x] **Git commit & push** — all CRM changes pushed to `main` on GitHub (commit `bc3ce3c`)
 - [x] **Vercel env prep** — `.env.local` exported as `env_vercel.txt` on Desktop for deployment
 - [x] **Dashboard KPI cards** — connected to live Supabase counts (commit `c509ff8`); recent leads/deals feed + pipeline summary added
 - [x] **Tenant-scoped RLS** — `get-tenant-id.ts` helper; all 4 CRM actions scope reads/writes by `tenant_id`; `rls_tenant_migration.sql` generated with `my_tenant_id()` function, auto-provision signup trigger, and backfill block (commit `e71517b`) — ⚠️ SQL must be run in Supabase dashboard
+- [x] **Lead Detail Page** — Unified tabbed view with Overview + Integrated Tasks ✅
 - [x] **`getById` helpers** — `getLeadById`, `getDealById`, `getContactById`, `getCompanyById` added (tenant-guarded)
 
 ### Retail / Individual Customer Management
@@ -63,62 +66,64 @@
 - [x] **Quick Contact Creation**
 - [x] **Customer Groups / Segments**
 - [x] **Customer Credit Limit**
-- [ ] Customer Ledger / Statement
+- [x] **Customer Ledger / Statement** — Contact detail page with ledger table (debit/credit/running balance), summary cards, communication log & tasks ✅
 
 ### Sales & Commerce
 - [x] **Products Catalog**
 - [x] **Services Catalog** 
-- [x] **Quotations / Estimates**
-- [ ] Sales Orders
+- [x] **Sales Orders** — (Standardized: Pagination & Filtering) ✅ Done
+- [x] **Quotations / Estimates** — (Standardized: Pagination & Filtering) ✅ Done
 - [x] **Invoicing** — Full CRUD live, tenant-scoped, Supabase-connected
   - `invoices` + `invoice_line_items` tables with RLS (tenant-scoped via `my_tenant_id()`)
   - `updated_at` auto-trigger applied and verified
   - Server actions: `getInvoices`, `getInvoiceById`, `createInvoice`, `updateInvoice`, `deleteInvoice`
+  - (Standardized: Pagination & Filtering / Prisma mapping fix) ✅ Done
   - List page: stats cards, search, status filter, table with actions
   - New invoice page wired to `createInvoice` action
   - Edit invoice page: server shell fetches by ID, client adapter maps DB ↔ form
   - All mock data removed — 100% live Supabase data
   - DB migration verified via Supabase MCP (all columns, policies, triggers confirmed)
-- [ ] Payment Tracking
+- [x] **Payment Tracking** — DB + UI + Server Actions for partial payments ✅
 
 ### Finance & Accounting (Core)
-- [ ] Chart of Accounts
-- [ ] Accounts Receivable (AR)
-- [ ] Accounts Payable (AP)
+- [x] **Chart of Accounts** — Prisma model, DB migration (with RLS), CRUD server actions, seed default Indian CoA (39 accounts), hierarchical tree UI with expand/collapse, type filters, New/Edit forms ✅
+- [x] **Accounts Receivable (AR)** — Global dashboard with aging buckets, top debtors, and outstanding tracking ✅
+- [x] **Accounts Payable (AP)** — Bills CRUD, AP dashboard, vendor payments, bill edit page ✅
+- [x] **Financial Reports (Basic)** — P&L Statement, Monthly Revenue Trend, Cash Flow Summary, Working Capital, Top Revenue Contacts ✅
 - [ ] Multi-Currency Support (Started in UI)
-- [ ] Financial Reports (Basic)
 
-### Multi-Country Tax & Compliance (India)
-- [ ] GST (CGST + SGST + IGST) Logic & Engine
+### Multi-Country Tax & Compliance (India) ✅
+- [x] **GST (CGST + SGST + IGST) Logic & Engine**
 - [x] **HSN / SAC Codes** (Added to Schema/UI)
-- [ ] GSTIN Validation
-- [ ] Place of Supply Rules
-- [ ] MSME / Udyam Display
+- [x] **GSTIN Validation**
+- [x] **Place of Supply Rules**
+- [x] **MSME / Udyam Display**
 
-### Invoice Design & Features
-- [ ] Tax Invoice PDF Template
-- [ ] Company Header
-- [ ] Bill To / Ship To Formatting
-- [ ] HSN/SAC Column
-- [ ] Split Tax Columns
-- [ ] HSN/SAC Summary Table
-- [ ] Total In Words
-- [ ] Payment Bank Details
-- [ ] Invoice Numbering Sequence
-- [ ] PDF Generation
-- [ ] Email Invoice
+### Invoice Design & Features ✅
+- [x] **Tax Invoice PDF Template**
+- [x] **Company Header**
+- [x] **Bill To / Ship To Formatting**
+- [x] **HSN/SAC Column**
+- [x] **Split Tax Columns**
+- [x] **HSN/SAC Summary Table**
+- [x] **Total In Words**
+- [x] **Payment Bank Details**
+- [x] **Invoice Numbering Sequence**
+- [x] **PDF Generation**
+- [x] **Email Invoice**
 
 ### Administration & Settings
 - [x] **Multi-Tenant Management** (Schema complete)
 - [x] **User Roles & Permissions** (Schema complete)
-- [ ] Company Settings (UI)
-- [ ] Notification System (Base UI)
-- [ ] Import / Export Data
+- [x] **Company Settings (UI)** — Logo, Address, Bank details, Tax Groups live in `/settings` ✅
+- [x] **Notification System** — In-app notification bell with unread tracking, cross-module triggers (CRM Leads & Finance Bills), real-time polling UI, and tenant-scoped RLS policies (`notifications` table + server actions) ✅
+- [x] **Import / Export Data** — Bulk CSV import for Contacts & Products using `papaparse` ✅
 
-### Subscription & Billing (SaaS Platform)
-- [ ] Subscription Plans Definition
-- [ ] Razorpay Integration
-- [ ] Trial Management
+### Subscription & Billing
+- [x] **SaaS Infrastructure**
+    - [x] Subscription Plans (Free, Pro, Enterprise)
+    - [x] Razorpay / Stripe Integration (SaaS Revenue)
+    - [x] Multi-tenant Data Isolation (RLS / Middleware)
 
 ---
 

@@ -4,6 +4,6 @@ import AccountsClient from "./AccountsClient"
 export const dynamic = "force-dynamic"
 
 export default async function AccountsPage() {
-  const accounts = await getAccounts()
+  const { data: accounts } = await getAccounts(1, 1000) // Fetch top 1000 for the full tree view
   return <AccountsClient initialAccounts={accounts} />
 }
