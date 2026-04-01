@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useRef } from "react"
 import { useRouter } from "next/navigation"
+import Papa from "papaparse"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,7 +18,7 @@ import {
     Plus, Search, Filter, Download, Upload, MoreHorizontal,
     Mail, Phone, Building2, User, Pencil, Trash2, Receipt, Eye, Loader2,
 } from "lucide-react"
-import { deleteContact, type Contact } from "@/app/actions/crm/contacts"
+import { deleteContact, type Contact, importContacts, exportContacts } from "@/app/actions/crm/contacts"
 
 interface Props {
     initialContacts: Contact[]
@@ -29,6 +30,9 @@ export default function ContactsClient({ initialContacts }: Props) {
     const [searchQuery, setSearchQuery] = useState("")
     const [filterType, setFilterType] = useState<"all" | "INDIVIDUAL" | "COMPANY">("all")
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [isExporting, setIsExporting] = useState(false)
+    const [isImporting, setIsImporting] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const [, startTransition] = useTransition()
 
     const filteredContacts = contacts.filter((c) => {
@@ -52,6 +56,60 @@ export default function ContactsClient({ initialContacts }: Props) {
         })
     }
 
+    const handleExport = async () => {
+        setIsExporting(true)
+        try {
+            const data = await exportContacts()
+            const csv = Papa.unparse(data)
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = url
+            link.setAttribute("download", `contacts_export_${new Date().toISOString().split('T')[0]}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+        } catch (error) {
+            console.error("Export failed", error)
+            alert("Export failed!")
+        } finally {
+            setIsExporting(false)
+        }
+    }
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click()
+    }
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setIsImporting(true)
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: async (results) => {
+                const { error, count } = await importContacts(results.data as any[])
+                setIsImporting(false)
+                if (error) {
+                    alert(`Import failed: ${error}`)
+                } else {
+                    alert(`Successfully imported ${count} contacts.`)
+                    router.refresh()
+                }
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = ""
+                }
+            },
+            error: (error) => {
+                console.error("Parse error:", error)
+                alert("Failed to parse CSV file.")
+                setIsImporting(false)
+            }
+        })
+    }
+
     const totalBalance = contacts.reduce((sum, c) => sum + (c.balance ?? 0), 0)
 
     return (
@@ -62,11 +120,20 @@ export default function ContactsClient({ initialContacts }: Props) {
                     <p className="text-muted-foreground mt-1">Manage customers, vendors, and leads</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm">
-                        <Upload className="h-4 w-4 mr-2" />Import
+                    <input 
+                        type="file" 
+                        accept=".csv" 
+                        ref={fileInputRef} 
+                        className="hidden" 
+                        onChange={handleFileUpload} 
+                    />
+                    <Button variant="outline" size="sm" onClick={handleImportClick} disabled={isImporting}>
+                        {isImporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                        Import
                     </Button>
-                    <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-2" />Export
+                    <Button variant="outline" size="sm" onClick={handleExport} disabled={isExporting}>
+                        {isExporting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                        Export
                     </Button>
                     <Button size="sm" onClick={() => router.push("/crm/contacts/new")}>
                         <Plus className="h-4 w-4 mr-2" />New Contact
@@ -213,14 +280,14 @@ export default function ContactsClient({ initialContacts }: Props) {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}`)}>
                                                 <Eye className="h-4 w-4 mr-2" />View Details
                                             </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}/edit`)}>
                                                 <Pencil className="h-4 w-4 mr-2" />Edit Contact
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem>
-                                                <Receipt className="h-4 w-4 mr-2" />View Transactions
+                                            <DropdownMenuItem onClick={() => router.push(`/crm/contacts/${contact.id}`)}>
+                                                <Receipt className="h-4 w-4 mr-2" />View Ledger
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
                                             <DropdownMenuItem

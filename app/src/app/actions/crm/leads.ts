@@ -19,6 +19,8 @@ export interface Lead {
   notes: string
   tenant_id: string
   created_at: string
+  updated_at: string
+  estimated_value?: number
 }
 
 export async function getLeads(): Promise<Lead[]> {
@@ -53,24 +55,46 @@ export async function getLeadById(id: string): Promise<Lead | null> {
   return data
 }
 
+import { createNotification } from "@/app/actions/notifications"
+
 export async function createLead(
-  formData: Omit<Lead, "id" | "created_at" | "tenant_id">
+  formData: Omit<Lead, "id" | "created_at" | "tenant_id" | "updated_at">
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
-  const { error } = await supabase
+  const { data: lead, error } = await supabase
     .from("leads")
     .insert([{ ...formData, tenant_id: tenantId }])
+    .select()
+    .single()
 
   if (error) return { error: error.message }
+
+  // Create notification
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    try {
+      await createNotification({
+        type: "lead",
+        title: "New Lead Created",
+        description: `Lead for ${formData.contact_name} has been added.`,
+        link: `/crm/leads`,
+        userId: user.id,
+        tenantId: tenantId,
+      })
+    } catch (notifyError) {
+      console.error("Failed to create notification:", notifyError)
+    }
+  }
+
   revalidatePath("/crm/leads")
   return { error: null }
 }
 
 export async function updateLead(
   id: string,
-  formData: Partial<Omit<Lead, "id" | "created_at" | "tenant_id">>
+  formData: Partial<Omit<Lead, "id" | "created_at" | "tenant_id" | "updated_at">>
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()

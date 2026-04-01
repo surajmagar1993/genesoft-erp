@@ -64,6 +64,8 @@ export interface InvoiceDB {
   supply_type: "intra" | "inter"
   pdf_url?: string | null
   tenant_id: string
+  contact_id: string
+  currency_code: string
   created_at: string
   updated_at: string
   invoice_line_items?: InvoiceLineItemDB[]

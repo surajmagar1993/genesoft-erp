@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Genesoft ERP
 
-## Getting Started
+Genesoft is a modern, enterprise-grade ERP and CRM platform built with Next.js, Supabase, and Prisma. It provides a comprehensive suite for managing business operations in the Indian market, including integrated GST handling.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 🤝 CRM (Customer Relationship Management)
+- **Leads & Deals**: Track sales pipeline from prospect to conversion.
+- **Contacts & Companies**: Centralized repository for all business partners.
+- **Tasks**: Activity management and follow-ups.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 💰 Finance & Accounting
+- **Accounts Payable**: Manage vendor bills, payments, and aging.
+- **Accounts Receivable**: Track customer invoices and incoming payments.
+- **GST Engine**: Integrated Indian GST calculations for all financial documents.
+- **Chart of Accounts**: Comprehensive financial structure management.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🔔 Notifications (New!)
+- **Cross-module Triggers**: Real-time notifications when leads are created or bills are generated.
+- **Actionable Alerts**: Clickable notifications that lead directly to the relevant record.
+- **Unread Tracking**: Per-user unread status and bulk "mark as read" capability.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 📤 Bulk Data Management (New!)
+- **Import/Export**: Bulk CSV import and export for Contacts & Products using `papaparse`.
+- **Batch Processing**: High-performance insertion using Supabase-native array batching.
+- **Client-Side Parsing**: Efficiently handle thousands of rows directly in the browser.
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠 Tech Stack
+- **Framework**: Next.js (App Router)
+- **Database**: Supabase (PostgreSQL) with Row Level Security (RLS)
+- **ORM**: Prisma
+- **Styling**: Tailwind CSS & Shadcn UI
+- **Types**: TypeScript
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🏁 Getting Started
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
 
-## Deploy on Vercel
+2.  **Environment Setup**:
+    Copy `.env.example` to `.env.local` and provide your Supabase credentials.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3.  **Database Sync**:
+    ```bash
+    npx prisma generate
+    ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
+
+Open [http://localhost:3000](http://localhost:3000) to access the dashboard.

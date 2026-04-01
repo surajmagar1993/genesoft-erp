@@ -46,7 +46,10 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/register') ||
         request.nextUrl.pathname.startsWith('/forgot-password')
 
-    const isPublicPage = request.nextUrl.pathname === '/'
+    const isPublicPage = request.nextUrl.pathname === '/' ||
+        request.nextUrl.pathname.startsWith('/api') // Allow API for and from Supabase
+
+    const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
 
     if (!user && !isAuthPage && !isPublicPage) {
         const url = request.nextUrl.clone()
@@ -59,6 +62,21 @@ export async function updateSession(request: NextRequest) {
         const url = request.nextUrl.clone()
         url.pathname = '/crm/contacts'
         return NextResponse.redirect(url)
+    }
+
+    // Admin role check
+    if (user && isAdminPage) {
+        const { data: userData } = await supabase
+            .from('users')
+            .select('role')
+            .eq('auth_id', user.id)
+            .single()
+
+        if (!userData || userData.role !== 'SUPER_ADMIN') {
+            const url = request.nextUrl.clone()
+            url.pathname = '/crm/contacts' // Standard dashboard if not admin
+            return NextResponse.redirect(url)
+        }
     }
 
     return supabaseResponse

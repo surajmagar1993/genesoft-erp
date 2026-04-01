@@ -60,6 +60,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
     const router = useRouter()
     const mode = initialData ? "edit" : "create"
     const [form, setForm] = useState<ProductFormData>(initialData || defaultProductForm)
+    const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
         if (initialData) setForm(initialData)
@@ -69,13 +70,19 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
         setForm((prev) => ({ ...prev, [field]: value }))
     }
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!form.name.trim()) {
             alert("Product Name is required.")
             return
         }
-        onSave(form)
-        router.push("/sales/products")
+        setIsSaving(true)
+        try {
+            await onSave(form)
+        } catch (err) {
+            console.error("onSave failed:", err)
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     return (
@@ -347,8 +354,8 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                 <Button variant="outline" onClick={() => router.push("/sales/products")}>
                     Cancel
                 </Button>
-                <Button onClick={handleSave}>
-                    {mode === "create" ? "Save Product" : "Update Changes"}
+                <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? "Saving..." : (mode === "create" ? "Save Product" : "Update Changes")}
                 </Button>
             </div>
         </div>

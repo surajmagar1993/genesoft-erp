@@ -1,9 +1,10 @@
 "use client"
 import { useEffect, useState } from "react"
 import { getQuotes, deleteQuote } from "@/app/actions/sales/quotes"
+import { convertQuoteToOrder } from "@/app/actions/sales/orders"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { Search, Plus, Pencil, Trash2, Send, FileText, CheckCircle2, XCircle, Clock, FileBarChart2 } from "lucide-react"
+import { Search, Plus, Pencil, Trash2, Send, FileText, CheckCircle2, XCircle, Clock, FileBarChart2, ShoppingCart } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -109,6 +110,21 @@ export default function QuotesPage() {
         } else {
             toast.success("Quote deleted")
             fetchQuotes()
+        }
+    }
+
+    const handleConvertToOrder = async (id: string) => {
+        if (!confirm("Are you sure you want to convert this quotation to a sales order?")) return
+        const { orderId, error } = await convertQuoteToOrder(id)
+        if (error) {
+            toast.error(error)
+        } else {
+            toast.success("Converted to Sales Order successfully")
+            if (orderId) {
+                router.push(`/sales/orders/${orderId}`)
+            } else {
+                fetchQuotes()
+            }
         }
     }
 
@@ -253,7 +269,12 @@ export default function QuotesPage() {
                                                         {cfg.label}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell className="text-right flex items-center justify-end gap-1">
+                                                    {q.status !== "ACCEPTED" && q.status !== "REJECTED" && (
+                                                        <Button variant="ghost" size="icon" title="Convert to Order" onClick={() => handleConvertToOrder(q.id!)}>
+                                                            <ShoppingCart className="h-4 w-4 text-emerald-600" />
+                                                        </Button>
+                                                    )}
                                                     <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/quotes/${q.id}/edit`)}>
                                                         <Pencil className="h-4 w-4 text-muted-foreground" />
                                                     </Button>

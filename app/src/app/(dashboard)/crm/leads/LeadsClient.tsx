@@ -143,7 +143,11 @@ export default function LeadsClient({ initialLeads }: Props) {
                                 const status = statusConfig[lead.status]
                                 const StatusIcon = status.icon
                                 return (
-                                    <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50">
+                                    <TableRow 
+                                        key={lead.id} 
+                                        className="cursor-pointer hover:bg-muted/50"
+                                        onClick={() => router.push(`/crm/leads/${lead.id}`)}
+                                    >
                                         <TableCell><span className="font-medium">{lead.title}</span></TableCell>
                                         <TableCell>
                                             <div><p className="text-sm">{lead.contact_name}</p><p className="text-xs text-muted-foreground">{lead.email}</p></div>
@@ -171,7 +175,9 @@ export default function LeadsClient({ initialLeads }: Props) {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => router.push(`/crm/leads/${lead.id}`)}>
+                                                        <Eye className="mr-2 h-4 w-4" />View
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => router.push(`/crm/leads/${lead.id}/edit`)}>
                                                         <Pencil className="mr-2 h-4 w-4" />Edit
                                                     </DropdownMenuItem>

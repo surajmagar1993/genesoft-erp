@@ -100,3 +100,54 @@ export async function deleteContact(id: string): Promise<{ error: string | null 
   revalidatePath("/crm/contacts")
   return { error: null }
 }
+
+export async function exportContacts(): Promise<Contact[]> {
+  const supabase = await createClient()
+  const tenantId = await getTenantId()
+
+  const { data, error } = await supabase
+    .from("contacts")
+    .select("*")
+    .eq("tenant_id", tenantId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("exportContacts error:", error.message)
+    return []
+  }
+  return data ?? []
+}
+
+export async function importContacts(
+  contacts: any[]
+): Promise<{ error: string | null; count: number }> {
+  const supabase = await createClient()
+  const tenantId = await getTenantId()
+
+  // Ensure default structure
+  const insertData = contacts.map(c => ({
+    display_name: c.display_name || "Unknown",
+    type: c.type || "INDIVIDUAL",
+    email: c.email || null,
+    phone: c.phone || null,
+    customer_group: c.customer_group || "retail",
+    currency_code: c.currency_code || "INR",
+    balance: parseFloat(c.balance) || 0,
+    is_active: c.is_active !== undefined ? c.is_active : true,
+    ...c, // Override with everything passed
+    tenant_id: tenantId,
+  }))
+
+  const { data, error } = await supabase
+    .from("contacts")
+    .insert(insertData)
+    .select("id")
+
+  if (error) {
+    console.error("importContacts error:", error.message)
+    return { error: error.message, count: 0 }
+  }
+
+  revalidatePath("/crm/contacts")
+  return { error: null, count: data?.length || 0 }
+}
