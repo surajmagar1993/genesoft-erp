@@ -21,22 +21,33 @@ export interface Contact {
   created_at: string
 }
 
-export async function getContacts(page: number = 1, limit: number = 10): Promise<Contact[]> {
+export async function getContacts(
+  page: number = 1,
+  limit: number = 10,
+  search?: string
+): Promise<{ data: Contact[]; total: number }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("contacts")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
-    .range((page - 1) * limit, page * limit - 1)
+
+  if (search) {
+    query = query.or(`display_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`)
+  }
+
+  const { data, count, error } = await query
+    .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false })
 
   if (error) {
     console.error("Error fetching contacts:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 export async function getContactById(id: string): Promise<Contact | null> {

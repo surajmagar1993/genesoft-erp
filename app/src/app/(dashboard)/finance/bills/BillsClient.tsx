@@ -37,9 +37,10 @@ import { toast } from "sonner"
 
 interface BillsClientProps {
   bills: any[]
+  total: number
 }
 
-export default function BillsClient({ bills }: BillsClientProps) {
+export default function BillsClient({ bills, total }: BillsClientProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredBills = bills.filter(bill => 

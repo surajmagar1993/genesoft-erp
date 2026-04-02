@@ -43,21 +43,26 @@ export interface CreatePaymentPayload {
 }
 
 /* ── Read All Payments ── */
-export async function getPayments(): Promise<PaymentDB[]> {
+export async function getPayments(
+  page: number = 1, 
+  limit: number = 10
+): Promise<{ data: PaymentDB[]; total: number }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
+  const offset = (page - 1) * limit
 
-  const { data, error } = await supabase
+  const { data, count, error } = await supabase
     .from("payments")
-    .select("*, invoices(invoice_number, total, currency_code), bills(bill_number, total, currency_code), contacts(display_name, company_name)")
+    .select("*, invoices(invoice_number, total, currency_code), bills(bill_number, total, currency_code), contacts(display_name, company_name)", { count: "exact" })
     .eq("tenant_id", tenantId)
     .order("payment_date", { ascending: false })
+    .range(offset, offset + limit - 1)
 
   if (error) {
     console.error("getPayments error:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 /* ── Read By Invoice ── */

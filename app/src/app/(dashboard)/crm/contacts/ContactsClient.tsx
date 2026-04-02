@@ -22,39 +22,53 @@ import { deleteContact, type Contact, importContacts, exportContacts } from "@/a
 
 interface Props {
     initialContacts: Contact[]
+    total: number
 }
 
-export default function ContactsClient({ initialContacts }: Props) {
+export default function ContactsClient({ initialContacts, total }: Props) {
     const router = useRouter()
-    const [contacts, setContacts] = useState<Contact[]>(initialContacts)
     const [searchQuery, setSearchQuery] = useState("")
     const [filterType, setFilterType] = useState<"all" | "INDIVIDUAL" | "COMPANY">("all")
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [isExporting, setIsExporting] = useState(false)
     const [isImporting, setIsImporting] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [, startTransition] = useTransition()
+    const [isPending, startTransition] = useTransition()
 
-    const filteredContacts = contacts.filter((c) => {
-        const matchesSearch =
-            c.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (c.email ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (c.gstin ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (c.pan ?? "").toLowerCase().includes(searchQuery.toLowerCase())
-        const matchesType = filterType === "all" || c.type === filterType
-        return matchesSearch && matchesType
-    })
+    // Server-side search handler
+    const handleSearch = (query: string) => {
+        setSearchQuery(query)
+        const params = new URLSearchParams(window.location.search)
+        if (query) {
+            params.set("search", query)
+        } else {
+            params.delete("search")
+        }
+        params.set("page", "1")
+        router.push(`/crm/contacts?${params.toString()}`)
+    }
+
+    const handlePageChange = (page: number) => {
+        const params = new URLSearchParams(window.location.search)
+        params.set("page", page.toString())
+        router.push(`/crm/contacts?${params.toString()}`)
+    }
 
     const handleDelete = (id: string) => {
         setDeletingId(id)
         startTransition(async () => {
             const { error } = await deleteContact(id)
             if (!error) {
-                setContacts((prev) => prev.filter((c) => c.id !== id))
+                router.refresh()
             }
             setDeletingId(null)
         })
     }
+
+    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams()
+    const currentPage = parseInt(searchParams.get("page") || "1")
+    const limit = 10
+    const totalPages = Math.ceil(total / limit)
 
     const handleExport = async () => {
         setIsExporting(true)
@@ -110,7 +124,7 @@ export default function ContactsClient({ initialContacts }: Props) {
         })
     }
 
-    const totalBalance = contacts.reduce((sum, c) => sum + (c.balance ?? 0), 0)
+    const totalBalance = initialContacts.reduce((sum, c) => sum + (c.balance ?? 0), 0)
 
     return (
         <div className="space-y-6">
@@ -145,19 +159,19 @@ export default function ContactsClient({ initialContacts }: Props) {
                 <Card>
                     <CardContent className="pt-4 pb-3">
                         <p className="text-xs text-muted-foreground">Total Contacts</p>
-                        <p className="text-2xl font-bold">{contacts.length}</p>
+                        <p className="text-2xl font-bold">{total}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-4 pb-3">
                         <p className="text-xs text-muted-foreground">Companies</p>
-                        <p className="text-2xl font-bold">{contacts.filter((c) => c.type === "COMPANY").length}</p>
+                        <p className="text-2xl font-bold">{initialContacts.filter((c) => c.type === "COMPANY").length}</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="pt-4 pb-3">
                         <p className="text-xs text-muted-foreground">Individuals</p>
-                        <p className="text-2xl font-bold">{contacts.filter((c) => c.type === "INDIVIDUAL").length}</p>
+                        <p className="text-2xl font-bold">{initialContacts.filter((c) => c.type === "INDIVIDUAL").length}</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -176,7 +190,7 @@ export default function ContactsClient({ initialContacts }: Props) {
                         placeholder="Search contacts, emails, IDs..."
                         className="pl-8"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => handleSearch(e.target.value)}
                     />
                 </div>
                 <Button variant="outline" className="gap-2">
@@ -202,13 +216,13 @@ export default function ContactsClient({ initialContacts }: Props) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredContacts.length === 0 ? (
+                        {initialContacts.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                     No contacts found.
                                 </TableCell>
                             </TableRow>
-                        ) : filteredContacts.map((contact) => (
+                        ) : initialContacts.map((contact) => (
                             <TableRow key={contact.id}>
                                 <TableCell>
                                     <div className="flex items-center gap-3">
@@ -303,6 +317,33 @@ export default function ContactsClient({ initialContacts }: Props) {
                         ))}
                     </TableBody>
                 </Table>
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-4 border-t bg-muted/20">
+                        <p className="text-sm text-muted-foreground">
+                            Showing <span className="font-medium">{(currentPage - 1) * limit + 1}</span> to{" "}
+                            <span className="font-medium">{Math.min(currentPage * limit, total)}</span> of{" "}
+                            <span className="font-medium">{total}</span> contacts
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Card>
         </div>
     )

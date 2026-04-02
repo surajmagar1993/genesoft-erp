@@ -15,29 +15,48 @@ import { deleteCompany, type Company } from "@/app/actions/crm/companies"
 
 const countryFlags: Record<string, string> = { IN: "🇮🇳", AE: "🇦🇪", SA: "🇸🇦", US: "🇺🇸", GB: "🇬🇧" }
 
-interface Props { initialCompanies: Company[] }
+interface Props { initialCompanies: Company[], total: number }
 
-export default function CompaniesClient({ initialCompanies }: Props) {
+export default function CompaniesClient({ initialCompanies, total }: Props) {
     const router = useRouter()
-    const [companies, setCompanies] = useState<Company[]>(initialCompanies)
     const [searchQuery, setSearchQuery] = useState("")
     const [deletingId, setDeletingId] = useState<string | null>(null)
-    const [, startTransition] = useTransition()
+    const [isPending, startTransition] = useTransition()
 
-    const filtered = companies.filter((c) =>
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.industry ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (c.city ?? "").toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    // Server-side search handler
+    const handleSearch = (query: string) => {
+        setSearchQuery(query)
+        const params = new URLSearchParams(window.location.search)
+        if (query) {
+            params.set("search", query)
+        } else {
+            params.delete("search")
+        }
+        params.set("page", "1")
+        router.push(`/crm/companies?${params.toString()}`)
+    }
+
+    const handlePageChange = (page: number) => {
+        const params = new URLSearchParams(window.location.search)
+        params.set("page", page.toString())
+        router.push(`/crm/companies?${params.toString()}`)
+    }
 
     const handleDelete = (id: string) => {
         setDeletingId(id)
         startTransition(async () => {
             const { error } = await deleteCompany(id)
-            if (!error) setCompanies((prev) => prev.filter((c) => c.id !== id))
+            if (!error) {
+                router.refresh()
+            }
             setDeletingId(null)
         })
     }
+
+    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams()
+    const currentPage = parseInt(searchParams.get("page") || "1")
+    const limit = 10
+    const totalPages = Math.ceil(total / limit)
 
     return (
         <div className="space-y-6">
@@ -54,21 +73,26 @@ export default function CompaniesClient({ initialCompanies }: Props) {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card><CardContent className="pt-4 pb-3">
                     <p className="text-xs text-muted-foreground">Total Companies</p>
-                    <p className="text-2xl font-bold">{companies.length}</p>
+                    <p className="text-2xl font-bold">{total}</p>
                 </CardContent></Card>
                 <Card><CardContent className="pt-4 pb-3">
                     <p className="text-xs text-muted-foreground">Active</p>
-                    <p className="text-2xl font-bold">{companies.filter((c) => c.is_active).length}</p>
+                    <p className="text-2xl font-bold">{initialCompanies.filter((c) => c.is_active).length}</p>
                 </CardContent></Card>
                 <Card><CardContent className="pt-4 pb-3">
                     <p className="text-xs text-muted-foreground">Countries</p>
-                    <p className="text-2xl font-bold">{new Set(companies.map((c) => c.country).filter(Boolean)).size}</p>
+                    <p className="text-2xl font-bold">{new Set(initialCompanies.map((c) => c.country).filter(Boolean)).size}</p>
                 </CardContent></Card>
             </div>
 
             <div className="relative max-w-sm">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search companies..." className="pl-8" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                <Input 
+                    placeholder="Search companies..." 
+                    className="pl-8" 
+                    value={searchQuery} 
+                    onChange={(e) => handleSearch(e.target.value)} 
+                />
             </div>
 
             <Card>
@@ -84,11 +108,11 @@ export default function CompaniesClient({ initialCompanies }: Props) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filtered.length === 0 ? (
+                        {initialCompanies.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">No companies found.</TableCell>
                             </TableRow>
-                        ) : filtered.map((company) => (
+                        ) : initialCompanies.map((company) => (
                             <TableRow key={company.id} className="cursor-pointer hover:bg-muted/50">
                                 <TableCell>
                                     <div className="flex items-center gap-3">
@@ -151,6 +175,33 @@ export default function CompaniesClient({ initialCompanies }: Props) {
                         ))}
                     </TableBody>
                 </Table>
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-4 py-4 border-t bg-muted/20">
+                        <p className="text-sm text-muted-foreground">
+                            Showing <span className="font-medium">{(currentPage - 1) * limit + 1}</span> to{" "}
+                            <span className="font-medium">{Math.min(currentPage * limit, total)}</span> of{" "}
+                            <span className="font-medium">{total}</span> companies
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Card>
         </div>
     )

@@ -7,7 +7,7 @@ export const metadata = {
 }
 
 export default async function BillsPage() {
-  const bills = await getBills()
+  const { data: bills, total } = await getBills()
 
-  return <BillsClient bills={bills} />
+  return <BillsClient bills={bills} total={total} />
 }

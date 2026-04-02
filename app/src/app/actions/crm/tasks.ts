@@ -30,7 +30,8 @@ export async function getTasks(
     contact_id?: string, 
     lead_id?: string, 
     deal_id?: string,
-    status?: TaskStatus 
+    status?: TaskStatus,
+    search?: string 
   }
 ): Promise<{ data: Task[]; total: number }> {
   const supabase = await createClient()
@@ -42,6 +43,9 @@ export async function getTasks(
     .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
 
+  if (filters?.search) {
+    query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
+  }
   if (filters?.contact_id) query = query.eq("contact_id", filters.contact_id)
   if (filters?.lead_id) query = query.eq("lead_id", filters.lead_id)
   if (filters?.deal_id) query = query.eq("deal_id", filters.deal_id)

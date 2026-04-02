@@ -12,6 +12,5 @@ export default async function EditAccountPage({ params }: { params: Promise<{ id
   ])
 
   if (!account) notFound()
-
-  return <EditAccountForm account={account} parentAccounts={allAccounts} />
+  return <EditAccountForm account={account} parentAccounts={allAccounts.data} />
 }

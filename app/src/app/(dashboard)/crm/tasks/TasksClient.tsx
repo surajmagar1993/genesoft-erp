@@ -53,9 +53,10 @@ const priorityConfig: Record<TaskPriority, { label: string; color: string }> = {
 
 interface Props {
     initialTasks: Task[]
+    total: number
 }
 
-export default function TasksClient({ initialTasks }: Props) {
+export default function TasksClient({ initialTasks, total }: Props) {
     const router = useRouter()
     const [tasks, setTasks] = useState<Task[]>(initialTasks)
     const [searchQuery, setSearchQuery] = useState("")
@@ -63,7 +64,12 @@ export default function TasksClient({ initialTasks }: Props) {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [pendingId, setPendingId] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
-    const [, startTransition] = useTransition()
+    const [isPending, startTransition] = useTransition()
+
+    // Sync with server data
+    useState(() => {
+        setTasks(initialTasks)
+    })
 
     // Form state
     const [formData, setFormData] = useState({
@@ -74,12 +80,34 @@ export default function TasksClient({ initialTasks }: Props) {
         due_date: "",
     })
 
-    const filtered = tasks.filter((t) => {
-        const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                             (t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false)
-        const matchesStatus = filterStatus === "all" || t.status === filterStatus
-        return matchesSearch && matchesStatus
-    })
+    const handleSearch = (query: string) => {
+        setSearchQuery(query)
+        const params = new URLSearchParams(window.location.search)
+        if (query) params.set("search", query)
+        else params.delete("search")
+        params.set("page", "1")
+        router.push(`/crm/tasks?${params.toString()}`)
+    }
+
+    const handleStatusFilter = (status: string) => {
+        setFilterStatus(status)
+        const params = new URLSearchParams(window.location.search)
+        if (status !== "all") params.set("status", status)
+        else params.delete("status")
+        params.set("page", "1")
+        router.push(`/crm/tasks?${params.toString()}`)
+    }
+
+    const handlePageChange = (page: number) => {
+        const params = new URLSearchParams(window.location.search)
+        params.set("page", page.toString())
+        router.push(`/crm/tasks?${params.toString()}`)
+    }
+
+    const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams()
+    const currentPage = parseInt(searchParams.get("page") || "1")
+    const limit = 10
+    const totalPages = Math.ceil(total / limit)
 
     const handleCreateTask = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -198,7 +226,7 @@ export default function TasksClient({ initialTasks }: Props) {
                         <Card
                             key={key}
                             className={`cursor-pointer transition-colors hover:bg-accent/50 ${filterStatus === key ? "ring-2 ring-primary" : "border-border/50"}`}
-                            onClick={() => setFilterStatus(filterStatus === key ? "all" : key)}
+                            onClick={() => handleStatusFilter(filterStatus === key ? "all" : key)}
                         >
                             <CardContent className="pt-4 pb-3">
                                 <div className="flex items-center gap-2">
@@ -220,7 +248,7 @@ export default function TasksClient({ initialTasks }: Props) {
                         placeholder="Search tasks..." 
                         className="pl-8" 
                         value={searchQuery} 
-                        onChange={(e) => setSearchQuery(e.target.value)} 
+                        onChange={(e) => handleSearch(e.target.value)} 
                     />
                 </div>
             </div>
@@ -230,7 +258,7 @@ export default function TasksClient({ initialTasks }: Props) {
                 <CardHeader className="pb-3 px-6">
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-base font-semibold">Active Tasks</CardTitle>
-                        <CardDescription>{filtered.length} items total</CardDescription>
+                        <CardDescription>{total} items total</CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -244,17 +272,17 @@ export default function TasksClient({ initialTasks }: Props) {
                                 <TableHead className="w-10 pr-6"></TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
-                            {filtered.length === 0 ? (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-40 text-center text-muted-foreground">
-                                        <div className="flex flex-col items-center justify-center space-y-2">
-                                            <CheckSquare className="h-10 w-10 text-muted-foreground/20" />
-                                            <p>No tasks found. Create one to get started!</p>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ) : filtered.map((task) => {
+                    <TableBody>
+                        {initialTasks.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-40 text-center text-muted-foreground">
+                                    <div className="flex flex-col items-center justify-center space-y-2">
+                                        <CheckSquare className="h-10 w-10 text-muted-foreground/20" />
+                                        <p>No tasks found. Create one to get started!</p>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : initialTasks.map((task) => {
                                 const status = statusConfig[task.status]
                                 const priority = priorityConfig[task.priority]
                                 const StatusIcon = status.icon
@@ -320,7 +348,34 @@ export default function TasksClient({ initialTasks }: Props) {
                                 )
                             })}
                         </TableBody>
-                    </Table>
+                </Table>
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t bg-muted/20">
+                        <p className="text-sm text-muted-foreground">
+                            Showing <span className="font-medium">{(currentPage - 1) * limit + 1}</span> to{" "}
+                            <span className="font-medium">{Math.min(currentPage * limit, total)}</span> of{" "}
+                            <span className="font-medium">{total}</span> tasks
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                            >
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                            >
+                                Next
+                            </Button>
+                        </div>
+                    </div>
+                )}
                 </CardContent>
             </Card>
         </div>

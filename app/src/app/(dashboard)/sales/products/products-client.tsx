@@ -21,9 +21,10 @@ import { ProductDB, deleteProduct, importProducts, exportProducts } from "@/app/
 
 interface ProductsClientProps {
     initialProducts: ProductDB[]
+    total: number
 }
 
-export function ProductsClient({ initialProducts }: ProductsClientProps) {
+export function ProductsClient({ initialProducts, total }: ProductsClientProps) {
     const router = useRouter()
     const [products, setProducts] = useState<ProductDB[]>(initialProducts)
     const [searchQuery, setSearchQuery] = useState("")

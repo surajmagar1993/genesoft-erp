@@ -315,9 +315,9 @@ export async function getVendors(limit: number = 100) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
-  const { data, error } = await supabase
+  const { data, count, error } = await supabase
     .from("contacts")
-    .select("id, display_name, company_name")
+    .select("id, display_name, company_name", { count: "exact" })
     .eq("tenant_id", tenantId)
     // .eq("type", "VENDOR") // Optional: filtering by type if enforced
     .eq("is_active", true)
@@ -325,7 +325,7 @@ export async function getVendors(limit: number = 100) {
     .limit(limit)
 
   if (error) throw new Error("Failed to fetch vendors")
-  return data
+  return { data: data ?? [], total: count || 0 }
 }
 
 /**
@@ -335,14 +335,14 @@ export async function getProducts(limit: number = 100) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
-  const { data, error } = await supabase
+  const { data, count, error } = await supabase
     .from("products")
-    .select("id, name, sku, unit_price, hsn_sac_code")
+    .select("id, name, sku, unit_price, hsn_sac_code", { count: "exact" })
     .eq("tenant_id", tenantId)
     .eq("is_active", true)
     .order("name")
     .limit(limit)
 
   if (error) throw new Error("Failed to fetch products")
-  return data
+  return { data: data ?? [], total: count || 0 }
 }

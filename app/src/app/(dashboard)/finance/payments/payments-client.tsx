@@ -28,10 +28,11 @@ const formatDate = (dateStr: string | null | undefined) => {
 }
 
 interface Props {
-    payments: PaymentDB[]
+    initialPayments: PaymentDB[]
+    total: number
 }
 
-export default function PaymentsClient({ payments: initialPayments }: Props) {
+export default function PaymentsClient({ initialPayments, total }: Props) {
     const router = useRouter()
     const [payments, setPayments] = useState<PaymentDB[]>(initialPayments)
     const [searchQuery, setSearchQuery] = useState("")

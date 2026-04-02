@@ -11,8 +11,8 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
   const [contact, ledger, tasks, logs] = await Promise.all([
     getContactById(params.id),
     getCustomerLedger(params.id),
-    getTasks({ contact_id: params.id }),
-    getCommunicationLogs({ contact_id: params.id }),
+    getTasks(1, 50, { contact_id: params.id }),
+    getCommunicationLogs(1, 50, { contact_id: params.id }),
   ])
 
   if (!contact) notFound()
@@ -21,8 +21,8 @@ export default async function ContactDetailPage({ params }: { params: { id: stri
     <ContactDetailClient
       contact={contact}
       ledger={ledger}
-      initialTasks={tasks}
-      initialLogs={logs}
+      initialTasks={tasks.data}
+      initialLogs={logs.data}
     />
   )
 }

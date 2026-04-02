@@ -7,8 +7,8 @@ export const metadata = {
 }
 
 export default async function NewBillPage() {
-  const vendors = await getVendors()
-  const products = await getProducts()
+  const { data: vendors } = await getVendors()
+  const { data: products } = await getProducts()
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">

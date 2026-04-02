@@ -32,22 +32,25 @@ export interface ProductDB {
 }
 
 /* ── Read All ── */
-export async function getProducts(page: number = 1, limit: number = 10): Promise<ProductDB[]> {
+export async function getProducts(
+  page: number = 1, 
+  limit: number = 10
+): Promise<{ data: ProductDB[]; total: number }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
-  const { data, error } = await supabase
+  const { data, count, error } = await supabase
     .from("products")
-    .select("*")
+    .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
     .range((page - 1) * limit, page * limit - 1)
     .order("name", { ascending: true })
 
   if (error) {
     console.error("getProducts error:", error.message)
-    return []
+    return { data: [], total: 0 }
   }
-  return data ?? []
+  return { data: data ?? [], total: count || 0 }
 }
 
 /* ── Read One ── */

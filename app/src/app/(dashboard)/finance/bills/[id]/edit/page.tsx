@@ -13,11 +13,14 @@ interface Props {
 
 export default async function EditBillPage({ params }: Props) {
   const { id } = await params
-  const [bill, vendors, products] = await Promise.all([
+  const [bill, vendorsRes, productsRes] = await Promise.all([
     getBill(id),
     getVendors(),
     getProducts(),
   ])
+
+  const vendors = vendorsRes.data
+  const products = productsRes.data
 
   if (!bill) return notFound()
 

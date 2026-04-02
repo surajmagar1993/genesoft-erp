@@ -4,7 +4,7 @@ import { ProductsClient } from "./products-client"
 export const dynamic = "force-dynamic"
 
 export default async function ProductsPage() {
-    const products = await getProducts()
+    const { data: products, total } = await getProducts()
 
-    return <ProductsClient initialProducts={products} />
+    return <ProductsClient initialProducts={products} total={total} />
 }

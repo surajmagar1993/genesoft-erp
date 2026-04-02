@@ -23,15 +23,25 @@ export interface Company {
   created_at: string
 }
 
-export async function getCompanies(page: number = 1, limit: number = 10): Promise<{ data: Company[]; total: number }> {
+export async function getCompanies(
+  page: number = 1,
+  limit: number = 10,
+  search?: string
+): Promise<{ data: Company[]; total: number }> {
   const supabase = await createClient()
   const tenantId = await getTenantId()
   const offset = (page - 1) * limit
 
-  const { data, count, error } = await supabase
+  let query = supabase
     .from("companies")
     .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
+
+  if (search) {
+    query = query.or(`name.ilike.%${search}%,industry.ilike.%${search}%,email.ilike.%${search}%`)
+  }
+
+  const { data, count, error } = await query
     .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false })
 

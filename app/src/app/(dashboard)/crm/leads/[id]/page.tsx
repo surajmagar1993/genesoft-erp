@@ -9,13 +9,13 @@ export const dynamic = "force-dynamic"
 export default async function LeadDetailPage({ params }: { params: { id: string } }) {
     const [lead, tasks, logs] = await Promise.all([
         getLeadById(params.id),
-        getTasks({ lead_id: params.id }),
-        getCommunicationLogs({ lead_id: params.id })
+        getTasks(1, 50, { lead_id: params.id }),
+        getCommunicationLogs(1, 50, { lead_id: params.id })
     ])
 
     if (!lead) {
         notFound()
     }
 
-    return <LeadDetailClient lead={lead} initialTasks={tasks} initialLogs={logs} />
+    return <LeadDetailClient lead={lead} initialTasks={tasks.data} initialLogs={logs.data} />
 }

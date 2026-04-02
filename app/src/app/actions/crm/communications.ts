@@ -29,6 +29,7 @@ export async function getCommunicationLogs(
     lead_id?: string
     deal_id?: string
     type?: CommunicationType
+    search?: string
   }
 ): Promise<{ data: CommunicationLog[]; total: number }> {
   const supabase = await createClient()
@@ -40,6 +41,9 @@ export async function getCommunicationLogs(
     .select("*", { count: "exact" })
     .eq("tenant_id", tenantId)
 
+  if (filters?.search) {
+    query = query.or(`subject.ilike.%${filters.search}%,content.ilike.%${filters.search}%`)
+  }
   if (filters?.contact_id) query = query.eq("contact_id", filters.contact_id)
   if (filters?.lead_id) query = query.eq("lead_id", filters.lead_id)
   if (filters?.deal_id) query = query.eq("deal_id", filters.deal_id)

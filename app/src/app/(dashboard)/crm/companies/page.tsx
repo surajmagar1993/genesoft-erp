@@ -1,10 +1,21 @@
 import { getCompanies } from "@/app/actions/crm/companies"
 import CompaniesClient from "./CompaniesClient"
 
-export default async function CompaniesPage() {
+export const dynamic = "force-dynamic"
+
+export default async function CompaniesPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+    const params = await searchParams
+    const search = params.search as string | undefined
+    const page = params.page ? parseInt(params.page as string) : 1
+    const limit = params.limit ? parseInt(params.limit as string) : 10
+
     try {
-        const companies = await getCompanies()
-        return <CompaniesClient initialCompanies={companies} />
+        const { data: companies, total } = await getCompanies(page, limit, search)
+        return <CompaniesClient initialCompanies={companies} total={total} />
     } catch (error) {
         return (
             <div className="flex h-[400px] items-center justify-center">
