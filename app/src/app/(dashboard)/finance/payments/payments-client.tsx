@@ -19,8 +19,7 @@ import { Badge } from "@/components/ui/badge"
 import { PaymentDB, deletePayment } from "@/app/actions/finance/payments"
 
 /* ── Helpers ── */
-const formatCurrency = (amount: number, currency: string = "INR") =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(amount)
+import { formatCurrency } from "@/lib/utils"
 
 const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—"
@@ -85,7 +84,7 @@ export default function PaymentsClient({ initialPayments, total }: Props) {
                 <Card className="bg-emerald-500/5 border-emerald-500/20">
                     <CardContent className="pt-4 pb-3">
                         <div className="flex items-center gap-2">
-                            <IndianRupee className="h-4 w-4 text-emerald-500" />
+                            <Banknote className="h-4 w-4 text-emerald-500" />
                             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Inbound</p>
                         </div>
                         <p className="text-2xl font-bold mt-1 text-emerald-600">{formatCurrency(totalInbound)}</p>
@@ -94,7 +93,7 @@ export default function PaymentsClient({ initialPayments, total }: Props) {
                 <Card className="bg-orange-500/5 border-orange-500/20">
                     <CardContent className="pt-4 pb-3">
                         <div className="flex items-center gap-2">
-                            <IndianRupee className="h-4 w-4 text-orange-500" />
+                            <Banknote className="h-4 w-4 text-orange-500" />
                             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Outbound</p>
                         </div>
                         <p className="text-2xl font-bold mt-1 text-orange-600">{formatCurrency(totalOutbound)}</p>

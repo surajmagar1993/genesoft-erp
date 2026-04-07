@@ -2,7 +2,7 @@
 
 **Project:** Multi-Platform SaaS ERP & CRM
 **Company:** Genesoft Infotech Private Limited
-**Date:** 2026-04-01 | **Status:** In Development (P1 MVP — CRM/Sales Standardization Complete)
+**Date:** 2026-04-07 | **Status:** In Development (P1 MVP — CRM/Sales + Multi-Currency Complete)
 
 ---
 
@@ -292,7 +292,7 @@ leads
 deals
 ├── id, tenant_id
 ├── contact_id (FK)
-├── title, value, currency
+├── title, value, currency_code
 ├── stage (prospecting/proposal/negotiation/won/lost)
 ├── expected_close_date
 ├── assigned_to
@@ -314,9 +314,10 @@ ledger_entries
 ├── contact_id (FK → contacts)
 ├── type (INVOICE, PAYMENT, CREDIT_NOTE, REFUND)
 ├── amount (Decimal) # Positive = Debit, Negative = Credit
-├── balance (Decimal) # Running balance for the contact
+├── balance (Decimal) # Running balance for the contact (in contact's base currency)
 ├── reference_id (String, optional) # ID of Invoice or Payment
 ├── description (String, optional)
+├── currency_code (String) # Original transaction currency
 └── date (DateTime)
 ```
 
@@ -566,7 +567,7 @@ genesoft-erp/
 | **Backups** | Supabase auto-backups (7 days free, 30 days pro) |
 | **Offline** | Basic offline via Capacitor (mobile) |
 | **i18n** | English first, framework-ready for Hindi, Arabic, etc. |
-| **Multi-Currency** | INR, USD, AED, SAR from day one |
+| **Multi-Currency** | Full multi-currency support (INR, USD, AED, SAR) implemented |
 | **PDF Export** | All reports & invoices exportable as PDF |
 | **Responsive** | Desktop-first, mobile-optimized |
 
@@ -597,4 +598,4 @@ genesoft-erp/
 
 ---
 
-*Document Version: 1.5 | Last Updated: 2026-04-01*
+*Document Version: 1.6 | Last Updated: 2026-04-07*

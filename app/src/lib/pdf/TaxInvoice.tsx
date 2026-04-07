@@ -14,6 +14,7 @@ import {
 import type { InvoiceDB, InvoiceLineItemDB } from "@/app/actions/sales/invoices"
 import { computeInvoiceGstSummary, computeHsnSummary } from "@/lib/gst-engine"
 import { COMPANY } from "@/lib/constants/company"
+import { getCurrencySymbol } from "@/lib/utils"
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const colors = {
@@ -231,9 +232,12 @@ const ONES = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"
   "Seventeen", "Eighteen", "Nineteen"]
 const TENS = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"]
 
-function numToWords(n: number): string {
+function numToWords(n: number, currencyCode: string = "INR"): string {
   const amount = Math.floor(n)
   const paise = Math.round((n - amount) * 100)
+  
+  const currencyName = currencyCode === "INR" ? "Rupees" : (currencyCode === "USD" ? "Dollars" : currencyCode)
+  const subCurrencyName = currencyCode === "INR" ? "Paise" : (currencyCode === "USD" ? "Cents" : "Sub-units")
 
   function chunk(num: number): string {
     if (num === 0) return ""
@@ -257,8 +261,8 @@ function numToWords(n: number): string {
     return result.trim()
   }
 
-  let words = convert(amount) + " Rupees"
-  if (paise > 0) words += " and " + convert(paise) + " Paise"
+  let words = convert(amount) + " " + currencyName
+  if (paise > 0) words += " and " + convert(paise) + " " + subCurrencyName
   return words + " Only"
 }
 
@@ -299,6 +303,8 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
     invoice.discount ?? 0,
     invoice.discount_type ?? "PERCENT"
   )
+
+  const currencySymbol = getCurrencySymbol(invoice.currency_code)
 
   const hsnSummaryList = computeHsnSummary(
     items.map((li) => ({
@@ -392,17 +398,17 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
             {isIntra ? (
               <>
                 <Text style={[s.thText, s.colGstPct]}>CGST%</Text>
-                <Text style={[s.thText, s.colGstAmt]}>CGST₹</Text>
+                <Text style={[s.thText, s.colGstAmt]}>CGST{currencySymbol}</Text>
                 <Text style={[s.thText, s.colGstPct]}>SGST%</Text>
-                <Text style={[s.thText, s.colGstAmt]}>SGST₹</Text>
+                <Text style={[s.thText, s.colGstAmt]}>SGST{currencySymbol}</Text>
               </>
             ) : (
               <>
                 <Text style={[s.thText, s.colGstPct]}>IGST%</Text>
-                <Text style={[s.thText, s.colGstAmt]}>IGST₹</Text>
+                <Text style={[s.thText, s.colGstAmt]}>IGST{currencySymbol}</Text>
               </>
             )}
-            <Text style={[s.thText, s.colTotal]}>Total</Text>
+            <Text style={[s.thText, s.colTotal]}>Total ({currencySymbol})</Text>
           </View>
 
           {/* Rows */}
@@ -451,22 +457,22 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
               <>
                 <View style={s.gstRow}>
                   <Text style={s.gstLabel}>CGST</Text>
-                  <Text style={s.gstValue}>₹{fmt(summary.cgstTotal)}</Text>
+                  <Text style={s.gstValue}>{currencySymbol}{fmt(summary.cgstTotal)}</Text>
                 </View>
                 <View style={s.gstRow}>
                   <Text style={s.gstLabel}>SGST</Text>
-                  <Text style={s.gstValue}>₹{fmt(summary.sgstTotal)}</Text>
+                  <Text style={s.gstValue}>{currencySymbol}{fmt(summary.sgstTotal)}</Text>
                 </View>
               </>
             ) : (
               <View style={s.gstRow}>
                 <Text style={s.gstLabel}>IGST</Text>
-                <Text style={s.gstValue}>₹{fmt(summary.igstTotal)}</Text>
+                <Text style={s.gstValue}>{currencySymbol}{fmt(summary.igstTotal)}</Text>
               </View>
             )}
             <View style={[s.gstRow, { marginTop: 4, paddingTop: 4, borderTop: `0.5 solid ${colors.border}` }]}>
               <Text style={s.gstLabel}>Total Tax</Text>
-              <Text style={s.gstValue}>₹{fmt(summary.totalTax)}</Text>
+              <Text style={s.gstValue}>{currencySymbol}{fmt(summary.totalTax)}</Text>
             </View>
           </View>
 
@@ -474,7 +480,7 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
           <View style={s.totalsBox}>
             <View style={s.totalRow}>
               <Text style={s.totalLabel}>Subtotal (Taxable)</Text>
-              <Text style={s.totalValue}>₹{fmt(summary.subtotal)}</Text>
+              <Text style={s.totalValue}>{currencySymbol}{fmt(summary.subtotal)}</Text>
             </View>
             {summary.discountAmount > 0 && (
               <View style={s.totalRow}>
@@ -482,12 +488,12 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
                   Discount
                   {invoice.discount_type === "PERCENT" ? ` (${invoice.discount}%)` : ""}
                 </Text>
-                <Text style={s.totalValue}>-₹{fmt(summary.discountAmount)}</Text>
+                <Text style={s.totalValue}>-{currencySymbol}{fmt(summary.discountAmount)}</Text>
               </View>
             )}
             <View style={s.totalRow}>
               <Text style={s.totalLabel}>Total Tax</Text>
-              <Text style={s.totalValue}>₹{fmt(summary.totalTax)}</Text>
+              <Text style={s.totalValue}>{currencySymbol}{fmt(summary.totalTax)}</Text>
             </View>
             <View style={s.grandTotalRow}>
               <Text style={s.grandTotalLabel}>Grand Total</Text>
@@ -498,7 +504,7 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
 
         {/* ── Amount in Words ── */}
         <Text style={s.amountWords}>
-          Amount in Words: {numToWords(summary.grandTotal)}
+          Amount in Words: {numToWords(summary.grandTotal, invoice.currency_code)}
         </Text>
 
         {/* ── HSN Summary Table ── */}
@@ -520,16 +526,16 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
           {hsnSummaryList.map((h, i) => (
             <View key={i} style={s.hsnRow}>
               <Text style={[s.hsnCol, s.hsnColHsn, { paddingLeft: 4 }]}>{h.hsnSac}</Text>
-              <Text style={[s.hsnCol, s.hsnColTaxable]}>₹{fmt(h.taxableAmount)}</Text>
+              <Text style={[s.hsnCol, s.hsnColTaxable]}>{currencySymbol}{fmt(h.taxableAmount)}</Text>
               {isIntra ? (
                 <>
-                  <Text style={[s.hsnCol, s.hsnColAmt]}>₹{fmt(h.cgstAmount)}</Text>
-                  <Text style={[s.hsnCol, s.hsnColAmt]}>₹{fmt(h.sgstAmount)}</Text>
+                  <Text style={[s.hsnCol, s.hsnColAmt]}>{currencySymbol}{fmt(h.cgstAmount)}</Text>
+                  <Text style={[s.hsnCol, s.hsnColAmt]}>{currencySymbol}{fmt(h.sgstAmount)}</Text>
                 </>
               ) : (
-                <Text style={[s.hsnCol, s.hsnColAmt]}>₹{fmt(h.igstAmount)}</Text>
+                <Text style={[s.hsnCol, s.hsnColAmt]}>{currencySymbol}{fmt(h.igstAmount)}</Text>
               )}
-              <Text style={[s.hsnCol, s.hsnColTotal, { paddingRight: 4 }]}>₹{fmt(h.totalTaxAmount)}</Text>
+              <Text style={[s.hsnCol, s.hsnColTotal, { paddingRight: 4 }]}>{currencySymbol}{fmt(h.totalTaxAmount)}</Text>
             </View>
           ))}
         </View>

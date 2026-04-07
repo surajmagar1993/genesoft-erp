@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+import { prisma } from '@/lib/prisma'
+
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
@@ -30,6 +32,7 @@ export async function register(formData: FormData) {
   const fullName = formData.get('fullName') as string
   const email = formData.get('email') as string
   const company = formData.get('company') as string
+  const slug = formData.get('slug') as string
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
 
@@ -37,7 +40,21 @@ export async function register(formData: FormData) {
     redirect('/register?error=Passwords+do+not+match')
   }
 
-  const { error } = await supabase.auth.signUp({
+  if (!slug) {
+    redirect('/register?error=Workspace+slug+is+required')
+  }
+
+  // 1. Check if slug (domain) is already taken
+  const existingTenant = await prisma.tenant.findUnique({
+    where: { domain: slug.toLowerCase() }
+  })
+
+  if (existingTenant) {
+    redirect('/register?error=Workspace+URL+is+already+taken')
+  }
+
+  // 2. Sign up user in Supabase
+  const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -48,11 +65,49 @@ export async function register(formData: FormData) {
     },
   })
 
-  if (error) {
-    redirect(`/register?error=${encodeURIComponent(error.message)}`)
+  if (authError) {
+    redirect(`/register?error=${encodeURIComponent(authError.message)}`)
   }
 
-  redirect('/login?message=Check+your+email+to+confirm+your+account')
+  if (!authData.user) {
+    redirect('/register?error=Failed+to+create+authentication+account')
+  }
+
+  try {
+    // 3. Create Tenant and Profile in Prisma
+    const [firstName, ...lastNameParts] = fullName.split(' ')
+    const lastName = lastNameParts.join(' ') || ''
+
+    await prisma.$transaction(async (tx) => {
+      const tenant = await tx.tenant.create({
+        data: {
+          name: company,
+          domain: slug.toLowerCase(),
+          plan: 'FREE',
+          isTrial: true,
+          trialEndsAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days trial
+        }
+      })
+
+      await tx.user.create({
+        data: {
+          authId: authData.user!.id,
+          tenantId: tenant.id,
+          firstName,
+          lastName,
+          email,
+          role: 'ADMIN',
+        }
+      })
+    })
+
+    redirect('/login?message=Account+created+successfully.+Check+your+email+to+confirm.')
+  } catch (dbError) {
+    console.error('Database sync error during registration:', dbError)
+    // NOTE: Ideally we would roll back the Supabase user here, 
+    // but typically email confirmation prevents them from logging in anyway.
+    redirect('/register?error=Application+setup+failed.+Please+contact+support.')
+  }
 }
 
 export async function forgotPassword(formData: FormData) {

@@ -1,0 +1,3 @@
+name,type,unit_price,currency,unit,stock_qty,is_active,category
+Widget A,PRODUCT,19.99,USD,Nos,100,true,Widgets
+Consulting,SERVICE,150.00,USD,Hours,0,true,Services

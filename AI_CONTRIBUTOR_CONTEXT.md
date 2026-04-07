@@ -1,6 +1,6 @@
 # 🤖 AI System Context — Genesoft ERP & CRM
 
-> **Last Updated:** 2026-04-01
+> **Last Updated:** 2026-04-07
 
 ## 🎯 Project Overview
 This repository contains the **Genesoft ERP & CRM**, a multi-tenant SaaS application. 
@@ -75,40 +75,31 @@ Full Chart of Accounts module for the Finance block:
 Full Accounts Payable module for the Finance block:
 - **`app/actions/finance/bills.ts`** — CRUD server actions for vendor bills, payments, and AP dashboard.
 - **`app/(dashboard)/finance/ap/page.tsx`** — Dashboard with aging buckets for vendor liabilities.
+- **Prisma**: `Bill` and `BillItem` models. Note: `invoice_line_items` mapping in schema.
 
-## 🔔 Notification System (Completed — 2026-04-01)
-Cross-module, tenant-scoped notification system:
-- **`app/actions/notifications.ts`** — Server actions: `getNotifications`, `markNotificationAsRead`, `markAllAsRead`, `createNotification`.
-- **`components/notifications-dropdown.tsx`** — Real-time polling UI component for the dashboard top bar.
-- **Prisma**: `Notification` model with type-safe fields and `NotificationType` enum.
-- **DB Migration**: Added `notifications` table with RLS policy (`auth.uid() = user_id`) and performance indexing.
-- **Integrations**: Automatic triggers on Lead creation (CRM) and Bill creation (Finance).
+## 📊 Financial Reports (Completed — 2026-04-05)
+Real-time financial analytics engine:
+- **`app/actions/finance/reports.ts`** — Aggregations for P&L, Monthly Revenue, Cash Flow, and Top Revenue Contacts.
+- **`app/(dashboard)/finance/reports/`** — Visual dashboards with period filtering.
+- **Logic**: Invoices (AR) vs Bills (AP) aggregation with payment-based cash flow tracking.
 
-## 🎨 UI/UX Design Rules
-Please refer to `DESIGN_DOCUMENT.md` for specific Tailwind color classes, but at a high level:
-1. **Forms**: Should be rendered on dedicated full pages (e.g., `/crm/contacts/new/page.tsx`), not in modals or dialogs.
-2. **Layout Wrapper**: Use `flex flex-col min-w-0 overflow-y-auto overflow-x-hidden p-6 w-full` for all main module views.
-3. **Typography**: Main page headers should be `h1` with `className="text-3xl font-bold tracking-tight"`.
-4. **Stats Grids**: Key landing pages should use a 4-column responsive stats grid `grid gap-4 md:grid-cols-2 lg:grid-cols-4`.
-5. **Search**: Embedded search bounds should be standardized: `className="relative max-w-sm w-full flex-1"`.
+## 🎫 Support & Ticketing (Completed — 2026-04-07)
+Multi-tenant helpdesk system:
+- **`app/actions/support/tickets.ts`** — Server actions for ticket lifecycle and threaded messaging.
+- **Prisma**: `SupportTicket` (Status/Priority) and `SupportMessage` (Admin/User flags).
+- **RBAC**: Integrated with user roles for Admin vs Tenant response views.
 
-## 📤 Bulk Import / Export (Completed — 2026-04-01)
-Real-time CSV processing for Contacts & Products:
-- **`app/actions/crm/contacts.ts`** & **`app/actions/sales/products.ts`** — Batch server actions for `import` and `export`.
-- **`papaparse`** — Used for robust client-side CSV parsing/generation.
-- **UI**: Added `Import` and `Export` buttons to `ContactsClient` and `ProductsClient`.
-- **Handling**: Supports automated mapping of standard fields; handles large inserts via Supabase batching.
-
-## ⚡ Standardized Performance Patterns (Completed — 2026-04-01)
-To ensure scalability and performance, all listing pages (Leads, Deals, Quotes, Orders, Invoices) have been refactored:
-- **Architecture**: Split into a Server Component (fetching) and a Client Component (UI/State).
-- **Pagination**: Uses standard `page` and `limit` parameters via `searchParams`, enabling URL-persistent state.
-- **Filtering**: Implemented debounced search (500ms) and status filtering on the server to minimize DB load.
-- **Reference**: Follow the pattern in `app/(dashboard)/sales/invoices/` when building new modules.
+## 💱 Multi-Currency Support (Completed — 2026-04-07)
+System-wide support for dynamic currency and exchange rates:
+- **`lib/utils.ts`** — `formatCurrency(amount, code)` helper using `Intl.NumberFormat`.
+- **`app/actions/finance/exchange-rates.ts`** — Central service for `getExchangeRate` with built-in reference rates.
+- **`app/actions/crm/ledger.ts`** — Enhanced to automatically convert transaction amounts to contact's base currency using exchange rates.
+- **Models**: `currency_code` added to `Quote`, `SalesOrder`, `Bill`, and `Contact`.
+- **UI**: Generic `Banknote` icons and dynamic symbols across all financial pages and PDF templates.
 
 ## 🚦 Contribution Workflow (For AI Agents)
 1. **Never** deviate from `lucide-react` or `shadcn/ui` components for base UI.
-2. Always write mocked UI *first* in standard TSX, then wire it to tRPC.
+2. Always write mocked UI *first* in standard TSX, then wire it up.
 3. Once a module feature is complete, update `TASK_TRACKER.md` and remove it from `REMAINING_TASKS.md`.
 4. Ensure components that interact with the database utilize the `tenantId` parameter inherently passed through the active session context.
-5. **Next active block**: Subscription & Billing (SaaS Platform).
+5. **Next active block**: Phase 2 Modules (Inventory & Purchase).

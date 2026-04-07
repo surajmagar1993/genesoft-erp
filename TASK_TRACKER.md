@@ -1,6 +1,6 @@
 # ERP & CRM Multi-Platform SaaS — Master Task Tracker
 
-> **Last Updated:** 2026-04-01 (v4) | **Latest Commit:** `bc3ce3c` | **Branch:** `main`
+> **Last Updated:** 2026-04-07 (v5) | **Latest Commit:** `c9e4b2d` | **Branch:** `main`
 
 ## Brainstorming Phase ✅
 - [x] Define purpose & scale
@@ -90,7 +90,7 @@
 - [x] **Accounts Receivable (AR)** — Global dashboard with aging buckets, top debtors, and outstanding tracking ✅
 - [x] **Accounts Payable (AP)** — Bills CRUD, AP dashboard, vendor payments, bill edit page ✅
 - [x] **Financial Reports (Basic)** — P&L Statement, Monthly Revenue Trend, Cash Flow Summary, Working Capital, Top Revenue Contacts ✅
-- [ ] Multi-Currency Support (Started in UI)
+- [x] **Multi-Currency Support** — Full support for dynamic currency formatting (INR, USD, AED, SAR), symbols, and exchange rate-aware ledger balances. Exchange rates implemented via central service. ✅ Done
 
 ### Multi-Country Tax & Compliance (India) ✅
 - [x] **GST (CGST + SGST + IGST) Logic & Engine**
@@ -122,7 +122,7 @@
 ### Subscription & Billing
 - [x] **SaaS Infrastructure**
     - [x] Subscription Plans (Free, Pro, Enterprise)
-    - [x] Razorpay / Stripe Integration (SaaS Revenue)
+    - [x] Razorpay Integration ✅ (Stripe Deferred for P1)
     - [x] Multi-tenant Data Isolation (RLS / Middleware)
 
 ---

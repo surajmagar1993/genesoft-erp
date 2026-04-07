@@ -1,6 +1,6 @@
 # Genesoft ERP
 
-Genesoft is a modern, enterprise-grade ERP and CRM platform built with Next.js, Supabase, and Prisma. It provides a comprehensive suite for managing business operations in the Indian market, including integrated GST handling.
+Genesoft is a modern, enterprise-grade ERP and CRM platform built with Next.js, Supabase, and Prisma. It provides a comprehensive suite for managing business operations with native multi-currency support and integrated GST handling.
 
 ## 🚀 Features
 
@@ -15,6 +15,7 @@ Genesoft is a modern, enterprise-grade ERP and CRM platform built with Next.js, 
 - **Accounts Receivable**: Track customer invoices and incoming payments.
 - **GST Engine**: Integrated Indian GST calculations for all financial documents.
 - **Chart of Accounts**: Comprehensive financial structure management.
+- **Multi-Currency Support (New!)**: Dynamic currency formatting ($, €, ₹, AED) and automated exchange rate-aware ledger balances.
 
 ### 🔔 Notifications (New!)
 - **Cross-module Triggers**: Real-time notifications when leads are created or bills are generated.

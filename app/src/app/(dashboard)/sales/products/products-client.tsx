@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { ProductDB, deleteProduct, importProducts, exportProducts } from "@/app/actions/sales/products"
+import { formatCurrency } from "@/lib/utils"
 
 interface ProductsClientProps {
     initialProducts: ProductDB[]
@@ -269,10 +270,7 @@ export function ProductsClient({ initialProducts, total }: ProductsClientProps) 
                                             <TableCell className="text-right">
                                                 <div className="flex flex-col">
                                                     <span className="font-medium font-mono text-sm">
-                                                        {new Intl.NumberFormat("en-IN", {
-                                                            style: "currency",
-                                                            currency: item.currency,
-                                                        }).format(item.unit_price)}
+                                                        {formatCurrency(item.unit_price, item.currency)}
                                                     </span>
                                                     <span className="text-xs text-muted-foreground pl-1">
                                                         per {item.unit}

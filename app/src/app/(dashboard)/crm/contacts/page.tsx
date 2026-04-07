@@ -15,7 +15,16 @@ export default async function ContactsPage({
 
     try {
         const { data: contacts, total } = await getContacts(page, limit, search)
-        return <ContactsClient initialContacts={contacts} total={total} />
+        
+        // Fetch Tenant Currency
+        const { prisma } = await import("@/lib/prisma")
+        const tenantId = await (await import("@/lib/get-tenant-id")).getTenantId()
+        const tenant = await prisma.tenant.findUnique({
+            where: { id: tenantId },
+            select: { currencyCode: true }
+        })
+
+        return <ContactsClient initialContacts={contacts} total={total} baseCurrency={tenant?.currencyCode || "INR"} />
     } catch (error) {
         return (
             <div className="flex h-[400px] items-center justify-center font-bold">

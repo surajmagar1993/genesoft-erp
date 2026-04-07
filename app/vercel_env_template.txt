@@ -1,0 +1,37 @@
+# ==============================================================================
+# VERCEL ENVIRONMENT VARIABLES FOR GENESOFT ERP & CRM
+# ==============================================================================
+
+# SUPABASE (Found in Supabase -> Settings -> API)
+NEXT_PUBLIC_SUPABASE_URL=https://qxvzvimmtpmmanldcrzq.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# DATABASE (Found in Supabase -> Settings -> Database -> Connection String)
+# IMPORTANT: Use the "Direct Connection" string (usually port 5432) for Vercel Build.
+# If using PgBouncer for production, use the Transaction string (Port 6543) for DATABASE_URL.
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.qxvzvimmtpmmanldcrzq.supabase.co:6543/postgres?pgbouncer=true"
+
+# STRIPE (Found in Stripe Dashboard -> Developers -> API Keys)
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# RAZORPAY (Found in Razorpay Dashboard -> Settings -> API Keys)
+RAZORPAY_KEY_ID=your-razorpay-key
+RAZORPAY_KEY_SECRET=your-razorpay-secret
+RAZORPAY_WEBHOOK_SECRET=your-razorpay-webhook-secret
+NEXT_PUBLIC_RAZORPAY_KEY_ID=your-razorpay-key
+
+# EMAIL (Found in Resend Dashboard)
+RESEND_API_KEY=re_...
+RESEND_DOMAIN=yourdomain.com
+
+# APP CONFIGURATION
+NEXT_PUBLIC_APP_URL=https://your-app-domain.vercel.app
+NEXT_PUBLIC_SITE_URL=https://your-app-domain.vercel.app
+NEXT_PUBLIC_APP_NAME="Genesoft ERP"
+
+# OPTIONAL COMPANY DEFAULTS (Used for fallback in quotes/invoices)
+COMPANY_NAME="Genesoft Infotech"
+COMPANY_ADDRESS="Mumbai, Maharashtra"
+COMPANY_GSTIN=""
+COMPANY_STATE="Maharashtra"

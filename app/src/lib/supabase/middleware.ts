@@ -64,17 +64,17 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    // Admin role check
+    // Admin role check (Platform level)
     if (user && isAdminPage) {
         const { data: userData } = await supabase
-            .from('users')
+            .from('profiles')
             .select('role')
             .eq('auth_id', user.id)
             .single()
 
         if (!userData || userData.role !== 'SUPER_ADMIN') {
             const url = request.nextUrl.clone()
-            url.pathname = '/crm/contacts' // Standard dashboard if not admin
+            url.pathname = '/crm/contacts' // Standard dashboard if not platform admin
             return NextResponse.redirect(url)
         }
     }

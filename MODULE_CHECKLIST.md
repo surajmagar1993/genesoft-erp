@@ -8,7 +8,7 @@
 - [x] **Leads**: (Standardized: Pagination & Filtering) ✅
 - [x] **Deals**: (Standardized: Pagination & Filtering) ✅
 - [x] **Tasks & Activities**: TODOs for team (Prisma Model + CRUD + UI) ✅
-- [/] **Notes & Communication Log**: UI implemented in Lead Detail, still needs dedicated DB model ⚠️
+- [x] **Notes & Communication Log**: Dedicated DB model + Timeline UI implemented ✅
 
 #### 🏪 Retail / B2C
 - [x] **Customer Types**: Individual vs Company split ✅
@@ -30,14 +30,14 @@
 - [x] **HSN/SAC**: Support for Item-level HSN codes & summary tables ✅
 - [x] **GSTIN Validator**: Format check implemented ✅
 - [x] **Tax Engine**: Centralized GST computation with multi-slab support ✅
-- [/] **MSME / Udyam**: DB field exists, missing in PDF header ⚠️
+- [x] **MSME / Udyam**: DB field exists and handled in PDF ✅
 
 #### 🏦 Finance (Basic)
 - [x] **Chart of Accounts**: Hierarchical ledger categorization ✅
 - [x] **Accounts Receivable (AR)**: Track customer aging and outstanding debt ✅
-- [ ] **Accounts Payable (AP)**: Track bills to pay ❌
-- [/] **Multi-Currency**: Base field exists, no exchange logic ⚠️
-- [ ] **Financial Reports**: P&L, Balance Sheet (Not started) ❌
+- [x] **Accounts Payable (AP)**: Track bills and vendor payments (Full CRUD live) ✅
+- [x] **Multi-Currency Support**: Exchange rates, conversions & global formatting ✅
+- [x] **Financial Reports**: P&L, Revenue Trend, Cash Flow Summary live ✅
 
 #### ⚙️ Admin & SaaS
 - [x] **Multi-Tenant**: Supabase Auth + Prisma multi-tenancy ✅
@@ -46,7 +46,7 @@
 - [x] **Notification System**: In-app unread tracking, cross-module triggers, Dashbard UI ✅
 - [x] **Import/Export**: Bulk CSV import for contacts/products ✅
 - [x] **Super Admin Console**: Centralized platform management (Live) ✅
-- [/] **Live Support**: Real-time chat system (Infrastructure Live) ⚠️
+- [x] **Live Support**: Infrastructure live and functional ✅
 
 ---
 
@@ -127,8 +127,8 @@
 
 - [x] **Chart of Accounts** 🔴 — Hierarchical account structure ✅
 - [x] **Accounts Receivable (AR)** 🔴 — Track customer aging and outstanding payments ✅
-- [ ] **Accounts Payable (AP)** 🔴 — Track vendor payments
-- [ ] **Multi-Currency Support** 🔴 — Exchange rates, conversions
+- [x] **Accounts Payable (AP)** 🔴 — Track vendor payments ✅
+- [x] **Multi-Currency Support** 🔴 — Exchange rates, conversions, and global formatting ✅
 - [x] **Financial Reports** 🔴 — P&L, AR/AP aging, cash flow ✅
 - [x] **General Ledger** 🟡 — Journal entries, double-entry bookkeeping ✅
 - [x] **Bank Reconciliation** 🟡 — Match bank statements
@@ -278,7 +278,7 @@
 - [x] **Razorpay Integration**: Payment processing ✅
 - [x] **Trial Management**: 15-day PRO trial infrastructure (Live) ✅
 - [x] **Super Admin Dashboard**: Platform metrics & tenant control (Live) ✅
-- [/] **Live Support Chat**: Real-time tenant support (Infrastructure Live) ⚠️
+- [x] **Live Support Chat**: Real-time tenant support (Live) ✅
 
 ---
 

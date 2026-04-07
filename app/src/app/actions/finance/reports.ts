@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId } from "@/lib/get-tenant-id"
+import { convertAmount } from "@/lib/exchange-rates"
+import { prisma } from "@/lib/prisma"
 
 /* ─────────────────────────────────────────
    Types
@@ -59,25 +61,38 @@ export async function getPnlReport(
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
+  // Fetch Tenant Base Currency
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { currencyCode: true }
+  })
+  if (!tenant) throw new Error("Tenant not found")
+  const baseCurrency = tenant.currencyCode
+
   // Revenue: from invoices (SENT, PARTIALLY_PAID, PAID) in period
   const { data: invoices } = await supabase
     .from("invoices")
-    .select("subtotal, total, tax_amount, status")
+    .select("subtotal, total, currency_code")
     .eq("tenant_id", tenantId)
     .in("status", ["SENT", "PARTIALLY_PAID", "PAID"])
     .gte("invoice_date", startDate)
     .lte("invoice_date", endDate)
 
-  const salesRevenue = (invoices ?? []).reduce(
-    (sum, inv) => sum + Number(inv.subtotal ?? inv.total ?? 0),
-    0
-  )
+  let salesRevenue = 0
+  for (const inv of invoices ?? []) {
+    const rawAmount = Number(inv.subtotal ?? inv.total ?? 0)
+    const normalized = inv.currency_code === baseCurrency
+      ? rawAmount 
+      : (await convertAmount(rawAmount, inv.currency_code, baseCurrency)).toNumber()
+    salesRevenue += normalized
+  }
 
   // 2. Fetch all bills in period WITH items and products
   const { data: billsWithItems } = await supabase
     .from("bills")
     .select(`
       id,
+      currency_code,
       bill_items (
         line_total,
         product_id,
@@ -93,12 +108,17 @@ export async function getPnlReport(
   let operating = 0
 
   for (const bill of billsWithItems ?? []) {
+    const billCurrency = bill.currency_code || "INR"
     for (const item of bill.bill_items as any[]) {
-      const amount = Number(item.line_total || 0)
+      const rawAmount = Number(item.line_total || 0)
+      const normalized = billCurrency === baseCurrency
+        ? rawAmount
+        : (await convertAmount(rawAmount, billCurrency, baseCurrency)).toNumber()
+
       if (item.products?.type === "PRODUCT") {
-        cogs += amount
+        cogs += normalized
       } else {
-        operating += amount // Services or miscellaneous are operating expenses
+        operating += normalized
       }
     }
   }
@@ -137,9 +157,17 @@ export async function getMonthlyRevenue(year: number): Promise<MonthlyRevenue[]>
   const startDate = `${year}-01-01`
   const endDate = `${year}-12-31`
 
+  // Fetch Tenant Base Currency
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { currencyCode: true }
+  })
+  if (!tenant) throw new Error("Tenant not found")
+  const baseCurrency = tenant.currencyCode
+
   const { data: invoices } = await supabase
     .from("invoices")
-    .select("subtotal, total, invoice_date")
+    .select("subtotal, total, invoice_date, currency_code")
     .eq("tenant_id", tenantId)
     .in("status", ["SENT", "PARTIALLY_PAID", "PAID"])
     .gte("invoice_date", startDate)
@@ -147,34 +175,44 @@ export async function getMonthlyRevenue(year: number): Promise<MonthlyRevenue[]>
 
   const { data: bills } = await supabase
     .from("bills")
-    .select("subtotal, total, bill_date")
+    .select("subtotal, total, bill_date, currency_code")
     .eq("tenant_id", tenantId)
     .in("status", ["OPEN", "PARTIALLY_PAID", "PAID"])
     .gte("bill_date", startDate)
     .lte("bill_date", endDate)
 
+  const result: MonthlyRevenue[] = []
   const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
   
-  const result: MonthlyRevenue[] = monthNames.map((month, idx) => {
+  for (let idx = 0; idx < 12; idx++) {
+    const month = monthNames[idx]
     const monthNum = idx + 1
     const monthStr = String(monthNum).padStart(2, "0")
 
-    const revenue = (invoices ?? [])
-      .filter(inv => inv.invoice_date?.startsWith(`${year}-${monthStr}`))
-      .reduce((sum, inv) => sum + Number(inv.subtotal ?? inv.total ?? 0), 0)
+    let revenue = 0
+    const monthlyInvoices = (invoices ?? []).filter(inv => inv.invoice_date?.startsWith(`${year}-${monthStr}`))
+    for (const inv of monthlyInvoices) {
+      const raw = Number(inv.subtotal ?? inv.total ?? 0)
+      const normalized = inv.currency_code === baseCurrency ? raw : (await convertAmount(raw, inv.currency_code, baseCurrency)).toNumber()
+      revenue += normalized
+    }
 
-    const expenses = (bills ?? [])
-      .filter(b => b.bill_date?.startsWith(`${year}-${monthStr}`))
-      .reduce((sum, b) => sum + Number(b.subtotal ?? b.total ?? 0), 0)
+    let expenses = 0
+    const monthlyBills = (bills ?? []).filter(b => b.bill_date?.startsWith(`${year}-${monthStr}`))
+    for (const b of monthlyBills) {
+      const raw = Number(b.subtotal ?? b.total ?? 0)
+      const normalized = (b.currency_code || "INR") === baseCurrency ? raw : (await convertAmount(raw, b.currency_code || "INR", baseCurrency)).toNumber()
+      expenses += normalized
+    }
 
-    return {
+    result.push({
       month,
       year,
       revenue: parseFloat(revenue.toFixed(2)),
       expenses: parseFloat(expenses.toFixed(2)),
       profit: parseFloat((revenue - expenses).toFixed(2)),
-    }
-  })
+    })
+  }
 
   return result
 }
@@ -190,10 +228,18 @@ export async function getCashFlowSummary(
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
+  // Fetch Tenant Base Currency
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { currencyCode: true }
+  })
+  if (!tenant) throw new Error("Tenant not found")
+  const baseCurrency = tenant.currencyCode
+
   // Payments received (inbound) in period
   const { data: inbound } = await supabase
     .from("payments")
-    .select("amount")
+    .select("amount, currency_code")
     .eq("tenant_id", tenantId)
     .eq("type", "INBOUND")
     .gte("payment_date", startDate)
@@ -202,30 +248,53 @@ export async function getCashFlowSummary(
   // Payments made (outbound) in period
   const { data: outbound } = await supabase
     .from("payments")
-    .select("amount")
+    .select("amount, currency_code")
     .eq("tenant_id", tenantId)
     .eq("type", "OUTBOUND")
     .gte("payment_date", startDate)
     .lte("payment_date", endDate)
 
+  let cashIn = 0
+  for (const p of inbound ?? []) {
+    const raw = Number(p.amount)
+    const normalized = (p.currency_code || "INR") === baseCurrency ? raw : (await convertAmount(raw, p.currency_code || "INR", baseCurrency)).toNumber()
+    cashIn += normalized
+  }
+
+  let cashOut = 0
+  for (const p of outbound ?? []) {
+    const raw = Number(p.amount)
+    const normalized = (p.currency_code || "INR") === baseCurrency ? raw : (await convertAmount(raw, p.currency_code || "INR", baseCurrency)).toNumber()
+    cashOut += normalized
+  }
+
   // Outstanding AR (all time — snapshot)
   const { data: unpaidInvoices } = await supabase
     .from("invoices")
-    .select("total")
+    .select("total, currency_code")
     .eq("tenant_id", tenantId)
     .in("status", ["SENT", "PARTIALLY_PAID"])
 
   // Outstanding AP (all time — snapshot)
   const { data: unpaidBills } = await supabase
     .from("bills")
-    .select("total")
+    .select("total, currency_code")
     .eq("tenant_id", tenantId)
     .in("status", ["OPEN", "PARTIALLY_PAID"])
 
-  const cashIn = (inbound ?? []).reduce((s, p) => s + Number(p.amount), 0)
-  const cashOut = (outbound ?? []).reduce((s, p) => s + Number(p.amount), 0)
-  const openingAR = (unpaidInvoices ?? []).reduce((s, inv) => s + Number(inv.total), 0)
-  const openingAP = (unpaidBills ?? []).reduce((s, b) => s + Number(b.total), 0)
+  let openingAR = 0
+  for (const inv of unpaidInvoices ?? []) {
+    const raw = Number(inv.total)
+    const normalized = (inv.currency_code || "INR") === baseCurrency ? raw : (await convertAmount(raw, inv.currency_code || "INR", baseCurrency)).toNumber()
+    openingAR += normalized
+  }
+
+  let openingAP = 0
+  for (const b of unpaidBills ?? []) {
+    const raw = Number(b.total)
+    const normalized = (b.currency_code || "INR") === baseCurrency ? raw : (await convertAmount(raw, b.currency_code || "INR", baseCurrency)).toNumber()
+    openingAP += normalized
+  }
 
   return {
     period: { start: startDate, end: endDate },
@@ -245,9 +314,17 @@ export async function getTopRevenueContacts(limit = 5): Promise<TopRevenueContac
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
+  // Fetch Tenant Base Currency
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { currencyCode: true }
+  })
+  if (!tenant) throw new Error("Tenant not found")
+  const baseCurrency = tenant.currencyCode
+
   const { data: invoices } = await supabase
     .from("invoices")
-    .select("contact_id, subtotal, total, contacts(display_name)")
+    .select("contact_id, subtotal, total, currency_code, contacts(display_name)")
     .eq("tenant_id", tenantId)
     .in("status", ["SENT", "PARTIALLY_PAID", "PAID"])
 
@@ -256,13 +333,14 @@ export async function getTopRevenueContacts(limit = 5): Promise<TopRevenueContac
   for (const inv of invoices ?? []) {
     const id = inv.contact_id
     const name = (inv.contacts as any)?.display_name ?? "Unknown"
-    const amount = Number(inv.subtotal ?? inv.total ?? 0)
+    const raw = Number(inv.subtotal ?? inv.total ?? 0)
+    const normalized = inv.currency_code === baseCurrency ? raw : (await convertAmount(raw, inv.currency_code, baseCurrency)).toNumber()
 
     if (!contactMap.has(id)) {
       contactMap.set(id, { contactId: id, displayName: name, revenue: 0, invoiceCount: 0 })
     }
     const entry = contactMap.get(id)!
-    entry.revenue += amount
+    entry.revenue += normalized
     entry.invoiceCount += 1
   }
 

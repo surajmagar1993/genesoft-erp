@@ -28,7 +28,8 @@ const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | 
     EXPIRED: { label: "Expired", variant: "secondary", icon: Clock },
 }
 
-/* ── Helpers ── */
+import { formatCurrency } from "@/lib/utils"
+
 function calcInvoiceTotal(inv: InvoiceDB) {
     const items = inv.invoice_line_items ?? []
     const subtotal = items.reduce((s, li) => s + li.qty * li.unit_price, 0)
@@ -36,9 +37,6 @@ function calcInvoiceTotal(inv: InvoiceDB) {
     const disc = inv.discount_type === "PERCENT" ? subtotal * (inv.discount / 100) : inv.discount
     return subtotal + tax - disc
 }
-
-const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
 
 const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—"
@@ -147,7 +145,9 @@ export default function InvoicesClient({ invoices: initialInvoices }: Props) {
                             <FileText className="h-4 w-4 text-primary" />
                             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Value</p>
                         </div>
-                        <p className="text-2xl font-bold mt-1 text-primary">{formatCurrency(totalPipeline)}</p>
+                        <p className="text-2xl font-bold mt-1 text-primary">
+                            {formatCurrency(totalPipeline, invoices[0]?.currency_code || "INR")}
+                        </p>
                     </CardContent>
                 </Card>
             </div>
@@ -230,7 +230,7 @@ export default function InvoicesClient({ invoices: initialInvoices }: Props) {
                                                     {(inv.invoice_line_items ?? []).length}
                                                 </TableCell>
                                                 <TableCell className="text-right font-medium">
-                                                    {formatCurrency(calcInvoiceTotal(inv))}
+                                                    {formatCurrency(calcInvoiceTotal(inv), inv.currency_code)}
                                                 </TableCell>
                                                 <TableCell>
                                                     <Badge variant={cfg.variant} className="flex w-fit items-center gap-1.5">

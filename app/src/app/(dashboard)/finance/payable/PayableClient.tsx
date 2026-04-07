@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { PayableSummary, CreditorSummary } from "@/app/actions/finance/payable"
+import { formatCurrency } from "@/lib/utils"
 
 interface PayableClientProps {
   summary: PayableSummary
@@ -25,13 +26,6 @@ interface PayableClientProps {
 }
 
 export default function PayableClient({ summary, creditors }: PayableClientProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: summary.currency || "INR",
-      maximumFractionDigits: 0,
-    }).format(amount)
-  }
 
   const agingBuckets = [
     { label: "0-30 Days", value: summary.agingBuckets.current, color: "bg-indigo-500" },
@@ -69,7 +63,7 @@ export default function PayableClient({ summary, creditors }: PayableClientProps
             <Wallet className="h-4 w-4 text-indigo-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.totalOutstanding)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(summary.totalOutstanding, summary.currency)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Due to {creditors.length} vendors
             </p>
@@ -82,7 +76,7 @@ export default function PayableClient({ summary, creditors }: PayableClientProps
             <AlertCircle className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{formatCurrency(summary.totalOverdue)}</div>
+            <div className="text-2xl font-bold text-amber-600">{formatCurrency(summary.totalOverdue, summary.currency)}</div>
             <p className="text-xs text-amber-500/80 mt-1">
               {summary.totalOutstanding > 0 
                 ? `${((summary.totalOverdue / summary.totalOutstanding) * 100).toFixed(1)}% of total payables`
@@ -97,7 +91,7 @@ export default function PayableClient({ summary, creditors }: PayableClientProps
             <Calendar className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.agingBuckets.current / 2)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(summary.agingBuckets.current / 2, summary.currency)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Prepare for cash outflow
             </p>
@@ -110,7 +104,7 @@ export default function PayableClient({ summary, creditors }: PayableClientProps
             <Clock className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.agingBuckets.ninetyPlus)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(summary.agingBuckets.ninetyPlus, summary.currency)}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Critically overdue
             </p>
@@ -131,7 +125,7 @@ export default function PayableClient({ summary, creditors }: PayableClientProps
                 <div key={bucket.label} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{bucket.label}</span>
-                    <span className="text-muted-foreground">{formatCurrency(bucket.value)}</span>
+                    <span className="text-muted-foreground">{formatCurrency(bucket.value, summary.currency)}</span>
                   </div>
                   <div className="h-4 w-full bg-gray-100 rounded-full overflow-hidden">
                     <div 
@@ -186,12 +180,12 @@ export default function PayableClient({ summary, creditors }: PayableClientProps
                         {creditor.displayName}
                       </TableCell>
                       <TableCell className="font-semibold">
-                        {formatCurrency(creditor.totalOwed)}
+                        {formatCurrency(creditor.totalOwed, summary.currency)}
                       </TableCell>
                       <TableCell>
                         {creditor.overdue > 0 ? (
                           <Badge variant="destructive" className="font-normal">
-                            {formatCurrency(creditor.overdue)} Overdue
+                            {formatCurrency(creditor.overdue, summary.currency)} Overdue
                           </Badge>
                         ) : (
                           <Badge variant="secondary" className="font-normal text-muted-foreground">

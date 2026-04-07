@@ -1,0 +1,3 @@
+display_name,type,email,phone,customer_group,currency_code,balance,is_active
+John Doe,INDIVIDUAL,john@example.com,1234567890,retail,INR,150.50,true
+Acme Corp,COMPANY,contact@acme.com,9876543210,wholesale,USD,0.00,true

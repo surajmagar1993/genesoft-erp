@@ -36,6 +36,7 @@ export interface QuoteDB {
   terms_and_conditions: string | null
   tenant_id: string
   contact_id: string | null
+  currency_code: string
   created_at: string
   updated_at: string
   quote_items?: QuoteLineItemDB[]
@@ -110,6 +111,7 @@ export interface CreateQuotePayload {
   notes?: string
   terms_and_conditions?: string
   contact_id?: string | null
+  currency_code: string
   line_items: Array<{
     product_name: string
     description?: string
@@ -156,6 +158,7 @@ export async function createQuote(
       tax_amount: taxAmount,
       total: grandTotal,
       tenant_id: tenantId,
+      currency_code: headerFields.currency_code || "INR",
       valid_until: headerFields.valid_until || null,
     })
     .select("id")

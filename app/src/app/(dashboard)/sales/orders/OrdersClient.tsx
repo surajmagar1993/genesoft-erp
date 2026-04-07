@@ -28,8 +28,7 @@ const statusConfig: Record<SalesOrderStatus, { label: string; variant: "default"
     CANCELLED: { label: "Cancelled", variant: "destructive", icon: XCircle },
 }
 
-const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
+import { formatCurrency } from "@/lib/utils"
 
 const formatDate = (dateStr: string) => {
     if (!dateStr) return "—"
@@ -174,7 +173,7 @@ export default function OrdersClient({ initialOrders, total }: Props) {
                                                 <div className="flex flex-col"><span className="font-medium">{o.customer_name}</span><span className="text-xs text-muted-foreground">{o.customer_email}</span></div>
                                             </TableCell>
                                             <TableCell className="text-sm">{formatDate(o.order_date)}</TableCell>
-                                            <TableCell className="text-right font-medium">{formatCurrency(Number(o.total))}</TableCell>
+                                            <TableCell className="text-right font-medium">{formatCurrency(Number(o.total), o.currency_code)}</TableCell>
                                             <TableCell><Badge variant={cfg.variant} className="flex w-fit items-center gap-1.5"><StatusIcon className="h-3 w-3" />{cfg.label}</Badge></TableCell>
                                             <TableCell className="text-right flex items-center justify-end gap-1">
                                                 <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/orders/${o.id}/edit`)}>

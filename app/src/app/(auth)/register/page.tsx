@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, UserPlus } from 'lucide-react'
+import { WorkspaceSlugInput } from '@/components/auth/workspace-slug-input'
 
 interface RegisterPageProps {
   searchParams: Promise<{ error?: string }>
@@ -69,6 +70,8 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
             className="h-10"
           />
         </div>
+
+        <WorkspaceSlugInput />
 
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>

@@ -19,13 +19,15 @@ import {
     Mail, Phone, Building2, User, Pencil, Trash2, Receipt, Eye, Loader2,
 } from "lucide-react"
 import { deleteContact, type Contact, importContacts, exportContacts } from "@/app/actions/crm/contacts"
+import { formatCurrency } from "@/lib/utils"
 
 interface Props {
     initialContacts: Contact[]
     total: number
+    baseCurrency: string
 }
 
-export default function ContactsClient({ initialContacts, total }: Props) {
+export default function ContactsClient({ initialContacts, total, baseCurrency }: Props) {
     const router = useRouter()
     const [searchQuery, setSearchQuery] = useState("")
     const [filterType, setFilterType] = useState<"all" | "INDIVIDUAL" | "COMPANY">("all")
@@ -177,7 +179,7 @@ export default function ContactsClient({ initialContacts, total }: Props) {
                 <Card>
                     <CardContent className="pt-4 pb-3">
                         <p className="text-xs text-muted-foreground">Total Outstanding</p>
-                        <p className="text-2xl font-bold">₹{totalBalance.toLocaleString("en-IN")}</p>
+                        <p className="text-2xl font-bold">{formatCurrency(totalBalance, baseCurrency)}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -279,9 +281,9 @@ export default function ContactsClient({ initialContacts, total }: Props) {
                                 </TableCell>
                                 <TableCell className="text-right font-medium">
                                     {(contact.balance ?? 0) > 0 ? (
-                                        <span className="text-destructive">₹{contact.balance.toLocaleString("en-IN")}</span>
+                                        <span className="text-destructive">{formatCurrency(contact.balance, baseCurrency)}</span>
                                     ) : (
-                                        <span className="text-muted-foreground">₹0</span>
+                                        <span className="text-muted-foreground">{formatCurrency(0, baseCurrency)}</span>
                                     )}
                                 </TableCell>
                                 <TableCell>

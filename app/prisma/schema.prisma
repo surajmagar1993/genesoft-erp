@@ -945,6 +945,8 @@ model LedgerEntry {
   amount      Decimal  @db.Decimal(15, 2)
   balance     Decimal  @db.Decimal(15, 2)
   
+  currencyCode String   @default("INR") @map("currency_code")
+  
   referenceId String?  @map("reference_id")
   description String?
   date        DateTime @default(now())
@@ -956,6 +958,21 @@ model LedgerEntry {
 
   @@index([tenantId, contactId])
   @@map("ledger_entries")
+}
+
+// ============================================
+// EXCHANGE RATE CACHE
+// ============================================
+
+model ExchangeRateCache {
+  id           String   @id @default(cuid())
+  fromCurrency String   @map("from_currency")
+  toCurrency   String   @map("to_currency")
+  rate         Decimal  @db.Decimal(15, 6)
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@unique([fromCurrency, toCurrency])
+  @@map("exchange_rate_cache")
 }
 
 enum LedgerEntryType {

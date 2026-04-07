@@ -31,4 +31,19 @@
 - **Variables**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 - **Status**: ✅ Done — `env_vercel.txt` saved on Desktop for manual Vercel import.
 
+
 ---
+
+## [2026-04-01] Import / Export Data (Bulk Data Management)
+- **Context**: Users need to migrate existing data in/out of the ERP without manual entry.
+- **Decision**: Use `papaparse` for client-side CSV processing and Supabase `insert()` batching.
+- **Rationale**: Keeps CSV logic in the browser to avoid server timeouts/huge payloads; handles large inserts in one DB trip.
+- **Status**: ✅ Complete — integrated into Contacts and Products clients.
+
+---
+
+## [2026-04-07] Multi-Currency Support (Cross-Currency Ledger)
+- **Context**: Businesses need to invoice in USD/AED/SAR while maintaining a primary INR balance for contacts.
+- **Decision**: Implement a central `formatCurrency` utility and an exchange-rate-aware `recordTransaction` ledger logic.
+- **Rationale**: Decouples presentation from data. Ledger conversion ensures that mixed-currency transactions result in accurate base-currency balances without manual math.
+- **Status**: ✅ Complete — implemented in `ledger.ts`, `exchange-rates.ts`, and all sales/finance modules.

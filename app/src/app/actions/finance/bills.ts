@@ -206,6 +206,7 @@ export async function updateBill(id: string, data: Partial<BillData>) {
       tax_amount: data.taxAmount,
       discount: data.discount,
       total: data.total,
+      currency_code: data.currencyCode,
       notes: data.notes,
       updated_at: new Date().toISOString()
     })

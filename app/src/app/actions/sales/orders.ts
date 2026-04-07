@@ -37,6 +37,7 @@ export interface SalesOrderDB {
   tenant_id: string
   contact_id: string | null
   quote_id: string | null
+  currency_code: string
   created_at: string
   updated_at: string
   sales_order_items?: SalesOrderLineItemDB[]
@@ -111,6 +112,7 @@ export interface CreateOrderPayload {
   terms_and_conditions?: string
   contact_id?: string | null
   quote_id?: string | null
+  currency_code: string
   line_items: Array<{
     product_name: string
     description?: string
@@ -157,6 +159,7 @@ export async function createOrder(
       tax_amount: taxAmount,
       total: grandTotal,
       tenant_id: tenantId,
+      currency_code: headerFields.currency_code || "INR",
       expected_date: headerFields.expected_date || null,
       quote_id: headerFields.quote_id || null,
     })
@@ -332,6 +335,7 @@ export async function convertQuoteToOrder(quoteId: string): Promise<{ orderId: s
     terms_and_conditions: quote.terms_and_conditions,
     contact_id: quote.contact_id,
     quote_id: quote.id,
+    currency_code: quote.currency_code || "INR",
     line_items,
   }
 

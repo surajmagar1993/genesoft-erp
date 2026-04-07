@@ -1,7 +1,7 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-04-01 | **Current Focus:** P1 Performance Standardization (CRM/Sales)
+> **Last Updated:** 2026-04-07 | **Current Focus:** P1 Core Completion (Multi-Currency Support)
 
 ## 🔴 P1 — MVP Launch (Pending)
 
@@ -21,7 +21,7 @@
 - [x] Accounts Receivable (AR) — Dashboard, aging, top debtors ✅ Done
 - [x] Accounts Payable (AP) — Bills CRUD, vendor payments, AP dashboard, bill edit ✅ Done
 - [x] Financial Reports (Basic) — P&L, Revenue Trend, Cash Flow, Working Capital ✅ Done
-- [ ] Multi-Currency Support (Started in UI)
+- [x] Multi-Currency Support (Exchange Rates, Conversions, Formatting) ✅ Done
 
 **Tax & Compliance (India)**
 - ~~GST Engine (CGST/SGST/IGST)~~ ✅ Done
@@ -49,10 +49,10 @@
 **Subscription & Billing (SaaS Platform)**
 - [x] Subscription Plans Definition (IN, US, AE, SA, UK, AU) ✅ Done
 - [x] Razorpay Flow ✅ Done
-- [ ] Stripe Integration
+- [ ] Stripe Integration (Deferred for P1)
 - [x] 15-Day PRO Trial Management ✅ Done
 - [x] Super Admin Console ✅ Done
-- [/] Live Support Chat System (In Progress - Infrastructure Live)
+- [x] Live Support Chat System ✅ Done
 - [x] System Health & Audit Logging ✅ Done
 
 ---

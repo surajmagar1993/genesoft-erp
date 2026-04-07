@@ -1,4 +1,4 @@
-> **Last Updated:** 2026-04-01 | **Active Block:** Bulk Import / Export (Contacts & Products) Completed ✅
+> **Last Updated:** 2026-04-07 | **Active Block:** Multi-Currency Support Completed ✅
 
 ## 🎯 Project Overview
 Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Prisma, and Supabase.

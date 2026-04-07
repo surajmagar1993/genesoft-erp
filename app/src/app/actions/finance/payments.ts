@@ -178,7 +178,7 @@ export async function deletePayment(id: string): Promise<{ error: string | null 
 
   // ─── LEDGER INTEGRATION ───
   try {
-    const entry = await prisma.ledgerEntry.findFirst({
+    const entry = await (prisma as any).ledgerEntry.findFirst({
         where: { referenceId: id, tenantId }
     })
     
@@ -191,7 +191,7 @@ export async function deletePayment(id: string): Promise<{ error: string | null 
                 data: { balance: { decrement: entry.amount } }
             })
             // Delete entry
-            await tx.ledgerEntry.delete({ where: { id: entry.id } })
+            await (tx as any).ledgerEntry.delete({ where: { id: entry.id } })
         })
     }
   } catch (ledgerError) {

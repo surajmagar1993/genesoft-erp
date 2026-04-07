@@ -11,7 +11,7 @@ import {
 import {
   ArrowLeft, Pencil, Phone, Mail, Building2, Globe,
   IndianRupee, TrendingUp, TrendingDown, AlertTriangle,
-  FileText, CreditCard, Download, Calendar
+  FileText, CreditCard, Download, Calendar, Banknote
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { Contact } from "@/app/actions/crm/contacts"
@@ -21,20 +21,14 @@ import type { CommunicationLog } from "@/app/actions/crm/communications"
 import EntityTasks from "@/components/crm/EntityTasks"
 import EntityCommunications from "@/components/crm/EntityCommunications"
 
-function formatCurrency(amount: number, currency: string = "INR") {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-  }).format(amount)
-}
+import { formatCurrency } from "@/lib/utils"
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  })
+    return new Date(iso).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+    })
 }
 
 interface Props {
@@ -120,7 +114,7 @@ export default function ContactDetailClient({ contact, ledger, initialTasks, ini
                 </p>
               </div>
               <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                <IndianRupee className="h-5 w-5 text-amber-500" />
+                <Banknote className="h-5 w-5 text-amber-500" />
               </div>
             </div>
           </CardContent>
@@ -297,7 +291,7 @@ export default function ContactDetailClient({ contact, ledger, initialTasks, ini
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                        <Banknote className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <p className="text-xs text-muted-foreground">Currency</p>
                           <p className="text-sm font-medium">{contact.currency_code || "INR"}</p>

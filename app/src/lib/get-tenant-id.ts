@@ -18,17 +18,17 @@ export async function getTenantId(): Promise<string> {
 
   if (!user) redirect("/login")
 
+  // Use auth_id to link to our Prisma-managed Profile
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("tenant_id")
-    .eq("id", user.id)
+    .eq("auth_id", user.id)
     .single()
 
   if (error || !profile?.tenant_id) {
-    // Fallback: use user.id as tenant_id for single-user setups
-    // In production this should throw or redirect to onboarding
-    console.warn("No tenant_id found for user", user.id, error?.message)
-    return user.id
+    console.error("Critical: User has no profile or tenant_id", user.id, error?.message)
+    // In SaaS mode, we cannot continue without a tenantId
+    redirect("/login?error=Session+configuration+error.+Please+contact+support.")
   }
 
   return profile.tenant_id
