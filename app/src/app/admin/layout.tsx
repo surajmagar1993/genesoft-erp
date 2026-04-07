@@ -50,6 +50,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useTheme } from "next-themes"
+import { UserProfileEmail } from "@/components/auth/user-profile-email"
 
 const adminNavigation = [
     {
@@ -141,7 +142,7 @@ function AdminSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                            <DropdownMenuTrigger asChild id="admin-sidebar-menu-trigger">
                                 <SidebarMenuButton
                                     size="lg"
                                     className="data-[state=open]:bg-sidebar-accent"
@@ -152,9 +153,9 @@ function AdminSidebar() {
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="grid flex-1 text-left text-sm leading-tight">
-                                        <span className="truncate font-semibold">Super Admin</span>
-                                        <span className="truncate text-xs text-muted-foreground italic">
-                                            Platform Oversight
+                                        <span className="truncate font-semibold text-sm">Super Admin</span>
+                                        <span className="truncate text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                                            <UserProfileEmail />
                                         </span>
                                     </div>
                                     <ChevronDown className="ml-auto size-4" />
@@ -166,7 +167,14 @@ function AdminSidebar() {
                                 side="top"
                                 sideOffset={4}
                             >
-                                <DropdownMenuLabel>System Control</DropdownMenuLabel>
+                                <DropdownMenuLabel>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-semibold">Logged in as</span>
+                                        <span className="text-xs text-muted-foreground truncate">
+                                            <UserProfileEmail />
+                                        </span>
+                                    </div>
+                                </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
                                     <Link href="/reports" className="flex items-center">

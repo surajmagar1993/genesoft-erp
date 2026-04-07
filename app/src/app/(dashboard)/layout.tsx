@@ -1,8 +1,9 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { UserProfileEmail } from "@/components/auth/user-profile-email"
+import { createClient } from "@/lib/supabase/client"
 import { LogoutMenuItem } from '@/components/auth/logout-button'
-
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
@@ -203,9 +204,11 @@ function AppSidebar() {
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="grid flex-1 text-left text-sm leading-tight">
-                                        <span className="truncate font-semibold">Admin User</span>
-                                        <span className="truncate text-xs text-muted-foreground">
-                                            admin@genesoft.in
+                                        <span className="truncate font-semibold uppercase">
+                                            {pathname.includes("/admin") || pathname.includes("/saas") ? "SaaS Admin" : "User Profile"}
+                                        </span>
+                                        <span className="truncate text-xs text-muted-foreground opacity-70">
+                                            <UserProfileEmail />
                                         </span>
                                     </div>
                                     <ChevronDown className="ml-auto size-4" />
@@ -279,6 +282,30 @@ export default function DashboardLayout({
 }: {
     children: React.ReactNode
 }) {
+    const pathname = usePathname()
+
+    useEffect(() => {
+        const checkRole = async () => {
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data: userData } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single()
+                
+                if (userData?.role === 'SUPER_ADMIN') {
+                    // Only redirect if not already on an admin page (should be safe due to layout structure)
+                    if (!pathname.startsWith('/admin') && !pathname.startsWith('/saas')) {
+                        window.location.href = '/admin/dashboard'
+                    }
+                }
+            }
+        }
+        checkRole()
+    }, [pathname])
+
     return (
         <SidebarProvider>
             <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
@@ -292,3 +319,4 @@ export default function DashboardLayout({
         </SidebarProvider>
     )
 }
+

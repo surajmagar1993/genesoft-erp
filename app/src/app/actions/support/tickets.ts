@@ -126,7 +126,7 @@ export async function updateTicketStatus(id: string, status: TicketStatus) {
 
   // Verify Role (Admin/SuperAdmin)
   const profile = await prisma.user.findUnique({
-    where: { authId: user.id }
+    where: { id: user.id }
   })
 
   if (!profile || !["ADMIN", "SUPER_ADMIN"].includes(profile.role)) {

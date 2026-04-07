@@ -1,11 +1,10 @@
-import { getTenants, toggleTenantStatus, extendTenantTrial, updateTenantPlan } from "@/app/actions/saas/admin"
+import { getTenants } from "@/app/actions/saas/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Building2, Calendar, MoreHorizontal, UserCheck, UserX, Clock, ChevronRight, CreditCard } from "lucide-react"
+import { Clock } from "lucide-react"
 import { format } from "date-fns"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { TenantActionsDropdown } from "@/components/admin/tenant-actions-dropdown"
 
 export const dynamic = "force-dynamic"
 
@@ -88,43 +87,7 @@ export default async function TenantsPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right pr-6">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/10 hover:text-primary">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-48">
-                                                <DropdownMenuLabel>Tenant Control</DropdownMenuLabel>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="gap-2">
-                                                    <Building2 className="h-4 w-4 opacity-70" />
-                                                    View Details
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="gap-2">
-                                                    <Calendar className="h-4 w-4 opacity-70" />
-                                                    Extend Trial (+7d)
-                                                </DropdownMenuItem>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem className="gap-2 text-amber-600 focus:text-amber-600">
-                                                    <CreditCard className="h-4 w-4 opacity-70" />
-                                                    Change Plan
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className={tenant.isActive ? "text-rose-600 focus:text-rose-600 gap-2" : "text-emerald-600 focus:text-emerald-600 gap-2"}>
-                                                    {tenant.isActive ? (
-                                                        <>
-                                                            <UserX className="h-4 w-4 opacity-70" />
-                                                            Suspend Account
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <UserCheck className="h-4 w-4 opacity-70" />
-                                                            Activate Account
-                                                        </>
-                                                    )}
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        <TenantActionsDropdown tenant={tenant} />
                                     </TableCell>
                                 </TableRow>
                             ))}

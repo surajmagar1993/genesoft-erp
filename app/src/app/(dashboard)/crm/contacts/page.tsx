@@ -14,17 +14,22 @@ export default async function ContactsPage({
     const limit = params.limit ? parseInt(params.limit as string) : 10
 
     try {
+        // Fetch contacts using Supabase server action
         const { data: contacts, total } = await getContacts(page, limit, search)
-        
-        // Fetch Tenant Currency
-        const { prisma } = await import("@/lib/prisma")
-        const tenantId = await (await import("@/lib/get-tenant-id")).getTenantId()
-        const tenant = await prisma.tenant.findUnique({
-            where: { id: tenantId },
-            select: { currencyCode: true }
-        })
 
-        return <ContactsClient initialContacts={contacts} total={total} baseCurrency={tenant?.currencyCode || "INR"} />
+        // Get tenant currency for proper formatting via Supabase (more resilient than Prisma TCP)
+        const supabase = await (await import("@/lib/supabase/server")).createClient()
+        const tenantId = await (await import("@/lib/get-tenant-id")).getTenantId()
+        
+        const { data: tenant } = await supabase
+            .from("tenants")
+            .select("currency_code")
+            .eq("id", tenantId)
+            .single()
+            
+        const currencyCode = (tenant as any)?.currency_code || "INR"
+
+        return <ContactsClient initialContacts={contacts} total={total} baseCurrency={currencyCode} />
     } catch (error) {
         return (
             <div className="flex h-[400px] items-center justify-center font-bold">

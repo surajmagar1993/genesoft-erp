@@ -16,10 +16,24 @@ export async function login(formData: FormData) {
     redirect('/login?error=Email+and+password+are+required')
   }
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
+  const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`)
+  }
+
+  if (user) {
+    // Get user role to determine redirect destination
+    const profile = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { role: true }
+    })
+
+    revalidatePath('/', 'layout')
+
+    if (profile?.role === 'SUPER_ADMIN') {
+      redirect('/admin/dashboard')
+    }
   }
 
   revalidatePath('/', 'layout')
@@ -91,10 +105,9 @@ export async function register(formData: FormData) {
 
       await tx.user.create({
         data: {
-          authId: authData.user!.id,
+          id: authData.user!.id,
           tenantId: tenant.id,
-          firstName,
-          lastName,
+          fullName: fullName,
           email,
           role: 'ADMIN',
         }

@@ -73,13 +73,11 @@ enum Plan {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  authId    String   @unique @map("auth_id") // Supabase Auth UUID
-  tenantId  String   @map("tenant_id") @db.Uuid
+  id        String   @id @db.Uuid
+  tenantId  String?  @map("tenant_id") @db.Uuid
   role      Role     @default(USER)
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  email     String
+  fullName  String?  @map("full_name")
+  email     String   @unique
   phone     String?
   avatarUrl String?  @map("avatar_url")
   isActive  Boolean  @default(true) @map("is_active")
@@ -87,7 +85,7 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  tenant Tenant @relation(fields: [tenantId], references: [id])
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
 
   @@map("profiles")
 }
@@ -830,7 +828,7 @@ model PricingPlan {
   id         String   @id @default(cuid())
   regionCode String   @map("region_code") // IN, US, AE, SA, UK, AU
   tier       Plan
-  amount     Decimal  @db.Decimal(15, 2)
+  amount     Decimal  @map("price") @db.Decimal(15, 2)
   currency   String   @default("INR")
   gateway    String   @default("RAZORPAY") // RAZORPAY or STRIPE
   isActive   Boolean  @default(true) @map("is_active")

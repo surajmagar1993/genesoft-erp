@@ -59,8 +59,18 @@ export async function updateSession(request: NextRequest) {
 
     // Redirect logged-in users away from auth pages
     if (user && isAuthPage) {
+        const { data: userData } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
         const url = request.nextUrl.clone()
-        url.pathname = '/crm/contacts'
+        if (userData?.role === 'SUPER_ADMIN') {
+            url.pathname = '/admin/dashboard'
+        } else {
+            url.pathname = '/crm/contacts'
+        }
         return NextResponse.redirect(url)
     }
 
@@ -69,7 +79,7 @@ export async function updateSession(request: NextRequest) {
         const { data: userData } = await supabase
             .from('profiles')
             .select('role')
-            .eq('auth_id', user.id)
+            .eq('id', user.id)
             .single()
 
         if (!userData || userData.role !== 'SUPER_ADMIN') {

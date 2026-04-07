@@ -18,11 +18,11 @@ export async function getTenantId(): Promise<string> {
 
   if (!user) redirect("/login")
 
-  // Use auth_id to link to our Prisma-managed Profile
+  // Use id to link to our Prisma-managed Profile
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("tenant_id")
-    .eq("auth_id", user.id)
+    .eq("id", user.id)
     .single()
 
   if (error || !profile?.tenant_id) {
