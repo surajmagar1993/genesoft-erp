@@ -29,6 +29,27 @@ async function ensureSuperAdmin() {
     return user
 }
 
+/**
+ * Internal helper to log high-impact admin actions.
+ */
+async function logAdminAction(action: string, targetId?: string, targetType?: string, metadata: any = {}) {
+    try {
+        const user = await ensureSuperAdmin()
+        await prisma.adminAuditLog.create({
+            data: {
+                adminId: user.id,
+                adminEmail: user.email || "unknown",
+                action,
+                targetId,
+                targetType,
+                metadata: metadata || {}
+            }
+        })
+    } catch (error) {
+        console.error("Failed to log admin action:", error)
+    }
+}
+
 export async function getPlatformStats() {
     await ensureSuperAdmin()
     const supabase = await createClient()
@@ -54,7 +75,17 @@ export async function getPlatformStats() {
             .limit(5)
     ])
 
-    const revenueEst = (totalTenants || 0) * 999 
+    // More accurate revenue estimation based on Plan types
+    const planWeights: Record<string, number> = {
+        'FREE': 0,
+        'BASIC': 499,
+        'PRO': 999,
+        'ENTERPRISE': 4999
+    }
+    
+    // Summing revenue from tenants based on their current plan (rough estimate)
+    const { data: tenantPlans } = await supabase.from("tenants").select("plan")
+    const revenueEst = (tenantPlans || []).reduce((sum, t) => sum + (planWeights[t.plan] || 0), 0)
 
     return {
         totalTenants: totalTenants || 0,
@@ -72,13 +103,33 @@ export async function getPlatformStats() {
     }
 }
 
-export async function getTenants(page: number = 1, limit: number = 10) {
+export async function getTenants(params: {
+    page?: number,
+    limit?: number,
+    search?: string,
+    plan?: string,
+    status?: string
+} = {}) {
+    const { page = 1, limit = 10, search, plan, status } = params
     await ensureSuperAdmin()
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    let query = supabase
         .from("tenants")
         .select("*, users:profiles(id)")
+
+    if (search) {
+        query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`)
+    }
+    if (plan && plan !== "ALL") {
+        query = query.eq("plan", plan)
+    }
+    if (status && status !== "ALL") {
+        const isActive = status === "ACTIVE"
+        query = query.eq("is_active", isActive)
+    }
+
+    const { data, error } = await query
         .order("created_at", { ascending: false })
         .range((page - 1) * limit, page * limit - 1)
 
@@ -89,6 +140,16 @@ export async function getTenants(page: number = 1, limit: number = 10) {
     return data
 }
 
+export async function getAdminAuditLogs(page: number = 1, limit: number = 50) {
+    await ensureSuperAdmin()
+    
+    return await prisma.adminAuditLog.findMany({
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit
+    })
+}
+
 export async function updateTenantPlan(tenantId: string, plan: any) {
     await ensureSuperAdmin()
 
@@ -96,6 +157,9 @@ export async function updateTenantPlan(tenantId: string, plan: any) {
         where: { id: tenantId },
         data: { plan, isTrial: false }
     })
+    
+    await logAdminAction("TENANT_PLAN_UPDATE", tenantId, "TENANT", { newPlan: plan })
+    
     revalidatePath('/admin/tenants')
     return updated
 }
@@ -119,6 +183,9 @@ export async function extendTenantTrial(tenantId: string, days: number) {
             isTrial: true 
         }
     })
+    
+    await logAdminAction("TENANT_TRIAL_EXTEND", tenantId, "TENANT", { extendedByDays: days, newEndDate: newEnd })
+    
     revalidatePath('/admin/tenants')
     return updated
 }
@@ -130,6 +197,9 @@ export async function toggleTenantStatus(tenantId: string, isActive: boolean) {
         where: { id: tenantId },
         data: { isActive }
     })
+    
+    await logAdminAction(isActive ? "TENANT_ACTIVATE" : "TENANT_SUSPEND", tenantId, "TENANT")
+    
     revalidatePath('/admin/tenants')
     return updated
 }

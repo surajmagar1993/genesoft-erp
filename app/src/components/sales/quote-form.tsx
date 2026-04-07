@@ -176,7 +176,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
                                     id="quoteNumber"
                                     value={form.quoteNumber}
                                     onChange={(e) => update("quoteNumber", e.target.value)}
-                                    placeholder="QTN-000001"
+                                    placeholder="Enter quote number"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -203,7 +203,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
                                     id="customerName"
                                     value={form.customerName}
                                     onChange={(e) => update("customerName", e.target.value)}
-                                    placeholder="e.g. Acme Corp"
+                                    placeholder="Enter customer name"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -213,7 +213,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
                                     type="email"
                                     value={form.customerEmail}
                                     onChange={(e) => update("customerEmail", e.target.value)}
-                                    placeholder="e.g. billing@acme.com"
+                                    placeholder="Enter customer email"
                                 />
                             </div>
                         </div>
@@ -245,7 +245,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
                                 id="reference"
                                 value={form.reference}
                                 onChange={(e) => update("reference", e.target.value)}
-                                placeholder="e.g. PO-2024-001"
+                                placeholder="Enter PO number"
                             />
                         </div>
 

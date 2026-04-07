@@ -112,7 +112,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                             <Input
                                 value={form.name}
                                 onChange={(e) => update("name", e.target.value)}
-                                placeholder="e.g. Acme Corp"
+                                placeholder="Enter company name"
                             />
                         </div>
                         <div className="space-y-2">
@@ -120,7 +120,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                             <Input
                                 value={form.industry}
                                 onChange={(e) => update("industry", e.target.value)}
-                                placeholder="e.g. IT Services"
+                                placeholder="Enter industry"
                             />
                         </div>
                     </div>
@@ -131,7 +131,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                             <Input
                                 value={form.website}
                                 onChange={(e) => update("website", e.target.value)}
-                                placeholder="e.g. www.example.com"
+                                placeholder="Enter website URL"
                             />
                         </div>
                         <div className="space-y-2">
@@ -139,7 +139,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                             <Input
                                 value={form.phone}
                                 onChange={(e) => update("phone", e.target.value)}
-                                placeholder="e.g. +91 98765 43210"
+                                placeholder="Enter phone number"
                             />
                         </div>
                     </div>
@@ -150,7 +150,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                             <Input
                                 value={form.city}
                                 onChange={(e) => update("city", e.target.value)}
-                                placeholder="e.g. Mumbai"
+                                placeholder="Enter city"
                             />
                         </div>
                         <div className="space-y-2">
@@ -169,7 +169,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                         <Input
                             value={form.gstin}
                             onChange={(e) => update("gstin", e.target.value)}
-                            placeholder="e.g. 22AAAAA0000A1Z5"
+                            placeholder="Enter Tax ID (GSTIN / VAT)"
                             className="uppercase"
                         />
                     </div>

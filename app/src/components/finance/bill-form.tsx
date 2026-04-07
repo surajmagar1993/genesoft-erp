@@ -184,7 +184,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
                   <Input 
                     value={billNumber} 
                     onChange={(e) => setBillNumber(e.target.value)} 
-                    placeholder="e.g. EB-2024-001"
+                    placeholder="Enter bill number"
                   />
                 </div>
               </div>

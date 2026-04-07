@@ -137,7 +137,7 @@ export default function EntityCommunications({ entityId, entityType, initialLogs
                   <Label htmlFor="subject">Subject</Label>
                   <Input
                     id="subject"
-                    placeholder="e.g., Pricing Discussion"
+                    placeholder="Enter subject"
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                   />

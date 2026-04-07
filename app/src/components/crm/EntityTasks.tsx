@@ -70,7 +70,7 @@ export default function EntityTasks({ entityId, entityType, initialTasks }: Prop
                               <Label htmlFor="title">Task Summary</Label>
                               <Input 
                                   id="title" 
-                                  placeholder="e.g., Call to discuss proposal"
+                                  placeholder="Enter task summary"
                                   value={formData.title} 
                                   onChange={(e) => setFormData({ ...formData, title: e.target.value })} 
                                   required 

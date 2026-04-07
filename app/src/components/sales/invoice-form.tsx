@@ -240,7 +240,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceF
                   id="invoiceNumber"
                   value={form.invoiceNumber}
                   onChange={(e) => update("invoiceNumber", e.target.value)}
-                  placeholder="INV-000001"
+                  placeholder="Enter invoice number"
                 />
               </div>
               <div className="space-y-2">
@@ -268,7 +268,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceF
                   id="customerName"
                   value={form.customerName}
                   onChange={(e) => update("customerName", e.target.value)}
-                  placeholder="e.g. Acme Corp"
+                  placeholder="Enter customer name"
                 />
               </div>
               <div className="space-y-2">
@@ -278,7 +278,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceF
                   type="email"
                   value={form.customerEmail}
                   onChange={(e) => update("customerEmail", e.target.value)}
-                  placeholder="e.g. billing@acme.com"
+                  placeholder="Enter customer email"
                 />
               </div>
             </div>
@@ -311,7 +311,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceF
                 id="reference"
                 value={form.reference}
                 onChange={(e) => update("reference", e.target.value)}
-                placeholder="e.g. PO-2024-001"
+                placeholder="Enter PO number"
               />
             </div>
 
@@ -332,7 +332,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceF
                       onChange={(e) =>
                         update("supplierGstin", e.target.value.toUpperCase())
                       }
-                      placeholder="e.g. 27ABCDE1234F1Z5"
+                      placeholder="Enter your GSTIN"
                       className={
                         form.supplierGstin && !supplierGstinValid
                           ? "border-red-500 pr-9"
@@ -356,7 +356,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceF
                       onChange={(e) =>
                         update("customerGstin", e.target.value.toUpperCase())
                       }
-                      placeholder="e.g. 29ABCDE1234F1Z5"
+                      placeholder="Enter customer GSTIN"
                       className={
                         form.customerGstin && !customerGstinValid
                           ? "border-red-500 pr-9"
@@ -508,7 +508,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceF
                           onChange={(e) =>
                             updateLineItem(item.id, "hsnSac", e.target.value)
                           }
-                          placeholder="e.g. 998314"
+                          placeholder="Enter HSN/SAC"
                           className="text-sm text-center"
                         />
                         <Input

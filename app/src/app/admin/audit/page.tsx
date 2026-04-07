@@ -1,18 +1,15 @@
+import { getAdminAuditLogs } from "@/app/actions/saas/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ShieldCheck, User, Activity } from "lucide-react"
+import { ShieldCheck, User } from "lucide-react"
+import { formatDistanceToNow } from "date-fns"
 
 export const dynamic = "force-dynamic"
 
-// Mock data until database wiring is requested
-const auditLogs = [
-    { id: "log_1", action: "TENANT_SUSPENDED", user: "suraj.magar1993@gmail.com", target: "Alpha Corp (tnt_892)", date: "2026-04-07 14:22:00", severity: "HIGH" },
-    { id: "log_2", action: "PRICING_UPDATED", user: "suraj.magar1993@gmail.com", target: "PRO Tier (IN)", date: "2026-04-07 10:15:00", severity: "MEDIUM" },
-    { id: "log_3", action: "ADMIN_LOGIN", user: "suraj.magar1993@gmail.com", target: "System Console", date: "2026-04-07 08:00:23", severity: "LOW" },
-]
-
 export default async function AdminAuditPage() {
+    const logs = await getAdminAuditLogs()
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -24,7 +21,7 @@ export default async function AdminAuditPage() {
                 </div>
             </div>
 
-            <Card className="border-primary/10 shadow-sm">
+            <Card className="border-primary/10 shadow-sm overflow-hidden">
                 <CardHeader className="bg-muted/30 border-b">
                     <CardTitle className="flex items-center gap-2">
                         <ShieldCheck className="h-5 w-5 text-primary" />
@@ -42,35 +39,40 @@ export default async function AdminAuditPage() {
                                 <TableHead>Executed By</TableHead>
                                 <TableHead>Target</TableHead>
                                 <TableHead>Timestamp</TableHead>
-                                <TableHead className="text-right pr-6">Severity</TableHead>
+                                <TableHead className="text-right pr-6">Metadata</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {auditLogs.map((log) => (
-                                <TableRow key={log.id}>
-                                    <TableCell className="font-medium text-sm">
-                                        {log.action}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground text-sm flex items-center gap-2">
-                                        <User className="h-3 w-3" />
-                                        {log.user}
-                                    </TableCell>
-                                    <TableCell className="text-sm">
-                                        {log.target}
-                                    </TableCell>
-                                    <TableCell className="text-sm text-muted-foreground">
-                                        {log.date}
-                                    </TableCell>
-                                    <TableCell className="text-right pr-6">
-                                        <Badge variant={
-                                            log.severity === "HIGH" ? "destructive" : 
-                                            log.severity === "MEDIUM" ? "default" : "secondary"
-                                        }>
-                                            {log.severity}
-                                        </Badge>
+                                {logs.length > 0 ? (
+                                logs.map((log: any) => (
+                                    <TableRow key={log.id}>
+                                        <TableCell className="font-medium text-sm">
+                                            <Badge variant="outline">{log.action}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-muted-foreground text-sm">
+                                            <div className="flex items-center gap-2">
+                                                <User className="h-3 w-3" />
+                                                {log.adminEmail}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-sm">
+                                            {log.targetType || "SYSTEM"}: {log.targetId || "N/A"}
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">
+                                            {formatDistanceToNow(new Date(log.createdAt))} ago
+                                        </TableCell>
+                                        <TableCell className="text-right pr-6 text-[10px] font-mono opacity-50">
+                                            {JSON.stringify(log.metadata)}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                                        No audit entries found.
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>

@@ -162,7 +162,7 @@ export default function TasksClient({ initialTasks, total }: Props) {
                                 <Label htmlFor="title">Task Title</Label>
                                 <Input 
                                     id="title" 
-                                    placeholder="e.g. Follow up with John Doe" 
+                                    placeholder="Enter task title" 
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     required 

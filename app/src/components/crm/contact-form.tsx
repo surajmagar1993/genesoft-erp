@@ -197,7 +197,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                         id="companyName"
                                         value={form.companyName}
                                         onChange={(e) => update("companyName", e.target.value)}
-                                        placeholder="e.g. Acme Corporation"
+                                        placeholder="Enter company name"
                                     />
                                 </div>
                             ) : (
@@ -229,7 +229,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                         type="email"
                                         value={form.email}
                                         onChange={(e) => update("email", e.target.value)}
-                                        placeholder="contact@example.com"
+                                        placeholder="Enter email address"
                                     />
                                 </div>
                                 <div className="space-y-2">
@@ -268,7 +268,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                             id="phone"
                                             value={form.phone}
                                             onChange={(e) => update("phone", e.target.value)}
-                                            placeholder="1234567890"
+                                            placeholder="Enter phone number"
                                         />
                                     </div>
                                 </div>
@@ -291,7 +291,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                             id="mobile"
                                             value={form.mobile}
                                             onChange={(e) => update("mobile", e.target.value)}
-                                            placeholder="9876543210"
+                                            placeholder="Enter mobile number"
                                         />
                                     </div>
                                 </div>
@@ -303,7 +303,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                     id="website"
                                     value={form.website}
                                     onChange={(e) => update("website", e.target.value)}
-                                    placeholder="https://www.example.com"
+                                    placeholder="Enter website URL"
                                 />
                             </div>
                         </TabsContent>
@@ -335,11 +335,11 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                     <>
                                         <div className="space-y-2">
                                             <Label htmlFor="gstin">GSTIN</Label>
-                                            <Input id="gstin" value={form.gstin} onChange={(e) => update("gstin", e.target.value)} placeholder="22AAAAA0000A1Z5" />
+                                            <Input id="gstin" value={form.gstin} onChange={(e) => update("gstin", e.target.value)} placeholder="Enter GSTIN" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="pan">PAN</Label>
-                                            <Input id="pan" value={form.pan} onChange={(e) => update("pan", e.target.value)} placeholder="ABCDE1234F" />
+                                            <Input id="pan" value={form.pan} onChange={(e) => update("pan", e.target.value)} placeholder="Enter PAN" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="cin">CIN (Corporate Identity)</Label>
@@ -356,7 +356,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                     <>
                                         <div className="space-y-2">
                                             <Label htmlFor="trn">TRN (Tax Registration Number)</Label>
-                                            <Input id="trn" value={form.trn} onChange={(e) => update("trn", e.target.value)} placeholder="100000000000003" />
+                                            <Input id="trn" value={form.trn} onChange={(e) => update("trn", e.target.value)} placeholder="Enter TRN" />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="tradeLicense">Trade License Number</Label>
@@ -369,7 +369,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                     <>
                                         <div className="space-y-2">
                                             <Label htmlFor="ein">EIN (Employer Identification Number)</Label>
-                                            <Input id="ein" value={form.ein} onChange={(e) => update("ein", e.target.value)} placeholder="XX-XXXXXXX" />
+                                            <Input id="ein" value={form.ein} onChange={(e) => update("ein", e.target.value)} placeholder="Enter EIN" />
                                         </div>
                                     </>
                                 )}

@@ -34,7 +34,7 @@ export function WorkspaceSlugInput() {
           id="slug"
           name="slug"
           type="text"
-          placeholder="your-company"
+          placeholder="Enter workspace name"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
           required

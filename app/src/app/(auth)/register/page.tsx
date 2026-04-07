@@ -39,7 +39,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
             id="fullName"
             name="fullName"
             type="text"
-            placeholder="John Doe"
+            placeholder="Enter your full name"
             required
             autoComplete="name"
             className="h-10"
@@ -52,7 +52,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
             id="email"
             name="email"
             type="email"
-            placeholder="you@company.com"
+            placeholder="Enter your email"
             required
             autoComplete="email"
             className="h-10"
@@ -65,7 +65,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
             id="company"
             name="company"
             type="text"
-            placeholder="Acme Corp"
+            placeholder="Enter company name"
             autoComplete="organization"
             className="h-10"
           />

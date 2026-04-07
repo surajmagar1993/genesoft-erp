@@ -120,7 +120,7 @@ export function LeadForm({ initialData, mode }: LeadFormProps) {
                             <Input
                                 value={form.title}
                                 onChange={(e) => update("title", e.target.value)}
-                                placeholder="e.g. Need CRM Implementation"
+                                placeholder="Enter lead title"
                             />
                         </div>
 
@@ -130,7 +130,7 @@ export function LeadForm({ initialData, mode }: LeadFormProps) {
                                 <Input
                                     value={form.contactName}
                                     onChange={(e) => update("contactName", e.target.value)}
-                                    placeholder="e.g. John Doe"
+                                    placeholder="Enter contact name"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -150,7 +150,7 @@ export function LeadForm({ initialData, mode }: LeadFormProps) {
                                     type="email"
                                     value={form.email}
                                     onChange={(e) => update("email", e.target.value)}
-                                    placeholder="john@example.com"
+                                    placeholder="Enter email address"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -158,7 +158,7 @@ export function LeadForm({ initialData, mode }: LeadFormProps) {
                                 <Input
                                     value={form.phone}
                                     onChange={(e) => update("phone", e.target.value)}
-                                    placeholder="+1 234 567 8900"
+                                    placeholder="Enter phone number"
                                 />
                             </div>
                         </div>
@@ -184,7 +184,7 @@ export function LeadForm({ initialData, mode }: LeadFormProps) {
                                 <Input
                                     value={form.source}
                                     onChange={(e) => update("source", e.target.value)}
-                                    placeholder="e.g. Website, Referral"
+                                    placeholder="Enter source (e.g. Website, LinkedIn)"
                                 />
                             </div>
                             <div className="space-y-2">

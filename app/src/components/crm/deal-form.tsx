@@ -135,7 +135,7 @@ export function DealForm({ initialData, mode }: DealFormProps) {
                             <Input
                                 value={form.title}
                                 onChange={(e) => update("title", e.target.value)}
-                                placeholder="e.g. Acme Corp CRM Implementation"
+                                placeholder="Enter deal title"
                             />
                         </div>
 
@@ -145,7 +145,7 @@ export function DealForm({ initialData, mode }: DealFormProps) {
                                 <Input
                                     value={form.contactName}
                                     onChange={(e) => update("contactName", e.target.value)}
-                                    placeholder="e.g. John Doe"
+                                    placeholder="Enter contact name"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -153,7 +153,7 @@ export function DealForm({ initialData, mode }: DealFormProps) {
                                 <Input
                                     value={form.company}
                                     onChange={(e) => update("company", e.target.value)}
-                                    placeholder="e.g. Acme Corp"
+                                    placeholder="Enter company name"
                                 />
                             </div>
                         </div>

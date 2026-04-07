@@ -104,7 +104,7 @@ export default function TaxConfigClient() {
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Group Name</label>
                                 <Input 
-                                    placeholder="e.g., GST 18%" 
+                                    placeholder="Enter tax group name" 
                                     value={newGroup.name} 
                                     onChange={e => setNewGroup({ ...newGroup, name: e.target.value })} 
                                 />
@@ -124,7 +124,7 @@ export default function TaxConfigClient() {
                             {newGroup.rates.map((rate, idx) => (
                                 <div key={idx} className="flex gap-2 items-center animate-in slide-in-from-left-2 duration-200">
                                     <Input 
-                                        placeholder="Rate Name (e.g. CGST)" 
+                                        placeholder="Enter tax component name" 
                                         value={rate.name} 
                                         onChange={e => updateRate(idx, "name", e.target.value)}
                                         className="flex-1"

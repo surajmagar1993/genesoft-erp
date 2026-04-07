@@ -155,7 +155,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                     id="category"
                                     value={form.category}
                                     onChange={(e) => update("category", e.target.value)}
-                                    placeholder="e.g. Laptops, Routers"
+                                    placeholder="Enter category"
                                 />
                             </div>
                         </div>
@@ -167,7 +167,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                     id="brand"
                                     value={form.brand}
                                     onChange={(e) => update("brand", e.target.value)}
-                                    placeholder="e.g. Dell, Cisco"
+                                    placeholder="Enter brand"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -176,7 +176,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                     id="modelNo"
                                     value={form.modelNo}
                                     onChange={(e) => update("modelNo", e.target.value)}
-                                    placeholder="e.g. XPS 15"
+                                    placeholder="Enter model number"
                                 />
                             </div>
                         </div>
@@ -188,7 +188,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                     id="serialNo"
                                     value={form.serialNo}
                                     onChange={(e) => update("serialNo", e.target.value)}
-                                    placeholder="e.g. SN-123456789"
+                                    placeholder="Enter serial number"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -234,7 +234,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                             {form.customAttributes.map((attr, index) => (
                                 <div key={index} className="flex items-center gap-2 mb-2">
                                     <Input
-                                        placeholder="Key (e.g. RAM)"
+                                        placeholder="Attribute name"
                                         value={attr.key}
                                         onChange={(e) => {
                                             const newAttrs = [...form.customAttributes]
@@ -244,7 +244,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                         className="w-1/3"
                                     />
                                     <Input
-                                        placeholder="Value (e.g. 16GB)"
+                                        placeholder="Attribute value"
                                         value={attr.value}
                                         onChange={(e) => {
                                             const newAttrs = [...form.customAttributes]
@@ -314,7 +314,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                     id="unit"
                                     value={form.unit}
                                     onChange={(e) => update("unit", e.target.value)}
-                                    placeholder="Nos, Kg, Ltr, etc."
+                                    placeholder="Enter unit of measurement"
                                 />
                             </div>
                             {form.type === "PRODUCT" && (

@@ -3,8 +3,12 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
 
 const prismaClientSingleton = () => {
-  // Use a fallback for build time static analysis if DATABASE_URL is missing
-  const connectionString = process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/postgres"
+  const connectionString = process.env.DATABASE_URL
+  
+  if (!connectionString) {
+    console.error("❌ [Prisma] DATABASE_URL is missing in environment variables.")
+    throw new Error("Misconfigured database connection. Please check your .env files.")
+  }
   
   const pool = new Pool({ connectionString })
   const adapter = new PrismaPg(pool)

@@ -178,7 +178,7 @@ export function OrderForm({ initialData, onSave }: OrderFormProps) {
                                     id="orderNumber"
                                     value={form.orderNumber}
                                     onChange={(e) => update("orderNumber", e.target.value)}
-                                    placeholder="ORD-000001"
+                                    placeholder="Enter order number"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -205,7 +205,7 @@ export function OrderForm({ initialData, onSave }: OrderFormProps) {
                                     id="customerName"
                                     value={form.customerName}
                                     onChange={(e) => update("customerName", e.target.value)}
-                                    placeholder="e.g. Acme Corp"
+                                    placeholder="Enter customer name"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -215,7 +215,7 @@ export function OrderForm({ initialData, onSave }: OrderFormProps) {
                                     type="email"
                                     value={form.customerEmail}
                                     onChange={(e) => update("customerEmail", e.target.value)}
-                                    placeholder="e.g. purchasing@acme.com"
+                                    placeholder="Enter customer email"
                                 />
                             </div>
                         </div>
@@ -247,7 +247,7 @@ export function OrderForm({ initialData, onSave }: OrderFormProps) {
                                 id="reference"
                                 value={form.reference}
                                 onChange={(e) => update("reference", e.target.value)}
-                                placeholder="e.g. PO-2024-001"
+                                placeholder="Enter PO number"
                             />
                         </div>
 

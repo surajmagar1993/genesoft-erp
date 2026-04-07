@@ -5,11 +5,19 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Clock } from "lucide-react"
 import { format } from "date-fns"
 import { TenantActionsDropdown } from "@/components/admin/tenant-actions-dropdown"
+import { TenantFilters } from "@/components/admin/tenant-filters"
 
 export const dynamic = "force-dynamic"
 
-export default async function TenantsPage() {
-    const tenants = await getTenants()
+export default async function TenantsPage(props: { 
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }> 
+}) {
+    const searchParams = await props.searchParams
+    const tenants = await getTenants({
+        search: searchParams.search as string,
+        plan: searchParams.plan as string,
+        status: searchParams.status as string
+    })
 
     return (
         <div className="space-y-6">
@@ -25,6 +33,8 @@ export default async function TenantsPage() {
                     {tenants.length} Total Businesses
                 </Badge>
             </div>
+
+            <TenantFilters />
 
             <Card className="border-primary/10 shadow-lg overflow-hidden bg-card/50 backdrop-blur">
                 <CardHeader className="bg-muted/30 border-b">
