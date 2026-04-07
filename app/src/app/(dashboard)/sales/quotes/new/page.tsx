@@ -21,6 +21,7 @@ export default function NewQuotePage() {
             discount_type: data.discountType,
             notes: data.notes,
             terms_and_conditions: data.termsAndConditions,
+            currency_code: "INR", // TODO: Get from form or settings
             line_items: data.lineItems.map((li: any) => ({
                 product_name: li.productName,
                 description: li.description,

@@ -64,6 +64,7 @@ export default function EditInvoiceClient({ invoice }: Props) {
             supplier_state: data.supplierState,
             place_of_supply: data.placeOfSupply,
             supply_type: supplyType,
+            contact_id: invoice.contact_id,
             line_items: data.lineItems.map((li) => {
                 const gst = computeLineItemGst(li.qty, li.unitPrice, li.gstRate, supplyType)
                 return {

@@ -24,6 +24,10 @@ export async function createCheckoutSession(plan: "STARTER" | "PRO" | "ENTERPRIS
   const successUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=billing&success=true`
   const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=billing&canceled=true`
 
+  if (!stripe) {
+    throw new Error("Stripe is not configured. Please add STRIPE_SECRET_KEY to your environment variables.")
+  }
+
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
     select: { email: true, stripeCustomerId: true }
@@ -67,6 +71,10 @@ export async function createCheckoutSession(plan: "STARTER" | "PRO" | "ENTERPRIS
 export async function createPortalSession(): Promise<{ url: string | null }> {
   const tenantId = await getTenantId()
   const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=billing`
+
+  if (!stripe) {
+    throw new Error("Stripe is not configured. Please add STRIPE_SECRET_KEY to your environment variables.")
+  }
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },

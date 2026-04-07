@@ -3,13 +3,13 @@
 # ==============================================================================
 
 # SUPABASE (Found in Supabase -> Settings -> API)
-NEXT_PUBLIC_SUPABASE_URL=https://qxvzvimmtpmmanldcrzq.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 
 # DATABASE (Found in Supabase -> Settings -> Database -> Connection String)
 # IMPORTANT: Use the "Direct Connection" string (usually port 5432) for Vercel Build.
 # If using PgBouncer for production, use the Transaction string (Port 6543) for DATABASE_URL.
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.qxvzvimmtpmmanldcrzq.supabase.co:6543/postgres?pgbouncer=true"
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.your-project.supabase.co:6543/postgres?pgbouncer=true"
 
 # STRIPE (Found in Stripe Dashboard -> Developers -> API Keys)
 STRIPE_SECRET_KEY=sk_test_...

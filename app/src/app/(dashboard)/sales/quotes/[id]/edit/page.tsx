@@ -51,7 +51,8 @@ export default function EditQuotePage() {
                 notes: data.notes || "",
                 termsAndConditions: data.terms_and_conditions || "",
                 discount: Number(data.discount),
-                discountType: data.discount_type
+                discountType: data.discount_type,
+                currencyCode: data.currency_code
             })
         } catch (error) {
             toast.error("Failed to fetch quote")
@@ -74,6 +75,7 @@ export default function EditQuotePage() {
             discount_type: data.discountType,
             notes: data.notes,
             terms_and_conditions: data.termsAndConditions,
+            currency_code: data.currencyCode || "INR",
             line_items: data.lineItems.map((li: any) => ({
                 product_name: li.productName,
                 description: li.description,

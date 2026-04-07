@@ -68,6 +68,7 @@ export default function EditOrderPage({ params }: { params: { id: string } }) {
             terms_and_conditions: rest.termsAndConditions,
             contact_id: rest.contactId,
             quote_id: rest.quoteId,
+            currency_code: "INR", // TODO: Get from form or settings
             line_items: rest.lineItems.map(li => ({
                 product_name: li.productName,
                 description: li.description,

@@ -39,6 +39,7 @@ function NewInvoiceFormWrapper() {
             supplier_state: data.supplierState,
             place_of_supply: data.placeOfSupply,
             supply_type: supplyType,
+            contact_id: "", // TODO: Get from form data
             line_items: data.lineItems.map((li) => {
                 const gst = computeLineItemGst(li.qty, li.unitPrice, li.gstRate, supplyType)
                 return {

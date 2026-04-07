@@ -71,16 +71,11 @@ export default function BillingTab({ settings }: BillingTabProps) {
     try {
       setLoading(plan.name)
       
-      if (!isINR) {
-        // Stripe Path (Global)
-        const { url } = await createCheckoutSession(plan.name as any)
-        if (url) window.location.href = url
-        return
-      }
-
-      // Razorpay Path (India)
+      // Razorpay Path (Unified for both Domestic and International)
       const amount = parseInt(plan.price.replace("₹", ""))
-      const order = await createRazorpayOrder(amount, settings.id, plan.name)
+      const currency = isINR ? "INR" : (settings?.currency_code || settings?.currencyCode || "INR")
+      
+      const order = await createRazorpayOrder(amount, settings.id, plan.name, currency)
 
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_placeholder",
@@ -139,12 +134,13 @@ export default function BillingTab({ settings }: BillingTabProps) {
               </CardDescription>
             </div>
             <div className="flex flex-col items-end gap-2">
-               {!isINR && (
+               {/* Stripe Portal Hidden until Account is active */}
+               {/* {!isINR && (
                  <Button variant="outline" size="sm" onClick={handlePortal} disabled={loading === 'portal'}>
                     <CreditCard className="w-4 h-4 mr-2" /> 
                     {loading === 'portal' ? 'Opening...' : 'Manage Subscription'}
                  </Button>
-               )}
+               )} */}
                {settings?.isTrial && settings?.trialEndsAt && (
                   <div className="text-right">
                       <p className="text-[10px] uppercase font-black text-primary/60 tracking-widest">Days Remaining</p>
