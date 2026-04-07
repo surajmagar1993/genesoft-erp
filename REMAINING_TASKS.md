@@ -1,102 +1,92 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-04-07 | **Current Focus:** P1 Core Completion (Multi-Currency Support)
+> **Last Updated:** 2026-04-08 | **Current Focus:** P2 Growth — Tenant Management & Admin Governance
 
-## 🔴 P1 — MVP Launch (Pending)
+---
 
-- [x] Leads (Standardized: Pagination & Filtering) ✅ Done
-- [x] Tasks & Activities ✅ Done
-- [x] Notes & Communication Log ✅ Done
+## ✅ P1 — MVP Launch (ALL COMPLETE)
 
-**Retail & Customers**
-- [x] Customer Ledger / Statement ✅ Done
-
-**Sales & Commerce**
-- [x] Sales Orders ✅ Done
-- [x] Payment Tracking ✅ Done
-
-**Finance & Accounting (Core)**
-- [x] Chart of Accounts ✅ Done
-- [x] Accounts Receivable (AR) — Dashboard, aging, top debtors ✅ Done
-- [x] Accounts Payable (AP) — Bills CRUD, vendor payments, AP dashboard, bill edit ✅ Done
-- [x] Financial Reports (Basic) — P&L, Revenue Trend, Cash Flow, Working Capital ✅ Done
-- [x] Multi-Currency Support (Exchange Rates, Conversions, Formatting) ✅ Done
-
-**Tax & Compliance (India)**
-- ~~GST Engine (CGST/SGST/IGST)~~ ✅ Done
-- ~~GSTIN Validation~~ ✅ Done
-- ~~Place of Supply Rules~~ ✅ Done
-- ~~HSN/SAC Codes~~ ✅ Done
-- ~~MSME / Udyam Display on Invoice~~ ✅ Done
-
-**🔥 Invoice Design & PDF — NEXT ACTIVE BLOCK**
-- ~~Tax Invoice PDF Template~~ ✅ Done
-- ~~Company Header~~ ✅ Done
-- ~~Bill To / Ship To Formatting~~ ✅ Done
-- ~~HSN/SAC Column~~ ✅ Done
-- ~~Split Tax Columns~~ ✅ Done
-- ~~HSN/SAC Summary Table~~ ✅ Done
-- ~~Total In Words~~ ✅ Done
-- ~~Payment / Bank Details section~~ ✅ Done
-- ~~Invoice Numbering Sequence~~ ✅ Done
-- ~~PDF Generation & Supabase Storage upload~~ ✅ Done
-- ~~Email Invoice~~ ✅ Done
-
-- [x] Notification System (In-app, unread tracking, module triggers) ✅ Done
-- [x] Import / Export Data (Contacts & Products) ✅ Done
-
-**Subscription & Billing (SaaS Platform)**
-- [x] Subscription Plans Definition (IN, US, AE, SA, UK, AU) ✅ Done
-- [x] Razorpay Flow ✅ Done
-- [ ] Stripe Integration (Deferred for P1)
-- [x] 15-Day PRO Trial Management ✅ Done
-- [x] Super Admin Console ✅ Done
-- [x] Live Support Chat System ✅ Done
-- [x] System Health & Audit Logging ✅ Done
+All P1 tasks have been completed as of 2026-04-08. Key completions this session:
+- [x] ERP-Wide UI Cleanup — removed all hardcoded example data from form placeholders ✅
+- [x] Production Build Fix — `export const dynamic = "force-dynamic"` on invoice PDF route ✅
+- [x] SaaS Super Admin Command Center — KPI cards, Charts, Health Monitor, Incident Feed ✅
+- [x] `recharts` installed and integrated ✅
 
 ---
 
 ## 🟡 P2 — Growth (Pending)
+
+### 🔴 Immediate Next Steps (SaaS Admin)
+- [ ] **Tenant Management CRUD Page** (`/admin/tenants`) — Create, view, edit, suspend tenants ← **START HERE**
+- [ ] **Support Ticket Orchestration** — View, assign, and close tickets from the Command Center
+- [ ] **AdminAuditLog Expansion** — Track granular platform-level governance actions
+- [ ] **Platform Security Page** (`/admin/security`) — Rate limits, blocked IPs, 2FA enforcement
+
+### CRM
 - [ ] CRM: Email Integration
 - [ ] CRM: Web Forms / Lead Capture
+
+### Retail
 - [ ] Retail: Customer Portal
 - [ ] Retail: Walk-in / POS Sales
+
+### Sales
 - [ ] Sales: Credit Notes / Refunds
 - [ ] Sales: Price Lists
+
+### Purchase
 - [ ] Purchase: Vendor / Supplier Management
 - [ ] Purchase: Purchase Orders
 - [ ] Purchase: Bills / Vendor Invoices
 - [ ] Purchase: Purchase Receipts
+
+### Inventory
 - [ ] Inventory: Stock Management
 - [ ] Inventory: Barcode / QR Code Support
 - [ ] Inventory: Stock Adjustments
+
+### Finance
 - [ ] Finance: General Ledger
 - [ ] Finance: Bank Reconciliation
 - [ ] Finance: Expense Management
+
+### Tax
 - [ ] Tax (India): TDS
 - [ ] Tax (India): E-Way Bill Integration
 - [ ] Tax (India): GST Returns Data
 - [ ] Tax (UAE): VAT, TRN Validation
 - [ ] Tax (KSA): VAT, Fatoora E-Invoicing, QR Code
+
+### Invoice Features
 - [ ] Invoice Features: Terms & Conditions
 - [ ] Invoice Features: Authorized Signature
 - [ ] Invoice Features: Declaration / Notes
 - [ ] Invoice Features: Proforma Invoice
 - [ ] Invoice Features: Credit/Debit Note
 - [ ] Invoice Features: Recurring Invoices
+
+### HR
 - [ ] HR: Employee Directory
 - [ ] HR: Attendance Tracking
 - [ ] HR: Leave Management
+
+### Projects
 - [ ] Projects: Projects & Teams
 - [ ] Projects: Tasks & Subtasks
 - [ ] Projects: Time Tracking
+
+### Rentals
 - [ ] Rentals: Asset Management
 - [ ] Rentals: Agreements & Invoicing
-- [ ] Admin: Audit Logs
+
+### Admin / SaaS
+- [ ] Admin: Audit Logs (expand `AdminAuditLog`)
 - [ ] Admin: Email Templates
 - [ ] SaaS: Plan Upgrade/Downgrade
 - [ ] SaaS: Invoice Generation
+
+### Integrations
 - [ ] Integrations: WhatsApp Business API
 - [ ] Integrations: Stripe / PayPal
 

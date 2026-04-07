@@ -1,8 +1,17 @@
-# Genesoft ERP
+# Genesoft ERP & CRM
 
-Genesoft is a modern, enterprise-grade ERP and CRM platform built with Next.js, Supabase, and Prisma. It provides a comprehensive suite for managing business operations with native multi-currency support and integrated GST handling.
+Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 15, Supabase, and Prisma. It provides a comprehensive suite for managing business operations with native multi-currency support, integrated GST handling, and a full **SaaS Super Admin Command Center** for platform-level governance.
+
+---
 
 ## 🚀 Features
+
+### 🏢 SaaS Super Admin Command Center
+- **Platform Intelligence Hub**: Real-time KPI cards (tenants, users, MRR, tickets) with trend indicators and glassmorphism styling.
+- **Interactive Charts**: Tenant Growth (line chart) and Global Presence (pie chart) powered by `recharts`.
+- **Database Health Monitor**: Real-time latency and total platform record counts.
+- **Incident Monitor**: Color-coded system event log feed with tenant attribution.
+- **Quick Actions Panel**: Direct navigation to Tenant Management, Support Tickets, Security, and Settings.
 
 ### 🤝 CRM (Customer Relationship Management)
 - **Leads & Deals**: Track sales pipeline from prospect to conversion.
@@ -15,44 +24,96 @@ Genesoft is a modern, enterprise-grade ERP and CRM platform built with Next.js, 
 - **Accounts Receivable**: Track customer invoices and incoming payments.
 - **GST Engine**: Integrated Indian GST calculations for all financial documents.
 - **Chart of Accounts**: Comprehensive financial structure management.
-- **Multi-Currency Support (New!)**: Dynamic currency formatting ($, €, ₹, AED) and automated exchange rate-aware ledger balances.
+- **Multi-Currency Support**: Dynamic currency formatting ($, €, ₹, AED) and exchange rate-aware ledger balances.
+- **Invoice PDF Export**: Server-rendered PDF generation for Tax Invoices.
 
-### 🔔 Notifications (New!)
-- **Cross-module Triggers**: Real-time notifications when leads are created or bills are generated.
+### 📤 Bulk Data Management
+- **Import/Export**: Bulk CSV import and export for Contacts & Products using `papaparse`.
+- **Batch Processing**: High-performance insertion using Supabase-native array batching.
+
+### 🔔 Notifications
+- **Cross-module Triggers**: Real-time notifications for leads, bills, and key business events.
 - **Actionable Alerts**: Clickable notifications that lead directly to the relevant record.
 - **Unread Tracking**: Per-user unread status and bulk "mark as read" capability.
 
-### 📤 Bulk Data Management (New!)
-- **Import/Export**: Bulk CSV import and export for Contacts & Products using `papaparse`.
-- **Batch Processing**: High-performance insertion using Supabase-native array batching.
-- **Client-Side Parsing**: Efficiently handle thousands of rows directly in the browser.
-
+---
 
 ## 🛠 Tech Stack
-- **Framework**: Next.js (App Router)
-- **Database**: Supabase (PostgreSQL) with Row Level Security (RLS)
-- **ORM**: Prisma
-- **Styling**: Tailwind CSS & Shadcn UI
-- **Types**: TypeScript
+
+| Layer | Technology |
+|---|---|
+| **Framework** | Next.js 15 (App Router) |
+| **Database** | Supabase (PostgreSQL) with Row Level Security |
+| **ORM** | Prisma 7 (with `@prisma/adapter-pg`) |
+| **Auth** | Supabase Auth |
+| **Styling** | Tailwind CSS & Shadcn UI |
+| **Charts** | Recharts |
+| **PDF** | Custom server-side PDF rendering |
+| **Types** | TypeScript (strict) |
+
+---
 
 ## 🏁 Getting Started
 
-1.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-2.  **Environment Setup**:
-    Copy `.env.example` to `.env.local` and provide your Supabase credentials.
+### 2. Environment Setup
+Create `.env.local` with your Supabase credentials:
+```env
+DATABASE_URL="postgresql://postgres:[password]@db.[project].supabase.co:5432/postgres"
+NEXT_PUBLIC_SUPABASE_URL="https://[project].supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="[anon-key]"
+```
 
-3.  **Database Sync**:
-    ```bash
-    npx prisma generate
-    ```
+> [!IMPORTANT]
+> Always use the **direct connection string** (port 5432) for `DATABASE_URL`, not the connection pooler, to avoid Prisma compatibility issues.
 
-4.  **Run Development Server**:
-    ```bash
-    npm run dev
-    ```
+### 3. Generate Prisma Client
+```bash
+npx prisma generate
+```
 
-Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
+### 4. Run Development Server
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to access the application.
+
+---
+
+## 🏗️ Project Structure
+
+```
+src/
+├── app/
+│   ├── (auth)/          # Login, Register, Password Reset
+│   ├── admin/           # Super Admin Command Center
+│   │   └── dashboard/   # Platform intelligence hub
+│   ├── actions/
+│   │   └── saas/        # getPlatformStats, getDashboardCharts, getDatabaseHealth
+│   ├── crm/             # CRM module (leads, contacts, deals)
+│   ├── sales/           # Sales module (quotes, invoices, orders)
+│   ├── finance/         # Finance module (bills, payments, accounts)
+│   └── api/             # API routes (all marked force-dynamic)
+├── components/          # Shared UI components
+└── lib/                 # Prisma client, Supabase client, utilities
+```
+
+---
+
+## 🔒 Multi-Tenant Architecture
+
+- All data is isolated by `tenant_id` at the database level using Supabase Row Level Security (RLS).
+- The Supabase middleware injects `tenant_id` into every authenticated session.
+- Super Admin routes (`/admin/*`) are protected and require the `SUPER_ADMIN` role.
+
+---
+
+## 📋 Known Notes
+
+- **Dynamic API Routes**: All API routes that access the database are marked `export const dynamic = "force-dynamic"` to prevent build-time initialization errors.
+- **Prisma Adapter**: Uses `@prisma/adapter-pg` with a `pg.Pool` for connection pooling. Avoid the PgBouncer transaction-mode URL for Prisma ORM.

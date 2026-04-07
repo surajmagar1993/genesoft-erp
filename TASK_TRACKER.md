@@ -1,6 +1,6 @@
 # ERP & CRM Multi-Platform SaaS — Master Task Tracker
 
-> **Last Updated:** 2026-04-07 (v5) | **Latest Commit:** `c9e4b2d` | **Branch:** `main`
+> **Last Updated:** 2026-04-08 (v6) | **Latest Commit:** Pending push | **Branch:** `main`
 
 ## Brainstorming Phase ✅
 - [x] Define purpose & scale
@@ -40,6 +40,7 @@
 - [x] Implement responsive 4-column stats grids on all major listing pages
 - [x] Verify alignment after standardization
 - [x] Convert modals to full pages (Contacts, Companies, Leads, Deals)
+- [x] **ERP-Wide Placeholder Cleanup** — Removed all hardcoded example values (e.g., "QT-2024-001") from form fields across ALL modules ✅ (2026-04-08)
 
 ---
 
@@ -52,25 +53,25 @@
 - [x] **Lead Management** — (Standardized: Pagination & Filtering) ✅ Done
 - [x] **Tasks & Activities** — Prisma model, server actions, and shared component ✅
 - [x] **Notes & Communication Log** — CommunicationLog model, server actions, EntityCommunications timeline UI ✅
-- [x] **CRUD forms (create/edit/delete)** — Contacts, Leads, Deals, Companies all have NEW + EDIT pages with Supabase server actions
+- [x] **CRUD forms (create/edit/delete)** — Contacts, Leads, Deals, Companies all have NEW + EDIT pages
 - [x] **Company interface type-safety fix** — added optional `gstin`, `country_code` fields
 - [x] **Git commit & push** — all CRM changes pushed to `main` on GitHub (commit `bc3ce3c`)
-- [x] **Vercel env prep** — `.env.local` exported as `env_vercel.txt` on Desktop for deployment
-- [x] **Dashboard KPI cards** — connected to live Supabase counts (commit `c509ff8`); recent leads/deals feed + pipeline summary added
-- [x] **Tenant-scoped RLS** — `get-tenant-id.ts` helper; all 4 CRM actions scope reads/writes by `tenant_id`; `rls_tenant_migration.sql` generated with `my_tenant_id()` function, auto-provision signup trigger, and backfill block (commit `e71517b`) — ⚠️ SQL must be run in Supabase dashboard
+- [x] **Vercel env prep** — `.env.local` exported as `env_vercel.txt` on Desktop
+- [x] **Dashboard KPI cards** — connected to live Supabase counts (commit `c509ff8`)
+- [x] **Tenant-scoped RLS** — `get-tenant-id.ts` helper; all CRM actions scope by `tenant_id`
 - [x] **Lead Detail Page** — Unified tabbed view with Overview + Integrated Tasks ✅
-- [x] **`getById` helpers** — `getLeadById`, `getDealById`, `getContactById`, `getCompanyById` added (tenant-guarded)
+- [x] **`getById` helpers** — `getLeadById`, `getDealById`, `getContactById`, `getCompanyById` added
 
 ### Retail / Individual Customer Management
 - [x] **Customer Types (B2B / B2C)**
 - [x] **Quick Contact Creation**
 - [x] **Customer Groups / Segments**
 - [x] **Customer Credit Limit**
-- [x] **Customer Ledger / Statement** — Contact detail page with ledger table (debit/credit/running balance), summary cards, communication log & tasks ✅
+- [x] **Customer Ledger / Statement** ✅
 
 ### Sales & Commerce
 - [x] **Products Catalog**
-- [x] **Services Catalog** 
+- [x] **Services Catalog**
 - [x] **Sales Orders** — (Standardized: Pagination & Filtering) ✅ Done
 - [x] **Quotations / Estimates** — (Standardized: Pagination & Filtering) ✅ Done
 - [x] **Invoicing** — Full CRUD live, tenant-scoped, Supabase-connected
@@ -79,18 +80,18 @@
   - Server actions: `getInvoices`, `getInvoiceById`, `createInvoice`, `updateInvoice`, `deleteInvoice`
   - (Standardized: Pagination & Filtering / Prisma mapping fix) ✅ Done
   - List page: stats cards, search, status filter, table with actions
-  - New invoice page wired to `createInvoice` action
-  - Edit invoice page: server shell fetches by ID, client adapter maps DB ↔ form
-  - All mock data removed — 100% live Supabase data
-  - DB migration verified via Supabase MCP (all columns, policies, triggers confirmed)
+  - New/Edit invoice pages wired to server actions
+  - All mock data removed — 100% live data
+  - DB migration verified via Supabase MCP
 - [x] **Payment Tracking** — DB + UI + Server Actions for partial payments ✅
+- [x] **Invoice PDF Export** — `export const dynamic = "force-dynamic"` applied to `/api/invoices/[id]/pdf/route.ts` — build-time error resolved ✅ (2026-04-08)
 
 ### Finance & Accounting (Core)
-- [x] **Chart of Accounts** — Prisma model, DB migration (with RLS), CRUD server actions, seed default Indian CoA (39 accounts), hierarchical tree UI with expand/collapse, type filters, New/Edit forms ✅
-- [x] **Accounts Receivable (AR)** — Global dashboard with aging buckets, top debtors, and outstanding tracking ✅
-- [x] **Accounts Payable (AP)** — Bills CRUD, AP dashboard, vendor payments, bill edit page ✅
-- [x] **Financial Reports (Basic)** — P&L Statement, Monthly Revenue Trend, Cash Flow Summary, Working Capital, Top Revenue Contacts ✅
-- [x] **Multi-Currency Support** — Full support for dynamic currency formatting (INR, USD, AED, SAR), symbols, and exchange rate-aware ledger balances. Exchange rates implemented via central service. ✅ Done
+- [x] **Chart of Accounts** — CRUD, seed Indian CoA (39 accounts), hierarchical UI ✅
+- [x] **Accounts Receivable (AR)** — aging buckets, top debtors ✅
+- [x] **Accounts Payable (AP)** — Bills CRUD, AP dashboard, vendor payments, bill edit ✅
+- [x] **Financial Reports (Basic)** — P&L, Revenue Trend, Cash Flow, Working Capital ✅
+- [x] **Multi-Currency Support** — INR, USD, AED, SAR with exchange rate-aware ledger ✅
 
 ### Multi-Country Tax & Compliance (India) ✅
 - [x] **GST (CGST + SGST + IGST) Logic & Engine**
@@ -100,30 +101,44 @@
 - [x] **MSME / Udyam Display**
 
 ### Invoice Design & Features ✅
-- [x] **Tax Invoice PDF Template**
-- [x] **Company Header**
-- [x] **Bill To / Ship To Formatting**
-- [x] **HSN/SAC Column**
-- [x] **Split Tax Columns**
-- [x] **HSN/SAC Summary Table**
-- [x] **Total In Words**
-- [x] **Payment Bank Details**
-- [x] **Invoice Numbering Sequence**
-- [x] **PDF Generation**
-- [x] **Email Invoice**
+- [x] Tax Invoice PDF Template
+- [x] Company Header (Logo, GSTIN, MSME/Udyam)
+- [x] Bill To / Ship To Formatting
+- [x] HSN/SAC Column
+- [x] Split Tax Columns (CGST/SGST/IGST)
+- [x] HSN/SAC Summary Table
+- [x] Total In Words
+- [x] Payment Bank Details
+- [x] Invoice Numbering Sequence
+- [x] PDF Generation
+- [x] Email Invoice
 
 ### Administration & Settings
 - [x] **Multi-Tenant Management** (Schema complete)
 - [x] **User Roles & Permissions** (Schema complete)
-- [x] **Company Settings (UI)** — Logo, Address, Bank details, Tax Groups live in `/settings` ✅
-- [x] **Notification System** — In-app notification bell with unread tracking, cross-module triggers (CRM Leads & Finance Bills), real-time polling UI, and tenant-scoped RLS policies (`notifications` table + server actions) ✅
-- [x] **Import / Export Data** — Bulk CSV import for Contacts & Products using `papaparse` ✅
+- [x] **Company Settings (UI)** — Logo, Address, Bank details, Tax Groups ✅
+- [x] **Notification System** — In-app with unread tracking, cross-module triggers ✅
+- [x] **Import / Export Data** — Bulk CSV import for Contacts & Products ✅
+
+### SaaS Super Admin Command Center ✅ (2026-04-08)
+- [x] **Platform Stats** — `getPlatformStats()` for KPI cards
+- [x] **Dashboard Charts** — `getDashboardCharts()` for time-series & regional data
+- [x] **Database Health** — `getDatabaseHealth()` for latency and record counts
+- [x] **System Logs** — `getRecentSystemLogs()` for incident feed
+- [x] **Tenant Growth Chart** — `LineChart` via recharts
+- [x] **Global Presence Chart** — `PieChart` via recharts
+- [x] **KPI Cards** — glassmorphism, trend indicators, decorative icons
+- [x] **Quick Actions Panel** — Tiles for Tenants, Tickets, Security, Settings
+- [x] **Incident Monitor** — Color-coded severity feed
+- [x] **`recharts` installed** ✅
 
 ### Subscription & Billing
 - [x] **SaaS Infrastructure**
     - [x] Subscription Plans (Free, Pro, Enterprise)
     - [x] Razorpay Integration ✅ (Stripe Deferred for P1)
     - [x] Multi-tenant Data Isolation (RLS / Middleware)
+    - [x] 15-Day PRO Trial Management ✅
+    - [x] Live Support Chat System ✅
 
 ---
 
@@ -164,8 +179,10 @@
 - [ ] Projects: Time Tracking
 - [ ] Rentals: Asset Management
 - [ ] Rentals: Agreements & Invoicing
-- [ ] Admin: Audit Logs
+- [ ] Admin: Audit Logs (expand `AdminAuditLog`)
 - [ ] Admin: Email Templates
+- [ ] SaaS: Tenant Management CRUD page (`/admin/tenants`) ← **NEXT**
+- [ ] SaaS: Support Ticket management from Command Center
 - [ ] SaaS: Plan Upgrade/Downgrade
 - [ ] SaaS: Invoice Generation
 - [ ] Integrations: WhatsApp Business API

@@ -6,6 +6,8 @@ import { NextResponse } from "next/server"
 import { getInvoiceById } from "@/app/actions/sales/invoices"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }

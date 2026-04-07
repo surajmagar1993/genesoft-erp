@@ -349,6 +349,67 @@ export async function getDatabaseHealth() {
 }
 
 /**
+ * Fetch time-series data and distribution for dashboard charts.
+ */
+export async function getDashboardCharts() {
+    await ensureSuperAdmin()
+    const supabase = await createClient()
+
+    // 1. Fetch last 6 months signups
+    const sixMonthsAgo = new Date()
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+    
+    const { data: signups } = await supabase
+        .from("tenants")
+        .select("created_at")
+        .gte("created_at", sixMonthsAgo.toISOString())
+        .order("created_at", { ascending: true })
+
+    // Grouping by month
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const chartDataMap: Record<string, number> = {}
+    
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date()
+        d.setMonth(d.getMonth() - i)
+        const label = `${months[d.getMonth()]}`
+        chartDataMap[label] = 0
+    }
+
+    signups?.forEach(t => {
+        const d = new Date(t.created_at)
+        const label = `${months[d.getMonth()]}`
+        if (chartDataMap[label] !== undefined) {
+            chartDataMap[label] += 1
+        }
+    })
+
+    const growthData = Object.entries(chartDataMap).map(([name, total]) => ({ name, total }))
+
+    // 2. Fetch regional distribution
+    const { data: regions } = await supabase
+        .from("tenants")
+        .select("country_code")
+
+    const regionMap: Record<string, number> = {}
+    regions?.forEach(t => {
+        const code = t.country_code || "Unknown"
+        regionMap[code] = (regionMap[code] || 0) + 1
+    })
+
+    const distributionData = Object.entries(regionMap)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value)
+        .slice(0, 5)
+
+    return {
+        growthData,
+        distributionData
+    }
+}
+
+/**
  * Truncate all system logs (Maintenance).
  */
 export async function clearSystemLogs() {
