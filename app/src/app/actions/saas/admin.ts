@@ -214,7 +214,7 @@ export async function getPricingPlans() {
                 { amount: 'asc' }
             ]
         })
-        return plans.map(plan => ({
+        return plans.map((plan: any) => ({
             ...plan,
             amount: plan.amount ? Number(plan.amount) : 0
         }))

@@ -82,12 +82,23 @@ interface QuoteFormProps {
 export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
     const router = useRouter()
     const mode = initialData ? "edit" : "create"
-    const [form, setForm] = useState<QuoteFormData>(
-        initialData || { ...defaultQuoteForm, quoteNumber: `QTN-${Date.now().toString().slice(-6)}` }
-    )
-
+    const [form, setForm] = useState<QuoteFormData>(initialData || defaultQuoteForm)
+    const [prevInitialData, setPrevInitialData] = useState(initialData)
+ 
+    // Synchronize state with props during render instead of effect to avoid cascading renders (React 19)
+    if (initialData !== prevInitialData) {
+        setPrevInitialData(initialData)
+        setForm(initialData || defaultQuoteForm)
+    }
+ 
     useEffect(() => {
-        if (initialData) setForm(initialData)
+        if (!initialData && !form.quoteNumber) {
+            // Generate temporary business ID on client-side mount only
+            setForm(prev => ({ 
+                ...prev, 
+                quoteNumber: `QTN-${Date.now().toString().slice(-6)}` 
+            }))
+        }
     }, [initialData])
 
     const update = <K extends keyof QuoteFormData>(field: K, value: QuoteFormData[K]) => {

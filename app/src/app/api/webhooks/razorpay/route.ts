@@ -3,6 +3,8 @@ import { headers } from "next/headers"
 import { prisma } from "../../../../lib/prisma"
 import crypto from "crypto"
 
+export const dynamic = "force-dynamic"
+
 export async function POST(req: Request) {
   const body = await req.json()
   const payload = JSON.stringify(body)

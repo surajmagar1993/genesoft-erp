@@ -369,7 +369,7 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
     })
     
     if (entry) {
-        await prisma.$transaction(async (tx) => {
+        await (prisma as any).$transaction(async (tx: any) => {
             // Adjust balance: CurrentBalance - EntryAmount
             await tx.contact.update({
                 where: { id: entry.contactId },

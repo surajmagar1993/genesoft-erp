@@ -53,7 +53,7 @@ export async function recordTransaction(payload: RecordTransactionPayload) {
 
   const transactionAmount = new Prisma.Decimal(amount)
 
-  return await prisma.$transaction(async (tx) => {
+  return await (prisma as any).$transaction(async (tx: any) => {
     // 1. Fetch Tenant and Contact to get base currency and current balance
     const tenant = await tx.tenant.findUnique({
       where: { id: tenantId },

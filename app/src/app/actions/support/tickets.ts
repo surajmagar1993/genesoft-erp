@@ -49,7 +49,7 @@ export async function createTicket(subject: string, message: string, priority: T
 
   if (!user) throw new Error("Unauthorized")
 
-  const ticket = await prisma.$transaction(async (tx) => {
+  const ticket = await (prisma as any).$transaction(async (tx: any) => {
     // 1. Create ticket
     const newTicket = await tx.supportTicket.create({
       data: {

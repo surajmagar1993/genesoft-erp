@@ -1,6 +1,6 @@
 # 🤖 AI System Context — Genesoft ERP & CRM
 
-> **Last Updated:** 2026-04-08
+> **Last Updated:** 2026-04-09
 
 ## 🎯 Project Overview
 This repository contains the **Genesoft ERP & CRM**, a multi-tenant SaaS application.
@@ -40,18 +40,22 @@ The database uses a strict multi-tenant architecture with Row-Level Security han
 - ❌ Wrong: `placeholder="QT-2024-001"` or `placeholder="John Doe"`
 - ✅ Right: `placeholder="Enter quotation number"` or `placeholder="Contact full name"`
 
-### Rule 2: Dynamic API Routes
+### Rule 2: Build Stability & Dynamic Routes
 All API routes that initialize Prisma or access the DB **MUST** export:
 ```typescript
 export const dynamic = "force-dynamic";
 ```
-Without this, `npm run build` will fail with `DATABASE_URL is missing`.
+Additionally, `lib/prisma.ts` is configured to skip connection errors during the build phase to prevent blocking deployment when `DATABASE_URL` is missing.
 
 ### Rule 3: Null-Safety for Admin Metrics
 Admin dashboard health metrics may be `undefined` at render time. Always use null-coalescing:
 ```typescript
 health.metrics?.tenants ?? 0
 ```
+
+### Rule 4: React 19 Purity & State Sync
+*   **Impure Functions**: Never use `Date.now()`, `Math.random()`, or `new Date()` directly during the render phase or in `useState` initializers (unless using a stable ID). These cause hydration mismatches and React 19 lint errors. Generate these in `useEffect` or on the server.
+*   **State Synchronization**: Avoid calling `setState` inside `useEffect` logic if it's dependent on props (cascading renders). Instead, perform state updates during the render phase using the "derived state" or "previous prop check" pattern.
 
 ---
 

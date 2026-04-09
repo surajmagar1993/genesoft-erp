@@ -183,7 +183,7 @@ export async function deletePayment(id: string): Promise<{ error: string | null 
     })
     
     if (entry) {
-        await prisma.$transaction(async (tx) => {
+        await (prisma as any).$transaction(async (tx: any) => {
             // Adjust balance: CurrentBalance - EntryAmount
             // Since Payment amount was negative, decrementing it will increase the balance back.
             await tx.contact.update({

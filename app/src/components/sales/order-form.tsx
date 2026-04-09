@@ -84,12 +84,23 @@ interface OrderFormProps {
 export function OrderForm({ initialData, onSave }: OrderFormProps) {
     const router = useRouter()
     const mode = initialData ? "edit" : "create"
-    const [form, setForm] = useState<OrderFormData>(
-        initialData || { ...defaultOrderForm, orderNumber: `ORD-${Date.now().toString().slice(-6)}` }
-    )
-
+    const [form, setForm] = useState<OrderFormData>(initialData || defaultOrderForm)
+    const [prevInitialData, setPrevInitialData] = useState(initialData)
+ 
+    // Synchronize state with props during render instead of effect to avoid cascading renders (React 19)
+    if (initialData !== prevInitialData) {
+        setPrevInitialData(initialData)
+        setForm(initialData || defaultOrderForm)
+    }
+ 
     useEffect(() => {
-        if (initialData) setForm(initialData)
+        if (!initialData && !form.orderNumber) {
+            // Generate temporary business ID on client-side mount only
+            setForm(prev => ({ 
+                ...prev, 
+                orderNumber: `ORD-${Date.now().toString().slice(-6)}` 
+            }))
+        }
     }, [initialData])
 
     const update = <K extends keyof OrderFormData>(field: K, value: OrderFormData[K]) => {

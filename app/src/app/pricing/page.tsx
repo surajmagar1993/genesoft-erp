@@ -59,7 +59,7 @@ export default async function PricingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-24 anim-delay-500">
-            {plans.map((plan, idx) => (
+            {plans.map((plan: any, idx: number) => (
               <div 
                 key={plan.tier}
                 className={`relative group bg-white dark:bg-slate-900 rounded-3xl border ${

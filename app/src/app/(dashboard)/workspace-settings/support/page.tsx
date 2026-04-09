@@ -36,7 +36,7 @@ export default function SupportAdminPage() {
       await loadAllTickets()
       // Refresh current view
       const updated = await getTickets()
-      const t = updated.find(x => x.id === selectedTicket.id)
+      const t = updated.find((x: any) => x.id === selectedTicket.id)
       setSelectedTicket(t)
       toast.success("Reply sent to customer")
     } catch (err) {

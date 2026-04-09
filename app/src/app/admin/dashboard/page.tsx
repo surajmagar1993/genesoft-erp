@@ -7,6 +7,8 @@ import { DashboardCharts } from "./DashboardCharts"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminDashboardPage() {
     const stats = await getPlatformStats()
     const logs = await getRecentSystemLogs()

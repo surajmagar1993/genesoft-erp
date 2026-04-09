@@ -92,7 +92,7 @@ export async function register(formData: FormData) {
     const [firstName, ...lastNameParts] = fullName.split(' ')
     const lastName = lastNameParts.join(' ') || ''
 
-    await prisma.$transaction(async (tx) => {
+    await (prisma as any).$transaction(async (tx: any) => {
       const tenant = await tx.tenant.create({
         data: {
           name: company,

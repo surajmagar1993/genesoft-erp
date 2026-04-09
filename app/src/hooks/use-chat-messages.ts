@@ -12,15 +12,17 @@ export interface Message {
 
 export function useChatMessages(ticketId: string | null, initialMessages: Message[] = []) {
   const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [prevTicketId, setPrevTicketId] = useState(ticketId)
   const supabase = createClient()
 
-  useEffect(() => {
-    if (!ticketId) {
-      setMessages([])
-      return
-    }
-
+  // Sync state with props during render instead of effect to avoid cascading renders
+  if (ticketId !== prevTicketId) {
+    setPrevTicketId(ticketId)
     setMessages(initialMessages)
+  }
+
+  useEffect(() => {
+    if (!ticketId) return
 
     // Subscribe to new messages for this ticket
     const channel = supabase
