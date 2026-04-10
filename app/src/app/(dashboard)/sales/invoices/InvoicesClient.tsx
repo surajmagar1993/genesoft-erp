@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { Search, Plus, Pencil, Trash2, FileText, Send, CheckCircle2, XCircle, Clock, MoreHorizontal, Download, Eye, Loader2 } from "lucide-react"
+import { Search, Plus, Pencil, Trash2, FileText, Send, CheckCircle2, XCircle, Clock, MoreHorizontal, Download, Eye, Loader2, Receipt } from "lucide-react"
 import { toast } from "sonner"
 
 import { Input } from "@/components/ui/input"

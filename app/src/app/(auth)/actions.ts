@@ -113,14 +113,14 @@ export async function register(formData: FormData) {
         }
       })
     })
-
-    redirect('/login?message=Account+created+successfully.+Check+your+email+to+confirm.')
   } catch (dbError) {
     console.error('Database sync error during registration:', dbError)
     // NOTE: Ideally we would roll back the Supabase user here, 
     // but typically email confirmation prevents them from logging in anyway.
     redirect('/register?error=Application+setup+failed.+Please+contact+support.')
   }
+
+  redirect('/login?message=Account+created+successfully.+Check+your+email+to+confirm.')
 }
 
 export async function forgotPassword(formData: FormData) {

@@ -16,6 +16,7 @@ import {
     Plus, Search, MoreHorizontal, Target, ArrowRightCircle, Pencil, Trash2, Eye,
     Sparkles, PhoneCall, CheckCircle2, XCircle, Loader2,
 } from "lucide-react"
+import { deleteLead, updateLead, type Lead, type LeadStatus } from "@/app/actions/crm/leads"
 import { PageHeader } from "@/components/ui/page-header"
 
 const statusConfig: Record<LeadStatus, { label: string; color: string; icon: React.ElementType }> = {
