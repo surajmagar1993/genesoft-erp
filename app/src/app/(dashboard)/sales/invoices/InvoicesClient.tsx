@@ -26,6 +26,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { InvoiceStatus, deleteInvoice, sendInvoiceEmail, type InvoiceDB } from "@/app/actions/sales/invoices"
 
+import { PageHeader } from "@/components/ui/page-header"
+
 const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "outline" | "destructive" | "success"; icon: React.ComponentType<{ className?: string }> }> = {
     DRAFT: { label: "Draft", variant: "secondary", icon: Clock },
     SENT: { label: "Sent", variant: "outline", icon: Send },
@@ -112,16 +114,17 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Invoices</h1>
-                    <p className="text-muted-foreground mt-1">Manage billing and payments</p>
-                </div>
-                <Button size="sm" onClick={() => router.push("/sales/invoices/new")}>
-                    <Plus className="mr-2 h-4 w-4" /> New Invoice
-                </Button>
-            </div>
+        <div className="space-y-6 animate-in fade-in duration-700">
+            <PageHeader 
+                title="Invoices" 
+                description="Manage billing and customer payments"
+                icon={Receipt}
+                action={{
+                    label: "New Invoice",
+                    icon: Plus,
+                    onClick: () => router.push("/sales/invoices/new")
+                }}
+            />
 
             {/* Stats */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

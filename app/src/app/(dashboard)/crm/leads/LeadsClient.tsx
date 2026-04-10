@@ -16,7 +16,7 @@ import {
     Plus, Search, MoreHorizontal, Target, ArrowRightCircle, Pencil, Trash2, Eye,
     Sparkles, PhoneCall, CheckCircle2, XCircle, Loader2,
 } from "lucide-react"
-import { deleteLead, updateLead, type Lead, type LeadStatus } from "@/app/actions/crm/leads"
+import { PageHeader } from "@/components/ui/page-header"
 
 const statusConfig: Record<LeadStatus, { label: string; color: string; icon: React.ElementType }> = {
     NEW: { label: "New", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Sparkles },
@@ -91,16 +91,17 @@ export default function LeadsClient({ initialLeads, total }: Props) {
     }
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
-                    <p className="text-muted-foreground mt-1">Track and convert potential customers</p>
-                </div>
-                <Button size="sm" onClick={() => router.push("/crm/leads/new")}>
-                    <Plus className="h-4 w-4 mr-2" /> New Lead
-                </Button>
-            </div>
+        <div className="space-y-6 animate-in fade-in duration-700">
+            <PageHeader 
+                title="Leads" 
+                description="Manage and nurture your sales prospects"
+                icon={Target}
+                action={{
+                    label: "New Lead",
+                    icon: Plus,
+                    onClick: () => router.push("/crm/leads/new")
+                }}
+            />
 
             {/* Status Grid */}
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-5">

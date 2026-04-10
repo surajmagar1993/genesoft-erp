@@ -12,6 +12,8 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { Lead, LeadStatus } from "@/app/actions/crm/leads"
+import { convertLeadToDeal } from "@/app/actions/crm/leads"
+import { toast } from "sonner"
 import EntityTasks from "@/components/crm/EntityTasks"
 import EntityCommunications from "@/components/crm/EntityCommunications"
 import type { Task } from "@/app/actions/crm/tasks"
@@ -33,8 +35,22 @@ interface Props {
 
 export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Props) {
   const router = useRouter()
+  const [isConverting, setIsConverting] = useState(false)
   const status = statusConfig[lead.status]
   const StatusIcon = status.icon
+
+  const handleConvert = async () => {
+    try {
+      setIsConverting(true)
+      const result = await convertLeadToDeal(lead.id)
+      toast.success("Lead successfully converted to a Deal!")
+      router.push(`/crm/deals/${result.dealId}`)
+    } catch (error: any) {
+      toast.error(error.message || "Failed to convert lead")
+    } finally {
+      setIsConverting(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -59,7 +75,16 @@ export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Pr
           <Button variant="outline" size="sm" onClick={() => router.push(`/crm/leads/${lead.id}/edit`)}>
             <Pencil className="h-4 w-4 mr-2" /> Edit
           </Button>
-          <Button size="sm">Convert to Deal</Button>
+          {lead.status !== "CONVERTED" && (
+            <Button 
+                size="sm" 
+                onClick={handleConvert} 
+                disabled={isConverting}
+                className="bg-primary shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
+            >
+              {isConverting ? "Converting..." : "Convert to Deal"}
+            </Button>
+          )}
         </div>
       </div>
 

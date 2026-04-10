@@ -105,11 +105,12 @@ export async function getBillById(id: string) {
   return bill
 }
 
+import { recordTransaction } from "@/app/actions/crm/ledger"
+import { createNotification } from "@/app/actions/notifications"
+
 /**
  * Create a new vendor bill
  */
-import { createNotification } from "@/app/actions/notifications"
-
 export async function createBill(data: BillData) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
@@ -139,20 +140,20 @@ export async function createBill(data: BillData) {
   }
 
   // Create notification for bill creation
-  const { data: { user } } = await supabase.auth.getUser()
-  if (user) {
-    try {
-      await createNotification({
-        type: "bill",
-        title: "New Purchase Bill",
-        description: `Bill ${data.billNumber} for ${data.total} ${data.currencyCode} has been created.`,
-        link: `/finance/bills/${bill.id}`,
-        userId: user.id,
-        tenantId: tenantId,
-      })
-    } catch (e) {
-      console.error("Failed to notify:", e)
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+        await createNotification({
+            type: "bill",
+            title: "New Purchase Bill",
+            description: `Bill ${data.billNumber} for ${data.total} ${data.currencyCode} has been created.`,
+            link: `/finance/bills/${bill.id}`,
+            userId: user.id,
+            tenantId: tenantId,
+        })
     }
+  } catch (e) {
+    console.error("Failed to notify:", e)
   }
 
   // 2. Insert bill items
@@ -165,7 +166,8 @@ export async function createBill(data: BillData) {
     unit_price: item.unitPrice,
     tax_percent: item.taxPercent,
     tax_amount: item.taxAmount,
-    line_total: item.lineTotal
+    line_total: item.lineTotal,
+    tenant_id: tenantId
   }))
 
   const { error: itemsError } = await supabase
@@ -174,11 +176,24 @@ export async function createBill(data: BillData) {
 
   if (itemsError) {
     console.error("Error creating bill items:", itemsError)
-    // 3. Cleanup: Delete the bill header if items fail. 
-    // We already have the bill.id from the successful insert in the same session.
-    // Adding tenant_id check for extra safety against race conditions.
     await supabase.from("bills").delete().eq("id", bill.id).eq("tenant_id", tenantId)
     throw new Error("Failed to create bill items")
+  }
+
+  // 3. LEDGER INTEGRATION (AP)
+  if (data.status !== "DRAFT") {
+    try {
+        await recordTransaction({
+            contactId: data.contactId,
+            type: "INVOICE", // Technically a Vendor Invoice
+            amount: -Math.abs(data.total), // Credit to vendor (we owe them more)
+            referenceId: bill.id,
+            description: `Bill ${data.billNumber} created`,
+            date: data.billDate
+        })
+    } catch (ledgerError) {
+        console.error("Ledger recording failed during bill creation:", ledgerError)
+    }
   }
 
   revalidatePath("/finance/bills")
@@ -259,6 +274,45 @@ export async function updateBill(id: string, data: Partial<BillData>) {
   revalidatePath("/finance/bills")
   revalidatePath(`/finance/bills/${id}`)
   revalidatePath("/finance/payable")
+
+  // ─── LEDGER INTEGRATION (AP) ───
+  if (data.status !== "DRAFT" && data.contactId) {
+    try {
+        const newTotal = -Math.abs(data.total || 0)
+        
+        const entry = await (prisma as any).ledgerEntry.findFirst({
+            where: { referenceId: id, tenantId }
+        })
+
+        if (entry) {
+            const delta = newTotal - entry.amount
+            if (delta !== 0) {
+                await (prisma as any).$transaction(async (tx: any) => {
+                    await tx.contact.update({
+                        where: { id: data.contactId },
+                        data: { balance: { increment: delta } }
+                    })
+                    await (tx as any).ledgerEntry.update({
+                        where: { id: entry.id },
+                        data: { amount: newTotal }
+                    })
+                })
+            }
+        } else {
+            // Create if missing
+            await recordTransaction({
+                contactId: data.contactId,
+                type: "INVOICE",
+                amount: newTotal,
+                referenceId: id,
+                description: `Bill ${data.billNumber} updated`,
+                date: data.billDate || new Date()
+            })
+        }
+    } catch (ledgerError) {
+        console.error("Ledger update failed for bill:", ledgerError)
+    }
+  }
 }
 
 /**
@@ -278,6 +332,28 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
     if (error) {
       console.error("Error deleting bill:", error)
       return { error: error.message }
+    }
+
+    // ─── LEDGER INTEGRATION (AP) ───
+    try {
+        const entry = await prisma.ledgerEntry.findFirst({
+            where: { referenceId: id, tenantId }
+        })
+        
+        if (entry) {
+            await (prisma as any).$transaction(async (tx: any) => {
+                // Adjust balance: CurrentBalance - EntryAmount
+                // Since Bill amount was negative, decrementing it will increase the balance back.
+                await tx.contact.update({
+                    where: { id: entry.contactId },
+                    data: { balance: { decrement: entry.amount } }
+                })
+                // Delete entry
+                await tx.ledgerEntry.delete({ where: { id: entry.id } })
+            })
+        }
+    } catch (ledgerError) {
+        console.error("Ledger cleanup failed for bill:", ledgerError)
     }
 
     revalidatePath("/finance/bills")

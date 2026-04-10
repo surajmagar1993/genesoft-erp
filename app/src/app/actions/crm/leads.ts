@@ -140,3 +140,85 @@ export async function deleteLead(id: string): Promise<{ error: string | null }> 
   revalidatePath("/crm/leads")
   return { error: null }
 }
+
+import { prisma } from "@/lib/prisma"
+
+/**
+ * Converts a Lead into a Deal and ensures a Contact exists.
+ * This is a critical P1 CRM workflow.
+ */
+export async function convertLeadToDeal(leadId: string) {
+  const tenantId = await getTenantId()
+
+  return await (prisma as any).$transaction(async (tx: any) => {
+    // 1. Fetch lead
+    const lead = await tx.lead.findUnique({
+      where: { id: leadId, tenantId },
+    })
+
+    if (!lead) throw new Error("Lead not found")
+    if (lead.status === "CONVERTED") throw new Error("Lead already converted")
+
+    // 2. Identify or Create Contact
+    let contactId = lead.contactId
+
+    if (!contactId) {
+      const newContact = await tx.contact.create({
+        data: {
+          tenantId,
+          displayName: lead.contact_name || "New Contact from Lead",
+          email: lead.email,
+          phone: lead.phone,
+          type: "INDIVIDUAL",
+        }
+      })
+      contactId = newContact.id
+    }
+
+    // 3. Create Deal
+    const deal = await tx.deal.create({
+      data: {
+        tenantId,
+        contactId,
+        title: `Deal: ${lead.title}`,
+        value: 0,
+        stage: "QUALIFICATION",
+        notes: `Converted from lead: ${lead.title}. ${lead.notes || ""}`,
+      }
+    })
+
+    // 4. Mark Lead as Converted
+    await tx.lead.update({
+      where: { id: leadId },
+      data: {
+        status: "CONVERTED",
+        convertedTo: deal.id,
+      }
+    })
+
+    // 5. Create Notification
+    try {
+      const { data: { user } } = await (await createClient()).auth.getUser()
+      if (user) {
+        await tx.notification.create({
+          data: {
+            tenantId,
+            userId: user.id,
+            type: "lead",
+            title: "Lead Converted",
+            description: `Lead "${lead.title}" was successfully converted to a deal.`,
+            link: `/crm/deals/${deal.id}`
+          }
+        })
+      }
+    } catch (e) {
+      console.warn("Notification skipped during conversion:", e)
+    }
+
+    revalidatePath("/crm/leads")
+    revalidatePath("/crm/deals")
+    revalidatePath("/crm/contacts")
+
+    return { success: true, dealId: deal.id }
+  })
+}

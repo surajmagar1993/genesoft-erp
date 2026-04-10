@@ -49,6 +49,54 @@ export async function getDashboardStats() {
   } as DashboardStats
 }
 
+export async function getDashboardTrends() {
+  const supabase = await createClient()
+  const tenantId = await getTenantId()
+
+  // Last 6 months
+  const months = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date()
+    d.setMonth(d.getMonth() - i)
+    months.push({
+      name: d.toLocaleString('default', { month: 'short' }),
+      month: d.getMonth() + 1,
+      year: d.getFullYear(),
+      turnover: 0,
+      leads: 0
+    })
+  }
+
+  // In a real scenario, we'd do a group by in SQL. 
+  // For P1 MVP, we'll fetch accepted quotes and group them.
+  const { data: quotes } = await supabase
+    .from("quotes")
+    .select("total, created_at")
+    .eq("tenant_id", tenantId)
+    .eq("status", "ACCEPTED")
+    .gte("created_at", new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString())
+
+  const { data: leads } = await supabase
+    .from("leads")
+    .select("created_at")
+    .eq("tenant_id", tenantId)
+    .gte("created_at", new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString())
+
+  months.forEach(m => {
+    m.turnover = quotes?.filter(q => {
+      const qd = new Date(q.created_at)
+      return qd.getMonth() + 1 === m.month && qd.getFullYear() === m.year
+    }).reduce((sum, q) => sum + Number(q.total), 0) || 0
+
+    m.leads = leads?.filter(l => {
+      const ld = new Date(l.created_at)
+      return ld.getMonth() + 1 === m.month && ld.getFullYear() === m.year
+    }).length || 0
+  })
+
+  return months
+}
+
 export async function getRecentActivities() {
   const supabase = await createClient()
   const tenantId = await getTenantId()

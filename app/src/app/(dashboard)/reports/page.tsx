@@ -7,16 +7,19 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Target,
-    ShoppingCart,
+    LayoutDashboard,
 } from "lucide-react"
-import { getDashboardStats, getRecentActivities } from "@/app/actions/reports/stats"
+import { getDashboardStats, getRecentActivities, getDashboardTrends } from "@/app/actions/reports/stats"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
+import { PageHeader } from "@/components/ui/page-header"
+import { RevenueChart, LeadsChart } from "@/components/dashboard/charts"
 
 export default async function DashboardPage() {
-    const [stats, activities, settings] = await Promise.all([
+    const [stats, activities, settings, trends] = await Promise.all([
         getDashboardStats(),
         getRecentActivities(),
-        getTenantSettings()
+        getTenantSettings(),
+        getDashboardTrends()
     ])
 
     const currencySymbol = settings?.currency_code === "INR" ? "₹" : "$"
@@ -57,28 +60,25 @@ export default async function DashboardPage() {
     ]
 
     return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Business Overview for {settings?.name || "Your Workspace"}
-                    </p>
-                </div>
+        <div className="space-y-8 animate-in fade-in duration-700">
+            <PageHeader 
+                title="Dashboard" 
+                description={`Insights and performance for ${settings?.name || "Your Workspace"}`}
+                icon={LayoutDashboard}
+            >
                 <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">
                     <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                     </span>
-                    Live Dashboard
+                    Live Data
                 </div>
-            </div>
+            </PageHeader>
 
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {statsConfig.map((stat) => (
-                    <Card key={stat.title} className="relative overflow-hidden group hover:border-primary/50 transition-colors">
+                    <Card key={stat.title} className="relative overflow-hidden group hover:border-primary/50 transition-colors shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                                 {stat.title}
@@ -107,10 +107,16 @@ export default async function DashboardPage() {
                 ))}
             </div>
 
+            {/* Charts Section */}
+            <div className="grid gap-6 md:grid-cols-2">
+                <RevenueChart data={trends} currencySymbol={currencySymbol} />
+                <LeadsChart data={trends} />
+            </div>
+
             {/* Content Grid */}
             <div className="grid gap-6 md:grid-cols-2">
                 {/* Recent Activity */}
-                <Card className="shadow-sm">
+                <Card className="shadow-sm border-none ring-1 ring-slate-200 dark:ring-slate-800">
                     <CardHeader>
                         <CardTitle className="text-lg">Recent Activity</CardTitle>
                         <CardDescription>Real-time stream from Sales & CRM</CardDescription>
@@ -146,23 +152,23 @@ export default async function DashboardPage() {
                 </Card>
 
                 {/* Quick Actions */}
-                <Card className="shadow-sm overflow-hidden border-primary/10">
+                <Card className="shadow-sm overflow-hidden border-none ring-1 ring-primary/20 bg-primary/5">
                     <CardHeader className="bg-primary/5 border-b border-primary/10">
                         <CardTitle className="text-lg">Quick Access</CardTitle>
-                        <CardDescription>MVP Shortcuts</CardDescription>
+                        <CardDescription>Shortcut to major modules</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <div className="grid grid-cols-2 gap-3">
                             {[
                                 { label: "New Lead", icon: Users, href: "/crm/leads" },
-                                { label: "New Quote", icon: Receipt, href: "/sales/quotes" },
-                                { label: "Products", icon: ShoppingCart, href: "/sales/products" },
+                                { label: "New Invoice", icon: Receipt, href: "/sales/invoices/new" },
+                                { label: "Inventory", icon: LayoutDashboard, href: "/inventory" },
                                 { label: "Active Deals", icon: Target, href: "/crm/deals" },
                             ].map((action) => (
                                 <a
                                     key={action.label}
                                     href={action.href}
-                                    className="flex items-center gap-3 p-4 rounded-xl border border-border/50 hover:bg-primary/5 hover:border-primary/20 transition-all group shadow-sm bg-card"
+                                    className="flex items-center gap-3 p-4 rounded-xl border border-border/50 hover:bg-white dark:hover:bg-slate-900 hover:border-primary/20 transition-all group shadow-sm bg-card/50"
                                 >
                                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                                         <action.icon className="h-5 w-5 text-primary" />

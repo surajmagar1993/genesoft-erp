@@ -343,6 +343,57 @@ export async function updateInvoice(
 
   revalidatePath("/sales/invoices")
   revalidatePath(`/sales/invoices/${id}/edit`)
+
+  // ─── LEDGER INTEGRATION ───
+  if (payload.status !== "DRAFT" && payload.contact_id) {
+    try {
+        const items = payload.line_items.map((li) => ({
+            qty: li.qty,
+            unitPrice: li.unit_price,
+            gstRate: li.tax_percent,
+        }))
+        const summary = computeInvoiceGstSummary(
+            items,
+            payload.supply_type || "intra",
+            payload.discount || 0,
+            payload.discount_type || "PERCENT"
+        )
+        const newTotal = summary.grandTotal
+
+        const entry = await prisma.ledgerEntry.findFirst({
+            where: { referenceId: id, tenantId }
+        })
+
+        if (entry) {
+            const delta = newTotal - entry.amount
+            if (delta !== 0) {
+                await (prisma as any).$transaction(async (tx: any) => {
+                    await tx.contact.update({
+                        where: { id: payload.contact_id },
+                        data: { balance: { increment: delta } }
+                    })
+                    await tx.ledgerEntry.update({
+                        where: { id: entry.id },
+                        data: { amount: newTotal }
+                    })
+                })
+            }
+        } else {
+            // Create if missing
+            await recordTransaction({
+                contactId: payload.contact_id,
+                type: "INVOICE",
+                amount: newTotal,
+                referenceId: id,
+                description: `Invoice ${payload.invoice_number} updated`,
+                date: new Date(payload.invoice_date)
+            })
+        }
+    } catch (ledgerError) {
+        console.error("Ledger update failed for invoice:", ledgerError)
+    }
+  }
+
   return { error: null }
 }
 
