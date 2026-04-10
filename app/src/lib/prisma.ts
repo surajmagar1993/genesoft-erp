@@ -6,17 +6,26 @@ const prismaClientSingleton = () => {
   const connectionString = process.env.DATABASE_URL
   
   if (!connectionString) {
-    // If during build, don't crash, just log and return a Proxy that will fail on real use
+    // If during build, don't crash, just log and return a Recursive Proxy
+    // This allows nested property access like prisma.tenant.findUnique() to NOT fail with a TypeError 
+    // until the actual execution is attempted.
     if (process.env.NODE_ENV === 'production' || process.env.NEXT_PHASE === 'phase-production-build') {
       console.warn("⚠️ [Prisma] DATABASE_URL missing during build. Routes must be marked dynamic if they use DB.")
-      return new Proxy({} as any, {
-        get: (target, prop) => {
-          if (prop === 'then') return undefined; // Avoid breaking async/await
-          return () => {
-            throw new Error(`❌ [Prisma] DATABASE_URL missing. Action attempted on property '${String(prop)}' during static build or runtime.`)
+      
+      const createRecursiveProxy = (path: string = ""): any => {
+        return new Proxy(() => {}, {
+          get: (target, prop) => {
+            if (prop === 'then') return undefined;
+            if (typeof prop === 'symbol') return (target as any)[prop];
+            return createRecursiveProxy(path ? `${path}.${String(prop)}` : String(prop));
+          },
+          apply: (target, thisArg, args) => {
+            throw new Error(`❌ [Prisma] DATABASE_URL missing. Action attempted on 'prisma.${path}()' during build or runtime.`);
           }
-        }
-      })
+        });
+      };
+
+      return createRecursiveProxy();
     }
     
     console.error("❌ [Prisma] DATABASE_URL is missing in environment variables.")
