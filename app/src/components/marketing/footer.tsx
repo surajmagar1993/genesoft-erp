@@ -11,21 +11,17 @@ export function PublicFooter() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           <div className="col-span-1 md:col-span-1 border-b md:border-none pb-8 md:pb-0">
             <Link href="/" className="flex items-center gap-2 mb-6 group">
-                <div className="relative w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center p-1.5 group-hover:scale-105 transition-transform">
+                <div className="relative h-8 w-24 transition-transform group-hover:scale-105">
                       <Image 
-                        src="/favicon.png" 
+                        src="/logo.png" 
                         alt="Genesoft Logo" 
-                        width={32} 
-                        height={32}
-                        className="object-contain"
+                        fill
+                        className="object-contain dark:brightness-110"
                       />
                 </div>
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Genesoft
-              </span>
             </Link>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-6">
-              Empowering businesses with intelligent CRM, Sales, and ERP solutions. Modern, secure, and built for growth.
+              Empowering businesses with intelligent CRM, Sales, and ERP solutions. Modern, secure, and built for global growth.
             </p>
             <div className="flex items-center gap-4">
               <Link href="#" className="text-slate-400 hover:text-orange-500 transition-colors bg-white dark:bg-slate-800 p-2 rounded-full shadow-sm hover:shadow-md transition-all">
@@ -43,20 +39,20 @@ export function PublicFooter() {
           <div>
             <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-6 uppercase tracking-wider">Product</h4>
             <ul className="space-y-4">
-              <li><Link href="#features" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">CRM & Sales</Link></li>
-              <li><Link href="#solutions" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">ERP Modules</Link></li>
+              <li><Link href="/#features" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">CRM & Sales</Link></li>
+              <li><Link href="/#solutions" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">ERP Modules</Link></li>
               <li><Link href="/pricing" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">Pricing Plans</Link></li>
-              <li><Link href="#" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">API Docs</Link></li>
+              <li><Link href="/contact?subject=API" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">API Docs</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-6 uppercase tracking-wider">Solutions</h4>
             <ul className="space-y-4">
-              <li><Link href="#" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">Manufacturing</Link></li>
-              <li><Link href="#" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">Retail & POS</Link></li>
-              <li><Link href="#" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">Service Industry</Link></li>
-              <li><Link href="#" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">Enterprise ERP</Link></li>
+              <li><Link href="/#solutions-manufacturing" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">Manufacturing</Link></li>
+              <li><Link href="/#solutions-retail" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">Retail & POS</Link></li>
+              <li><Link href="/#solutions-services" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">Service Industry</Link></li>
+              <li><Link href="/#solutions-enterprise" className="text-slate-500 hover:text-orange-600 transition-colors text-sm">Enterprise ERP</Link></li>
             </ul>
           </div>
 
@@ -65,15 +61,19 @@ export function PublicFooter() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-orange-600 mt-1" />
-                <span className="text-slate-500 dark:text-slate-400 text-sm">hello@genesoft.in</span>
+                <span className="text-slate-500 dark:text-slate-400 text-sm">hello@genesoftinfotech.com</span>
               </li>
               <li className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-orange-600 mt-1" />
-                <span className="text-slate-500 dark:text-slate-400 text-sm">+91 (800) GEN-SOFT</span>
+                <span className="text-slate-500 dark:text-slate-400 text-sm">+91 8888885285</span>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-orange-600 mt-1" />
-                <span className="text-slate-500 dark:text-slate-400 text-sm">Tech Hub, Pune, India</span>
+                <span className="text-slate-500 dark:text-slate-400 text-sm">
+                  Shivtirtha Bungalow Lane 15,<br />
+                  Khese Park Lohegaon Pune,<br />
+                  Maharashtra, India 411032
+                </span>
               </li>
             </ul>
           </div>
@@ -81,7 +81,7 @@ export function PublicFooter() {
 
         <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-slate-400 dark:text-slate-500 text-sm">
-            © {currentYear} Genesoft Infotech. All rights reserved.
+            © {currentYear} Genesoft Infotech Private Limited. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-slate-400 hover:text-slate-600 transition-colors">
             <Link href="/privacy">Privacy Policy</Link>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, ArrowRight, Zap, Shield, Globe } from "lucide-react";
+import { Check, ArrowRight, Zap, Shield, Globe, Minus } from "lucide-react";
 import { PublicNavbar } from "@/components/marketing/navbar";
 import { PublicFooter } from "@/components/marketing/footer";
 import { prisma } from "@/lib/prisma";
@@ -114,6 +114,140 @@ export default async function PricingPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Detailed Feature Matrix */}
+          <div className="mt-24 mb-24 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white mb-4">Compare Plans in Detail</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-base max-w-2xl mx-auto">See side-by-side comparisons of features across all plans. Perfect for selecting your operational scale.</p>
+            </div>
+            
+            <div className="overflow-x-auto bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-xl">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+                    <th className="p-6 text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Features</th>
+                    <th className="p-6 text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-center">Free</th>
+                    <th className="p-6 text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-center">Basic</th>
+                    <th className="p-6 text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-center">Pro</th>
+                    <th className="p-6 text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider text-center">Enterprise</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-150 dark:divide-slate-800">
+                  {/* Category: CRM */}
+                  <tr className="bg-slate-50/30 dark:bg-slate-900/20">
+                    <td colSpan={5} className="p-4 text-xs font-black uppercase tracking-wider text-orange-600">CRM & Leads</td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Contacts & Companies</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Up to 5</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Up to 100</td>
+                    <td className="p-6 text-center text-sm font-bold text-orange-600">Unlimited</td>
+                    <td className="p-6 text-center text-sm font-bold text-orange-600">Unlimited</td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Sales Pipeline & Deals</td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Lead Scoring & Assignments</td>
+                    <td className="p-6 text-center"><Minus className="mx-auto w-4 h-4 text-slate-300" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                  </tr>
+                  
+                  {/* Category: Sales & Invoicing */}
+                  <tr className="bg-slate-50/30 dark:bg-slate-900/20">
+                    <td colSpan={5} className="p-4 text-xs font-black uppercase tracking-wider text-orange-600">Sales & Invoicing</td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Invoicing & Estimates</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Basic</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Standard GST/VAT</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Multi-Template</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Fully Customized</td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Localized Tax Engines (GST, VAT, Sales Tax)</td>
+                    <td className="p-6 text-center"><Minus className="mx-auto w-4 h-4 text-slate-300" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">HSN/SAC & Custom tax groups</td>
+                    <td className="p-6 text-center"><Minus className="mx-auto w-4 h-4 text-slate-300" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                  </tr>
+
+                  {/* Category: Finance */}
+                  <tr className="bg-slate-50/30 dark:bg-slate-900/20">
+                    <td colSpan={5} className="p-4 text-xs font-black uppercase tracking-wider text-orange-600">Finance & Ledgers</td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Chart of Accounts (CoA)</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Standard Template</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Standard Template</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Customizable Structure</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Consolidated Holdings</td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Multi-Currency Transactions</td>
+                    <td className="p-6 text-center"><Minus className="mx-auto w-4 h-4 text-slate-300" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">AP/AR Outstanding Tracking</td>
+                    <td className="p-6 text-center"><Minus className="mx-auto w-4 h-4 text-slate-300" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                  </tr>
+
+                  {/* Category: Platform */}
+                  <tr className="bg-slate-50/30 dark:bg-slate-900/20">
+                    <td colSpan={5} className="p-4 text-xs font-black uppercase tracking-wider text-orange-600">Platform & Admin</td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Active User Slots</td>
+                    <td className="p-6 text-center text-sm text-slate-500">1 User</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Up to 3 Users</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Up to 10 Users</td>
+                    <td className="p-6 text-center text-sm font-bold text-orange-600">Unlimited</td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Role-Based Access Control (RBAC)</td>
+                    <td className="p-6 text-center"><Minus className="mx-auto w-4 h-4 text-slate-300" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Row-Level Data Security (RLS)</td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                    <td className="p-6 text-center"><Check className="mx-auto w-4 h-4 text-green-500" /></td>
+                  </tr>
+                  <tr>
+                    <td className="p-6 text-sm font-medium text-slate-900 dark:text-white">Support SLA</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Email</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Chat / Email</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Priority 24/7</td>
+                    <td className="p-6 text-center text-sm text-slate-500">Dedicated Manager (SLA 99.9%)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Quick FAQ / trust section */}

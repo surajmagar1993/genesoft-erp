@@ -29,24 +29,21 @@ export function PublicNavbar() {
     >
       <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="relative w-10 h-10 overflow-hidden rounded-xl bg-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <div className="relative h-9 w-28 md:h-10 md:w-32 transition-transform group-hover:scale-105">
              <Image 
-               src="/favicon.png" 
+               src="/logo.png" 
                alt="Genesoft Logo" 
-               width={40} 
-               height={40}
-               className="object-contain p-1.5"
+               fill
+               className="object-contain dark:brightness-110"
+               priority
              />
           </div>
-          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Genesoft
-          </span>
         </Link>
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
-          <Link href="#features" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Features</Link>
-          <Link href="#solutions" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Solutions</Link>
+          <Link href="/#features" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Features</Link>
+          <Link href="/#solutions" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Solutions</Link>
           <Link href="/pricing" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Pricing</Link>
           <Link href="/contact" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Contact</Link>
         </div>
@@ -79,8 +76,8 @@ export function PublicNavbar() {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-col gap-4 animate-in slide-in-from-top duration-200">
-          <Link href="#features" className="text-lg font-medium p-2">Features</Link>
-          <Link href="#solutions" className="text-lg font-medium p-2">Solutions</Link>
+          <Link href="/#features" className="text-lg font-medium p-2">Features</Link>
+          <Link href="/#solutions" className="text-lg font-medium p-2">Solutions</Link>
           <Link href="/pricing" className="text-lg font-medium p-2">Pricing</Link>
           <Link href="/login" className="text-lg font-medium p-2 border-t pt-4">Login</Link>
           <Link 

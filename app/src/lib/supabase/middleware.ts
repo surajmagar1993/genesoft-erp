@@ -47,6 +47,11 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/forgot-password')
 
     const isPublicPage = request.nextUrl.pathname === '/' ||
+        request.nextUrl.pathname === '/pricing' ||
+        request.nextUrl.pathname === '/contact' ||
+        request.nextUrl.pathname === '/privacy' ||
+        request.nextUrl.pathname === '/terms' ||
+        request.nextUrl.pathname === '/sitemap' ||
         request.nextUrl.pathname.startsWith('/api') // Allow API for and from Supabase
 
     const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
