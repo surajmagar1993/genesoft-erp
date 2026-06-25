@@ -4,17 +4,84 @@ import { PublicNavbar } from "@/components/marketing/navbar";
 import { PublicFooter } from "@/components/marketing/footer";
 import { prisma } from "@/lib/prisma";
 import { Plan } from "@prisma/client";
+import { headers } from "next/headers";
 
-async function getPricingPlans() {
+async function getPricingPlans(regionCode: string) {
   try {
     const plans = await prisma.pricingPlan.findMany({
-      where: { regionCode: "IN", isActive: true },
+      where: { regionCode, isActive: true },
       orderBy: { amount: "asc" }
     });
     return plans;
   } catch (error) {
     console.error("Failed to fetch pricing plans:", error);
     return [];
+  }
+}
+
+const regionalFallbacks: Record<string, { currency: string, plans: any[] }> = {
+  IN: {
+    currency: "INR",
+    plans: [
+      { tier: Plan.FREE, amount: 0, currency: "INR" },
+      { tier: Plan.BASIC, amount: 499, currency: "INR" },
+      { tier: Plan.PRO, amount: 999, currency: "INR" },
+      { tier: Plan.ENTERPRISE, amount: 4999, currency: "INR" }
+    ]
+  },
+  US: {
+    currency: "USD",
+    plans: [
+      { tier: Plan.FREE, amount: 0, currency: "USD" },
+      { tier: Plan.BASIC, amount: 9, currency: "USD" },
+      { tier: Plan.PRO, amount: 29, currency: "USD" },
+      { tier: Plan.ENTERPRISE, amount: 99, currency: "USD" }
+    ]
+  },
+  UK: {
+    currency: "GBP",
+    plans: [
+      { tier: Plan.FREE, amount: 0, currency: "GBP" },
+      { tier: Plan.BASIC, amount: 8, currency: "GBP" },
+      { tier: Plan.PRO, amount: 25, currency: "GBP" },
+      { tier: Plan.ENTERPRISE, amount: 80, currency: "GBP" }
+    ]
+  },
+  AE: {
+    currency: "AED",
+    plans: [
+      { tier: Plan.FREE, amount: 0, currency: "AED" },
+      { tier: Plan.BASIC, amount: 35, currency: "AED" },
+      { tier: Plan.PRO, amount: 110, currency: "AED" },
+      { tier: Plan.ENTERPRISE, amount: 360, currency: "AED" }
+    ]
+  },
+  SA: {
+    currency: "SAR",
+    plans: [
+      { tier: Plan.FREE, amount: 0, currency: "SAR" },
+      { tier: Plan.BASIC, amount: 35, currency: "SAR" },
+      { tier: Plan.PRO, amount: 110, currency: "SAR" },
+      { tier: Plan.ENTERPRISE, amount: 375, currency: "SAR" }
+    ]
+  }
+};
+
+function getPricingRegion(countryCode: string): string {
+  const code = countryCode?.toUpperCase() || "US";
+  if (code === "GB") return "UK";
+  const supported = ["IN", "US", "UK", "AE", "SA"];
+  return supported.includes(code) ? code : "US";
+}
+
+function getCurrencySymbol(currency: string) {
+  switch (currency?.toUpperCase()) {
+    case "USD": return "$";
+    case "GBP": return "£";
+    case "AED": return "د.إ ";
+    case "SAR": return "ر.س ";
+    case "INR":
+    default: return "₹";
   }
 }
 
@@ -32,16 +99,21 @@ const tierDescriptions = {
   [Plan.ENTERPRISE]: "Tailored solutions for large-scale corporations."
 };
 
-export default async function PricingPage() {
-  const dbPlans = await getPricingPlans();
+export default async function PricingPage({ searchParams }: { searchParams: Promise<{ region?: string }> }) {
+  const resolvedParams = await searchParams;
+  const regionParam = resolvedParams?.region?.toUpperCase();
+
+  const headerList = await headers();
+  const geoCountry = headerList.get("x-vercel-ip-country") || headerList.get("x-geo-country") || "US";
+  const activeRegion = regionParam || geoCountry.toUpperCase();
+
+  const region = getPricingRegion(activeRegion);
+
+  const dbPlans = await getPricingPlans(region);
   
-  // Fallback plans if seeding failed
-  const plans = dbPlans.length > 0 ? dbPlans : [
-    { tier: Plan.FREE, amount: 0, currency: "INR" },
-    { tier: Plan.BASIC, amount: 499, currency: "INR" },
-    { tier: Plan.PRO, amount: 999, currency: "INR" },
-    { tier: Plan.ENTERPRISE, amount: 4999, currency: "INR" }
-  ];
+  // Fallback plans if database is empty or fetch fails
+  const fallback = regionalFallbacks[region] || regionalFallbacks["US"];
+  const plans = dbPlans.length > 0 ? dbPlans : fallback.plans;
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">
@@ -84,7 +156,7 @@ export default async function PricingPage() {
                 <div className="mb-8">
                   <div className="flex items-baseline gap-1">
                     <span className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
-                      ₹{typeof plan.amount === 'number' ? plan.amount : parseFloat(plan.amount.toString())}
+                      {getCurrencySymbol(plan.currency)}{typeof plan.amount === 'number' ? plan.amount : parseFloat(plan.amount.toString())}
                     </span>
                     <span className="text-slate-500 text-sm font-medium">/mo</span>
                   </div>
