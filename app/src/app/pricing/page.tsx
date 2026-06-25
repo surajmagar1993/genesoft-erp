@@ -78,8 +78,8 @@ function getCurrencySymbol(currency: string) {
   switch (currency?.toUpperCase()) {
     case "USD": return "$";
     case "GBP": return "£";
-    case "AED": return "د.إ ";
-    case "SAR": return "ر.س ";
+    case "AED": return "AED ";
+    case "SAR": return "SAR ";
     case "INR":
     default: return "₹";
   }
