@@ -1,0 +1,25 @@
+# Ignore build/dependency artifacts
+node_modules/
+.next/
+dist/
+graphify-out/
+.venv/
+.git/
+
+# Ignore media & documents requiring semantic LLM extraction
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.gif
+*.mp4
+*.mov
+*.mp3
+*.wav
+*.svg
+*.ico
+
+# Ignore documentation/text documents
+*.md
+*.txt

@@ -1,0 +1,8 @@
+.venv/
+graphify-out/
+.DS_Store
+.vscode/
+app/check-plans.js
+app/check-user.ts
+app/test-db.js
+app/test-us-east.js
