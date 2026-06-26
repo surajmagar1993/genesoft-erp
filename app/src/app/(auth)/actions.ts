@@ -72,6 +72,7 @@ export async function register(formData: FormData) {
     email,
     password,
     options: {
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`,
       data: {
         full_name: fullName,
         company_name: company,
