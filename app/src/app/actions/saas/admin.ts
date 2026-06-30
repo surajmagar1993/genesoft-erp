@@ -52,27 +52,47 @@ async function logAdminAction(action: string, targetId?: string, targetType?: st
 
 export async function getPlatformStats() {
     await ensureSuperAdmin()
-    const supabase = await createClient()
 
-    // Resilient data fetching via Supabase HTTP client
+    // Resilient data fetching via Prisma client
     const [
-        { count: totalTenants },
-        { count: totalUsers },
-        { count: activeTrials },
-        { count: openTickets },
-        { data: recentTenants }
+        totalTenants,
+        totalUsers,
+        activeTrials,
+        openTickets,
+        recentTenants,
+        tenantPlans
     ] = await Promise.all([
-        supabase.from("tenants").select("*", { count: "exact", head: true }),
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("tenants").select("*", { count: "exact", head: true })
-            .eq("is_trial", true)
-            .eq("is_active", true),
-        supabase.from("support_tickets").select("*", { count: "exact", head: true })
-            .eq("status", "OPEN"),
-        supabase.from("tenants")
-            .select("id, name, plan, created_at, is_trial")
-            .order("created_at", { ascending: false })
-            .limit(5)
+        prisma.tenant.count(),
+        prisma.user.count(),
+        prisma.tenant.count({
+            where: {
+                isTrial: true,
+                isActive: true
+            }
+        }),
+        prisma.supportTicket.count({
+            where: {
+                status: "OPEN"
+            }
+        }),
+        prisma.tenant.findMany({
+            select: {
+                id: true,
+                name: true,
+                plan: true,
+                createdAt: true,
+                isTrial: true
+            },
+            orderBy: {
+                createdAt: "desc"
+            },
+            take: 5
+        }),
+        prisma.tenant.findMany({
+            select: {
+                plan: true
+            }
+        })
     ])
 
     // More accurate revenue estimation based on Plan types
@@ -84,20 +104,19 @@ export async function getPlatformStats() {
     }
     
     // Summing revenue from tenants based on their current plan (rough estimate)
-    const { data: tenantPlans } = await supabase.from("tenants").select("plan")
-    const revenueEst = (tenantPlans || []).reduce((sum, t) => sum + (planWeights[t.plan] || 0), 0)
+    const revenueEst = (tenantPlans || []).reduce((sum: number, t: any) => sum + (planWeights[t.plan] || 0), 0)
 
     return {
-        totalTenants: totalTenants || 0,
-        totalUsers: totalUsers || 0,
-        activeTrials: activeTrials || 0,
-        openTickets: openTickets || 0,
+        totalTenants,
+        totalUsers,
+        activeTrials,
+        openTickets,
         recentTenants: (recentTenants || []).map((t: any) => ({
             id: t.id,
             name: t.name,
             plan: t.plan,
-            createdAt: t.created_at,
-            isTrial: t.is_trial
+            createdAt: t.createdAt,
+            isTrial: t.isTrial
         })),
         revenueEst
     }
@@ -112,32 +131,43 @@ export async function getTenants(params: {
 } = {}) {
     const { page = 1, limit = 10, search, plan, status } = params
     await ensureSuperAdmin()
-    const supabase = await createClient()
 
-    let query = supabase
-        .from("tenants")
-        .select("*, users:profiles(id)")
+    const where: any = {}
 
     if (search) {
-        query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`)
+        where.OR = [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } }
+        ]
     }
     if (plan && plan !== "ALL") {
-        query = query.eq("plan", plan)
+        where.plan = plan as any
     }
     if (status && status !== "ALL") {
-        const isActive = status === "ACTIVE"
-        query = query.eq("is_active", isActive)
+        where.isActive = status === "ACTIVE"
     }
 
-    const { data, error } = await query
-        .order("created_at", { ascending: false })
-        .range((page - 1) * limit, page * limit - 1)
-
-    if (error) {
+    try {
+        const tenants = await prisma.tenant.findMany({
+            where,
+            include: {
+                users: {
+                    select: {
+                        id: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: "desc"
+            },
+            skip: (page - 1) * limit,
+            take: limit
+        })
+        return tenants
+    } catch (error) {
         console.error("getTenants error:", error)
         return []
     }
-    return data
 }
 
 export async function getAdminAuditLogs(page: number = 1, limit: number = 50) {
@@ -240,19 +270,26 @@ export async function updatePricingPlan(id: string, data: { amount: number, isAc
 
 export async function getSupportTickets(page: number = 1, limit: number = 15) {
     await ensureSuperAdmin()
-    const supabase = await createClient()
-
-    const { data, error } = await supabase
-        .from("support_tickets")
-        .select("*, tenant:tenants(name)")
-        .order("created_at", { ascending: false })
-        .range((page - 1) * limit, page * limit - 1)
-
-    if (error) {
+    try {
+        const tickets = await prisma.supportTicket.findMany({
+            include: {
+                tenant: {
+                    select: {
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: "desc"
+            },
+            skip: (page - 1) * limit,
+            take: limit
+        })
+        return tickets
+    } catch (error) {
         console.error("getSupportTickets error:", error)
         return []
     }
-    return data
 }
 
 export async function getTicketMessages(ticketId: string) {
@@ -288,19 +325,26 @@ export async function replyToTicket(ticketId: string, content: string) {
 
 export async function getRecentSystemLogs(page: number = 1, limit: number = 20) {
     await ensureSuperAdmin()
-    const supabase = await createClient()
-
-    const { data, error } = await supabase
-        .from("system_logs")
-        .select("*, tenant:tenants(name)")
-        .order("timestamp", { ascending: false })
-        .range((page - 1) * limit, page * limit - 1)
-
-    if (error) {
+    try {
+        const logs = await prisma.systemLog.findMany({
+            include: {
+                tenant: {
+                    select: {
+                        name: true
+                    }
+                }
+            },
+            orderBy: {
+                timestamp: "desc"
+            },
+            skip: (page - 1) * limit,
+            take: limit
+        })
+        return logs
+    } catch (error) {
         console.error("getRecentSystemLogs error:", error)
         return []
     }
-    return data
 }
 
 /**
@@ -308,24 +352,18 @@ export async function getRecentSystemLogs(page: number = 1, limit: number = 20) 
  */
 export async function getDatabaseHealth() {
     await ensureSuperAdmin()
-    const supabase = await createClient()
 
     const start = Date.now()
     try {
         // 1. Check Connectivity
-        const { error: pingError } = await supabase.from("tenants").select("id").limit(1)
-        if (pingError) throw pingError
+        await prisma.$queryRaw`SELECT 1`
         const latency = Date.now() - start
 
-        // 2. Metrics via resilient counts
-        const [
-            { count: tenantCount },
-            { count: userCount },
-            { count: logCount }
-        ] = await Promise.all([
-            supabase.from("tenants").select("*", { count: "exact", head: true }),
-            supabase.from("profiles").select("*", { count: "exact", head: true }),
-            supabase.from("system_logs").select("*", { count: "exact", head: true })
+        // 2. Metrics via counts
+        const [tenantCount, userCount, logCount] = await Promise.all([
+            prisma.tenant.count(),
+            prisma.user.count(),
+            prisma.systemLog.count()
         ])
 
         return {
@@ -333,9 +371,9 @@ export async function getDatabaseHealth() {
             latency: `${latency}ms`,
             databaseSize: "Optimized",
             metrics: {
-                tenants: tenantCount || 0,
-                users: userCount || 0,
-                logs: logCount || 0
+                tenants: tenantCount,
+                users: userCount,
+                logs: logCount
             },
             timestamp: new Date().toISOString()
         }
@@ -353,17 +391,24 @@ export async function getDatabaseHealth() {
  */
 export async function getDashboardCharts() {
     await ensureSuperAdmin()
-    const supabase = await createClient()
 
     // 1. Fetch last 6 months signups
     const sixMonthsAgo = new Date()
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
     
-    const { data: signups } = await supabase
-        .from("tenants")
-        .select("created_at")
-        .gte("created_at", sixMonthsAgo.toISOString())
-        .order("created_at", { ascending: true })
+    const signups = await prisma.tenant.findMany({
+        select: {
+            createdAt: true
+        },
+        where: {
+            createdAt: {
+                gte: sixMonthsAgo
+            }
+        },
+        orderBy: {
+            createdAt: "asc"
+        }
+    })
 
     // Grouping by month
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -377,8 +422,8 @@ export async function getDashboardCharts() {
         chartDataMap[label] = 0
     }
 
-    signups?.forEach(t => {
-        const d = new Date(t.created_at)
+    signups.forEach((t: any) => {
+        const d = new Date(t.createdAt)
         const label = `${months[d.getMonth()]}`
         if (chartDataMap[label] !== undefined) {
             chartDataMap[label] += 1
@@ -388,13 +433,15 @@ export async function getDashboardCharts() {
     const growthData = Object.entries(chartDataMap).map(([name, total]) => ({ name, total }))
 
     // 2. Fetch regional distribution
-    const { data: regions } = await supabase
-        .from("tenants")
-        .select("country_code")
+    const regions = await prisma.tenant.findMany({
+        select: {
+            countryCode: true
+        }
+    })
 
     const regionMap: Record<string, number> = {}
-    regions?.forEach(t => {
-        const code = t.country_code || "Unknown"
+    regions.forEach((t: any) => {
+        const code = t.countryCode || "Unknown"
         regionMap[code] = (regionMap[code] || 0) + 1
     })
 
