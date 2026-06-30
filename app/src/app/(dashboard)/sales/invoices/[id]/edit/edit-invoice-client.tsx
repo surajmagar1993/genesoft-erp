@@ -1,8 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { InvoiceForm, InvoiceFormData } from "@/components/sales/invoice-form"
 import { updateInvoice, InvoiceDB } from "@/app/actions/sales/invoices"
+import { getContacts } from "@/app/actions/crm/contacts"
 import { computeLineItemGst, getSupplyType, GstRate } from "@/lib/gst-engine"
 
 interface Props {
@@ -11,10 +13,16 @@ interface Props {
 
 export default function EditInvoiceClient({ invoice }: Props) {
     const router = useRouter()
+    const [contacts, setContacts] = useState<any[]>([])
+
+    useEffect(() => {
+        getContacts(1, 100).then((res) => setContacts(res.data))
+    }, [])
 
     // Adapt snake_case DB record → camelCase form data
     const initialData: InvoiceFormData = {
         id: invoice.id,
+        contactId: invoice.contact_id,
         invoiceNumber: invoice.invoice_number,
         customerName: invoice.customer_name,
         customerEmail: invoice.customer_email,
@@ -64,7 +72,7 @@ export default function EditInvoiceClient({ invoice }: Props) {
             supplier_state: data.supplierState,
             place_of_supply: data.placeOfSupply,
             supply_type: supplyType,
-            contact_id: invoice.contact_id,
+            contact_id: data.contactId || invoice.contact_id,
             line_items: data.lineItems.map((li) => {
                 const gst = computeLineItemGst(li.qty, li.unitPrice, li.gstRate, supplyType)
                 return {
@@ -89,5 +97,5 @@ export default function EditInvoiceClient({ invoice }: Props) {
         }
     }
 
-    return <InvoiceForm initialData={initialData} onSave={handleSave} />
+    return <InvoiceForm initialData={initialData} onSave={handleSave} contacts={contacts} />
 }

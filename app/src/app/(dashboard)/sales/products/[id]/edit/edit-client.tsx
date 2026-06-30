@@ -52,7 +52,8 @@ export function EditProductClient({ initialProduct }: EditProductClientProps) {
             unit: data.unit,
             stock_qty: data.stockQty,
             is_active: data.isActive,
-            custom_attributes: data.customAttributes
+            custom_attributes: data.customAttributes,
+            tax_group_id: data.taxGroupId || null
         }
 
         const { error } = await updateProduct(payload)

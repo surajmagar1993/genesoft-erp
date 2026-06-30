@@ -44,6 +44,7 @@ export type InvoiceStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRE
 
 export interface InvoiceFormData {
   id?: string
+  contactId?: string
   invoiceNumber: string
   customerName: string
   customerEmail: string
@@ -64,6 +65,7 @@ export interface InvoiceFormData {
 }
 
 export const defaultInvoiceForm: InvoiceFormData = {
+  contactId: "",
   invoiceNumber: "",
   customerName: "",
   customerEmail: "",
@@ -101,10 +103,11 @@ const formatCurrency = (amount: number) =>
 interface InvoiceFormProps {
   initialData?: InvoiceFormData | null
   nextInvoiceNumber?: string
+  contacts?: any[]
   onSave: (data: InvoiceFormData) => void
 }
 
-export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceFormProps) {
+export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }: InvoiceFormProps) {
   const router = useRouter()
   const mode = initialData ? "edit" : "create"
   const [form, setForm] = useState<InvoiceFormData>(
@@ -263,13 +266,48 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceF
             {/* Customer details */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="customerName">Customer Name *</Label>
-                <Input
-                  id="customerName"
-                  value={form.customerName}
-                  onChange={(e) => update("customerName", e.target.value)}
-                  placeholder="Enter customer name"
-                />
+                <Label htmlFor="contactId">Customer / Contact *</Label>
+                {contacts && contacts.length > 0 ? (
+                  <Select
+                    value={form.contactId}
+                    onValueChange={(val) => {
+                      const selected = contacts.find((c) => c.id === val)
+                      if (selected) {
+                        setForm((prev) => ({
+                          ...prev,
+                          contactId: val,
+                          customerName: selected.display_name,
+                          customerEmail: selected.email || "",
+                          customerGstin: selected.gstin || "",
+                          placeOfSupply: selected.billing_address?.state || (selected.country_code === "IN" ? "Maharashtra" : "")
+                        }))
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="contactId">
+                      <SelectValue placeholder="Select a customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {contacts.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.display_name} {c.email ? `(${c.email})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="flex flex-col gap-1">
+                    <Input
+                      id="customerName"
+                      value={form.customerName}
+                      onChange={(e) => update("customerName", e.target.value)}
+                      placeholder="Enter customer name"
+                    />
+                    <p className="text-[11px] text-amber-500">
+                      No CRM contacts found. You should create a contact first.
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="customerEmail">Customer Email</Label>
@@ -279,6 +317,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, onSave }: InvoiceF
                   value={form.customerEmail}
                   onChange={(e) => update("customerEmail", e.target.value)}
                   placeholder="Enter customer email"
+                  disabled={!!form.contactId}
                 />
               </div>
             </div>

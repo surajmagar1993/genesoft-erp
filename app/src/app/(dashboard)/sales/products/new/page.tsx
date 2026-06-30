@@ -24,7 +24,8 @@ export default function NewProductPage() {
             unit: data.unit,
             stock_qty: data.stockQty,
             is_active: data.isActive,
-            custom_attributes: data.customAttributes // Array of {key, value} as-is
+            custom_attributes: data.customAttributes, // Array of {key, value} as-is
+            tax_group_id: data.taxGroupId || null
         }
 
         const { id, error } = await createProduct(payload)

@@ -89,6 +89,7 @@ export interface CreateProductPayload {
   stock_qty?: number
   is_active?: boolean
   custom_attributes?: any
+  tax_group_id?: string | null
 }
 
 export async function createProduct(

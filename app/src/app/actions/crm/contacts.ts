@@ -8,14 +8,32 @@ export interface Contact {
   id: string
   display_name: string
   type: "INDIVIDUAL" | "COMPANY"
-  email: string
-  phone: string
-  gstin?: string
-  pan: string
+  first_name?: string | null
+  last_name?: string | null
+  company_name?: string | null
+  email: string | null
+  phone: string | null
+  mobile?: string | null
+  website?: string | null
+  gstin?: string | null
+  pan: string | null
+  cin?: string | null
+  tan?: string | null
+  msme_udyam?: string | null
+  trn?: string | null
+  trade_license?: string | null
+  vat_number_ksa?: string | null
+  cr_number?: string | null
+  ein?: string | null
+  tax_number?: string | null
   customer_group: string
-  country_code?: string
+  country_code?: string | null
   currency_code: string
+  credit_limit?: number | null
   balance: number
+  billing_address?: any
+  shipping_address?: any
+  notes?: string | null
   is_active: boolean
   tenant_id: string
   created_at: string

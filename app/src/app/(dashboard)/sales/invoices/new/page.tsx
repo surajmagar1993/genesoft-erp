@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { InvoiceForm, InvoiceFormData } from "@/components/sales/invoice-form"
 import { createInvoice, getNextInvoiceNumber } from "@/app/actions/sales/invoices"
+import { getContacts } from "@/app/actions/crm/contacts"
 import { computeLineItemGst, getSupplyType } from "@/lib/gst-engine"
 
 export default function NewInvoicePage() {
@@ -13,12 +14,18 @@ export default function NewInvoicePage() {
 function NewInvoiceFormWrapper() {
     const router = useRouter()
     const [nextInvoiceNum, setNextInvoiceNum] = useState<string>("")
+    const [contacts, setContacts] = useState<any[]>([])
 
     useEffect(() => {
         getNextInvoiceNumber().then(setNextInvoiceNum)
+        getContacts(1, 100).then((res) => setContacts(res.data))
     }, [])
 
     const handleSave = async (data: InvoiceFormData) => {
+        if (!data.contactId) {
+            alert("Please select a registered CRM Contact to create an invoice.")
+            return
+        }
         const supplyType = getSupplyType(data.supplierState, data.placeOfSupply)
 
         const { error } = await createInvoice({
@@ -39,7 +46,7 @@ function NewInvoiceFormWrapper() {
             supplier_state: data.supplierState,
             place_of_supply: data.placeOfSupply,
             supply_type: supplyType,
-            contact_id: "", // TODO: Get from form data
+            contact_id: data.contactId,
             line_items: data.lineItems.map((li) => {
                 const gst = computeLineItemGst(li.qty, li.unitPrice, li.gstRate, supplyType)
                 return {
@@ -64,5 +71,5 @@ function NewInvoiceFormWrapper() {
         }
     }
 
-    return <InvoiceForm onSave={handleSave} nextInvoiceNumber={nextInvoiceNum} />
+    return <InvoiceForm onSave={handleSave} nextInvoiceNumber={nextInvoiceNum} contacts={contacts} />
 }

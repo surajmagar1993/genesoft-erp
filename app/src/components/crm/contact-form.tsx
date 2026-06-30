@@ -107,20 +107,49 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
         const payload = {
             display_name: displayName || form.displayName,
             type: form.type,
-            email: form.email,
-            phone: `${form.phoneDialCode} ${form.phone}`.trim(),
-            gstin: form.gstin,
-            pan: form.pan,
-            customer_group: form.customerGroup,
-            country_code: form.countryCode,
-            currency_code: form.currencyCode,
+            first_name: form.type === "INDIVIDUAL" ? form.firstName : null,
+            last_name: form.type === "INDIVIDUAL" ? form.lastName : null,
+            company_name: form.type === "COMPANY" ? form.companyName : null,
+            email: form.email || null,
+            phone: form.phone ? `${form.phoneDialCode} ${form.phone}`.trim() : null,
+            mobile: form.mobile ? `${form.mobileDialCode} ${form.mobile}`.trim() : null,
+            website: form.website || null,
+            customer_group: form.customerGroup || "retail",
+            country_code: form.countryCode || "IN",
+            currency_code: form.currencyCode || "INR",
+            gstin: form.gstin || null,
+            pan: form.pan || null,
+            cin: form.cin || null,
+            tan: form.tan || null,
+            msme_udyam: form.msmeUdyam || null,
+            trn: form.trn || null,
+            trade_license: form.tradeLicense || null,
+            vat_number_ksa: form.vatNumberKsa || null,
+            cr_number: form.crNumber || null,
+            ein: form.ein || null,
+            credit_limit: form.creditLimit ? parseFloat(form.creditLimit) : null,
             balance: 0,
+            billing_address: {
+                street: form.billingStreet || "",
+                city: form.billingCity || "",
+                state: form.billingState || "",
+                zip: form.billingZip || "",
+                country: form.billingCountry || ""
+            },
+            shipping_address: {
+                street: form.billingStreet || "",
+                city: form.billingCity || "",
+                state: form.billingState || "",
+                zip: form.billingZip || "",
+                country: form.billingCountry || ""
+            },
+            notes: form.notes || null,
             is_active: true,
         }
 
         const result = mode === "create"
-            ? await createContact(payload)
-            : await updateContact(initialData!.id!, payload)
+            ? await createContact(payload as any)
+            : await updateContact(initialData!.id!, payload as any)
 
         if (result.error) {
             setSaveError(result.error)
