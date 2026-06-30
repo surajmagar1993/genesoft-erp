@@ -142,9 +142,9 @@ export default function LandingPage() {
                         </div>
                         <div className="space-y-2 mt-2">
                           {[
-                            { name: "Acme Corp Ltd", type: "B2B Sales Invoice", val: "+$4,200", status: "Paid", col: "bg-green-500/10 text-green-600 dark:text-green-400" },
-                            { name: "Globex Solutions", type: "Consulting Quote", val: "$1,850", status: "Pending", col: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
-                            { name: "Zeta License Inc", type: "Subscription Bill", val: "+$950", status: "Paid", col: "bg-green-500/10 text-green-600 dark:text-green-400" }
+                            { name: "Enterprise Client", type: "B2B Sales Invoice", val: "+$4,200", status: "Paid", col: "bg-green-500/10 text-green-600 dark:text-green-400" },
+                            { name: "Consulting Partner", type: "Consulting Quote", val: "$1,850", status: "Pending", col: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
+                            { name: "SaaS Subscription", type: "Subscription Bill", val: "+$950", status: "Paid", col: "bg-green-500/10 text-green-600 dark:text-green-400" }
                           ].map((item, idx) => (
                             <div key={idx} className="flex items-center justify-between text-[11px] border-b border-slate-100 dark:border-slate-800/50 pb-1.5">
                               <div>

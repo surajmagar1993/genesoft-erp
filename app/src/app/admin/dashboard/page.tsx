@@ -20,33 +20,25 @@ export default async function AdminDashboardPage() {
             title: "Total Tenants",
             value: stats.totalTenants,
             description: "Total registered businesses",
-            icon: Building2,
-            trend: "+12.5%",
-            trendUp: true
+            icon: Building2
         },
         {
             title: "Active Users",
             value: stats.totalUsers,
             description: "Total across all tenants",
-            icon: Users,
-            trend: "+5.2%",
-            trendUp: true
+            icon: Users
         },
         {
             title: "Estimated Revenue",
             value: `₹${stats.revenueEst.toLocaleString()}`,
             description: "Monthly recurring revenue",
-            icon: CreditCard,
-            trend: "+24.8%",
-            trendUp: true
+            icon: CreditCard
         },
         {
             title: "Open Support Tickets",
             value: stats.openTickets,
             description: "Awaiting response",
-            icon: MessageSquare,
-            trend: "-2.1%",
-            trendUp: false
+            icon: MessageSquare
         }
     ]
 
@@ -92,19 +84,6 @@ export default async function AdminDashboardPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-3xl font-black tracking-tight">{card.value}</div>
-                            <div className="flex items-center gap-1 mt-1">
-                                {card.trendUp ? (
-                                    <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                                ) : (
-                                    <ArrowDownRight className="h-3 w-3 text-rose-500" />
-                                )}
-                                <span className={card.trendUp ? "text-emerald-500" : "text-rose-500 font-bold"}>
-                                    {card.trend}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground ml-1 font-medium">
-                                    vs last month
-                                </span>
-                            </div>
                         </CardContent>
                         <div className="absolute -right-4 -bottom-4 opacity-[0.03] rotate-12 group-hover:rotate-0 transition-transform duration-500">
                             <card.icon size={100} />
