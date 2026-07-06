@@ -176,10 +176,10 @@ export default function LandingPage() {
              </p>
              <div className="flex flex-wrap items-center justify-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all">
                 {/* Mock Logo Icons */}
-                <div className="flex items-center gap-2 font-bold text-slate-500 text-xl"><Globe2 className="w-8 h-8 text-blue-500" /> TATA</div>
-                <div className="flex items-center gap-2 font-bold text-slate-500 text-xl"><Layers className="w-8 h-8 text-indigo-500" /> RELIANCE</div>
-                <div className="flex items-center gap-2 font-bold text-slate-500 text-xl"><Zap className="w-8 h-8 text-yellow-500" /> WIPRO</div>
-                <div className="flex items-center gap-2 font-bold text-slate-500 text-xl"><BarChart3 className="w-8 h-8 text-orange-500" /> INFOSYS</div>
+                <div className="flex items-center gap-2 font-bold text-slate-500 text-xl"><Globe2 className="w-8 h-8 text-blue-500" /> TECHCORP</div>
+                <div className="flex items-center gap-2 font-bold text-slate-500 text-xl"><Layers className="w-8 h-8 text-indigo-500" /> GLOBALSYNC</div>
+                <div className="flex items-center gap-2 font-bold text-slate-500 text-xl"><Zap className="w-8 h-8 text-yellow-500" /> INNOVATE</div>
+                <div className="flex items-center gap-2 font-bold text-slate-500 text-xl"><BarChart3 className="w-8 h-8 text-orange-500" /> NEXUS</div>
              </div>
           </div>
         </section>
