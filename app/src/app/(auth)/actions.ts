@@ -121,7 +121,7 @@ export async function register(formData: FormData) {
     redirect('/register?error=Application+setup+failed.+Please+contact+support.')
   }
 
-  redirect('/login?message=Account+created+successfully.+Check+your+email+to+confirm.')
+  redirect('/login?message=Account+created+successfully.+Please+sign+in.')
 }
 
 export async function forgotPassword(formData: FormData) {

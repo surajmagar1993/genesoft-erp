@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { login } from '../actions'
 import { Button } from '@/components/ui/button'
+import { SubmitButton } from '@/components/ui/submit-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -75,10 +76,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           />
         </div>
 
-        <Button type="submit" className="w-full h-10 font-medium">
+        <SubmitButton className="w-full h-10 font-medium" loadingText="Signing in...">
           <LogIn className="mr-2 h-4 w-4" />
           Sign in
-        </Button>
+        </SubmitButton>
       </form>
 
       {/* Divider */}
