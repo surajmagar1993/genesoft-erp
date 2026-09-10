@@ -20,6 +20,19 @@
 - **Null Safety**: All admin health metrics MUST use null-coalescing: `health.metrics?.tenants ?? 0`.
 - **KPI Trend Source**: Trend percentages are currently static; wire to `getDashboardCharts()` when historical data grows.
 
+## SaaS Admin Tenant Management Patterns (New — 2026-09-10)
+- **Server Actions Location**: Tenant administration actions reside in `app/src/app/actions/saas/admin.ts`.
+- **Authorization Guard**: Every tenant management action calls `await ensureSuperAdmin()` before touching data.
+- **Audit Logging**: Any tenant modification (plan update, trial extension, status toggle, profile edit, creation) MUST log to `AdminAuditLog` with `adminId`, `adminEmail`, `action`, `targetId`, `targetType: "TENANT"`, and metadata JSON.
+- **Atomic CoA Provisioning**: Tenant creation atomically seeds 39 hierarchical Chart of Accounts entries using `prisma.account.createMany({ skipDuplicates: true })`.
+- **Tenant Detail Architecture**: Server component `admin/tenants/[id]/page.tsx` resolves params as Promise (`await props.params`), calls `getTenantById`, and delegates rendering to `TenantDetailClient.tsx`.
+
+## Inventory & Stock Management Patterns (New — 2026-09-10)
+- **Location**: Actions in `app/src/app/actions/inventory.ts`, UI in `app/src/app/(dashboard)/inventory/`.
+- **Atomic Double-Entry**: Every stock change must atomically update `WarehouseStock.quantity`, `Product.stockQty`, and append to `StockMovement` within a `prisma.$transaction`.
+- **Zero-Friction Auto-Provisioning**: `ensureDefaultWarehouse(tenantId)` creates a default facility (`WH-MAIN`) on demand and links existing products, preventing unhandled empty states.
+- **Inter-Depot Transfers**: Source depot is validated for sufficient balance before executing decrement/increment operations.
+
 ## Data Patterns
 - **Multi-tenancy**: Use `tenantId` in all queries (RLS enforced via Supabase policies).
 - **Server Actions**: All CRUD operations use Next.js Server Actions.

@@ -18,10 +18,19 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 ## 🟡 P2 — Growth (Pending)
 
 ### 🔴 Immediate Next Steps (SaaS Admin)
-- [ ] **Tenant Management CRUD Page** (`/admin/tenants`) — Create, view, edit, suspend tenants ← **START HERE**
-- [ ] **Support Ticket Orchestration** — View, assign, and close tickets from the Command Center
-- [ ] **AdminAuditLog Expansion** — Track granular platform-level governance actions
-- [ ] **Platform Security Page** (`/admin/security`) — Rate limits, blocked IPs, 2FA enforcement
+- [x] **Tenant Management CRUD Page** (`/admin/tenants`, `/admin/tenants/[id]`, `/admin/tenants/new`) ✅
+- [x] **Support Ticket Orchestration** (`/admin/support`, `/admin/support/[id]`) ✅
+- [x] **AdminAuditLog Expansion** — Track granular platform-level governance actions ✅
+- [x] **Platform Security Page** (`/admin/security`) — Rate limits, blocked IPs, 2FA enforcement ✅
+
+### 🟡 Completed P2 Core Operations (Inventory, Purchase, HR)
+- [x] **Inventory: Stock Management & Multi-Warehouse Control** (`/inventory`) — Multi-depots, SKU tracking, atomic stock adjustments, transfers, reorder alerts, transaction audit ledger ✅ **(2026-09-10)**
+- [x] **Purchase: Vendor Management & Purchase Orders** (`/purchase`) — Supplier directory, PO lifecycle, multi-facility goods intake, AP bill conversion ✅ **(2026-09-10)**
+- [x] **HR: Employee Directory, Attendance & Leaves** (`/hr`) — Employee directory, departmental structuring, daily attendance tracking, leave workflows ✅ **(2026-09-10)**
+
+### 🟡 Next Focus: P2 Projects & Rental
+- [ ] **Projects: Projects, Teams & Milestones** (`/projects`) — Project management, team allocation, deliverables tracking ← **START HERE**
+- [ ] **Rental Management** (`/sales/rental`) — Rental agreements, asset tracking, recurring billing
 
 ### CRM
 - [ ] CRM: Email Integration
@@ -36,15 +45,15 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [ ] Sales: Price Lists
 
 ### Purchase
-- [ ] Purchase: Vendor / Supplier Management
-- [ ] Purchase: Purchase Orders
-- [ ] Purchase: Bills / Vendor Invoices
-- [ ] Purchase: Purchase Receipts
+- [x] Purchase: Vendor / Supplier Management (`/purchase`) ✅ **(2026-09-10)**
+- [x] Purchase: Purchase Orders (`/purchase`) ✅ **(2026-09-10)**
+- [x] Purchase: Bills / Vendor Invoices (AP Integration `/finance/bills`) ✅ **(2026-09-10)**
+- [x] Purchase: Purchase Receipts (Warehouse Intake `/inventory`) ✅ **(2026-09-10)**
 
 ### Inventory
-- [ ] Inventory: Stock Management
+- [x] Inventory: Stock Management ✅ **(2026-09-10)**
 - [ ] Inventory: Barcode / QR Code Support
-- [ ] Inventory: Stock Adjustments
+- [x] Inventory: Stock Adjustments & Transfers ✅ **(2026-09-10)**
 
 ### Finance
 - [ ] Finance: General Ledger

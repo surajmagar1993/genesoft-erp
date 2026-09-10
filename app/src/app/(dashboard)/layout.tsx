@@ -20,6 +20,7 @@ import {
     Settings,
     LayoutDashboard,
     Warehouse,
+    Truck,
     DollarSign,
     UserCog,
     FolderKanban,
@@ -110,6 +111,7 @@ const navigation = [
     {
         label: "Operations",
         items: [
+            { name: "Purchase", href: "/purchase", icon: Truck },
             { name: "Inventory", href: "/inventory", icon: Warehouse },
             { name: "HR", href: "/hr", icon: UserCog },
             { name: "Projects", href: "/projects", icon: FolderKanban },

@@ -1,6 +1,6 @@
 # ERP & CRM Multi-Platform SaaS — Master Task Tracker
 
-> **Last Updated:** 2026-04-09 (v7) | **Latest Commit:** `88d6589` | **Branch:** `main`
+> **Last Updated:** 2026-09-10 (v8) | **Latest Commit:** `b1dc1ba` | **Branch:** `main`
 
 ## Brainstorming Phase ✅
 - [x] Define purpose & scale
@@ -150,13 +150,13 @@
 - [ ] Retail: Walk-in / POS Sales
 - [ ] Sales: Credit Notes / Refunds
 - [ ] Sales: Price Lists
-- [ ] Purchase: Vendor / Supplier Management
-- [ ] Purchase: Purchase Orders
-- [ ] Purchase: Bills / Vendor Invoices
-- [ ] Purchase: Purchase Receipts
-- [ ] Inventory: Stock Management
+- [x] Purchase: Vendor / Supplier Management (`/purchase`) ✅ **(2026-09-10)**
+- [x] Purchase: Purchase Orders (`/purchase`) ✅ **(2026-09-10)**
+- [x] Purchase: Bills / Vendor Invoices (AP Integration `/finance/bills`) ✅ **(2026-09-10)**
+- [x] Purchase: Purchase Receipts (Warehouse Intake `/inventory`) ✅ **(2026-09-10)**
+- [x] Inventory: Stock Management (`/inventory`) ✅ **(2026-09-10)**
 - [ ] Inventory: Barcode / QR Code Support
-- [ ] Inventory: Stock Adjustments
+- [x] Inventory: Stock Adjustments & Multi-Depot Transfers ✅ **(2026-09-10)**
 - [ ] Finance: General Ledger
 - [ ] Finance: Bank Reconciliation
 - [ ] Finance: Expense Management
@@ -171,19 +171,20 @@
 - [ ] Invoice Features: Proforma Invoice
 - [ ] Invoice Features: Credit/Debit Note
 - [ ] Invoice Features: Recurring Invoices
-- [ ] HR: Employee Directory
-- [ ] HR: Attendance Tracking
-- [ ] HR: Leave Management
+- [x] HR: Employee Directory (`/hr`) ✅ **(2026-09-10)**
+- [x] HR: Attendance Tracking (`/hr`) ✅ **(2026-09-10)**
+- [x] HR: Leave Management (`/hr`) ✅ **(2026-09-10)**
 - [ ] Projects: Projects & Teams
 - [ ] Projects: Tasks & Subtasks
 - [ ] Projects: Time Tracking
 - [ ] Rentals: Asset Management
 - [ ] Rentals: Agreements & Invoicing
-- [ ] Admin: Audit Logs (expand `AdminAuditLog`)
+- [x] Admin: Audit Logs (expanded `AdminAuditLog` tracking platform security & governance) ✅
+- [x] SaaS: Platform Security & Governance (`/admin/security`) ✅
 - [ ] Admin: Email Templates
-- [ ] SaaS: Tenant Management CRUD page (`/admin/tenants`) ← **NEXT**
-- [ ] SaaS: Support Ticket management from Command Center
-- [ ] SaaS: Plan Upgrade/Downgrade
+- [x] SaaS: Tenant Management CRUD page (`/admin/tenants`, `/admin/tenants/[id]`, `/admin/tenants/new`) ✅
+- [x] SaaS: Support Ticket management from Command Center (`/admin/support`, `/admin/support/[id]`) ✅
+- [ ] SaaS: Plan Upgrade/Downgrade (automated billing webhook sync)
 - [ ] SaaS: Invoice Generation
 - [ ] Integrations: WhatsApp Business API
 - [ ] Integrations: Stripe / PayPal

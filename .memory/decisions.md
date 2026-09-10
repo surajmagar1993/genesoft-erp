@@ -73,3 +73,36 @@
 - **Rationale**: Hardcoded examples confuse users, make the UI look unprofessional to enterprise buyers, and can cause confusion if a user submits a form without clearing the placeholder value (in some older browsers/implementations).
 - **Scope**: CRM, Sales, Finance, Auth, and Settings modules.
 - **Status**: ✅ Complete across all P1 modules.
+
+---
+
+## [2026-09-10] Super Admin Tenant Management CRUD & Auto-Seeding
+- **Context**: Super Admins needed full lifecycle controls to provision, inspect, modify, and govern business tenants directly from the Command Center (`/admin/tenants`).
+- **Decision**: Build `/admin/tenants/new` (manual provisioning), `/admin/tenants/[id]` (360° profile with user roster, usage metrics, and audit history), and update actions directly in `app/actions/saas/admin.ts`. Auto-seed 39 standard Chart of Accounts (Assets, Liabilities, Equity, Revenue, Expenses) atomically upon tenant creation.
+- **Rationale**: Keeps platform tenant administration self-contained without requiring direct database access or manual SQL scripts; ensures any new tenant starts with a fully functional accounting foundation immediately.
+- **Status**: ✅ Complete — routes live, dynamic server-rendered, and build verified.
+
+---
+
+## [2026-09-10] Codebase Hygiene: Orphaned Root Elimination & Prisma 7 Driver Adapter Standardization
+- **Context**: A legacy empty directory `src/` existed at the project root while active code lived in `app/src/`, and `schema.prisma` contained a deprecated `previewFeatures = ["driverAdapters"]` flag for Prisma 7.4+.
+- **Decision**: Safely remove root `src/` and strip the deprecated preview flag from `schema.prisma`.
+- **Rationale**: Eliminates developer and tool confusion between root and app codebases, and eliminates compiler deprecation warnings.
+- **Status**: ✅ Complete — `npx prisma validate` passes with zero warnings.
+
+---
+
+## [2026-09-10] Multi-Warehouse Inventory Architecture & Default Provisioning
+- **Context**: Physical businesses and enterprises manage stock across multiple storage depots, branches, or retail counters.
+- **Decision**: Implement a 3-tier inventory model: `warehouses` (facility metadata), `warehouse_stocks` (per-facility SKU quantities and reorder thresholds), and `stock_movements` (immutable transaction log). Auto-provision a default "Central Logistics Hub" (`WH-MAIN`) when a tenant first visits `/inventory` to avoid empty-state friction.
+- **Rationale**: Ensures enterprise-grade multi-location traceability without breaking existing single-depot simplicity or requiring manual data migrations.
+- **Status**: ✅ Complete — PostgreSQL migration applied with RLS, server actions live, and UI operational.
+
+---
+
+## [2026-09-10] Monorepo Workspace Delegation & Deployment Safety
+- **Context**: Standard cloud platforms (Vercel, Docker, Railway) require root-level repository orchestration when the Next.js app is hosted in a subdirectory (`app/`).
+- **Decision**: Add root `package.json` utilizing npm workspaces (`"workspaces": ["app"]`) with delegation scripts for `build` and `start`, update root `.gitignore`, and generate `DEPLOYMENT_AUDIT.md`.
+- **Rationale**: Guarantees zero build-time friction regardless of whether the hosting platform detects the root directory or the `app` subdirectory.
+- **Status**: ✅ Complete — verified with passing root `npm run build` and `PORT=3001 npm start`.
+

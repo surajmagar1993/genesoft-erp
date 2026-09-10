@@ -2,10 +2,12 @@ import { getTenants } from "@/app/actions/saas/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Clock } from "lucide-react"
+import { Clock, Plus } from "lucide-react"
 import { format } from "date-fns"
 import { TenantActionsDropdown } from "@/components/admin/tenant-actions-dropdown"
 import { TenantFilters } from "@/components/admin/tenant-filters"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
@@ -22,16 +24,24 @@ export default async function TenantsPage(props: {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Tenant Directory</h1>
                     <p className="text-muted-foreground mt-1">
-                        Overview of all businesses on the platform.
+                        Overview of all businesses registered across the platform.
                     </p>
                 </div>
-                <Badge variant="outline" className="px-3 py-1 font-semibold border-primary/20 bg-primary/5">
-                    {tenants.length} Total Businesses
-                </Badge>
+                <div className="flex items-center gap-3">
+                    <Badge variant="outline" className="px-3 py-1 font-semibold border-primary/20 bg-primary/5 hidden sm:inline-flex">
+                        {tenants.length} Total Businesses
+                    </Badge>
+                    <Link href="/admin/tenants/new">
+                        <Button className="gap-2 shadow-sm font-semibold">
+                            <Plus className="h-4 w-4" />
+                            New Tenant
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <TenantFilters />
@@ -58,17 +68,17 @@ export default async function TenantsPage(props: {
                             {tenants.map((tenant: any) => (
                                 <TableRow key={tenant.id} className="group hover:bg-primary/5 transition-colors">
                                     <TableCell>
-                                        <div className="flex items-center gap-3">
+                                        <Link href={`/admin/tenants/${tenant.id}`} className="flex items-center gap-3 group-hover:text-primary transition-colors">
                                             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center font-bold text-primary group-hover:scale-110 transition-transform">
                                                 {tenant.name.substring(0, 2).toUpperCase()}
                                             </div>
                                             <div className="flex flex-col">
-                                                <span className="font-semibold text-sm">{tenant.name}</span>
+                                                <span className="font-semibold text-sm hover:underline">{tenant.name}</span>
                                                 <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
                                                     ID: {tenant.id.split('-')[0]}...
                                                 </span>
                                             </div>
-                                        </div>
+                                        </Link>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col gap-1">

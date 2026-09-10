@@ -20,6 +20,7 @@ import {
     ShieldCheck,
     Globe,
     Activity,
+    Shield,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -72,6 +73,7 @@ const adminNavigation = [
         label: "Global Settings",
         items: [
             { name: "Regions", href: "/admin/regions", icon: Globe },
+            { name: "Platform Security", href: "/admin/security", icon: Shield },
             { name: "System Health", href: "/admin/health", icon: Activity },
             { name: "Admin Audit", href: "/admin/audit", icon: ShieldCheck },
         ],

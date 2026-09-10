@@ -1,0 +1,12 @@
+{
+  "name": "genesoft-erp",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "app"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=app",
+    "start": "npm run start --workspace=app"
+  }
+}

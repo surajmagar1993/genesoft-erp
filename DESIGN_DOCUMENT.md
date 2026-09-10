@@ -2,7 +2,7 @@
 
 **Project:** Multi-Platform SaaS ERP & CRM
 **Company:** Genesoft Infotech Private Limited
-**Date:** 2026-04-07 | **Status:** In Development (P1 MVP — CRM/Sales + Multi-Currency Complete)
+**Date:** 2026-09-10 | **Status:** In Development (P1 MVP Complete + P2 Admin Governance, Platform Security & Multi-Warehouse Inventory Live)
 
 ---
 
@@ -509,6 +509,10 @@ support_messages
 | 13 | **Unified Super Admin Route** | Separate App | Fastest MVP for 50–500 tenants; easy to migrate later. |
 | 14 | **Metadata-Only Admin View** | Full Data Access | Prioritizes tenant privacy and data security. |
 | 15 | **Database-Backed Pricing** | Hardcoded Constants | Allows instant price changes via dashboard for 6+ regions. |
+| 16 | **Multi-Warehouse 3-Tier Model** | Flat product stock | Enables localized SKU tracking and atomic inter-depot transfers with immutable audit ledger. |
+| 17 | **Platform Security & Governance Hub** | Ad-hoc env vars | Centralizes 2FA enforcement, IP firewall blocklists, and rate limits in `/admin/security`. |
+| 18 | **Monorepo Workspace Delegation** | Root standalone script | Guarantees standard Node.js hosting compatibility via root `package.json` with `"workspaces": ["app"]`. |
+
 
 ---
 

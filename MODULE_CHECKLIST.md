@@ -107,21 +107,21 @@
 
 ## 📦 Purchase & Procurement
 
-- [ ] **Vendor / Supplier Management** 🟡
-- [ ] **Purchase Orders** 🟡
-- [ ] **Bills / Vendor Invoices** 🟡
-- [ ] **Purchase Receipts** 🟡
+- [x] **Vendor / Supplier Management** 🟡 ✅ **(2026-09-10)**
+- [x] **Purchase Orders** 🟡 ✅ **(2026-09-10)**
+- [x] **Bills / Vendor Invoices** 🟡 ✅ **(2026-09-10)**
+- [x] **Purchase Receipts** 🟡 ✅ **(2026-09-10)**
 - [ ] **Request for Quotation (RFQ)** 🟢
 
 ---
 
 ## 🏭 Inventory & Warehouse
 
-- [ ] **Stock Management** 🟡
+- [x] **Stock Management** 🟡 ✅ **(2026-09-10)**
 - [ ] **Barcode / QR Code Support** 🟡
-- [ ] **Stock Adjustments** 🟡
-- [ ] **Warehouse Management** 🟢
-- [ ] **Stock Transfers** 🟢
+- [x] **Stock Adjustments** 🟡 ✅ **(2026-09-10)**
+- [x] **Warehouse Management** 🟢 ✅ **(2026-09-10)**
+- [x] **Stock Transfers** 🟢 ✅ **(2026-09-10)**
 - [ ] **Batch & Serial Number Tracking** 🟢
 
 ---
@@ -206,9 +206,9 @@
 
 ## 👥 HR & People
 
-- [ ] **Employee Directory** 🟡
-- [ ] **Attendance Tracking** 🟡
-- [ ] **Leave Management** 🟡
+- [x] **Employee Directory** 🟡 ✅ **(2026-09-10)**
+- [x] **Attendance Tracking** 🟡 ✅ **(2026-09-10)**
+- [x] **Leave Management** 🟡 ✅ **(2026-09-10)**
 - [ ] **Payroll Processing** 🟢
 - [ ] **Recruitment / Hiring** 🟢
 - [ ] **Employee Self-Service Portal** 🟢
@@ -282,8 +282,9 @@
 - [x] **Trial Management**: 15-day PRO trial infrastructure ✅
 - [x] **Super Admin Command Center**: Platform intelligence hub with recharts ✅ **(2026-04-08)**
 - [x] **Live Support Chat**: Real-time tenant support ✅
-- [ ] **Tenant Management CRUD** (`/admin/tenants`) ← **NEXT**
-- [ ] **Support Ticket Orchestration** from Command Center
+- [x] **Tenant Management CRUD** (`/admin/tenants`, `/admin/tenants/[id]`, `/admin/tenants/new`) ✅ **(2026-09-10)**
+- [x] **Support Ticket Orchestration** from Command Center (`/admin/support`, `/admin/support/[id]`) ✅
+- [x] **Platform Security & Governance** (`/admin/security`) — Rate limiting, IP firewall, 2FA enforcement, audit feed ✅ **(2026-09-10)**
 
 ---
 

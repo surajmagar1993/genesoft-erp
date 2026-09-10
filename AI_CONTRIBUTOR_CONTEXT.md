@@ -1,6 +1,6 @@
 # 🤖 AI System Context — Genesoft ERP & CRM
 
-> **Last Updated:** 2026-04-09
+> **Last Updated:** 2026-09-10
 
 ## 🎯 Project Overview
 This repository contains the **Genesoft ERP & CRM**, a multi-tenant SaaS application.
@@ -14,11 +14,11 @@ This project uses several Markdown files to track state and requirements:
 4. **`REMAINING_TASKS.md`**: A filtered checklist comprising only tasks that are incomplete and still pending execution.
 
 ## 🛠 Tech Stack
-*   **Framework**: Next.js 15 (App Router)
+*   **Framework**: Next.js 16 (App Router)
 *   **Language**: TypeScript (strict)
 *   **Styling**: Tailwind CSS + shadcn/ui
 *   **Icons**: lucide-react
-*   **Charts**: recharts (v2) — installed 2026-04-08
+*   **Charts**: recharts (v3)
 *   **Backend & API**: Next.js Server Actions (replaces tRPC for data mutations)
 *   **Database**: PostgreSQL
 *   **ORM**: Prisma 7 (schema at `app/prisma/schema.prisma`) with `@prisma/adapter-pg`
@@ -58,6 +58,20 @@ health.metrics?.tenants ?? 0
 *   **State Synchronization**: Avoid calling `setState` inside `useEffect` logic if it's dependent on props (cascading renders). Instead, perform state updates during the render phase using the "derived state" or "previous prop check" pattern.
 
 ---
+
+## 🏢 Tenant Management Lifecycle (Completed — 2026-09-10)
+Full multi-tenant provisioning, inspection, and administration under `/admin/tenants`:
+- **`app/admin/tenants/new/page.tsx`** — Super Admin manual onboarding:
+  - Configures business profile, operating country, currency, subscription tier, and trial duration.
+  - Automatically provisions the tenant and seeds 39 standard Indian Chart of Accounts (Assets, Liabilities, Equity, Revenue, Expenses) atomically.
+- **`app/admin/tenants/[id]/page.tsx` & `TenantDetailClient.tsx`** — 360° Tenant Intelligence View:
+  - 4-column metric cards: Billed Revenue, Total Invoices, Contacts, Active Users.
+  - 4 tabs: Overview & Settings, Team Members roster, Business Footprint metrics, and Governance Audit Trail.
+  - In-place management: Extend trial (+7d), change subscription plan, suspend/activate account, and edit company profile.
+- **`app/actions/saas/admin.ts`** includes:
+  - `getTenantById(tenantId)` — fetches tenant with users, module counts, and audit logs.
+  - `createTenant(payload)` — provisions tenant with auto-seeded CoA and logs action in `AdminAuditLog`.
+  - `updateTenantDetails(tenantId, payload)` — updates tenant properties and revalidates paths.
 
 ## 🏠 Super Admin Command Center (Completed — 2026-04-08)
 Full SaaS platform intelligence hub at `/admin/dashboard`:
@@ -119,6 +133,19 @@ Full CoA module:
 - **`app/actions/finance/exchange-rates.ts`** — `getExchangeRate` with built-in reference rates.
 - **Models**: `currency_code` added to `Quote`, `SalesOrder`, `Bill`, and `Contact`.
 
+## 🛡️ Platform Security & Governance (Completed — 2026-09-10)
+Full platform security command center under `/admin/security`:
+- **`app/admin/security/page.tsx` & `SecurityDashboardClient.tsx`** — Telemetry cards (2FA, Rate Limit, Blocked IPs, Session Guard), policy toggles, IP blocklist manager, and security incident feed.
+- **`app/actions/saas/admin.ts`** — `getSecurityOverview`, `updateSecurityPolicy`, `addBlockedIp`, `removeBlockedIp`.
+- **Audit**: All actions logged to `AdminAuditLog` with target type `SECURITY` or `IP_RULE`.
+
+## 🏭 Inventory & Multi-Warehouse Operations (Completed — 2026-09-10)
+Full multi-depot stock management under `/inventory`:
+- **`app/(dashboard)/inventory/page.tsx` & `inventory-client.tsx`** — 4-column KPI telemetry (Valuation, Units, Facilities, Alerts), Low Stock warning banner, 4 tabbed views (Stock Levels, Warehouses, Movement Ledger, Reorder Alerts), and operational modals for stock adjustments, transfers, and warehouse creation.
+- **`app/actions/inventory.ts`** — `getInventoryOverview`, `createWarehouse`, `updateWarehouse`, `adjustStock`, `transferStock`.
+- **Database**: `warehouses`, `warehouse_stocks`, and `stock_movements` with RLS.
+- **Auto-Provisioning**: Automatically creates default `WH-MAIN` and links products upon initial tenant access.
+
 ## 🚦 Contribution Workflow (For AI Agents)
 1. **Never** deviate from `lucide-react` or `shadcn/ui` components for base UI.
 2. **Never** put hardcoded example data in form placeholders (see Rule 1 above).
@@ -126,4 +153,4 @@ Full CoA module:
 4. Always write UI first in standard TSX, then wire it up to server actions.
 5. Once a module feature is complete, update `TASK_TRACKER.md` and remove it from `REMAINING_TASKS.md`.
 6. Ensure components that interact with the database utilize the `tenantId` parameter from the active session context.
-7. **Next active block**: Tenant Management CRUD page (`/admin/tenants`).
+7. **Next active block**: P2 Core Operations: Purchase & Vendor Management (`/purchase`) — Supplier directory, Purchase Orders (PO) workflow, vendor bill linking, and receipt tracking.

@@ -1,17 +1,28 @@
 # Genesoft ERP & CRM
 
-Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 15, Supabase, and Prisma. It provides a comprehensive suite for managing business operations with native multi-currency support, integrated GST handling, and a full **SaaS Super Admin Command Center** for platform-level governance.
+Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 16, Supabase, and Prisma. It provides a comprehensive suite for managing business operations with native multi-currency support, integrated GST handling, multi-warehouse inventory control, and a full **SaaS Super Admin Command Center** for platform-level governance.
 
 ---
 
 ## 🚀 Features
 
 ### 🏢 SaaS Super Admin Command Center
+- **Tenant Management Lifecycle**: Complete CRUD for platform tenants (`/admin/tenants`), 360° tenant profile dashboards (`/admin/tenants/[id]`), manual business onboarding (`/admin/tenants/new`), trial extension (+7d), plan switching, and automatic Chart of Accounts (39 accounts) provisioning.
+- **Platform Security & Governance (`/admin/security`)**: Super Admin security hub with 2FA enforcement policy toggles, configurable session inactivity timeout, global rate limiting, real-time IP firewall blocklist management, and security audit log feed.
 - **Platform Intelligence Hub**: Real-time KPI cards (tenants, users, MRR, tickets) with trend indicators and glassmorphism styling.
 - **Interactive Charts**: Tenant Growth (line chart) and Global Presence (pie chart) powered by `recharts`.
 - **Database Health Monitor**: Real-time latency and total platform record counts.
 - **Incident Monitor**: Color-coded system event log feed with tenant attribution.
+- **Support Inbox**: Platform-wide helpdesk command center with real-time ticket messaging (`/admin/support`).
 - **Quick Actions Panel**: Direct navigation to Tenant Management, Support Tickets, Security, and Settings.
+
+### 🏭 Inventory & Multi-Warehouse Management (`/inventory`)
+- **Multi-Facility Stock Control**: Multi-depot and warehouse tracking with unique facility codes, managers, and addresses.
+- **Auto-Provisioning**: Automatically provisions a default "Central Logistics Hub" (`WH-MAIN`) on demand for zero empty-state friction.
+- **Atomic Stock Adjustments**: Fast logging of PO receipts (`IN`), shipments (`OUT`), physical count reconciliations (`ADJUSTMENT`), and damage write-offs (`DAMAGE`).
+- **Inter-Depot Transfers**: Seamless inventory movement between physical facilities with source balance checks.
+- **Reorder Alerts & Deficit Tracking**: Real-time monitoring of items below reorder points with calculated replenishment deficits and estimated restock costs.
+- **Transaction Ledger**: Immutable audit log of all historical inventory movements.
 
 ### 🤝 CRM (Customer Relationship Management)
 - **Leads & Deals**: Track sales pipeline from prospect to conversion.
@@ -22,10 +33,10 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 ### 💰 Finance & Accounting
 - **Accounts Payable**: Manage vendor bills, payments, and aging.
 - **Accounts Receivable**: Track customer invoices and incoming payments.
-- **GST Engine**: Integrated Indian GST calculations for all financial documents.
-- **Chart of Accounts**: Comprehensive financial structure management.
+- **GST Engine**: Integrated Indian GST calculations (CGST, SGST, IGST split) for all financial documents.
+- **Chart of Accounts**: Comprehensive financial structure management (seeded with 39 standard Indian accounts).
 - **Multi-Currency Support**: Dynamic currency formatting ($, €, ₹, AED) and exchange rate-aware ledger balances.
-- **Invoice PDF Export**: Server-rendered PDF generation for Tax Invoices.
+- **Invoice PDF Export**: Server-rendered PDF generation for Tax Invoices with HSN/SAC breakdown.
 
 ### 📤 Bulk Data Management
 - **Import/Export**: Bulk CSV import and export for Contacts & Products using `papaparse`.
@@ -42,14 +53,14 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 
 | Layer | Technology |
 |---|---|
-| **Framework** | Next.js 15 (App Router) |
+| **Framework** | Next.js 16 (App Router) with Turbopack |
 | **Database** | Supabase (PostgreSQL) with Row Level Security |
 | **ORM** | Prisma 7 (with `@prisma/adapter-pg`) |
-| **Auth** | Supabase Auth |
-| **Styling** | Tailwind CSS & Shadcn UI |
-| **Charts** | Recharts |
+| **Auth** | Supabase Auth (`@supabase/ssr`) |
+| **Styling** | Tailwind CSS & shadcn/ui |
+| **Charts** | Recharts (v3) |
 | **PDF** | Custom server-side PDF rendering |
-| **Types** | TypeScript (strict) |
+| **Types** | TypeScript Strict |
 
 ---
 
@@ -61,15 +72,16 @@ npm install
 ```
 
 ### 2. Environment Setup
-Create `.env.local` with your Supabase credentials:
+Create `.env.local` in `app/` with your Supabase credentials:
 ```env
 DATABASE_URL="postgresql://postgres:[password]@db.[project].supabase.co:5432/postgres"
 NEXT_PUBLIC_SUPABASE_URL="https://[project].supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="[anon-key]"
+SUPABASE_SERVICE_ROLE_KEY="[service-role-key]"
 ```
 
 > [!IMPORTANT]
-> Always use the **direct connection string** (port 5432) for `DATABASE_URL`, not the connection pooler, to avoid Prisma compatibility issues.
+> Always use the **direct connection string** (port 5432) for `DATABASE_URL`, not the connection pooler, to avoid Prisma schema and migration compatibility issues.
 
 ### 3. Generate Prisma Client
 ```bash
@@ -88,19 +100,29 @@ Open [http://localhost:3000](http://localhost:3000) to access the application.
 ## 🏗️ Project Structure
 
 ```
-src/
+CRM/
+├── package.json         # Root workspace delegation
+├── DEPLOYMENT_AUDIT.md  # Production compliance audit report
 ├── app/
-│   ├── (auth)/          # Login, Register, Password Reset
-│   ├── admin/           # Super Admin Command Center
-│   │   └── dashboard/   # Platform intelligence hub
-│   ├── actions/
-│   │   └── saas/        # getPlatformStats, getDashboardCharts, getDatabaseHealth
-│   ├── crm/             # CRM module (leads, contacts, deals)
-│   ├── sales/           # Sales module (quotes, invoices, orders)
-│   ├── finance/         # Finance module (bills, payments, accounts)
-│   └── api/             # API routes (all marked force-dynamic)
-├── components/          # Shared UI components
-└── lib/                 # Prisma client, Supabase client, utilities
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── (auth)/          # Login, Register, Password Reset
+│   │   │   ├── (dashboard)/
+│   │   │   │   ├── crm/         # CRM module (leads, contacts, deals)
+│   │   │   │   ├── sales/       # Sales module (quotes, invoices, orders, products)
+│   │   │   │   ├── inventory/   # Inventory & warehouse management
+│   │   │   │   └── finance/     # Finance module (bills, accounts, reports)
+│   │   │   ├── admin/           # SaaS Super Admin Command Center
+│   │   │   │   ├── dashboard/   # Intelligence telemetry hub
+│   │   │   │   ├── tenants/     # Tenant lifecycle CRUD & 360 profiles
+│   │   │   │   ├── security/    # Security policy & firewall control
+│   │   │   │   └── support/     # Support ticket orchestration
+│   │   │   ├── actions/         # Server Actions (tenant-scoped)
+│   │   │   └── api/             # Force-dynamic API routes (webhooks, PDF export)
+│   │   ├── components/          # Shared UI components (shadcn/ui)
+│   │   └── lib/                 # Prisma singleton, Supabase SSR, GST engine
+│   └── prisma/
+│       └── schema.prisma        # Multi-tenant datamodel definition
 ```
 
 ---
@@ -109,11 +131,18 @@ src/
 
 - All data is isolated by `tenant_id` at the database level using Supabase Row Level Security (RLS).
 - The Supabase middleware injects `tenant_id` into every authenticated session.
-- Super Admin routes (`/admin/*`) are protected and require the `SUPER_ADMIN` role.
+- Super Admin routes (`/admin/*`) are protected and require the `SUPER_ADMIN` role via server-side guard `ensureSuperAdmin()`.
 
 ---
 
-## 📋 Known Notes
+## 📋 Production Deployment Verification
 
-- **Dynamic API Routes**: All API routes that access the database are marked `export const dynamic = "force-dynamic"` to prevent build-time initialization errors.
-- **Prisma Adapter**: Uses `@prisma/adapter-pg` with a `pg.Pool` for connection pooling. Avoid the PgBouncer transaction-mode URL for Prisma ORM.
+The application supports both root workspace delegation and direct `/app` deployments:
+```bash
+# Build from project root
+npm run build
+
+# Start production server on specified port
+PORT=3000 npm start
+```
+See [DEPLOYMENT_AUDIT.md](file:///home/genesoft/Downloads/ERP/Archive/CRM/DEPLOYMENT_AUDIT.md) for the full compliance checklist.

@@ -15,6 +15,8 @@ import { toggleTenantStatus, extendTenantTrial, updateTenantPlan } from "@/app/a
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
+import Link from "next/link"
+
 export function TenantActionsDropdown({ tenant }: { tenant: any }) {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
@@ -76,9 +78,11 @@ export function TenantActionsDropdown({ tenant }: { tenant: any }) {
             <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuLabel>Tenant Control</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="gap-2 focus:bg-primary/5 cursor-pointer">
-                    <Building2 className="h-4 w-4 opacity-70" />
-                    View Details
+                <DropdownMenuItem asChild className="gap-2 focus:bg-primary/5 cursor-pointer">
+                    <Link href={`/admin/tenants/${tenant.id}`}>
+                        <Building2 className="h-4 w-4 opacity-70" />
+                        View 360° Profile
+                    </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                     className="gap-2 focus:bg-primary/5 cursor-pointer"

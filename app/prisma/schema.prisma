@@ -2,8 +2,7 @@
 // Multi-tenant SaaS with Row-Level Security
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -62,6 +61,15 @@ model Tenant {
   supportTickets     SupportTicket[]
   systemLogs         SystemLog[]
   ledgerEntries      LedgerEntry[]
+  warehouses         Warehouse[]
+  warehouseStocks    WarehouseStock[]
+  stockMovements     StockMovement[]
+  purchaseOrders     PurchaseOrder[]
+  departments        Department[]
+  designations       Designation[]
+  employees          Employee[]
+  attendances        Attendance[]
+  leaves             Leave[]
 
   @@map("tenants")
 }
@@ -86,7 +94,8 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
-  tenant Tenant? @relation(fields: [tenantId], references: [id])
+  tenant   Tenant?   @relation(fields: [tenantId], references: [id])
+  employee Employee?
 
   @@map("profiles")
 }
@@ -169,6 +178,7 @@ model Contact {
   bills              Bill[]
   communicationLogs  CommunicationLog[]
   ledgerEntries      LedgerEntry[]
+  purchaseOrders     PurchaseOrder[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -270,10 +280,13 @@ model Product {
   createdAt        DateTime    @default(now()) @map("created_at")
   updatedAt        DateTime    @updatedAt @map("updated_at")
 
-  tenant       Tenant        @relation(fields: [tenantId], references: [id])
-  taxGroup     TaxGroup?     @relation(fields: [taxGroupId], references: [id])
-  invoiceItems InvoiceItem[]
-  billItems    BillItem[]
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  taxGroup        TaxGroup?        @relation(fields: [taxGroupId], references: [id])
+  invoiceItems    InvoiceItem[]
+  billItems       BillItem[]
+  warehouseStocks    WarehouseStock[]
+  stockMovements     StockMovement[]
+  purchaseOrderItems PurchaseOrderItem[]
 
   @@index([tenantId])
   @@index([tenantId, sku])
@@ -283,6 +296,92 @@ model Product {
 enum ProductType {
   PRODUCT
   SERVICE
+}
+
+// ============================================
+// INVENTORY & WAREHOUSES
+// ============================================
+
+model Warehouse {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  name         String
+  code         String
+  address      String?
+  city         String?
+  state        String?
+  country      String?  @default("India")
+  contactName  String?  @map("contact_name")
+  contactPhone String?  @map("contact_phone")
+  isDefault    Boolean  @default(false) @map("is_default")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  warehouseStocks WarehouseStock[]
+  movementsFrom   StockMovement[]  @relation("SourceWarehouse")
+  movementsTo     StockMovement[]  @relation("DestinationWarehouse")
+  purchaseOrders  PurchaseOrder[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("warehouses")
+}
+
+model WarehouseStock {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  warehouseId  String   @map("warehouse_id") @db.Uuid
+  productId    String   @map("product_id") @db.Uuid
+  quantity     Decimal  @default(0) @db.Decimal(15, 2)
+  reorderPoint Decimal  @default(10) @map("reorder_point") @db.Decimal(15, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  product   Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([warehouseId, productId])
+  @@index([tenantId])
+  @@index([productId])
+  @@map("warehouse_stocks")
+}
+
+model StockMovement {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String            @map("tenant_id") @db.Uuid
+  productId     String            @map("product_id") @db.Uuid
+  warehouseId   String            @map("warehouse_id") @db.Uuid
+  toWarehouseId String?           @map("to_warehouse_id") @db.Uuid
+  type          StockMovementType
+  quantity      Decimal           @db.Decimal(15, 2)
+  previousQty   Decimal           @map("previous_qty") @db.Decimal(15, 2)
+  newQty        Decimal           @map("new_qty") @db.Decimal(15, 2)
+  reason        String?
+  referenceNo   String?           @map("reference_no")
+  performedBy   String?           @map("performed_by")
+  createdAt     DateTime          @default(now()) @map("created_at")
+
+  tenant               Tenant     @relation(fields: [tenantId], references: [id])
+  product              Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sourceWarehouse      Warehouse  @relation("SourceWarehouse", fields: [warehouseId], references: [id], onDelete: Cascade)
+  destinationWarehouse Warehouse? @relation("DestinationWarehouse", fields: [toWarehouseId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([productId])
+  @@index([warehouseId])
+  @@map("stock_movements")
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+  TRANSFER
+  DAMAGE
+  RETURN
 }
 
 // ============================================
@@ -701,8 +800,9 @@ model Bill {
   // Relations
   tenant   Tenant     @relation(fields: [tenantId], references: [id])
   contact  Contact    @relation(fields: [contactId], references: [id])
-  items    BillItem[]
-  payments Payment[]
+  items          BillItem[]
+  payments       Payment[]
+  purchaseOrders PurchaseOrder[]
 
   @@unique([tenantId, billNumber])
   @@index([tenantId])
@@ -739,6 +839,76 @@ model BillItem {
   product Product? @relation(fields: [productId], references: [id])
 
   @@map("bill_items")
+}
+
+// ============================================
+// PROCUREMENT & PURCHASE ORDERS
+// ============================================
+
+model PurchaseOrder {
+  id                   String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId             String              @map("tenant_id") @db.Uuid
+  vendorId             String              @map("vendor_id") @db.Uuid
+  warehouseId          String?             @map("warehouse_id") @db.Uuid
+  billId               String?             @map("bill_id") @db.Uuid
+  orderNumber          String              @map("order_number")
+  status               PurchaseOrderStatus @default(DRAFT)
+  orderDate            DateTime            @default(now()) @map("order_date")
+  expectedDeliveryDate DateTime?           @map("expected_delivery_date")
+
+  // Amounts
+  subtotal     Decimal @default(0) @db.Decimal(15, 2)
+  taxAmount    Decimal @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  discount     Decimal @default(0) @db.Decimal(15, 2)
+  total        Decimal @default(0) @db.Decimal(15, 2)
+  currencyCode String  @default("INR") @map("currency_code")
+
+  // Meta
+  notes     String?
+  terms     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tenant    Tenant              @relation(fields: [tenantId], references: [id])
+  vendor    Contact             @relation(fields: [vendorId], references: [id])
+  warehouse Warehouse?          @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  bill      Bill?               @relation(fields: [billId], references: [id], onDelete: SetNull)
+  items     PurchaseOrderItem[]
+
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id              String  @id @default(cuid())
+  purchaseOrderId String  @map("purchase_order_id") @db.Uuid
+  productId       String? @map("product_id") @db.Uuid
+  description     String
+  hsnSacCode      String? @map("hsn_sac_code")
+  quantity        Decimal @db.Decimal(15, 2)
+  receivedQty     Decimal @default(0) @map("received_qty") @db.Decimal(15, 2)
+  unitPrice       Decimal @map("unit_price") @db.Decimal(15, 2)
+  taxPercent      Decimal @default(0) @map("tax_percent") @db.Decimal(5, 2)
+  taxAmount       Decimal @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  lineTotal       Decimal @map("line_total") @db.Decimal(15, 2)
+
+  // Relations
+  purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product       Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("purchase_order_items")
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  APPROVED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
 }
 
 // ============================================
@@ -1010,3 +1180,189 @@ model GlobalSettings {
 
   @@map("global_settings")
 }
+
+// ============================================
+// HR & WORKFORCE MANAGEMENT
+// ============================================
+
+model Department {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  name        String
+  code        String?
+  description String?
+  managerId   String?  @map("manager_id") @db.Uuid
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  manager      Employee?     @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  employees    Employee[]    @relation("DepartmentEmployees")
+  designations Designation[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("departments")
+}
+
+model Designation {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  departmentId String?  @map("department_id") @db.Uuid
+  title        String
+  description  String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  employees  Employee[]
+
+  @@unique([tenantId, title])
+  @@index([tenantId])
+  @@index([departmentId])
+  @@map("designations")
+}
+
+model Employee {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String         @map("tenant_id") @db.Uuid
+  userId           String?        @unique @map("user_id") @db.Uuid
+  employeeNumber   String         @map("employee_number")
+  firstName        String         @map("first_name")
+  lastName         String?        @map("last_name")
+  displayName      String         @map("display_name")
+  email            String
+  phone            String?
+  dateOfBirth      DateTime?      @map("date_of_birth")
+  gender           String?
+  joiningDate      DateTime       @default(now()) @map("joining_date")
+  status           EmployeeStatus @default(ACTIVE)
+  employmentType   EmploymentType @default(FULL_TIME) @map("employment_type")
+  
+  departmentId     String?        @map("department_id") @db.Uuid
+  designationId    String?        @map("designation_id") @db.Uuid
+  managerId        String?        @map("manager_id") @db.Uuid
+  
+  basicSalary      Decimal?       @map("basic_salary") @db.Decimal(15, 2)
+  currencyCode     String         @default("INR") @map("currency_code")
+  bankDetails      Json?          @map("bank_details")
+  address          Json?
+  emergencyContact Json?          @map("emergency_contact")
+  
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  tenant             Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user               User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
+  department         Department?    @relation("DepartmentEmployees", fields: [departmentId], references: [id], onDelete: SetNull)
+  designation        Designation?   @relation(fields: [designationId], references: [id], onDelete: SetNull)
+  manager            Employee?      @relation("ReportingHierarchy", fields: [managerId], references: [id], onDelete: SetNull)
+  subordinates       Employee[]     @relation("ReportingHierarchy")
+  managedDepartments Department[]   @relation("DepartmentManager")
+  attendances        Attendance[]
+  leaves             Leave[]
+
+  @@unique([tenantId, employeeNumber])
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([departmentId])
+  @@index([designationId])
+  @@index([managerId])
+  @@map("employees")
+}
+
+model Attendance {
+  id           String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String           @map("tenant_id") @db.Uuid
+  employeeId   String           @map("employee_id") @db.Uuid
+  date         DateTime
+  checkIn      DateTime?        @map("check_in")
+  checkOut     DateTime?        @map("check_out")
+  status       AttendanceStatus @default(PRESENT)
+  workingHours Decimal?         @map("working_hours") @db.Decimal(5, 2)
+  notes        String?
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, employeeId, date])
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([date])
+  @@map("attendances")
+}
+
+model Leave {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String      @map("tenant_id") @db.Uuid
+  employeeId      String      @map("employee_id") @db.Uuid
+  type            LeaveType   @default(CASUAL)
+  startDate       DateTime    @map("start_date")
+  endDate         DateTime    @map("end_date")
+  days            Decimal     @db.Decimal(4, 1)
+  reason          String
+  status          LeaveStatus @default(PENDING)
+  approvedById    String?     @map("approved_by_id") @db.Uuid
+  approvedAt      DateTime?   @map("approved_at")
+  rejectionReason String?     @map("rejection_reason")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([status])
+  @@map("leaves")
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  PROBATION
+  RESIGNED
+  TERMINATED
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  ON_LEAVE
+  LATE
+  HOLIDAY
+}
+
+enum LeaveType {
+  CASUAL
+  SICK
+  ANNUAL
+  MATERNITY
+  PATERNITY
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
