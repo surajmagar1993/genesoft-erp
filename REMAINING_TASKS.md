@@ -23,14 +23,14 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **AdminAuditLog Expansion** — Track granular platform-level governance actions ✅
 - [x] **Platform Security Page** (`/admin/security`) — Rate limits, blocked IPs, 2FA enforcement ✅
 
-### 🟡 Completed P2 Core Operations (Inventory, Purchase, HR)
+### 🟡 Completed P2 Core Operations (Inventory, Purchase, HR, Projects)
 - [x] **Inventory: Stock Management & Multi-Warehouse Control** (`/inventory`) — Multi-depots, SKU tracking, atomic stock adjustments, transfers, reorder alerts, transaction audit ledger ✅ **(2026-09-10)**
 - [x] **Purchase: Vendor Management & Purchase Orders** (`/purchase`) — Supplier directory, PO lifecycle, multi-facility goods intake, AP bill conversion ✅ **(2026-09-10)**
 - [x] **HR: Employee Directory, Attendance & Leaves** (`/hr`) — Employee directory, departmental structuring, daily attendance tracking, leave workflows ✅ **(2026-09-10)**
+- [x] **Projects: Agile Delivery, Kanban Boards, Milestones & Timesheets** (`/projects`) — 5-stage Kanban board, milestone deliverable checklists, HR resource allocation, billable timesheets ✅ **(2026-09-10)**
 
-### 🟡 Next Focus: P2 Projects & Rental
-- [ ] **Projects: Projects, Teams & Milestones** (`/projects`) — Project management, team allocation, deliverables tracking ← **START HERE**
-- [ ] **Rental Management** (`/sales/rental`) — Rental agreements, asset tracking, recurring billing
+### 🟡 Next Focus: P2 Rental Management
+- [ ] **Rental Management** (`/sales/rental`) — Rental agreements, asset tracking, recurring billing ← **START HERE**
 
 ### CRM
 - [ ] CRM: Email Integration

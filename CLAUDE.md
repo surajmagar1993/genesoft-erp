@@ -67,8 +67,15 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
   - Built interactive multi-tab interface in `/hr`: 4-column KPI telemetry (Headcount, Present Today, Pending Leaves, Departments), Employee directory with search/filters and 360° profile inspection, daily attendance register with working hours calculation, leave approval queue, and organizational department/designation management.
   - Verified type check (`tsc --noEmit`), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
 
+- Implemented P2 Core Operations: Projects & Task Delivery (`/projects`):
+  - Added Prisma models & Supabase PostgreSQL tables: `projects`, `project_members`, `project_milestones`, `project_tasks`, `project_time_entries` with multi-tenant RLS, composite unique constraints, and enums (`ProjectStatus`, `ProjectPriority`, `ProjectBillingType`, `MilestoneStatus`, `ProjectTaskStatus`).
+  - Built tenant-scoped server actions in `app/actions/projects.ts`: `getProjectsOverview` (with automated starter projects & deliverables seeding), `createProject`, `updateProject`, `deleteProject`, `createProjectTask`, `updateProjectTaskStatus`, `updateProjectTask`, `deleteProjectTask`, `createMilestone`, `updateMilestone`, `deleteMilestone`, `addProjectMember`, `removeProjectMember`, `logProjectTime`, `deleteProjectTime`.
+  - Replaced placeholder with interactive `ProjectsClient` in `/projects`: 4-column KPI telemetry (Active Projects, Task Velocity % progress bar, Tracked Effort total/billable, Portfolio Budget), 5-column Agile Kanban sprint board (`BACKLOG`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, `DONE`) with inline stage transitions, Projects Directory table with budget and progress indicators, Milestones deliverable checklist with completion markers, Team resource allocation linked to `/hr` employees, and Timesheet ledger with billable tracking and task actual-hours rollup.
+  - Added reusable accessible `Progress` UI component (`app/src/components/ui/progress.tsx`).
+  - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
+
 ## 🔜 Next Active Block
-P2 Core Operations: Projects, Teams & Milestones (`/projects`) or Rental & Asset Management (`/sales/rental`).
+P2 Growth: Rental Management & Asset Tracking (`/sales/rental`) — the final remaining placeholder in the entire dashboard navigation!
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*

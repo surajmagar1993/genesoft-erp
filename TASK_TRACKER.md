@@ -174,9 +174,9 @@
 - [x] HR: Employee Directory (`/hr`) ✅ **(2026-09-10)**
 - [x] HR: Attendance Tracking (`/hr`) ✅ **(2026-09-10)**
 - [x] HR: Leave Management (`/hr`) ✅ **(2026-09-10)**
-- [ ] Projects: Projects & Teams
-- [ ] Projects: Tasks & Subtasks
-- [ ] Projects: Time Tracking
+- [x] Projects: Projects & Teams (`/projects`) ✅ **(2026-09-10)**
+- [x] Projects: Tasks & Subtasks (Agile Kanban Board) (`/projects`) ✅ **(2026-09-10)**
+- [x] Projects: Time Tracking & Deliverables (`/projects`) ✅ **(2026-09-10)**
 - [ ] Rentals: Asset Management
 - [ ] Rentals: Agreements & Invoicing
 - [x] Admin: Audit Logs (expanded `AdminAuditLog` tracking platform security & governance) ✅

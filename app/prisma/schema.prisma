@@ -70,6 +70,11 @@ model Tenant {
   employees          Employee[]
   attendances        Attendance[]
   leaves             Leave[]
+  projects           Project[]
+  projectMembers     ProjectMember[]
+  projectMilestones  ProjectMilestone[]
+  projectTasks       ProjectTask[]
+  projectTimeEntries ProjectTimeEntry[]
 
   @@map("tenants")
 }
@@ -179,6 +184,7 @@ model Contact {
   communicationLogs  CommunicationLog[]
   ledgerEntries      LedgerEntry[]
   purchaseOrders     PurchaseOrder[]
+  projects           Project[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -1266,6 +1272,10 @@ model Employee {
   managedDepartments Department[]   @relation("DepartmentManager")
   attendances        Attendance[]
   leaves             Leave[]
+  managedProjects    Project[]          @relation("ProjectManager")
+  projectMemberships ProjectMember[]
+  assignedTasks      ProjectTask[]
+  timeEntries        ProjectTimeEntry[]
 
   @@unique([tenantId, employeeNumber])
   @@unique([tenantId, email])
@@ -1364,5 +1374,183 @@ enum LeaveStatus {
   APPROVED
   REJECTED
   CANCELLED
+}
+
+// ============================================
+// PROJECTS & TASKS DELIVERY
+// ============================================
+
+model Project {
+  id            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String             @map("tenant_id") @db.Uuid
+  projectCode   String             @map("project_code")
+  name          String
+  description   String?
+  status        ProjectStatus      @default(PLANNING)
+  priority      ProjectPriority    @default(MEDIUM)
+  startDate     DateTime?          @map("start_date")
+  targetEndDate DateTime?          @map("target_end_date")
+  actualEndDate DateTime?          @map("actual_end_date")
+  budget        Decimal?           @db.Decimal(15, 2)
+  currencyCode  String             @default("INR") @map("currency_code")
+  clientId      String?            @map("client_id") @db.Uuid
+  managerId     String?            @map("manager_id") @db.Uuid
+  billingType   ProjectBillingType @default(FIXED_FEE) @map("billing_type")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  tenant        Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  client        Contact?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  manager       Employee?          @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
+  members       ProjectMember[]
+  milestones    ProjectMilestone[]
+  tasks         ProjectTask[]
+  timeEntries   ProjectTimeEntry[]
+
+  @@unique([tenantId, projectCode])
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([managerId])
+  @@index([status])
+  @@map("projects")
+}
+
+model ProjectMember {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  projectId  String    @map("project_id") @db.Uuid
+  employeeId String    @map("employee_id") @db.Uuid
+  role       String    @default("Team Member")
+  hourlyRate Decimal?  @map("hourly_rate") @db.Decimal(10, 2)
+  joinedAt   DateTime  @default(now()) @map("joined_at")
+
+  tenant     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, employeeId])
+  @@index([tenantId])
+  @@index([projectId])
+  @@index([employeeId])
+  @@map("project_members")
+}
+
+model ProjectMilestone {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String          @map("tenant_id") @db.Uuid
+  projectId     String          @map("project_id") @db.Uuid
+  title         String
+  description   String?
+  dueDate       DateTime?       @map("due_date")
+  completedDate DateTime?       @map("completed_date")
+  status        MilestoneStatus @default(PENDING)
+  deliverable   String?
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project       Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks         ProjectTask[]
+
+  @@index([tenantId])
+  @@index([projectId])
+  @@index([status])
+  @@map("project_milestones")
+}
+
+model ProjectTask {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId           String            @map("tenant_id") @db.Uuid
+  projectId          String            @map("project_id") @db.Uuid
+  milestoneId        String?           @map("milestone_id") @db.Uuid
+  taskCode           String            @map("task_code")
+  title              String
+  description        String?
+  status             ProjectTaskStatus @default(TODO)
+  priority           ProjectPriority   @default(MEDIUM)
+  assignedEmployeeId String?           @map("assigned_employee_id") @db.Uuid
+  estimatedHours     Decimal?          @map("estimated_hours") @db.Decimal(6, 2)
+  actualHours        Decimal?          @default(0) @map("actual_hours") @db.Decimal(6, 2)
+  startDate          DateTime?         @map("start_date")
+  dueDate            DateTime?         @map("due_date")
+  completedAt        DateTime?         @map("completed_at")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @updatedAt @map("updated_at")
+
+  tenant             Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project            Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone          ProjectMilestone? @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  assignedEmployee   Employee?         @relation(fields: [assignedEmployeeId], references: [id], onDelete: SetNull)
+  timeEntries        ProjectTimeEntry[]
+
+  @@unique([tenantId, taskCode])
+  @@index([tenantId])
+  @@index([projectId])
+  @@index([milestoneId])
+  @@index([assignedEmployeeId])
+  @@index([status])
+  @@map("project_tasks")
+}
+
+model ProjectTimeEntry {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String       @map("tenant_id") @db.Uuid
+  projectId   String       @map("project_id") @db.Uuid
+  taskId      String?      @map("task_id") @db.Uuid
+  employeeId  String       @map("employee_id") @db.Uuid
+  workDate    DateTime     @map("work_date")
+  hours       Decimal      @db.Decimal(5, 2)
+  description String
+  isBillable  Boolean      @default(true) @map("is_billable")
+  isBilled    Boolean      @default(false) @map("is_billed")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task        ProjectTask? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  employee    Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([projectId])
+  @@index([taskId])
+  @@index([employeeId])
+  @@map("project_time_entries")
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ProjectBillingType {
+  FIXED_FEE
+  TIME_AND_MATERIALS
+  NON_BILLABLE
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+}
+
+enum ProjectTaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
 }
 

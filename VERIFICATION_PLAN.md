@@ -248,6 +248,35 @@ LIMIT 10;
    - Verify departmental cards show employee headcounts and assigned manager names.
    - Click "Add Department" to create custom business units, or "Add Designation" to introduce new organizational job titles.
 
+---
 
-
-
+### 3.11 Project Management & Delivery Protocols (`/projects`)
+1. **Initial Provisioning & Auto-Seeding**:
+   - Navigate to `/projects`.
+   - **Expectation**: If no projects exist for the tenant, the system auto-seeds realistic starter template projects (*Enterprise ERP & Cloud Infrastructure Modernization* and *B2B Customer Self-Service Mobile Portal*) populated with deliverables, milestones, Kanban tasks, staff assignments, and billable time logs.
+   - Top KPI cards render real-time values for **Active Projects**, **Task Velocity** (% completion progress bar), **Tracked Effort** (total & billable hours), and **Portfolio Budget** (in INR).
+2. **Project Creation (`PRJ-XXXX`)**:
+   - Click "New Project", specify Project Title, Client Account, Lead Manager (from `/hr`), Billing Type (`FIXED_FEE`, `TIME_AND_MATERIALS`, `NON_BILLABLE`), Budget, and Start/Target End dates.
+   - **Expectation**: Project persists in `projects` table with sequential code `PRJ-XXXX`, status `PLANNING`, manager auto-allocated as team lead, and appears in the Projects Directory table.
+3. **Agile Kanban Sprint Board**:
+   - Navigate to the "Kanban Board" tab.
+   - Verify tasks are sorted across 5 columns: `BACKLOG`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, and `DONE`.
+   - Each card displays the task code (`TSK-XXXX`), priority badge, project code, linked milestone, assignee avatar/name, and actual vs estimated hours.
+   - Use the inline stage switcher dropdown on a task to advance it from `TODO` to `IN_PROGRESS` or `DONE`.
+   - **Expectation**: Status updates seamlessly in the database; completing a task automatically records `completedAt` timestamp and updates project completion percentage.
+4. **Milestone Tracking & Sign-offs**:
+   - Navigate to the "Milestones" tab.
+   - Click "Add Milestone", assign to project, enter title, key deliverable description, target due date, and save.
+   - Click "Mark Done" on an in-progress milestone.
+   - **Expectation**: Milestone status toggles to `COMPLETED` with completed timestamp.
+5. **Team Resource Allocation**:
+   - Under the "Resource Allocation" tab, view staff members assigned to the scoped project.
+   - Click "Allocate Team Member", select an active employee from `/hr`, assign their project role (e.g., "Senior Full-Stack Engineer"), set hourly billing rate, and confirm.
+   - **Expectation**: Employee is linked in `project_members` and appears in the team roster.
+6. **Timesheets & Effort Tracking**:
+   - Under the "Time Tracking & Logs" tab or via top bar "Log Hours", click "Log Work Hours".
+   - Select project, choose specific task, select employee, enter duration (e.g., `4.5`), work description, and toggle Billable.
+   - **Expectation**:
+     - Time entry records in `project_time_entries`.
+     - `actualHours` accumulator increments automatically on the target `ProjectTask`.
+     - Tracked Effort KPI card updates hours and recalculates billable ratio.
