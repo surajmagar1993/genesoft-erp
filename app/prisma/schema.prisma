@@ -85,6 +85,8 @@ model Tenant {
   expenses           Expense[]
   journalEntries     JournalEntry[]
   journalEntryLines  JournalEntryLine[]
+  priceLists         PriceList[]
+  priceListItems     PriceListItem[]
 
   @@map("tenants")
 }
@@ -200,9 +202,13 @@ model Contact {
   expenses           Expense[]
   journalEntryLines  JournalEntryLine[]
 
+  priceListId        String?            @map("price_list_id") @db.Uuid
+  priceList          PriceList?         @relation(fields: [priceListId], references: [id], onDelete: SetNull)
+
   @@index([tenantId])
   @@index([tenantId, email])
   @@index([tenantId, gstin])
+  @@index([tenantId, priceListId])
   @@map("contacts")
 }
 
@@ -308,6 +314,7 @@ model Product {
   stockMovements     StockMovement[]
   purchaseOrderItems PurchaseOrderItem[]
   creditNoteItems    CreditNoteItem[]
+  priceListItems     PriceListItem[]
 
   @@index([tenantId])
   @@index([tenantId, sku])
@@ -1961,4 +1968,78 @@ enum JournalStatus {
   DRAFT
   POSTED
   VOID
+}
+
+// ============================================
+// PRICE LISTS & CUSTOMER PRICING TIERS
+// ============================================
+
+model PriceList {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String            @map("tenant_id") @db.Uuid
+  code            String            // e.g. "PL-WHOLESALE", "PL-ENTERPRISE-VIP", "PL-DISTRIBUTOR"
+  name            String            // e.g. "Wholesale Partner Rate Card"
+  description     String?
+  type            PriceListType     @default(SALES)
+  currencyCode    String            @default("INR") @map("currency_code")
+  
+  pricingScheme   PricingScheme     @default(FIXED_OVERRIDE) @map("pricing_scheme")
+  defaultDiscount Decimal           @default(0) @map("default_discount") @db.Decimal(5, 2) // % discount on unlisted items
+  targetGroup     String?           @map("target_group") // ALL, RETAIL, WHOLESALE, ENTERPRISE, DISTRIBUTOR, VIP
+  
+  isDefault       Boolean           @default(false) @map("is_default")
+  isActive        Boolean           @default(true) @map("is_active")
+  
+  startDate       DateTime?         @map("start_date")
+  endDate         DateTime?         @map("end_date")
+  
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items           PriceListItem[]
+  contacts        Contact[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("price_lists")
+}
+
+model PriceListItem {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String      @map("tenant_id") @db.Uuid
+  priceListId     String      @map("price_list_id") @db.Uuid
+  productId       String      @map("product_id") @db.Uuid
+  
+  minQuantity     Decimal     @default(1) @map("min_quantity") @db.Decimal(15, 2) // Volume tier (e.g. 1, 10, 50, 100)
+  customPrice     Decimal?    @map("custom_price") @db.Decimal(15, 2) // Fixed unit price override
+  discountPercent Decimal?    @map("discount_percent") @db.Decimal(5, 2) // % discount on base product unitPrice
+  
+  startDate       DateTime?   @map("start_date")
+  endDate         DateTime?   @map("end_date")
+  
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  tenant          Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  priceList       PriceList   @relation(fields: [priceListId], references: [id], onDelete: Cascade)
+  product         Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([priceListId, productId, minQuantity])
+  @@index([tenantId])
+  @@index([priceListId])
+  @@index([productId])
+  @@map("price_list_items")
+}
+
+enum PriceListType {
+  SALES
+  PURCHASE
+}
+
+enum PricingScheme {
+  FIXED_OVERRIDE
+  PERCENTAGE_DISCOUNT
+  PERCENTAGE_MARKUP
 }

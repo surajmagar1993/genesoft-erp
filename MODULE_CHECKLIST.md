@@ -100,7 +100,7 @@
 - [x] **Invoicing** 🔴
 - [x] **Payment Tracking** 🔴 ✅
 - [x] **Credit Notes / Refunds** 🟡 ✅ **(2026-09-12)**
-- [ ] **Price Lists** 🟡
+- [x] **Price Lists** 🟡 ✅ (`/sales/price-lists`) **(2026-09-12)**
 - [ ] **Discount & Coupon Management** 🟢
 
 ---

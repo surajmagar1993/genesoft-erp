@@ -38,6 +38,7 @@ import {
     TrendingUp,
     Wallet,
     ReceiptText,
+    Tag,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -93,6 +94,7 @@ const navigation = [
         label: "Sales",
         items: [
             { name: "Products", href: "/sales/products", icon: Package },
+            { name: "Price Lists", href: "/sales/price-lists", icon: Tag },
             { name: "Quotations", href: "/sales/quotes", icon: FileText },
             { name: "Orders", href: "/sales/orders", icon: ShoppingCart },
             { name: "Invoices", href: "/sales/invoices", icon: Receipt },

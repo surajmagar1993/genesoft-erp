@@ -31,10 +31,11 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **Rental: Rental Management & Asset Leasing** (`/sales/rental`) — Multi-asset catalog, lease agreements, checkouts, returns & damage inspections, and sales invoicing ✅ **(2026-09-12)**
 - [x] **Sales: Credit Notes & Refunds** (`/sales/credit-notes`) — Customer refunds, returns against invoices, credit memo ledger, inventory restock ✅ **(2026-09-12)**
 - [x] **Finance: Expense Management & General Ledger** (`/finance/expenses`) — Operational business expenses, employee reimbursement claims, double-entry journal vouchers (`JE-YYYY-XXXX`), and Account T-Ledgers ✅ **(2026-09-12)**
+- [x] **Sales: Price Lists & Customer Tier Pricing** (`/sales/price-lists`) — Wholesale/retail rate cards, volume discount breaks, and interactive price resolution simulator ✅ **(2026-09-12)**
 
-### 🟡 Next Focus: P2 Sales Pricing & Additional Enhancements
-- [ ] **Sales: Price Lists** (`/sales/price-lists`) — Customer tier pricing, wholesale/retail rate cards, volume discount rules
+### 🟡 Next Focus: P2 Finance & Automation Enhancements
 - [ ] **Finance: Bank Reconciliation** — Matching bank statements against system records
+- [ ] **Invoice Features: Recurring Invoices** — Automated subscription & cyclical billing
 
 ### CRM
 - [ ] CRM: Email Integration
@@ -46,7 +47,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 
 ### Sales
 - [x] Sales: Credit Notes / Refunds (`/sales/credit-notes`) ✅ **(2026-09-12)**
-- [ ] Sales: Price Lists
+- [x] Sales: Price Lists (`/sales/price-lists`) ✅ **(2026-09-12)**
 
 ### Purchase
 - [x] Purchase: Vendor / Supplier Management (`/purchase`) ✅ **(2026-09-10)**

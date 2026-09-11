@@ -149,7 +149,7 @@
 - [ ] Retail: Customer Portal
 - [ ] Retail: Walk-in / POS Sales
 - [x] Sales: Credit Notes / Refunds (`/sales/credit-notes`) ✅ **(2026-09-12)**
-- [ ] Sales: Price Lists
+- [x] Sales: Price Lists (`/sales/price-lists`) ✅ **(2026-09-12)**
 - [x] Purchase: Vendor / Supplier Management (`/purchase`) ✅ **(2026-09-10)**
 - [x] Purchase: Purchase Orders (`/purchase`) ✅ **(2026-09-10)**
 - [x] Purchase: Bills / Vendor Invoices (AP Integration `/finance/bills`) ✅ **(2026-09-10)**

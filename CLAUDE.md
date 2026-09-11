@@ -94,8 +94,16 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
   - Added navigation item with `ReceiptText` icon under Finance in `app/(dashboard)/layout.tsx`.
   - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
 
+- Implemented P2 Sales: Price Lists & Customer Tier Pricing (`/sales/price-lists`):
+  - Added Prisma models & Supabase PostgreSQL tables: `price_lists` and `price_list_items` with multi-tenant RLS, composite unique constraints (`[priceListId, productId, minQuantity]`), and enums (`PriceListType`, `PricingScheme`).
+  - Added reverse relations to `Tenant`, `Product`, and `Contact` (with `priceListId` customer tier mapping).
+  - Built tenant-scoped server actions in `app/actions/sales/price-lists.ts`: `getPriceListsOverview` (with automated starter products & rate cards seeding), `createPriceList`, `updatePriceList`, `deletePriceList`, `upsertPriceListItem`, `deletePriceListItem`, `assignContactPriceList`, `calculateEffectivePrice`.
+  - Built interactive `PriceListsClient` in `/sales/price-lists`: 4-column KPI telemetry (Active Rate Cards, Product Price Rules, Avg Tier Discount, Assigned Accounts), 4 tabbed views (Rate Cards Directory, Item Pricing Matrix, Volume Break Tiers, Interactive Price Simulator), and interactive modal dialogs (Create/Edit Rate Card, Add Product Override with volume breaks, Map Customer to Rate Card).
+  - Added navigation item with `Tag` icon under Sales in `app/(dashboard)/layout.tsx`.
+  - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
+
 ## 🔜 Next Active Block
-P2 Growth: Sales & Finance Enhancements — Price Lists (`/sales/price-lists`), and Bank Reconciliation.
+P2 Growth: Finance & Automation Enhancements — Bank Reconciliation, Recurring Invoices, and Multi-Currency / Tax enhancements.
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*

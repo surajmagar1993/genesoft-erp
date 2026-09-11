@@ -426,3 +426,42 @@ LIMIT 10;
      - Expense status updates to `VOID`.
      - Linked Journal Entry status transitions to `VOID`.
      - General Ledger account balances are atomically reversed.
+
+---
+
+### 3.15 Price Lists & Customer Tier Pricing Protocols (`/sales/price-lists`)
+1. **Initial Provisioning & Rate Card Telemetry**:
+   - Navigate to `/sales/price-lists`.
+   - **Expectation**:
+     - System auto-seeds realistic starter rate cards (*Wholesale Partner Rate Card*, *Enterprise VIP Corporate Rate Card*, *High-Volume Distributor Rate Card*) with tiered volume breaks across catalog products (*Enterprise ERP License*, *Cloud Database Engine*, *Industrial IoT Sensor Node*).
+     - 4-column KPI telemetry renders real-time values for:
+       - **Active Rate Cards**: Count of active pricing policies.
+       - **Product Price Rules**: Total custom price overrides with progressive volume breaks.
+       - **Avg Tier Discount**: Average percentage savings configured across price lists.
+       - **Assigned Accounts**: Customers mapped to specialized pricing tiers.
+2. **Catalog Pricing Comparison Matrix Inspection**:
+   - Click the "Item Pricing Matrix" tab.
+   - **Expectation**:
+     - Comprehensive grid displays all products, catalog base prices, and side-by-side columns for each active rate card (`PL-WHOLESALE`, `PL-ENTERPRISE-VIP`, `PL-DISTRIBUTOR`).
+     - Each cell displays effective unit prices, discount badges (e.g. `-15%`, `-20%`), and volume tier tags.
+3. **Volume Discount Tiers View**:
+   - Switch to the "Volume Break Tiers" tab.
+   - **Expectation**:
+     - Cards display progressive volume breaks grouped by rate card (e.g. Min Order: 1 unit, 5 units, 20 units, 100 units) with lower unit prices for higher quantities.
+4. **Interactive Real-Time Price Simulator**:
+   - Switch to the "Interactive Price Simulator" tab.
+   - Pick a customer (e.g. Enterprise or Wholesale customer).
+   - Select a product (e.g. *Enterprise ERP Cloud Platform Annual License*).
+   - Enter quantity (e.g. `25`).
+   - Click "Resolve Price".
+   - **Expectation**:
+     - Simulator displays complete breakdown: Catalog Base Price, Effective Contract Unit Price, Net Line Total, Total Customer Savings (₹ and %), and confirms the matched volume break tier ($Q \ge 20$).
+5. **Rate Card Authoring & Volume Break Overrides**:
+   - Click "New Rate Card", enter Code (e.g. `PL-GOV`), Name (e.g. *Government & Educational Rate Card*), Scheme (`PERCENTAGE_DISCOUNT`), Default Discount (`25%`), Target Group (`ALL`), and submit.
+   - **Expectation**: New rate card appears in the Directory and Matrix tables.
+   - Click "Add Product Rule", select the new rate card, pick a product, specify `minQuantity = 10` and `customPrice = 75000`.
+   - **Expectation**: Custom override rule commits and immediately reflects in the matrix and simulator.
+6. **Customer Pricing Tier Assignment**:
+   - Click "Assign Customer", select a customer contact from CRM, select an assigned rate card, and confirm.
+   - **Expectation**: Customer is linked to the price list; future sales documents and simulator lookups automatically inherit the contracted rate card.
+
