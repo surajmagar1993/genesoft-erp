@@ -23,14 +23,16 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **AdminAuditLog Expansion** — Track granular platform-level governance actions ✅
 - [x] **Platform Security Page** (`/admin/security`) — Rate limits, blocked IPs, 2FA enforcement ✅
 
-### 🟡 Completed P2 Core Operations (Inventory, Purchase, HR, Projects)
+### 🟡 Completed P2 Core Operations (Inventory, Purchase, HR, Projects, Rental)
 - [x] **Inventory: Stock Management & Multi-Warehouse Control** (`/inventory`) — Multi-depots, SKU tracking, atomic stock adjustments, transfers, reorder alerts, transaction audit ledger ✅ **(2026-09-10)**
 - [x] **Purchase: Vendor Management & Purchase Orders** (`/purchase`) — Supplier directory, PO lifecycle, multi-facility goods intake, AP bill conversion ✅ **(2026-09-10)**
 - [x] **HR: Employee Directory, Attendance & Leaves** (`/hr`) — Employee directory, departmental structuring, daily attendance tracking, leave workflows ✅ **(2026-09-10)**
 - [x] **Projects: Agile Delivery, Kanban Boards, Milestones & Timesheets** (`/projects`) — 5-stage Kanban board, milestone deliverable checklists, HR resource allocation, billable timesheets ✅ **(2026-09-10)**
+- [x] **Rental: Rental Management & Asset Leasing** (`/sales/rental`) — Multi-asset catalog, lease agreements, checkouts, returns & damage inspections, and sales invoicing ✅ **(2026-09-12)**
 
-### 🟡 Next Focus: P2 Rental Management
-- [ ] **Rental Management** (`/sales/rental`) — Rental agreements, asset tracking, recurring billing ← **START HERE**
+### 🟡 Next Focus: P2 Sales & Finance Enhancements
+- [ ] **Sales: Credit Notes & Refunds** (`/sales/credit-notes`) — Customer refunds, returns against invoices, credit memo ledger
+- [ ] **Finance: Expense Management & General Ledger** (`/finance/expenses`) — Business expenses, receipts, recurring overheads
 
 ### CRM
 - [ ] CRM: Email Integration
@@ -86,8 +88,8 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [ ] Projects: Time Tracking
 
 ### Rentals
-- [ ] Rentals: Asset Management
-- [ ] Rentals: Agreements & Invoicing
+- [x] Rentals: Asset Management (`/sales/rental`) ✅ **(2026-09-12)**
+- [x] Rentals: Agreements, Returns & Invoicing (`/sales/rental`) ✅ **(2026-09-12)**
 
 ### Admin / SaaS
 - [ ] Admin: Audit Logs (expand `AdminAuditLog`)

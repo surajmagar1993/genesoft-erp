@@ -75,6 +75,10 @@ model Tenant {
   projectMilestones  ProjectMilestone[]
   projectTasks       ProjectTask[]
   projectTimeEntries ProjectTimeEntry[]
+  rentalAssets       RentalAsset[]
+  rentalAgreements   RentalAgreement[]
+  rentalAgreementItems RentalAgreementItem[]
+  rentalReturns      RentalReturn[]
 
   @@map("tenants")
 }
@@ -185,6 +189,7 @@ model Contact {
   ledgerEntries      LedgerEntry[]
   purchaseOrders     PurchaseOrder[]
   projects           Project[]
+  rentalAgreements   RentalAgreement[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -329,6 +334,7 @@ model Warehouse {
   movementsFrom   StockMovement[]  @relation("SourceWarehouse")
   movementsTo     StockMovement[]  @relation("DestinationWarehouse")
   purchaseOrders  PurchaseOrder[]
+  rentalAssets    RentalAsset[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -1553,4 +1559,157 @@ enum ProjectTaskStatus {
   IN_REVIEW
   DONE
 }
+
+// ============================================
+// RENTAL & LEASING MANAGEMENT
+// ============================================
+
+model RentalAsset {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String            @map("tenant_id") @db.Uuid
+  assetCode       String            @map("asset_code")
+  name            String
+  category        String
+  serialNumber    String?           @map("serial_number")
+  dailyRate       Decimal           @map("daily_rate") @db.Decimal(12, 2)
+  weeklyRate      Decimal?          @map("weekly_rate") @db.Decimal(12, 2)
+  monthlyRate     Decimal?          @map("monthly_rate") @db.Decimal(12, 2)
+  securityDeposit Decimal           @default(0) @map("security_deposit") @db.Decimal(12, 2)
+  condition       AssetCondition    @default(EXCELLENT)
+  status          RentalAssetStatus @default(AVAILABLE)
+  warehouseId     String?           @map("warehouse_id") @db.Uuid
+  description     String?
+  specifications  Json?             @default("{}")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  warehouse       Warehouse?        @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  agreementItems  RentalAgreementItem[]
+  returns         RentalReturn[]
+
+  @@unique([tenantId, assetCode])
+  @@index([tenantId])
+  @@index([warehouseId])
+  @@index([status])
+  @@index([category])
+  @@map("rental_assets")
+}
+
+model RentalAgreement {
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId           String              @map("tenant_id") @db.Uuid
+  agreementNumber    String              @map("agreement_number")
+  contactId          String              @map("contact_id") @db.Uuid
+  startDate          DateTime            @map("start_date")
+  endDate            DateTime            @map("end_date")
+  actualReturnDate   DateTime?           @map("actual_return_date")
+  billingCycle       RentalBillingCycle  @default(DAILY) @map("billing_cycle")
+  rentalRate         Decimal             @map("rental_rate") @db.Decimal(12, 2)
+  totalRentalAmount  Decimal             @map("total_rental_amount") @db.Decimal(12, 2)
+  securityDeposit    Decimal             @default(0) @map("security_deposit") @db.Decimal(12, 2)
+  depositStatus      DepositStatus       @default(HELD) @map("deposit_status")
+  status             RentalStatus        @default(ACTIVE)
+  invoiceId          String?             @map("invoice_id")
+  terms              String?
+  notes              String?
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contact            Contact             @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  items              RentalAgreementItem[]
+  returns            RentalReturn[]
+
+  @@unique([tenantId, agreementNumber])
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([status])
+  @@map("rental_agreements")
+}
+
+model RentalAgreementItem {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String          @map("tenant_id") @db.Uuid
+  agreementId  String          @map("agreement_id") @db.Uuid
+  assetId      String          @map("asset_id") @db.Uuid
+  quantity     Int             @default(1)
+  rate         Decimal         @db.Decimal(12, 2)
+  rentalDays   Int             @default(1) @map("rental_days")
+  totalAmount  Decimal         @map("total_amount") @db.Decimal(12, 2)
+  conditionOut AssetCondition  @default(EXCELLENT) @map("condition_out")
+  conditionIn  AssetCondition? @map("condition_in")
+
+  tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agreement    RentalAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  asset        RentalAsset     @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId])
+  @@index([agreementId])
+  @@index([assetId])
+  @@map("rental_agreement_items")
+}
+
+model RentalReturn {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String         @map("tenant_id") @db.Uuid
+  agreementId     String         @map("agreement_id") @db.Uuid
+  assetId         String         @map("asset_id") @db.Uuid
+  returnDate      DateTime       @default(now()) @map("return_date")
+  condition       AssetCondition @map("condition")
+  damageNotes     String?        @map("damage_notes")
+  damageFee       Decimal        @default(0) @map("damage_fee") @db.Decimal(12, 2)
+  lateFee         Decimal        @default(0) @map("late_fee") @db.Decimal(12, 2)
+  depositRefunded Decimal        @default(0) @map("deposit_refunded") @db.Decimal(12, 2)
+  inspectedBy     String?        @map("inspected_by")
+  createdAt       DateTime       @default(now()) @map("created_at")
+
+  tenant          Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  agreement       RentalAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  asset           RentalAsset    @relation(fields: [assetId], references: [id], onDelete: Restrict)
+
+  @@index([tenantId])
+  @@index([agreementId])
+  @@index([assetId])
+  @@map("rental_returns")
+}
+
+enum AssetCondition {
+  EXCELLENT
+  GOOD
+  FAIR
+  DAMAGED
+  UNDER_MAINTENANCE
+}
+
+enum RentalAssetStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  RESERVED
+  RETIRED
+}
+
+enum RentalBillingCycle {
+  HOURLY
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum RentalStatus {
+  DRAFT
+  ACTIVE
+  OVERDUE
+  RETURNED
+  CANCELLED
+}
+
+enum DepositStatus {
+  HELD
+  PARTIALLY_REFUNDED
+  FULLY_REFUNDED
+  FORFEITED
+}
+
 

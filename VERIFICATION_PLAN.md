@@ -280,3 +280,39 @@ LIMIT 10;
      - Time entry records in `project_time_entries`.
      - `actualHours` accumulator increments automatically on the target `ProjectTask`.
      - Tracked Effort KPI card updates hours and recalculates billable ratio.
+
+---
+
+### 3.12 Rental Management & Asset Leasing Protocols (`/sales/rental`)
+1. **Initial Provisioning & Fleet Telemetry**:
+   - Navigate to `/sales/rental`.
+   - **Expectation**:
+     - System auto-provisions default equipment fleet (*Caterpillar 320D Hydraulic Excavator*, *Apple MacBook Pro 16" M3 Max*, *Yamaha DZR12-D Audio Rig*, *Mercedes Sprinter Van*, *Genie Scissor Lift*, *Sony FX6 Cinema Camera*) with predefined daily, weekly, monthly rates and security deposits.
+     - Top KPI cards render real-time values for **Fleet Availability** (available % vs rented units), **Active Leases** (active contracts & total pipeline value in INR), **Security Deposits Held** (escrow protection), and **Damages & Penalties** (assessed fee totals).
+2. **Asset Registration (`AST-XXXX`)**:
+   - Click "Register Asset", enter Asset Name, Category, Serial Number, Daily/Weekly/Monthly rates, Security Deposit, Condition (`EXCELLENT`, `GOOD`, `FAIR`), Depot Warehouse, and Description. Click "Register Asset".
+   - **Expectation**: Asset persists in `rental_assets` table with auto-generated code `AST-XXXX`, status `AVAILABLE`, and appears in the "Asset Fleet Directory" tab table.
+3. **Rental Agreement Drafting & Asset Checkout (`RNT-YYYY-XXXX`)**:
+   - Click "New Rental Agreement".
+   - Select hiring customer, choose available asset, specify start date and return date (e.g. 7 days), and review estimated total rent and required security deposit.
+   - Click "Activate Agreement & Check Out".
+   - **Expectation**:
+     - Agreement persists in `rental_agreements` with sequential code `RNT-YYYY-XXXX`, status `ACTIVE`, and linked line items in `rental_agreement_items`.
+     - Target asset status transitions atomically from `AVAILABLE` to `RENTED`.
+     - Active Leases KPI increments and contract value updates.
+4. **Return Gear & Damage Inspection Workflow**:
+   - On an active or overdue agreement row, click "Return Gear".
+   - In the inspection modal, verify return date, inspect condition (e.g., `DAMAGED` or `EXCELLENT`), input inspection notes, assess optional damage fee or late fee.
+   - Note the deposit refund recalculation: `Deposit - Damage Fee - Late Fee`.
+   - Click "Confirm Return & Restock".
+   - **Expectation**:
+     - Formal inspection record commits to `rental_returns` table.
+     - Agreement status updates to `RETURNED` with recorded return date and reconciled deposit status.
+     - If returned in `DAMAGED` condition, asset status shifts to `MAINTENANCE`; if `EXCELLENT`/`GOOD`, asset returns to `AVAILABLE` status.
+5. **Direct GST Sales Invoice Generation (`/sales/rental` -> `/sales/invoices`)**:
+   - On an agreement without an existing invoice, click "Invoice".
+   - **Expectation**:
+     - System generates an official `Invoice` in `invoices` with sequential numbering (`INV-YYYY-XXXX`).
+     - Line items map rental period days, daily rates, and any assessed damage/late fees with SAC code `9973` and GST 18%.
+     - Agreement displays the linked invoice badge (e.g. `INV-2026-0004`).
+     - Navigating to `/sales/invoices` confirms the newly created invoice ready for payment tracking or PDF download.

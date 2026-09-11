@@ -230,11 +230,11 @@
 
 ## 🏠 Rental Management
 
-- [ ] **Asset Management** 🟡
-- [ ] **Rental Agreements** 🟡
-- [ ] **Rental Invoicing** 🟡
-- [ ] **Rental Scheduling** 🟢
-- [ ] **Returns & Damage Tracking** 🟢
+- [x] **Asset Management** 🟡 ✅ **(2026-09-12)**
+- [x] **Rental Agreements** 🟡 ✅ **(2026-09-12)**
+- [x] **Rental Invoicing** 🟡 ✅ **(2026-09-12)**
+- [x] **Rental Scheduling** 🟢 ✅ **(2026-09-12)**
+- [x] **Returns & Damage Tracking** 🟢 ✅ **(2026-09-12)**
 
 ---
 

@@ -177,8 +177,8 @@
 - [x] Projects: Projects & Teams (`/projects`) ✅ **(2026-09-10)**
 - [x] Projects: Tasks & Subtasks (Agile Kanban Board) (`/projects`) ✅ **(2026-09-10)**
 - [x] Projects: Time Tracking & Deliverables (`/projects`) ✅ **(2026-09-10)**
-- [ ] Rentals: Asset Management
-- [ ] Rentals: Agreements & Invoicing
+- [x] Rentals: Asset Management (`/sales/rental`) ✅ **(2026-09-12)**
+- [x] Rentals: Agreements, Returns & Invoicing (`/sales/rental`) ✅ **(2026-09-12)**
 - [x] Admin: Audit Logs (expanded `AdminAuditLog` tracking platform security & governance) ✅
 - [x] SaaS: Platform Security & Governance (`/admin/security`) ✅
 - [ ] Admin: Email Templates

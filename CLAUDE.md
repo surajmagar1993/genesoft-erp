@@ -74,8 +74,14 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
   - Added reusable accessible `Progress` UI component (`app/src/components/ui/progress.tsx`).
   - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
 
+- Implemented P2 Core Operations: Rental Management & Asset Leasing (`/sales/rental`):
+  - Added Prisma models & Supabase PostgreSQL tables: `rental_assets`, `rental_agreements`, `rental_agreement_items`, `rental_returns` with multi-tenant RLS, and enums (`AssetCondition`, `RentalAssetStatus`, `RentalBillingCycle`, `RentalStatus`, `DepositStatus`).
+  - Built tenant-scoped server actions in `app/actions/rental.ts`: `getRentalOverview` (with automated starter equipment & lease agreements seeding), `createRentalAsset`, `updateRentalAsset`, `deleteRentalAsset`, `createRentalAgreement`, `updateRentalAgreementStatus`, `processRentalReturn`, `convertAgreementToInvoice`.
+  - Replaced `ModulePlaceholder` with interactive `RentalClient` in `/sales/rental`: 4-column KPI telemetry (Fleet Availability, Active Leases, Security Deposits Held, Damages & Penalties), Overdue Alert banner, 4 tabbed views (Agreements & Leases, Asset Fleet Directory, Schedule & Timeline, Returns & Damage Inspection Ledger), and interactive modal dialogs for drafting agreements, registering assets, inspecting returns, and converting contracts directly into official GST Sales Invoices.
+  - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
+
 ## 🔜 Next Active Block
-P2 Growth: Rental Management & Asset Tracking (`/sales/rental`) — the final remaining placeholder in the entire dashboard navigation!
+P2 Growth: Sales & Finance Enhancements — Credit Notes & Customer Refunds (`/sales/credit-notes`), Price Lists, and General Ledger / Expense Management (`/finance/expenses`).
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*
