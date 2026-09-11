@@ -87,8 +87,15 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
   - Added navigation item with `FileMinus` icon under Sales in `app/(dashboard)/layout.tsx`.
   - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
 
+- Implemented P2 Finance: Expense Management & General Ledger (`/finance/expenses`):
+  - Added Prisma models & Supabase PostgreSQL tables: `expenses`, `journal_entries`, `journal_entry_lines` with multi-tenant RLS, and enums (`ExpenseStatus`, `JournalSourceType`, `JournalStatus`).
+  - Built tenant-scoped server actions in `app/actions/finance/expenses.ts`: `getExpensesOverview` (with automated Chart of Accounts and starter operational expenses auto-seeding), `createExpense` (with atomic double-entry journal creation and account balance sync), `updateExpenseStatus`, `createJournalEntry` (strict mathematical debit/credit balancing verification), `voidExpense` (reversing GL lines and account balances).
+  - Built interactive `ExpensesClient` in `/finance/expenses`: 4-column KPI telemetry (Operational Expenses, Pending Approvals/Claims, Top Expense Driver, Input Tax Credit), 4 tabbed views (Expenses Register, General Ledger & Journal Vouchers, Account T-Ledger Statement, Spending Breakdown & Analytics), and interactive modal dialogs (Record Operational Expense with CoA mapping, Post Double-Entry Journal Voucher with live balancing check, View/Approve Expense Claim Voucher, Inspect Balanced Journal Lines).
+  - Added navigation item with `ReceiptText` icon under Finance in `app/(dashboard)/layout.tsx`.
+  - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
+
 ## 🔜 Next Active Block
-P2 Growth: Sales & Finance Enhancements — Price Lists (`/sales/price-lists`), and General Ledger / Expense Management (`/finance/expenses`).
+P2 Growth: Sales & Finance Enhancements — Price Lists (`/sales/price-lists`), and Bank Reconciliation.
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*

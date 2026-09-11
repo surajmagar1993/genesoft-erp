@@ -23,17 +23,18 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **AdminAuditLog Expansion** — Track granular platform-level governance actions ✅
 - [x] **Platform Security Page** (`/admin/security`) — Rate limits, blocked IPs, 2FA enforcement ✅
 
-### 🟡 Completed P2 Core Operations (Inventory, Purchase, HR, Projects, Rental)
+### 🟡 Completed P2 Core Operations (Inventory, Purchase, HR, Projects, Rental, Sales & Finance)
 - [x] **Inventory: Stock Management & Multi-Warehouse Control** (`/inventory`) — Multi-depots, SKU tracking, atomic stock adjustments, transfers, reorder alerts, transaction audit ledger ✅ **(2026-09-10)**
 - [x] **Purchase: Vendor Management & Purchase Orders** (`/purchase`) — Supplier directory, PO lifecycle, multi-facility goods intake, AP bill conversion ✅ **(2026-09-10)**
 - [x] **HR: Employee Directory, Attendance & Leaves** (`/hr`) — Employee directory, departmental structuring, daily attendance tracking, leave workflows ✅ **(2026-09-10)**
 - [x] **Projects: Agile Delivery, Kanban Boards, Milestones & Timesheets** (`/projects`) — 5-stage Kanban board, milestone deliverable checklists, HR resource allocation, billable timesheets ✅ **(2026-09-10)**
 - [x] **Rental: Rental Management & Asset Leasing** (`/sales/rental`) — Multi-asset catalog, lease agreements, checkouts, returns & damage inspections, and sales invoicing ✅ **(2026-09-12)**
 - [x] **Sales: Credit Notes & Refunds** (`/sales/credit-notes`) — Customer refunds, returns against invoices, credit memo ledger, inventory restock ✅ **(2026-09-12)**
+- [x] **Finance: Expense Management & General Ledger** (`/finance/expenses`) — Operational business expenses, employee reimbursement claims, double-entry journal vouchers (`JE-YYYY-XXXX`), and Account T-Ledgers ✅ **(2026-09-12)**
 
-### 🟡 Next Focus: P2 Finance & Pricing Enhancements
-- [ ] **Finance: Expense Management & General Ledger** (`/finance/expenses`) — Business expenses, receipts, recurring overheads, cash flow categorization
+### 🟡 Next Focus: P2 Sales Pricing & Additional Enhancements
 - [ ] **Sales: Price Lists** (`/sales/price-lists`) — Customer tier pricing, wholesale/retail rate cards, volume discount rules
+- [ ] **Finance: Bank Reconciliation** — Matching bank statements against system records
 
 ### CRM
 - [ ] CRM: Email Integration
@@ -59,9 +60,9 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] Inventory: Stock Adjustments & Transfers ✅ **(2026-09-10)**
 
 ### Finance
-- [ ] Finance: General Ledger
+- [x] Finance: General Ledger (`/finance/expenses`) ✅ **(2026-09-12)**
 - [ ] Finance: Bank Reconciliation
-- [ ] Finance: Expense Management
+- [x] Finance: Expense Management (`/finance/expenses`) ✅ **(2026-09-12)**
 
 ### Tax
 - [ ] Tax (India): TDS

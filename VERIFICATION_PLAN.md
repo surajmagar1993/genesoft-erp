@@ -365,3 +365,64 @@ LIMIT 10;
      - Credit note status changes to `VOID`.
      - Reverse transaction entries are logged in the customer ledger.
      - Unallocated credit decreases and Voided Credits KPI increments.
+
+---
+
+### 3.14 Expense Management & General Ledger Protocols (`/finance/expenses`)
+1. **Initial Provisioning & Financial Telemetry**:
+   - Navigate to `/finance/expenses`.
+   - **Expectation**:
+     - If no expenses exist for the tenant, the system auto-provisions realistic operational business expenses (*AWS Cloud Compute & EC2 Hosting*, *Corporate Headquarters Office Rent*, *Google Ads & Marketing Campaigns*, *Client Pitch Travel & Meals*, *High-Speed Leased Line Internet*) with balanced double-entry Journal Vouchers in the General Ledger.
+     - 4-column KPI telemetry renders real-time totals for:
+       - **Operational Expenses**: Gross paid and approved business spending in current fiscal period.
+       - **Pending Approvals**: Total value and count of unapproved employee claims.
+       - **Top Expense Driver**: Dominant expenditure category with total outlay.
+       - **Input Tax Credit (ITC)**: Total deductible GST claimable against output tax liabilities.
+2. **Recording an Expense with Automatic General Ledger Posting**:
+   - Click "Record Expense".
+   - Enter Title (e.g. *Datadog Monitoring & APM Subscription*).
+   - Select Category (e.g. *Software & Hosting*).
+   - Select Expense Account from Chart of Accounts (e.g. `5650 — Software & Cloud Infrastructure`).
+   - Select Payment Account (e.g. `1120 — Bank Account (HDFC)`).
+   - Select or enter Payee/Vendor (e.g. *Datadog Inc*).
+   - Enter Net Amount (e.g. ₹20,000) and GST rate 18% (Tax: ₹3,600, Total: ₹23,600).
+   - Leave "Auto-Post to General Ledger" checked and submit.
+   - **Expectation**:
+     - Expense voucher persists with code `EXP-YYYY-XXXX`, status `PAID`.
+     - Automatically creates a balanced double-entry Journal Voucher `JE-YYYY-XXXX`:
+       - Debit: `5650 — Software & Cloud Infrastructure` (₹20,000).
+       - Debit: `1400 — Input GST (ITC)` (₹3,600).
+       - Credit: `1120 — Bank Account (HDFC)` (₹23,600).
+     - $\sum \text{Debit} = \sum \text{Credit} = ₹23,600$ verified balanced.
+     - Account balances in Chart of Accounts update accordingly.
+3. **Double-Entry Journal Voucher Authoring**:
+   - Click "New Journal Voucher" or switch to "General Ledger Vouchers" tab and click "Post Manual Voucher".
+   - Specify Date, Reference, and Narration (e.g., *Annual Office Equipment Depreciation Journal*).
+   - Add lines:
+     - Line 1: Debit `5800 — Depreciation` for ₹15,000.
+     - Line 2: Credit `1520 — Office Equipment` for ₹15,000.
+   - Verify the real-time balance indicator reports "Balanced Entry".
+   - Click "Post Journal Voucher".
+   - **Expectation**:
+     - Journal entry commits with code `JE-YYYY-XXXX` and status `POSTED`.
+     - Line items appear in the General Ledger table and update respective account balances.
+     - Attempting to submit unbalanced entries is rejected by both client and server guards.
+4. **Account T-Ledger Statement Inspection**:
+   - Switch to the "Account T-Ledger" tab.
+   - Select an account from the dropdown (e.g. `1120 — Bank Account` or `5650 — Software & Cloud Infrastructure`).
+   - **Expectation**:
+     - Top banner displays account code, account classification (`ASSET`, `EXPENSE`, etc.), current balance, and voucher volume.
+     - Chronological ledger table displays all posted vouchers impacting that account with Date, Voucher Ref, Narration, Debit, Credit, and calculated Running Balance.
+5. **Employee Reimbursement Workflow**:
+   - Click "Record Expense", check "This is an Employee Reimbursement Claim", select an employee from `/hr`, and submit.
+   - **Expectation**:
+     - Expense voucher is created with status `PENDING_APPROVAL`.
+     - Pending Approvals KPI card increments count and amount.
+     - Under the "Expenses Register" tab, clicking "Approve" advances status to `APPROVED`.
+     - Clicking "Mark Paid" shifts status to `PAID`, marks reimbursement claim settled, and automatically posts the balanced Journal Voucher.
+6. **Voiding an Expense**:
+   - Click the void icon (ban button) on an active expense row. Confirm the prompt.
+   - **Expectation**:
+     - Expense status updates to `VOID`.
+     - Linked Journal Entry status transitions to `VOID`.
+     - General Ledger account balances are atomically reversed.

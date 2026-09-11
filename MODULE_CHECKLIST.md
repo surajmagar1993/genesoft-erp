@@ -133,9 +133,9 @@
 - [x] **Accounts Payable (AP)** 🔴 ✅
 - [x] **Multi-Currency Support** 🔴 ✅
 - [x] **Financial Reports** 🔴 ✅
-- [ ] **General Ledger** 🟡
+- [x] **General Ledger** 🟡 ✅ (`/finance/expenses`)
 - [ ] **Bank Reconciliation** 🟡
-- [ ] **Expense Management** 🟡
+- [x] **Expense Management** 🟡 ✅ (`/finance/expenses`)
 - [ ] **Budgeting** 🟢
 
 ---

@@ -82,6 +82,9 @@ model Tenant {
   creditNotes        CreditNote[]
   creditNoteItems    CreditNoteItem[]
   creditNoteRefunds  CreditNoteRefund[]
+  expenses           Expense[]
+  journalEntries     JournalEntry[]
+  journalEntryLines  JournalEntryLine[]
 
   @@map("tenants")
 }
@@ -194,6 +197,8 @@ model Contact {
   projects           Project[]
   rentalAgreements   RentalAgreement[]
   creditNotes        CreditNote[]
+  expenses           Expense[]
+  journalEntryLines  JournalEntryLine[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -954,6 +959,11 @@ model Account {
   parent       Account?    @relation("AccountHierarchy", fields: [parentId], references: [id])
   children     Account[]   @relation("AccountHierarchy")
 
+  // Expenses & General Ledger
+  expensesAsExpense  Expense[]          @relation("ExpenseAccount")
+  expensesAsPayment  Expense[]          @relation("PaymentAccount")
+  journalEntryLines  JournalEntryLine[]
+
   @@unique([tenantId, code])
   @@index([tenantId])
   @@index([parentId])
@@ -1289,6 +1299,7 @@ model Employee {
   projectMemberships ProjectMember[]
   assignedTasks      ProjectTask[]
   timeEntries        ProjectTimeEntry[]
+  expenses           Expense[]
 
   @@unique([tenantId, employeeNumber])
   @@unique([tenantId, email])
@@ -1820,5 +1831,134 @@ enum CreditNoteReason {
   OTHER
 }
 
+// ============================================
+// EXPENSES & GENERAL LEDGER
+// ============================================
 
+model Expense {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String         @map("tenant_id") @db.Uuid
+  expenseNumber    String         @map("expense_number") // e.g. "EXP-2026-0001"
+  title            String
+  description      String?
+  category         String         // e.g. "Software & Hosting", "Rent & Facilities", "Utilities", "Office Supplies", "Salaries & Wages", "Travel & Meals", "Marketing & Advertising", "Professional Fees", "Equipment & Maintenance", "Miscellaneous"
+  
+  accountId        String         @map("account_id") @db.Uuid // Expense Account in CoA (5xxx)
+  paymentAccountId String?        @map("payment_account_id") @db.Uuid // Cash/Bank Account in CoA (1xxx)
+  
+  vendorId         String?        @map("vendor_id") @db.Uuid
+  vendorName       String?        @map("vendor_name")
+  employeeId       String?        @map("employee_id") @db.Uuid // Employee for reimbursement claims
+  
+  amount           Decimal        @db.Decimal(15, 2) // Subtotal
+  taxAmount        Decimal        @default(0) @map("tax_amount") @db.Decimal(15, 2) // Input GST / Tax
+  totalAmount      Decimal        @map("total_amount") @db.Decimal(15, 2) // Grand Total
+  currencyCode     String         @default("INR") @map("currency_code")
+  
+  expenseDate      DateTime       @default(now()) @map("expense_date")
+  paymentMethod    PaymentMethod? @default(BANK_TRANSFER) @map("payment_method")
+  paymentReference String?        @map("payment_reference") // UTR / Cheque # / Txn ID
+  status           ExpenseStatus  @default(PAID)
+  
+  isReimbursable   Boolean        @default(false) @map("is_reimbursable")
+  isClaimSettled   Boolean        @default(false) @map("is_claim_settled")
+  receiptUrl       String?        @map("receipt_url")
+  notes            String?
+  
+  journalEntryId   String?        @map("journal_entry_id") @db.Uuid
+  
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
 
+  tenant           Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  expenseAccount   Account        @relation("ExpenseAccount", fields: [accountId], references: [id])
+  paymentAccount   Account?       @relation("PaymentAccount", fields: [paymentAccountId], references: [id])
+  vendor           Contact?       @relation(fields: [vendorId], references: [id], onDelete: SetNull)
+  employee         Employee?      @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  journalEntry     JournalEntry?  @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, expenseNumber])
+  @@index([tenantId])
+  @@index([accountId])
+  @@index([paymentAccountId])
+  @@index([vendorId])
+  @@index([employeeId])
+  @@index([status])
+  @@map("expenses")
+}
+
+model JournalEntry {
+  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String            @map("tenant_id") @db.Uuid
+  entryNumber  String            @map("entry_number") // e.g. "JE-2026-0001"
+  date         DateTime          @default(now())
+  reference    String?           // Source ref e.g. "EXP-2026-0001", "INV-2026-0002"
+  sourceType   JournalSourceType @default(MANUAL) @map("source_type")
+  sourceId     String?           @map("source_id")
+  narration    String            // Narrative explanation
+  status       JournalStatus     @default(POSTED)
+  totalDebit   Decimal           @map("total_debit") @db.Decimal(15, 2)
+  totalCredit  Decimal           @map("total_credit") @db.Decimal(15, 2)
+  currencyCode String            @default("INR") @map("currency_code")
+  
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  lines        JournalEntryLine[]
+  expenses     Expense[]
+
+  @@unique([tenantId, entryNumber])
+  @@index([tenantId])
+  @@index([date])
+  @@index([status])
+  @@map("journal_entries")
+}
+
+model JournalEntryLine {
+  id             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId       String       @map("tenant_id") @db.Uuid
+  journalEntryId String       @map("journal_entry_id") @db.Uuid
+  accountId      String       @map("account_id") @db.Uuid
+  debit          Decimal      @default(0) @db.Decimal(15, 2)
+  credit         Decimal      @default(0) @db.Decimal(15, 2)
+  description    String?
+  contactId      String?      @map("contact_id") @db.Uuid
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  account        Account      @relation(fields: [accountId], references: [id])
+  contact        Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([journalEntryId])
+  @@index([accountId])
+  @@index([contactId])
+  @@map("journal_entry_lines")
+}
+
+enum ExpenseStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  PAID
+  REJECTED
+  VOID
+}
+
+enum JournalSourceType {
+  MANUAL
+  EXPENSE
+  INVOICE
+  BILL
+  PAYMENT
+  PAYROLL
+  OPENING_BALANCE
+}
+
+enum JournalStatus {
+  DRAFT
+  POSTED
+  VOID
+}

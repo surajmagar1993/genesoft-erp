@@ -37,6 +37,7 @@ import {
     Landmark,
     TrendingUp,
     Wallet,
+    ReceiptText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -103,6 +104,7 @@ const navigation = [
         label: "Finance",
         items: [
             { name: "Chart of Accounts", href: "/finance/accounts", icon: Landmark },
+            { name: "Expenses & Ledger", href: "/finance/expenses", icon: ReceiptText },
             { name: "Receivables", href: "/finance/receivable", icon: TrendingUp },
             { name: "Payables", href: "/finance/payable", icon: Wallet },
             { name: "Bills", href: "/finance/bills", icon: FileText },
