@@ -29,10 +29,11 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **HR: Employee Directory, Attendance & Leaves** (`/hr`) — Employee directory, departmental structuring, daily attendance tracking, leave workflows ✅ **(2026-09-10)**
 - [x] **Projects: Agile Delivery, Kanban Boards, Milestones & Timesheets** (`/projects`) — 5-stage Kanban board, milestone deliverable checklists, HR resource allocation, billable timesheets ✅ **(2026-09-10)**
 - [x] **Rental: Rental Management & Asset Leasing** (`/sales/rental`) — Multi-asset catalog, lease agreements, checkouts, returns & damage inspections, and sales invoicing ✅ **(2026-09-12)**
+- [x] **Sales: Credit Notes & Refunds** (`/sales/credit-notes`) — Customer refunds, returns against invoices, credit memo ledger, inventory restock ✅ **(2026-09-12)**
 
-### 🟡 Next Focus: P2 Sales & Finance Enhancements
-- [ ] **Sales: Credit Notes & Refunds** (`/sales/credit-notes`) — Customer refunds, returns against invoices, credit memo ledger
-- [ ] **Finance: Expense Management & General Ledger** (`/finance/expenses`) — Business expenses, receipts, recurring overheads
+### 🟡 Next Focus: P2 Finance & Pricing Enhancements
+- [ ] **Finance: Expense Management & General Ledger** (`/finance/expenses`) — Business expenses, receipts, recurring overheads, cash flow categorization
+- [ ] **Sales: Price Lists** (`/sales/price-lists`) — Customer tier pricing, wholesale/retail rate cards, volume discount rules
 
 ### CRM
 - [ ] CRM: Email Integration
@@ -43,7 +44,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [ ] Retail: Walk-in / POS Sales
 
 ### Sales
-- [ ] Sales: Credit Notes / Refunds
+- [x] Sales: Credit Notes / Refunds (`/sales/credit-notes`) ✅ **(2026-09-12)**
 - [ ] Sales: Price Lists
 
 ### Purchase
@@ -74,7 +75,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [ ] Invoice Features: Authorized Signature
 - [ ] Invoice Features: Declaration / Notes
 - [ ] Invoice Features: Proforma Invoice
-- [ ] Invoice Features: Credit/Debit Note
+- [x] Invoice Features: Credit/Debit Note (`/sales/credit-notes`) ✅ **(2026-09-12)**
 - [ ] Invoice Features: Recurring Invoices
 
 ### HR

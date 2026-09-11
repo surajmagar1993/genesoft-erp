@@ -99,7 +99,7 @@
 - [x] **Sales Orders** 🔴
 - [x] **Invoicing** 🔴
 - [x] **Payment Tracking** 🔴 ✅
-- [ ] **Credit Notes / Refunds** 🟡
+- [x] **Credit Notes / Refunds** 🟡 ✅ **(2026-09-12)**
 - [ ] **Price Lists** 🟡
 - [ ] **Discount & Coupon Management** 🟢
 
@@ -197,7 +197,7 @@
 - [ ] **Authorized Signature** 🟡
 - [ ] **Declaration / Notes** 🟡
 - [ ] **Proforma Invoice** 🟡
-- [ ] **Credit Note / Debit Note** 🟡
+- [x] **Credit Note / Debit Note** 🟡 ✅ **(2026-09-12)**
 - [ ] **Recurring Invoices** 🟡
 - [ ] **Delivery Challan** 🟢
 - [ ] **Multi-Template Support** 🟢

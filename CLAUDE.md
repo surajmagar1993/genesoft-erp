@@ -80,8 +80,15 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
   - Replaced `ModulePlaceholder` with interactive `RentalClient` in `/sales/rental`: 4-column KPI telemetry (Fleet Availability, Active Leases, Security Deposits Held, Damages & Penalties), Overdue Alert banner, 4 tabbed views (Agreements & Leases, Asset Fleet Directory, Schedule & Timeline, Returns & Damage Inspection Ledger), and interactive modal dialogs for drafting agreements, registering assets, inspecting returns, and converting contracts directly into official GST Sales Invoices.
   - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
 
+- Implemented P2 Sales & Commerce: Credit Notes & Customer Refunds (`/sales/credit-notes`):
+  - Added Prisma models & Supabase PostgreSQL tables: `credit_notes`, `credit_note_items`, and `credit_note_refunds` with multi-tenant RLS, and enums (`CreditNoteStatus`, `CreditNoteReason`).
+  - Built tenant-scoped server actions in `app/actions/sales/credit-notes.ts`: `getCreditNotesOverview` (with automated seeding if empty), `createCreditNote`, `applyCreditToInvoice`, `recordCreditNoteRefund`, `voidCreditNote`.
+  - Replaced placeholder with interactive `CreditNotesClient` in `/sales/credit-notes`: 4-column KPI telemetry (Total Credit Issued, Unallocated Credit, Cash/Bank Disbursed, Voided Credits), 3 tabbed views (Credit Notes Register, Applied Invoices Ledger, Cash & Bank Refunds History), and 3 interactive modal dialogs (Issue Credit Note with optional Inventory Restock & Customer Ledger write, Allocate Credit to unpaid Invoices, Disburse Cash/Bank Refund with Ledger balance debit).
+  - Added navigation item with `FileMinus` icon under Sales in `app/(dashboard)/layout.tsx`.
+  - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .`).
+
 ## 🔜 Next Active Block
-P2 Growth: Sales & Finance Enhancements — Credit Notes & Customer Refunds (`/sales/credit-notes`), Price Lists, and General Ledger / Expense Management (`/finance/expenses`).
+P2 Growth: Sales & Finance Enhancements — Price Lists (`/sales/price-lists`), and General Ledger / Expense Management (`/finance/expenses`).
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*

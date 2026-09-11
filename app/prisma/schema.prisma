@@ -79,6 +79,9 @@ model Tenant {
   rentalAgreements   RentalAgreement[]
   rentalAgreementItems RentalAgreementItem[]
   rentalReturns      RentalReturn[]
+  creditNotes        CreditNote[]
+  creditNoteItems    CreditNoteItem[]
+  creditNoteRefunds  CreditNoteRefund[]
 
   @@map("tenants")
 }
@@ -190,6 +193,7 @@ model Contact {
   purchaseOrders     PurchaseOrder[]
   projects           Project[]
   rentalAgreements   RentalAgreement[]
+  creditNotes        CreditNote[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -298,6 +302,7 @@ model Product {
   warehouseStocks    WarehouseStock[]
   stockMovements     StockMovement[]
   purchaseOrderItems PurchaseOrderItem[]
+  creditNoteItems    CreditNoteItem[]
 
   @@index([tenantId])
   @@index([tenantId, sku])
@@ -335,6 +340,7 @@ model Warehouse {
   movementsTo     StockMovement[]  @relation("DestinationWarehouse")
   purchaseOrders  PurchaseOrder[]
   rentalAssets    RentalAsset[]
+  creditNoteItems CreditNoteItem[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -478,8 +484,9 @@ model Invoice {
   // Relations
   tenant   Tenant        @relation(fields: [tenantId], references: [id])
   contact  Contact       @relation(fields: [contactId], references: [id])
-  items    InvoiceItem[]
-  payments Payment[]
+  items       InvoiceItem[]
+  payments    Payment[]
+  creditNotes CreditNote[]
 
   @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
@@ -1711,5 +1718,107 @@ enum DepositStatus {
   FULLY_REFUNDED
   FORFEITED
 }
+
+// ============================================
+// CREDIT NOTES & CUSTOMER REFUNDS
+// ============================================
+
+model CreditNote {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String            @map("tenant_id") @db.Uuid
+  creditNoteNumber String            @map("credit_note_number")
+  contactId        String            @map("contact_id") @db.Uuid
+  invoiceId        String?           @map("invoice_id")
+  issueDate        DateTime          @default(now()) @map("issue_date")
+  status           CreditNoteStatus  @default(ISSUED)
+  reason           CreditNoteReason  @default(GOODS_RETURN)
+  subtotal         Decimal           @default(0) @db.Decimal(15, 2)
+  taxAmount        Decimal           @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  total            Decimal           @default(0) @db.Decimal(15, 2)
+  allocatedAmount  Decimal           @default(0) @map("allocated_amount") @db.Decimal(15, 2)
+  remainingBalance Decimal           @default(0) @map("remaining_balance") @db.Decimal(15, 2)
+  currencyCode     String            @default("INR") @map("currency_code")
+  notes            String?
+  terms            String?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contact          Contact           @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  invoice          Invoice?          @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  items            CreditNoteItem[]
+  refunds          CreditNoteRefund[]
+
+  @@unique([tenantId, creditNoteNumber])
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([invoiceId])
+  @@index([status])
+  @@map("credit_notes")
+}
+
+model CreditNoteItem {
+  id               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String      @map("tenant_id") @db.Uuid
+  creditNoteId     String      @map("credit_note_id") @db.Uuid
+  productId        String?     @map("product_id") @db.Uuid
+  description      String
+  hsnSacCode       String?     @map("hsn_sac_code")
+  quantity         Decimal     @default(1) @db.Decimal(15, 2)
+  unitPrice        Decimal     @map("unit_price") @db.Decimal(15, 2)
+  taxRate          Decimal     @default(0) @map("tax_rate") @db.Decimal(5, 2)
+  taxAmount        Decimal     @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  total            Decimal     @db.Decimal(15, 2)
+  restockInventory Boolean     @default(false) @map("restock_inventory")
+  warehouseId      String?     @map("warehouse_id") @db.Uuid
+
+  tenant           Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  creditNote       CreditNote  @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+  product          Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  warehouse        Warehouse?  @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([creditNoteId])
+  @@index([productId])
+  @@index([warehouseId])
+  @@map("credit_note_items")
+}
+
+model CreditNoteRefund {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String      @map("tenant_id") @db.Uuid
+  creditNoteId  String      @map("credit_note_id") @db.Uuid
+  amount        Decimal     @db.Decimal(15, 2)
+  refundDate    DateTime    @default(now()) @map("refund_date")
+  paymentMethod String      @default("BANK_TRANSFER") @map("payment_method")
+  reference     String?
+  notes         String?
+  createdAt     DateTime    @default(now()) @map("created_at")
+
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  creditNote    CreditNote  @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([creditNoteId])
+  @@map("credit_note_refunds")
+}
+
+enum CreditNoteStatus {
+  DRAFT
+  ISSUED
+  APPLIED
+  REFUNDED
+  VOID
+}
+
+enum CreditNoteReason {
+  GOODS_RETURN
+  OVERBILLING
+  ORDER_CANCELLATION
+  DEFECTIVE_PRODUCT
+  GOODWILL_DISCOUNT
+  OTHER
+}
+
 
 

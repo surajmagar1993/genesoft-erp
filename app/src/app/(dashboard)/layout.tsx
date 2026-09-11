@@ -25,6 +25,7 @@ import {
     UserCog,
     FolderKanban,
     Home,
+    FileMinus,
     ChevronDown,
 
     Bell,
@@ -94,6 +95,7 @@ const navigation = [
             { name: "Quotations", href: "/sales/quotes", icon: FileText },
             { name: "Orders", href: "/sales/orders", icon: ShoppingCart },
             { name: "Invoices", href: "/sales/invoices", icon: Receipt },
+            { name: "Credit Notes", href: "/sales/credit-notes", icon: FileMinus },
             { name: "Rental", href: "/sales/rental", icon: Home },
         ],
     },

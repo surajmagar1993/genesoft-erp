@@ -316,3 +316,52 @@ LIMIT 10;
      - Line items map rental period days, daily rates, and any assessed damage/late fees with SAC code `9973` and GST 18%.
      - Agreement displays the linked invoice badge (e.g. `INV-2026-0004`).
      - Navigating to `/sales/invoices` confirms the newly created invoice ready for payment tracking or PDF download.
+
+---
+
+### 3.13 Credit Notes & Customer Refunds Protocols (`/sales/credit-notes`)
+1. **Initial Provisioning & Credit Telemetry**:
+   - Navigate to `/sales/credit-notes`.
+   - **Expectation**:
+     - If no credit notes exist for the tenant, the system auto-provisions initial demonstration credit notes (*Sales Return / Defective Unit RMA* and *Billing Rate Correction & Promotional Rebate*) with linked customer ledger entries and items.
+     - 4-column KPI telemetry renders real-time counts and amounts for:
+       - **Total Credit Issued**: Sum of active credits (`ISSUED`, `PARTIALLY_APPLIED`, `APPLIED`).
+       - **Unallocated Credit**: Remaining balance available to apply to future invoices or cash refunds.
+       - **Cash/Bank Disbursed**: Total cash/bank payouts issued against credit notes.
+       - **Voided Credits**: Total count and value of cancelled credit instruments.
+2. **Issuing a Credit Note (`CN-YYYY-XXXX`)**:
+   - Click "Issue Credit Note".
+   - Select Customer/Contact.
+   - (Optional) Select a linked Sales Invoice (`INV-YYYY-XXXX`).
+   - Select Credit Reason (`SALES_RETURN`, `DEFECTIVE_GOODS`, `PRICE_CORRECTION`, `GOODWILL_REBATE`, etc.).
+   - Specify line items: Item description, Unit Price, Quantity, Tax Rate (e.g., 18% GST).
+   - If `SALES_RETURN` or `DEFECTIVE_GOODS`, optionally check "Restock Inventory to Warehouse" and select target depot.
+   - Click "Issue Credit Note".
+   - **Expectation**:
+     - Credit note persists in `credit_notes` table with code `CN-YYYY-XXXX`, status `ISSUED`, line items in `credit_note_items`.
+     - If inventory restock checked, `warehouse_stocks` increments and a `stock_movements` record of type `RESTOCK` is created.
+     - Customer ledger balance updates with a `"CREDIT_NOTE"` transaction reducing receivables.
+3. **Applying Credit Note to Unpaid Sales Invoice**:
+   - On a credit note with remaining balance, click "Apply to Invoice".
+   - Select target invoice with pending balance.
+   - Enter allocation amount (up to the lesser of the unallocated credit or invoice pending balance).
+   - Click "Allocate Credit".
+   - **Expectation**:
+     - Credit note `remainingAmount` decrements; status updates to `PARTIALLY_APPLIED` or `APPLIED`.
+     - Target invoice `paid_amount` increments; invoice status shifts to `PAID` or `PARTIAL`.
+     - Record added to Applied Invoices ledger tab.
+4. **Disbursing Cash or Bank Refund**:
+   - On a credit note with remaining balance, click "Disburse Refund".
+   - Select payment mode (`BANK_TRANSFER`, `CHEQUE`, `CASH`, `UPI`), enter reference number (e.g., UTR / Transaction ID), refund amount, and notes.
+   - Click "Process Refund Payout".
+   - **Expectation**:
+     - `CreditNoteRefund` record persists in `credit_note_refunds`.
+     - Credit note `remainingAmount` decrements.
+     - Customer ledger records a `"REFUND"` debit balancing the accounts.
+     - History displays under the "Cash & Bank Refunds" tab.
+5. **Voiding a Credit Note**:
+   - On an unapplied credit note, click "Void". Confirm the prompt.
+   - **Expectation**:
+     - Credit note status changes to `VOID`.
+     - Reverse transaction entries are logged in the customer ledger.
+     - Unallocated credit decreases and Voided Credits KPI increments.

@@ -148,7 +148,7 @@
 - [ ] CRM: Web Forms / Lead Capture
 - [ ] Retail: Customer Portal
 - [ ] Retail: Walk-in / POS Sales
-- [ ] Sales: Credit Notes / Refunds
+- [x] Sales: Credit Notes / Refunds (`/sales/credit-notes`) ✅ **(2026-09-12)**
 - [ ] Sales: Price Lists
 - [x] Purchase: Vendor / Supplier Management (`/purchase`) ✅ **(2026-09-10)**
 - [x] Purchase: Purchase Orders (`/purchase`) ✅ **(2026-09-10)**
@@ -169,7 +169,7 @@
 - [ ] Invoice Features: Authorized Signature
 - [ ] Invoice Features: Declaration / Notes
 - [ ] Invoice Features: Proforma Invoice
-- [ ] Invoice Features: Credit/Debit Note
+- [x] Invoice Features: Credit/Debit Note (`/sales/credit-notes`) ✅ **(2026-09-12)**
 - [ ] Invoice Features: Recurring Invoices
 - [x] HR: Employee Directory (`/hr`) ✅ **(2026-09-10)**
 - [x] HR: Attendance Tracking (`/hr`) ✅ **(2026-09-10)**
