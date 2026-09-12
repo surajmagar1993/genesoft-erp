@@ -126,8 +126,19 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
   - Added navigation item with `Mail` icon under CRM in `app/(dashboard)/layout.tsx`.
   - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .` -> 1392 nodes, 4632 edges, 78 communities).
 
+- Implemented P2 CRM: Web Forms & Lead Capture (`/crm/forms`):
+  - Added Prisma models & Supabase PostgreSQL tables: `web_forms` and `form_submissions` with multi-tenant RLS, composite unique constraints (`code`), and enums (`WebFormType`, `WebFormStatus`, `FormSubmissionStatus`).
+  - Added reciprocal relations to `Tenant`, `Lead`, and `Contact` (with automated inbound lead synthesis upon submission).
+  - Built tenant-scoped server actions in `app/actions/crm/forms.ts`: `getWebFormsOverview` (with automated starter forms & submissions seeding), `createWebForm`, `updateWebForm`, `deleteWebForm`, `toggleWebFormStatus`, and `submitPublicForm` (with honeypot anti-spam protection, Contact lookup/creation, and CRM Lead generation).
+  - Created public CORS-enabled API intake route (`/api/forms/[id]/submit`) supporting cross-origin `POST` and `OPTIONS` requests from external client websites and webhooks.
+  - Created standalone public landing page & iframe host (`/forms/[code]`) with `PublicFormClient` featuring real-time client verification, honeypot spam protection, responsive inputs, and celebration screens.
+  - Built interactive `FormsClient` in `/crm/forms`: 4-column KPI telemetry (Active Web Forms, Total Submissions, Inbound Leads Captured with direct CRM link, Avg Conversion Rate), 4 tabbed workspaces (Forms Directory, Form Studio & Visual Builder with live split preview, Submissions Feed table, and Embed & Integration Hub with one-click iFrame, JS widget, Direct URL, and cURL snippets), plus interactive modal dialogs (Blueprint Template Picker, Live Submission Simulator, Embed Generator, and Raw JSON Payload Inspector).
+  - Added navigation item with `Globe` icon under CRM in `app/(dashboard)/layout.tsx`.
+  - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .` -> 1437 nodes, 4781 edges, 93 communities).
+
 ## 🔜 Next Active Block
-P2 Growth: CRM Web Forms & Lead Capture (`/crm/forms` or `/crm/leads/forms`) — Embeddable lead generation forms, public submission endpoints, and webhook intake.
+P2 Retail / B2C: Customer Portal (`/portal` or `/retail/portal`) — Self-service customer account center, invoices viewing, payment tracking, balance statements, and support tickets.
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*
+

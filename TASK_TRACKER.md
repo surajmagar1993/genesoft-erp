@@ -145,7 +145,7 @@
 ## 🟡 P2 — Growth (Month 4-6)
 
 - [x] CRM: Email Integration (`/crm/emails`) ✅ **(2026-09-12)**
-- [ ] CRM: Web Forms / Lead Capture
+- [x] CRM: Web Forms / Lead Capture (`/crm/forms`) ✅ **(2026-09-12)**
 - [ ] Retail: Customer Portal
 - [ ] Retail: Walk-in / POS Sales
 - [x] Sales: Credit Notes / Refunds (`/sales/credit-notes`) ✅ **(2026-09-12)**

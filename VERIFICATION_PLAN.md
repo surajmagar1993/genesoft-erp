@@ -619,6 +619,67 @@ LIMIT 10;
    - Review existing templates categorized by `SALES`, `FOLLOW_UP`, `BILLING`, etc.
    - Create custom templates with dynamic merge tags (`{{contact.name}}`, `{{deal.name}}`, `{{company.name}}`).
 
+---
+
+### 3.19 CRM Web Forms & Inbound Lead Capture Protocols (`/crm/forms`)
+1. **Initial Provisioning & Lead Capture Telemetry**:
+   - Navigate to `/crm/forms`.
+   - **Expectation**:
+     - System auto-seeds starter web intake forms (*Enterprise Cloud ERP Demo Request*, *Website General Contact & Consultation*) with predefined schema fields, brand styling, and sample submission records.
+     - 4-column KPI telemetry renders real-time counts for:
+       - **Active Web Forms**: Count of live intake endpoints accepting inbound submissions.
+       - **Total Submissions**: Cumulative count of inbound responses received.
+       - **Inbound Leads Captured**: Count of verified CRM Leads generated, with a working direct link to `/crm/leads`.
+       - **Avg. Conversion Rate**: Top-funnel lead qualification percentage.
+2. **Forms Directory & Lifecycle Controls**:
+   - Review the "Forms Directory" tab.
+   - Search by title or code (`FORM-YYYY-XXXX`), or filter by type (`Contact`, `Quote / RFQ`, `Demo Request`, `Feedback`, `Support`) and status (`Active`, `Paused`, `Draft`, `Archived`).
+   - Click the "Pause / Activate" toggle icon on any form card.
+   - **Expectation**:
+     - Form status updates in real time.
+     - Paused forms reject public submissions with a clear notice, while active forms accept traffic.
+3. **Form Studio & Visual Schema Builder**:
+   - Switch to the "Form Studio & Builder" tab or click the edit icon on any form card.
+   - Modify Form Title, Description, Button CTA Text, Brand Primary Color picker (swatches + hex), Success Message, and optional Redirect URL.
+   - Reorder input fields using the Up/Down controls, toggle the "Required" validation flag, or customize placeholder text.
+   - Click "Add Custom Field" to add new inputs (Text, Email, Phone/Tel, Textarea, Select Dropdown, Number).
+   - Observe the sticky right-side **Live Interactive Preview** pane updating in real time with exact brand colors and form styling.
+   - Click "Save Changes".
+   - **Expectation**:
+     - Configurations persist to `web_forms` in the database.
+4. **Live Form Submission Simulator**:
+   - Click "Preview" on any form card or click "Test Simulator" in the top header.
+   - Fill out the simulated form inputs with realistic prospect details (e.g. *Alexander Vance*, *alexander.vance@techcorp.io*, *Vance Technologies*).
+   - Click "Submit Request".
+   - **Expectation**:
+     - Submission completes with celebratory success confirmation screen.
+     - Automatically creates a new `Lead` in `leads` linked to the contact details.
+     - Appends a new submission log to `form_submissions`.
+     - Clicking "View In CRM Leads" navigates directly to `/crm/leads` where the newly captured prospect is present.
+5. **Submissions Feed & Raw Payload Inspector**:
+   - Switch to the "Submissions Feed" tab.
+   - Search by submitter name, email, or company.
+   - **Expectation**:
+     - Table displays Timestamp, Origin Web Form, Submitter Name & Email, CRM Lead badge (with direct link to `/crm/leads`), and Status badge (`PROCESSED`, `SPAM`).
+     - Clicking "Inspect" opens the modal displaying full raw JSON submission payload and client metadata.
+6. **Embed & Integration Hub**:
+   - Switch to the "Embed & Integration Hub" tab or click "Embed" on any form card.
+   - Review the 4 available integration modalities:
+     - **Responsive HTML iFrame**: Self-sizing `<iframe src="...">` snippet with one-click copy.
+     - **JavaScript Widget Script**: Asynchronous dynamic widget script snippet.
+     - **Direct Shareable URL**: Public link (`/forms/[code]`) with one-click copy.
+     - **Public REST API & cURL**: Production-grade cURL command for programmatic Jamstack, mobile, or webhook integration.
+7. **Public Standalone Form Page & CORS Intake API**:
+   - Open `/forms/[code]` in a browser window.
+   - **Expectation**:
+     - Standalone branded page renders without ERP dashboard chrome.
+     - Hidden anti-spam honeypot field (`_hp_company`) guards against automated scrapers.
+     - Submitting the form validates inputs, triggers the public intake pipeline, and presents the success message or executes the redirect.
+   - Send a `POST` request to `/api/forms/[id]/submit` from an external domain or test script.
+   - **Expectation**:
+     - Responds with `200 OK` and CORS headers (`Access-Control-Allow-Origin: *`), returns `{ success: true, leadId, message }`.
+
+
 
 
 

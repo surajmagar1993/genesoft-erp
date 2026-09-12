@@ -1,7 +1,7 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-04-09 | **Current Focus:** P2 Growth — Tenant Management & Admin Governance
+> **Last Updated:** 2026-09-12 | **Current Focus:** P2 Retail & B2C — Customer Portal & Self-Service Account Center
 
 ---
 
@@ -35,13 +35,14 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **Finance: Bank Reconciliation** (`/finance/bank-reconciliation`) — Multi-bank accounts, statement batch imports, rule-based auto-matching engine, split-screen match desk, and discrepancy diagnostics ✅ **(2026-09-12)**
 - [x] **Invoice Features: Recurring Invoices** (`/sales/invoices/recurring`) — Automated subscription retainers, cyclical schedules, next run countdowns, and instant invoice generation ✅ **(2026-09-12)**
 - [x] **CRM: Email Integration** (`/crm/emails`) — Connect corporate IMAP/SMTP mailboxes, email thread synchronization, CRM entity linking, and merge-tag templates ✅ **(2026-09-12)**
+- [x] **CRM: Web Forms & Lead Capture** (`/crm/forms`) — Embeddable lead intake forms, public CORS intake API route (`/api/forms/[id]/submit`), honeypot spam protection, standalone public view (`/forms/[code]`), and Form Studio visual builder ✅ **(2026-09-12)**
 
-### 🟡 Next Focus: P2 CRM & Communication Integration
-- [ ] **CRM: Web Forms / Lead Capture** — Embeddable lead generation forms, public endpoint & webhook intake
+### 🟡 Next Focus: P2 Retail & Customer Portal
+- [ ] **Retail: Customer Portal** — Self-service customer account center, invoice viewing, payment status, support tickets
 
-### CRM
+### CRM (ALL P2 MODULES COMPLETE ✅)
 - [x] CRM: Email Integration (`/crm/emails`) ✅ **(2026-09-12)**
-- [ ] CRM: Web Forms / Lead Capture
+- [x] CRM: Web Forms / Lead Capture (`/crm/forms`) ✅ **(2026-09-12)**
 
 ### Retail
 - [ ] Retail: Customer Portal

@@ -96,6 +96,8 @@ model Tenant {
   emailAccounts      EmailAccount[]
   emailMessages      EmailMessage[]
   emailTemplates     EmailTemplate[]
+  webForms           WebForm[]
+  formSubmissions    FormSubmission[]
 
   @@map("tenants")
 }
@@ -215,6 +217,7 @@ model Contact {
   priceList          PriceList?         @relation(fields: [priceListId], references: [id], onDelete: SetNull)
   recurringProfiles  RecurringProfile[]
   emailMessages      EmailMessage[]
+  formSubmissions    FormSubmission[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -246,6 +249,7 @@ model Lead {
   tasks             Task[]
   communicationLogs CommunicationLog[]
   emailMessages     EmailMessage[]
+  formSubmissions   FormSubmission[]
 
   @@index([tenantId])
   @@map("leads")
@@ -2494,3 +2498,88 @@ enum EmailTemplateCategory {
   SUPPORT
   BILLING
 }
+
+// ============================================
+// CRM: WEB FORMS & LEAD CAPTURE
+// ============================================
+
+model WebForm {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String            @map("tenant_id") @db.Uuid
+  code              String            @unique
+  title             String
+  description       String?
+  type              WebFormType       @default(CONTACT)
+  status            WebFormStatus     @default(ACTIVE)
+  fields            Json              @default("[]")
+  submitButtonText  String            @default("Submit Request") @map("submit_button_text")
+  successMessage    String            @default("Thank you! Your inquiry has been received. Our team will contact you shortly.") @map("success_message")
+  redirectUrl       String?           @map("redirect_url")
+  defaultLeadStatus LeadStatus        @default(NEW) @map("default_lead_status")
+  defaultLeadSource String            @default("web_form") @map("default_lead_source")
+  assignedTo        String?           @map("assigned_to")
+  notifyEmail       String?           @map("notify_email")
+  primaryColor      String            @default("#2563eb") @map("primary_color")
+  submissionsCount  Int               @default(0) @map("submissions_count")
+  convertedCount    Int               @default(0) @map("converted_count")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  submissions       FormSubmission[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("web_forms")
+}
+
+model FormSubmission {
+  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String               @map("tenant_id") @db.Uuid
+  webFormId   String               @map("web_form_id") @db.Uuid
+  leadId      String?              @map("lead_id") @db.Uuid
+  contactId   String?              @map("contact_id") @db.Uuid
+  data        Json                 @default("{}")
+  ipAddress   String?              @map("ip_address")
+  userAgent   String?              @map("user_agent")
+  referer     String?
+  isSpam      Boolean              @default(false) @map("is_spam")
+  spamScore   Float                @default(0) @map("spam_score")
+  status      FormSubmissionStatus @default(PROCESSED)
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  webForm     WebForm              @relation(fields: [webFormId], references: [id], onDelete: Cascade)
+  lead        Lead?                @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  contact     Contact?             @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([webFormId])
+  @@index([tenantId, createdAt])
+  @@map("form_submissions")
+}
+
+enum WebFormType {
+  CONTACT
+  QUOTE_REQUEST
+  DEMO_REQUEST
+  FEEDBACK
+  SUPPORT
+  PARTNERSHIP
+}
+
+enum WebFormStatus {
+  ACTIVE
+  DRAFT
+  PAUSED
+  ARCHIVED
+}
+
+enum FormSubmissionStatus {
+  PROCESSED
+  SPAM
+  CONVERTED
+  FLAGGED
+}
+

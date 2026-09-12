@@ -74,7 +74,7 @@
 - [x] **Tasks & Activities** 🔴 — Follow-ups, calls, meetings, reminders ✅
 - [x] **Notes & Communication Log** 🔴 — Track all interactions per contact ✅
 - [x] **Email Integration** 🟡 — Send/receive emails within CRM, templates ✅
-- [ ] **Web Forms / Lead Capture** 🟡 — Embeddable forms for website
+- [x] **Web Forms / Lead Capture** 🟡 — Embeddable forms for website ✅ (2026-09-12)
 
 ---
 
