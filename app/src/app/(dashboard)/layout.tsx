@@ -41,6 +41,7 @@ import {
     Tag,
     Scale,
     Repeat,
+    Mail,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -89,6 +90,7 @@ const navigation = [
             { name: "Companies", href: "/crm/companies", icon: Building2 },
             { name: "Leads", href: "/crm/leads", icon: Target },
             { name: "Deals", href: "/crm/deals", icon: Handshake },
+            { name: "Emails", href: "/crm/emails", icon: Mail },
             { name: "Tasks", href: "/crm/tasks", icon: CheckSquare },
         ],
     },

@@ -93,6 +93,9 @@ model Tenant {
   recurringProfiles  RecurringProfile[]
   recurringProfileItems RecurringProfileItem[]
   recurringExecutions RecurringExecution[]
+  emailAccounts      EmailAccount[]
+  emailMessages      EmailMessage[]
+  emailTemplates     EmailTemplate[]
 
   @@map("tenants")
 }
@@ -211,6 +214,7 @@ model Contact {
   priceListId        String?            @map("price_list_id") @db.Uuid
   priceList          PriceList?         @relation(fields: [priceListId], references: [id], onDelete: SetNull)
   recurringProfiles  RecurringProfile[]
+  emailMessages      EmailMessage[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -241,6 +245,7 @@ model Lead {
   contact           Contact?           @relation(fields: [contactId], references: [id])
   tasks             Task[]
   communicationLogs CommunicationLog[]
+  emailMessages     EmailMessage[]
 
   @@index([tenantId])
   @@map("leads")
@@ -272,6 +277,7 @@ model Deal {
   contact           Contact            @relation(fields: [contactId], references: [id])
   tasks             Task[]
   communicationLogs CommunicationLog[]
+  emailMessages     EmailMessage[]
 
   @@index([tenantId])
   @@map("deals")
@@ -2333,4 +2339,158 @@ enum RecurringStatus {
 enum RecurringExecutionStatus {
   SUCCESS
   FAILED
+}
+
+// ============================================
+// CRM EMAIL INTEGRATION
+// ============================================
+
+model EmailAccount {
+  id                    String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId              String        @map("tenant_id") @db.Uuid
+  name                  String        // e.g. "Corporate Sales Desk", "Partnerships Inbox"
+  email                 String        // e.g. "sales@acmeglobal.com"
+  provider              EmailProvider @default(CUSTOM_SMTP_IMAP)
+  
+  // SMTP settings
+  smtpHost              String?       @map("smtp_host")
+  smtpPort              Int?          @default(587) @map("smtp_port")
+  smtpUser              String?       @map("smtp_user")
+  smtpSecure            Boolean       @default(true) @map("smtp_secure")
+  
+  // IMAP settings
+  imapHost              String?       @map("imap_host")
+  imapPort              Int?          @default(993) @map("imap_port")
+  imapUser              String?       @map("imap_user")
+  imapSecure            Boolean       @default(true) @map("imap_secure")
+  
+  isDefault             Boolean       @default(false) @map("is_default")
+  isActive              Boolean       @default(true) @map("is_active")
+  lastSyncedAt          DateTime?     @map("last_synced_at")
+  syncFrequencyMinutes  Int           @default(15) @map("sync_frequency_minutes")
+  
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  tenant                Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  messages              EmailMessage[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("email_accounts")
+}
+
+model EmailMessage {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId       String         @map("tenant_id") @db.Uuid
+  emailAccountId String?        @map("email_account_id") @db.Uuid
+  
+  direction      EmailDirection @default(OUTBOUND)
+  status         EmailStatus    @default(SENT)
+  
+  fromEmail      String         @map("from_email")
+  fromName       String?        @map("from_name")
+  toEmail        String         @map("to_email")
+  toName         String?        @map("to_name")
+  cc             String?
+  bcc            String?
+  
+  subject        String
+  bodyHtml       String         @map("body_html")
+  bodyText       String?        @map("body_text")
+  
+  threadId       String?        @map("thread_id")
+  messageId      String?        @map("message_id")
+  inReplyTo      String?        @map("in_reply_to")
+  
+  isStarred      Boolean        @default(false) @map("is_starred")
+  isArchived     Boolean        @default(false) @map("is_archived")
+  isRead         Boolean        @default(true) @map("is_read")
+  
+  sentAt         DateTime?      @default(now()) @map("sent_at")
+  deliveredAt    DateTime?      @map("delivered_at")
+  openedAt       DateTime?      @map("opened_at")
+  openCount      Int            @default(0) @map("open_count")
+  clickCount     Int            @default(0) @map("click_count")
+  
+  // CRM Entity Links
+  contactId      String?        @map("contact_id") @db.Uuid
+  leadId         String?        @map("lead_id") @db.Uuid
+  dealId         String?        @map("deal_id") @db.Uuid
+  
+  attachments    Json?          @default("[]")
+  errorMessage   String?        @map("error_message")
+  
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  emailAccount   EmailAccount?  @relation(fields: [emailAccountId], references: [id], onDelete: SetNull)
+  contact        Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  lead           Lead?          @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  deal           Deal?          @relation(fields: [dealId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([emailAccountId])
+  @@index([threadId])
+  @@index([contactId])
+  @@index([leadId])
+  @@index([dealId])
+  @@index([direction])
+  @@index([status])
+  @@map("email_messages")
+}
+
+model EmailTemplate {
+  id          String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String                @map("tenant_id") @db.Uuid
+  name        String                // e.g. "Cold Outreach - SaaS Platform Pitch"
+  category    EmailTemplateCategory @default(SALES)
+  subject     String
+  bodyHtml    String                @map("body_html")
+  bodyText    String?               @map("body_text")
+  mergeTags   Json?                 @default("[]") @map("merge_tags")
+  isActive    Boolean               @default(true) @map("is_active")
+  
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+
+  tenant      Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@index([category])
+  @@map("email_templates")
+}
+
+enum EmailDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum EmailStatus {
+  DRAFT
+  QUEUED
+  SENT
+  DELIVERED
+  OPENED
+  BOUNCED
+  FAILED
+}
+
+enum EmailProvider {
+  CUSTOM_SMTP_IMAP
+  GMAIL
+  OUTLOOK
+  RESEND
+  SENDGRID
+}
+
+enum EmailTemplateCategory {
+  SALES
+  FOLLOW_UP
+  ONBOARDING
+  SUPPORT
+  BILLING
 }

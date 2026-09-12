@@ -23,7 +23,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **AdminAuditLog Expansion** — Track granular platform-level governance actions ✅
 - [x] **Platform Security Page** (`/admin/security`) — Rate limits, blocked IPs, 2FA enforcement ✅
 
-### 🟡 Completed P2 Core Operations (Inventory, Purchase, HR, Projects, Rental, Sales & Finance)
+### 🟡 Completed P2 Core Operations (Inventory, Purchase, HR, Projects, Rental, Sales, Finance & CRM)
 - [x] **Inventory: Stock Management & Multi-Warehouse Control** (`/inventory`) — Multi-depots, SKU tracking, atomic stock adjustments, transfers, reorder alerts, transaction audit ledger ✅ **(2026-09-10)**
 - [x] **Purchase: Vendor Management & Purchase Orders** (`/purchase`) — Supplier directory, PO lifecycle, multi-facility goods intake, AP bill conversion ✅ **(2026-09-10)**
 - [x] **HR: Employee Directory, Attendance & Leaves** (`/hr`) — Employee directory, departmental structuring, daily attendance tracking, leave workflows ✅ **(2026-09-10)**
@@ -34,13 +34,13 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **Sales: Price Lists & Customer Tier Pricing** (`/sales/price-lists`) — Wholesale/retail rate cards, volume discount breaks, and interactive price resolution simulator ✅ **(2026-09-12)**
 - [x] **Finance: Bank Reconciliation** (`/finance/bank-reconciliation`) — Multi-bank accounts, statement batch imports, rule-based auto-matching engine, split-screen match desk, and discrepancy diagnostics ✅ **(2026-09-12)**
 - [x] **Invoice Features: Recurring Invoices** (`/sales/invoices/recurring`) — Automated subscription retainers, cyclical schedules, next run countdowns, and instant invoice generation ✅ **(2026-09-12)**
+- [x] **CRM: Email Integration** (`/crm/emails`) — Connect corporate IMAP/SMTP mailboxes, email thread synchronization, CRM entity linking, and merge-tag templates ✅ **(2026-09-12)**
 
 ### 🟡 Next Focus: P2 CRM & Communication Integration
-- [ ] **CRM: Email Integration** — Connect corporate IMAP/SMTP mailboxes & email thread synchronization
-- [ ] **CRM: Web Forms / Lead Capture** — Embeddable lead generation forms & webhook intake
+- [ ] **CRM: Web Forms / Lead Capture** — Embeddable lead generation forms, public endpoint & webhook intake
 
 ### CRM
-- [ ] CRM: Email Integration
+- [x] CRM: Email Integration (`/crm/emails`) ✅ **(2026-09-12)**
 - [ ] CRM: Web Forms / Lead Capture
 
 ### Retail

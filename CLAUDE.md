@@ -118,8 +118,16 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
   - Added navigation item with `Repeat` icon under Sales in `app/(dashboard)/layout.tsx`.
   - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), and root monorepo build (exit code 0).
 
+- Implemented P2 CRM: Email Integration & Corporate Inboxes (`/crm/emails`):
+  - Added Prisma models & Supabase PostgreSQL tables: `email_accounts`, `email_messages`, and `email_templates` with multi-tenant RLS, and enums (`EmailProvider`, `EmailTemplateCategory`, `EmailStatus`, `EmailDirection`).
+  - Added reciprocal relations to `Tenant`, `Contact`, `Lead`, and `Deal` (with automatic `CommunicationLog` parity synchronization so that customer 360° activity feeds reflect emails without redundant queries).
+  - Built tenant-scoped server actions in `app/actions/crm/emails.ts`: `getEmailsOverview` (with automated starter corporate mailboxes, templates, and thread seeding), `sendEmail` (with automatic contact email resolution, thread tracking, and unified communication log recording), `saveEmailDraft`, `toggleStarEmail`, `markEmailAsRead`, `deleteEmailMessage`, `syncMailbox`, `createEmailAccount`, `deleteEmailAccount`, `createEmailTemplate`, `deleteEmailTemplate`.
+  - Built interactive `EmailsClient` in `/crm/emails`: 4-column KPI telemetry (Active Conversations, Unread Inbound, Sent Outreach, Email Open Rate), modern 3-pane email client layout (Folders & Connected Mailboxes pane, Search & Thread Feed pane, Conversation Reader & CRM 360° Inspector pane with inline reply composer), and interactive modal dialogs (Compose Corporate Email with Contact/Lead/Deal linking and dynamic merge-tag substitution, Corporate Mailboxes Manager, Email Template Builder).
+  - Added navigation item with `Mail` icon under CRM in `app/(dashboard)/layout.tsx`.
+  - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .` -> 1392 nodes, 4632 edges, 78 communities).
+
 ## 🔜 Next Active Block
-P2 Growth: CRM & Communication Integration — Email Integration (IMAP/SMTP corporate mailboxes), Web Forms & Lead Capture, and Multi-Country Tax compliance.
+P2 Growth: CRM Web Forms & Lead Capture (`/crm/forms` or `/crm/leads/forms`) — Embeddable lead generation forms, public submission endpoints, and webhook intake.
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*

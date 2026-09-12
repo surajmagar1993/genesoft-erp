@@ -73,7 +73,7 @@
 - [x] **Deals / Opportunities** 🔴 — Sales pipeline, stages, win/loss tracking
 - [x] **Tasks & Activities** 🔴 — Follow-ups, calls, meetings, reminders ✅
 - [x] **Notes & Communication Log** 🔴 — Track all interactions per contact ✅
-- [ ] **Email Integration** 🟡 — Send/receive emails within CRM, templates
+- [x] **Email Integration** 🟡 — Send/receive emails within CRM, templates ✅
 - [ ] **Web Forms / Lead Capture** 🟡 — Embeddable forms for website
 
 ---

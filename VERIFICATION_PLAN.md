@@ -569,5 +569,56 @@ LIMIT 10;
      - Status updates to `PAUSED`, MRR recalculates, and profile is excluded from automated batch runs.
    - Click "Resume" to restore status to `ACTIVE`.
 
+---
+
+### 3.18 CRM Email Integration & Corporate Inbox Protocols (`/crm/emails`)
+1. **Initial Provisioning & Telemetry**:
+   - Navigate to `/crm/emails`.
+   - **Expectation**:
+     - System auto-seeds corporate mailboxes (*Corporate Sales Desk*, *Strategic Partnerships Desk*), standardized sales outreach templates (*Cold Outreach - Cloud ERP Modernization*, *Post-Demo Proposal*, *Contract Renewal*), and initial correspondence threads linked to CRM Contacts and Deals.
+     - 4-column KPI telemetry renders real-time counts for:
+       - **Active Conversations**: Total conversation threads tracked.
+       - **Unread Inbound**: Inbound emails requiring team response.
+       - **Sent Outreach**: Outbound emails synchronized with CRM customer timelines.
+       - **Email Open Rate**: Real-time engagement percentage based on tracking pixels.
+2. **Modern 3-Pane Email Navigation**:
+   - Left Pane: Quick folder switcher (**Inbox**, **Unread**, **Starred**, **Sent**, **Archive**), CRM Linked Threads filters (**Contacts**, **Leads**, **Deals**), and Connected Mailbox accounts with status indicators.
+   - Middle Pane: Live search bar (by sender, subject, body, contact) and thread cards showing unread badges, direction indicators (`Inbound`/`Sent`), open tracking indicators, and CRM association badges.
+   - Right Pane: Conversation Reader & CRM 360° Inspector.
+3. **Reading & Interacting with Conversation Threads**:
+   - Click a conversation thread in the middle pane.
+   - **Expectation**:
+     - Thread marks as read in real time; unread counter decrements.
+     - Top action bar displays thread subject, star toggle, and delete action.
+     - CRM 360° Context Bar renders linked Contact (with direct link to `/crm/contacts`), linked Lead (to `/crm/leads`), or linked Deal (to `/crm/deals`).
+     - Chronological message history renders clean formatted correspondence with sender/recipient metadata, timestamps, and open tracking telemetry.
+4. **Sending Quick Inline Replies**:
+   - At the bottom of the conversation reader, select sending mailbox from the "via" dropdown.
+   - Type a reply in the quick response textarea (or select a quick template from "Insert Template...").
+   - Click "Send Reply".
+   - **Expectation**:
+     - Message is dispatched and appended to the thread.
+     - Automatically logs a corresponding `CommunicationLog` record of type `EMAIL` to maintain 360° timeline parity.
+5. **Composing Corporate Emails with Merge-Tag Templates**:
+   - Click "Compose Email" button in the top header.
+   - Select sending account, pick CRM Recipient (Contact, Lead, or Custom), and optionally associate a Deal.
+   - Select an Email Template from the "Load Template" dropdown (e.g. *Cold Outreach* or *Post-Demo Proposal*).
+   - **Expectation**:
+     - Template subject and body load dynamically.
+     - Merge tags (`{{contact.name}}`, `{{company.name}}`, `{{deal.name}}`, `{{user.name}}`) are automatically evaluated and replaced with real CRM entity values.
+   - Click "Send Email".
+   - **Expectation**:
+     - Email is created, thread is tracked, and toast confirms dispatch and CRM activity feed recording.
+6. **Corporate Mailbox Account Management**:
+   - Click "Mailboxes" in the header.
+   - Review connected corporate accounts (Gmail, Outlook, IMAP/SMTP).
+   - Add a new account specifying Display Name, Email Address, and Provider.
+   - Click "Sync" to trigger manual mailbox synchronization.
+7. **Email Template Management**:
+   - Click "Templates" in the header.
+   - Review existing templates categorized by `SALES`, `FOLLOW_UP`, `BILLING`, etc.
+   - Create custom templates with dynamic merge tags (`{{contact.name}}`, `{{deal.name}}`, `{{company.name}}`).
+
+
 
 
