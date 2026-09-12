@@ -521,4 +521,53 @@ LIMIT 10;
      - Statement status updates to `RECONCILED` with timestamp.
      - All matched lines are locked as permanently `RECONCILED`.
 
+---
+
+### 3.17 Recurring Invoices & Subscription Billing Protocols (`/sales/invoices/recurring`)
+1. **Initial Provisioning & Subscription Telemetry**:
+   - Navigate to `/sales/invoices/recurring`.
+   - **Expectation**:
+     - If no recurring profiles exist for the tenant, the system auto-provisions realistic client retainers (*Enterprise Cloud Managed DevOps Retainer [Monthly]*, *Annual Enterprise ERP Infrastructure License [Annually]*, *Quarterly Database Cluster Replication SLA [Quarterly]*).
+     - 4-column KPI telemetry renders real-time totals for:
+       - **Active Retainers**: Total count of active ongoing subscription contracts.
+       - **Monthly Run Rate (MRR)**: Normalized monthly revenue pipeline across all frequencies.
+       - **Next Run Scheduled**: Earliest upcoming next run date with countdown indicator ("Runs in X days").
+       - **Invoices Generated**: Total lifetime sales invoices spawned from recurring schedules.
+2. **Subscription Profiles Directory & Inspection**:
+   - Review the "Subscription Profiles" tab.
+   - Filter by status (`ACTIVE`, `PAUSED`, `COMPLETED`) or search by profile title/client.
+   - **Expectation**:
+     - Cards display Profile Code (`REC-YYYY-XXXX`), Cadence badge, Total recurring amount, Client company, Next run date with countdown tag, and Cycles completed progress.
+3. **Instant Invoice Generation ("Run Now" Trigger)**:
+   - On an active profile card, click "Run Now".
+   - Review confirmation modal and confirm.
+   - **Expectation**:
+     - An authentic Sales Invoice (`INV-YYYY-XXXX`) is spawned in `invoices` with full line items, HSN/SAC codes, and GST taxes.
+     - Profile `cyclesCompleted` increments by 1.
+     - Profile `nextRunDate` automatically shifts forward by the cadence interval (e.g. +1 month for monthly, +1 year for annual).
+     - Execution record is appended to `recurring_executions`.
+4. **Schedule Forecast Calendar**:
+   - Switch to the "Billing Forecast Schedule" tab.
+   - **Expectation**:
+     - Chronological list of upcoming billing events over the next 90 days.
+     - Displays expected invoice amounts and direct "Run Now" actions.
+5. **Generation History & Audit Log**:
+   - Switch to the "Generation History & Audit Log" tab.
+   - **Expectation**:
+     - Itemized table of all spawned invoices with execution timestamps, billed amounts, and working "View Invoice" links navigating to the generated invoice record.
+6. **Creating a New Recurring Billing Schedule**:
+   - Click "New Recurring Schedule".
+   - Enter Title (e.g. *Biweekly IT Support Retainer*), select Customer Contact, Frequency (`BIWEEKLY`), Start Date, Payment Terms (`NET_15`).
+   - Add line items with Qty, Unit Price, GST tax rate (e.g. 18%).
+   - Click "Create Schedule".
+   - **Expectation**:
+     - Profile persists with sequential numbering `REC-YYYY-XXXX`.
+     - Displays in directory and updates MRR telemetry card.
+7. **Pause / Resume & Status Management**:
+   - Click "Pause" on an active profile.
+   - **Expectation**:
+     - Status updates to `PAUSED`, MRR recalculates, and profile is excluded from automated batch runs.
+   - Click "Resume" to restore status to `ACTIVE`.
+
+
 

@@ -40,6 +40,7 @@ import {
     ReceiptText,
     Tag,
     Scale,
+    Repeat,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -99,6 +100,7 @@ const navigation = [
             { name: "Quotations", href: "/sales/quotes", icon: FileText },
             { name: "Orders", href: "/sales/orders", icon: ShoppingCart },
             { name: "Invoices", href: "/sales/invoices", icon: Receipt },
+            { name: "Recurring Invoices", href: "/sales/invoices/recurring", icon: Repeat },
             { name: "Credit Notes", href: "/sales/credit-notes", icon: FileMinus },
             { name: "Rental", href: "/sales/rental", icon: Home },
         ],

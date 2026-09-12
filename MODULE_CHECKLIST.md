@@ -198,7 +198,7 @@
 - [ ] **Declaration / Notes** 🟡
 - [ ] **Proforma Invoice** 🟡
 - [x] **Credit Note / Debit Note** 🟡 ✅ **(2026-09-12)**
-- [ ] **Recurring Invoices** 🟡
+- [x] **Recurring Invoices** 🟡 ✅ (`/sales/invoices/recurring`)
 - [ ] **Delivery Challan** 🟢
 - [ ] **Multi-Template Support** 🟢
 

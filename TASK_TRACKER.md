@@ -170,7 +170,7 @@
 - [ ] Invoice Features: Declaration / Notes
 - [ ] Invoice Features: Proforma Invoice
 - [x] Invoice Features: Credit/Debit Note (`/sales/credit-notes`) ✅ **(2026-09-12)**
-- [ ] Invoice Features: Recurring Invoices
+- [x] Invoice Features: Recurring Invoices (`/sales/invoices/recurring`) ✅ **(2026-09-12)**
 - [x] HR: Employee Directory (`/hr`) ✅ **(2026-09-10)**
 - [x] HR: Attendance Tracking (`/hr`) ✅ **(2026-09-10)**
 - [x] HR: Leave Management (`/hr`) ✅ **(2026-09-10)**

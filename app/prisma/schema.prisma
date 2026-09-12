@@ -90,6 +90,9 @@ model Tenant {
   bankAccounts       BankAccount[]
   bankStatements     BankStatement[]
   bankTransactions   BankTransaction[]
+  recurringProfiles  RecurringProfile[]
+  recurringProfileItems RecurringProfileItem[]
+  recurringExecutions RecurringExecution[]
 
   @@map("tenants")
 }
@@ -207,6 +210,7 @@ model Contact {
 
   priceListId        String?            @map("price_list_id") @db.Uuid
   priceList          PriceList?         @relation(fields: [priceListId], references: [id], onDelete: SetNull)
+  recurringProfiles  RecurringProfile[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -318,6 +322,7 @@ model Product {
   purchaseOrderItems PurchaseOrderItem[]
   creditNoteItems    CreditNoteItem[]
   priceListItems     PriceListItem[]
+  recurringProfileItems RecurringProfileItem[]
 
   @@index([tenantId])
   @@index([tenantId, sku])
@@ -502,10 +507,14 @@ model Invoice {
   items       InvoiceItem[]
   payments    Payment[]
   creditNotes CreditNote[]
+  recurringProfileId String?            @map("recurring_profile_id") @db.Uuid
+  recurringProfile   RecurringProfile?  @relation(fields: [recurringProfileId], references: [id], onDelete: SetNull)
+  recurringExecutions RecurringExecution[]
 
   @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([recurringProfileId])
   @@map("invoices")
 }
 
@@ -2198,4 +2207,130 @@ enum BankMatchedType {
   EXPENSE
   JOURNAL_ENTRY
   MANUAL_ADJUSTMENT
+}
+
+// ============================================
+// RECURRING INVOICES & SUBSCRIPTIONS
+// ============================================
+
+model RecurringProfile {
+  id              String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String             @map("tenant_id") @db.Uuid
+  profileNumber   String             @map("profile_number") // e.g. "REC-2026-0001"
+  title           String             // e.g. "Monthly Cloud DevOps Retainer"
+  description     String?
+  contactId       String             @map("contact_id") @db.Uuid
+  
+  frequency       RecurringFrequency @default(MONTHLY)
+  startDate       DateTime           @map("start_date")
+  endDate         DateTime?          @map("end_date")
+  nextRunDate     DateTime           @map("next_run_date")
+  lastRunDate     DateTime?          @map("last_run_date")
+  
+  maxCycles       Int?               @map("max_cycles") // null = unlimited ongoing
+  cyclesCompleted Int                @default(0) @map("cycles_completed")
+  status          RecurringStatus    @default(ACTIVE)
+  
+  autoSendEmail   Boolean            @default(false) @map("auto_send_email")
+  autoApprove     Boolean            @default(true) @map("auto_approve") // If true, invoice is created as SENT or PAID, else DRAFT
+  paymentTerms    String?            @default("NET_30") @map("payment_terms")
+  
+  subtotal        Decimal            @default(0) @db.Decimal(15, 2)
+  taxAmount       Decimal            @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  totalAmount     Decimal            @default(0) @map("total_amount") @db.Decimal(15, 2)
+  currencyCode    String             @default("INR") @map("currency_code")
+  
+  notes           String?
+  terms           String?
+  
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  tenant          Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contact         Contact            @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  items           RecurringProfileItem[]
+  invoices        Invoice[]
+  executions      RecurringExecution[]
+
+  @@unique([tenantId, profileNumber])
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([status])
+  @@index([nextRunDate])
+  @@map("recurring_profiles")
+}
+
+model RecurringProfileItem {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId           String           @map("tenant_id") @db.Uuid
+  recurringProfileId String           @map("recurring_profile_id") @db.Uuid
+  productId          String?          @map("product_id") @db.Uuid
+  description        String
+  hsnSacCode         String?          @map("hsn_sac_code")
+  quantity           Decimal          @default(1) @db.Decimal(15, 2)
+  unitPrice          Decimal          @map("unit_price") @db.Decimal(15, 2)
+  
+  cgstRate           Decimal?         @default(0) @map("cgst_rate") @db.Decimal(5, 2)
+  cgstAmount         Decimal?         @default(0) @map("cgst_amount") @db.Decimal(15, 2)
+  sgstRate           Decimal?         @default(0) @map("sgst_rate") @db.Decimal(5, 2)
+  sgstAmount         Decimal?         @default(0) @map("sgst_amount") @db.Decimal(15, 2)
+  igstRate           Decimal?         @default(0) @map("igst_rate") @db.Decimal(5, 2)
+  igstAmount         Decimal?         @default(0) @map("igst_amount") @db.Decimal(15, 2)
+  
+  discount           Decimal          @default(0) @db.Decimal(15, 2)
+  lineTotal          Decimal          @map("line_total") @db.Decimal(15, 2)
+  
+  createdAt          DateTime         @default(now()) @map("created_at")
+
+  tenant             Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  recurringProfile   RecurringProfile @relation(fields: [recurringProfileId], references: [id], onDelete: Cascade)
+  product            Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([recurringProfileId])
+  @@index([productId])
+  @@map("recurring_profile_items")
+}
+
+model RecurringExecution {
+  id                 String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId           String                   @map("tenant_id") @db.Uuid
+  recurringProfileId String                   @map("recurring_profile_id") @db.Uuid
+  invoiceId          String?                  @map("invoice_id")
+  executionDate      DateTime                 @default(now()) @map("execution_date")
+  status             RecurringExecutionStatus @default(SUCCESS)
+  amount             Decimal                  @db.Decimal(15, 2)
+  errorMessage       String?                  @map("error_message")
+  
+  createdAt          DateTime                 @default(now()) @map("created_at")
+
+  tenant             Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  recurringProfile   RecurringProfile         @relation(fields: [recurringProfileId], references: [id], onDelete: Cascade)
+  invoice            Invoice?                 @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([recurringProfileId])
+  @@index([invoiceId])
+  @@map("recurring_executions")
+}
+
+enum RecurringFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  QUARTERLY
+  BIANNUALLY
+  ANNUALLY
+}
+
+enum RecurringStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum RecurringExecutionStatus {
+  SUCCESS
+  FAILED
 }

@@ -33,10 +33,11 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **Finance: Expense Management & General Ledger** (`/finance/expenses`) — Operational business expenses, employee reimbursement claims, double-entry journal vouchers (`JE-YYYY-XXXX`), and Account T-Ledgers ✅ **(2026-09-12)**
 - [x] **Sales: Price Lists & Customer Tier Pricing** (`/sales/price-lists`) — Wholesale/retail rate cards, volume discount breaks, and interactive price resolution simulator ✅ **(2026-09-12)**
 - [x] **Finance: Bank Reconciliation** (`/finance/bank-reconciliation`) — Multi-bank accounts, statement batch imports, rule-based auto-matching engine, split-screen match desk, and discrepancy diagnostics ✅ **(2026-09-12)**
+- [x] **Invoice Features: Recurring Invoices** (`/sales/invoices/recurring`) — Automated subscription retainers, cyclical schedules, next run countdowns, and instant invoice generation ✅ **(2026-09-12)**
 
-### 🟡 Next Focus: P2 Automation & Invoice Features
-- [ ] **Invoice Features: Recurring Invoices** — Automated subscription & cyclical billing
-- [ ] **CRM: Email Integration** — Connect corporate IMAP/SMTP mailboxes
+### 🟡 Next Focus: P2 CRM & Communication Integration
+- [ ] **CRM: Email Integration** — Connect corporate IMAP/SMTP mailboxes & email thread synchronization
+- [ ] **CRM: Web Forms / Lead Capture** — Embeddable lead generation forms & webhook intake
 
 ### CRM
 - [ ] CRM: Email Integration
@@ -79,7 +80,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [ ] Invoice Features: Declaration / Notes
 - [ ] Invoice Features: Proforma Invoice
 - [x] Invoice Features: Credit/Debit Note (`/sales/credit-notes`) ✅ **(2026-09-12)**
-- [ ] Invoice Features: Recurring Invoices
+- [x] Invoice Features: Recurring Invoices (`/sales/invoices/recurring`) ✅ **(2026-09-12)**
 
 ### HR
 - [ ] HR: Employee Directory

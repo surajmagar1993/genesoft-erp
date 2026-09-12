@@ -110,8 +110,16 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
   - Added navigation item with `Scale` icon under Finance in `app/(dashboard)/layout.tsx`.
   - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), and root monorepo build (exit code 0).
 
+- Implemented P2 Invoice Features: Recurring Invoices & Subscriptions (`/sales/invoices/recurring`):
+  - Added Prisma models & Supabase PostgreSQL tables: `recurring_profiles`, `recurring_profile_items`, and `recurring_executions` with multi-tenant RLS, and enums (`RecurringFrequency`, `RecurringStatus`, `RecurringExecutionStatus`).
+  - Added reciprocal relations to `Tenant`, `Contact`, `Product`, and `Invoice` (with `recurringProfileId` mapping on `Invoice`).
+  - Built tenant-scoped server actions in `app/actions/sales/recurring-invoices.ts`: `getRecurringInvoicesOverview` (with automated starter subscription retainers seeding & MRR calculation), `createRecurringProfile`, `updateRecurringProfile`, `deleteRecurringProfile`, `toggleRecurringProfileStatus`, `triggerGenerateInvoice` (instant 1-click live invoice generation with automatic next run date advancement and execution logging), and `batchRunDueRecurringProfiles`.
+  - Built interactive `RecurringInvoicesClient` in `/sales/invoices/recurring`: 4-column KPI telemetry (Active Retainers, MRR with ARR calculation, Soonest Scheduled Run with days countdown, Lifetime Invoices Generated), 4 tabbed views (Subscription Profiles Directory, 90-Day Billing Schedule Forecast, Generation History & Audit Log, MRR & Subscription Breakdown), and interactive modal dialogs (Create/Edit Recurring Schedule with dynamic multi-item line editor, Run Now instant generation trigger confirmation, 360° Profile Inspector).
+  - Added navigation item with `Repeat` icon under Sales in `app/(dashboard)/layout.tsx`.
+  - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), and root monorepo build (exit code 0).
+
 ## 🔜 Next Active Block
-P2 Growth: Automation & Invoice Features — Recurring Invoices & Subscriptions (`/sales/invoices/recurring`), CRM Email Integration, and Multi-Country Tax compliance.
+P2 Growth: CRM & Communication Integration — Email Integration (IMAP/SMTP corporate mailboxes), Web Forms & Lead Capture, and Multi-Country Tax compliance.
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*
