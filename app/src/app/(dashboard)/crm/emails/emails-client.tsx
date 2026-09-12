@@ -4,17 +4,17 @@ import { useState, useTransition, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
-    EmailProvider,
-    EmailTemplateCategory,
-    EmailStatus,
-    EmailDirection,
-} from "@prisma/client"
-import {
     EmailsOverview,
     EmailAccountRecord,
     EmailMessageRecord,
     EmailTemplateRecord,
     EmailThreadSummary,
+    EmailProvider,
+    EmailTemplateCategory,
+    EmailStatus,
+    EmailDirection,
+} from "@/app/actions/crm/email-types"
+import {
     sendEmail,
     saveEmailDraft,
     toggleStarEmail,

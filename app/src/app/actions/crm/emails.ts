@@ -4,202 +4,23 @@ import { prisma } from "@/lib/prisma"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
+    CommunicationType,
     EmailDirection,
     EmailStatus,
     EmailProvider,
     EmailTemplateCategory,
-    CommunicationType,
 } from "@prisma/client"
-
-// ============================================
-// TYPES & INTERFACES
-// ============================================
-
-export interface EmailAccountRecord {
-    id: string
-    tenantId: string
-    name: string
-    email: string
-    provider: EmailProvider
-    smtpHost?: string | null
-    smtpPort?: number | null
-    smtpUser?: string | null
-    smtpSecure: boolean
-    imapHost?: string | null
-    imapPort?: number | null
-    imapUser?: string | null
-    imapSecure: boolean
-    isDefault: boolean
-    isActive: boolean
-    lastSyncedAt?: string | null
-    syncFrequencyMinutes: number
-    createdAt: string
-    messagesCount?: number
-}
-
-export interface EmailMessageRecord {
-    id: string
-    tenantId: string
-    emailAccountId?: string | null
-    emailAccount?: {
-        id: string
-        name: string
-        email: string
-    } | null
-    direction: EmailDirection
-    status: EmailStatus
-    fromEmail: string
-    fromName?: string | null
-    toEmail: string
-    toName?: string | null
-    cc?: string | null
-    bcc?: string | null
-    subject: string
-    bodyHtml: string
-    bodyText?: string | null
-    threadId?: string | null
-    messageId?: string | null
-    inReplyTo?: string | null
-    isStarred: boolean
-    isArchived: boolean
-    isRead: boolean
-    sentAt?: string | null
-    deliveredAt?: string | null
-    openedAt?: string | null
-    openCount: number
-    clickCount: number
-    contactId?: string | null
-    contact?: {
-        id: string
-        displayName: string
-        companyName?: string | null
-        email?: string | null
-    } | null
-    leadId?: string | null
-    lead?: {
-        id: string
-        title: string
-        status: string
-    } | null
-    dealId?: string | null
-    deal?: {
-        id: string
-        title: string
-        value?: number | null
-    } | null
-    attachments?: any
-    createdAt: string
-    updatedAt: string
-}
-
-export interface EmailTemplateRecord {
-    id: string
-    tenantId: string
-    name: string
-    category: EmailTemplateCategory
-    subject: string
-    bodyHtml: string
-    bodyText?: string | null
-    mergeTags?: any
-    isActive: boolean
-    createdAt: string
-    updatedAt: string
-}
-
-export interface EmailThreadSummary {
-    threadId: string
-    subject: string
-    latestDate: string
-    participantName: string
-    participantEmail: string
-    snippet: string
-    messagesCount: number
-    hasUnread: boolean
-    isStarred: boolean
-    contact?: {
-        id: string
-        displayName: string
-        companyName?: string | null
-    } | null
-    deal?: {
-        id: string
-        title: string
-    } | null
-}
-
-export interface EmailsOverviewKPIs {
-    totalThreads: number
-    unreadInbound: number
-    sentCount: number
-    openRate: number
-    activeMailboxes: number
-}
-
-export interface EmailsOverview {
-    accounts: EmailAccountRecord[]
-    selectedAccount: EmailAccountRecord | null
-    messages: EmailMessageRecord[]
-    threads: EmailThreadSummary[]
-    templates: EmailTemplateRecord[]
-    contacts: Array<{
-        id: string
-        displayName: string
-        companyName?: string | null
-        email?: string | null
-    }>
-    leads: Array<{
-        id: string
-        title: string
-        contactId?: string | null
-    }>
-    deals: Array<{
-        id: string
-        title: string
-        contactId: string
-    }>
-    kpis: EmailsOverviewKPIs
-}
-
-export interface SendEmailInput {
-    emailAccountId?: string
-    toEmail: string
-    toName?: string
-    cc?: string
-    bcc?: string
-    subject: string
-    bodyHtml?: string
-    bodyText?: string
-    threadId?: string
-    inReplyTo?: string
-    contactId?: string
-    leadId?: string
-    dealId?: string
-    templateId?: string
-}
-
-export interface CreateEmailAccountInput {
-    name: string
-    email: string
-    provider: EmailProvider
-    smtpHost?: string
-    smtpPort?: number
-    smtpUser?: string
-    smtpSecure?: boolean
-    imapHost?: string
-    imapPort?: number
-    imapUser?: string
-    imapSecure?: boolean
-    isDefault?: boolean
-}
-
-export interface CreateEmailTemplateInput {
-    name: string
-    category: EmailTemplateCategory
-    subject: string
-    bodyHtml: string
-    bodyText?: string
-    mergeTags?: string[]
-}
+import type {
+    EmailAccountRecord,
+    EmailMessageRecord,
+    EmailTemplateRecord,
+    EmailThreadSummary,
+    EmailsOverviewKPIs,
+    EmailsOverview,
+    SendEmailInput,
+    CreateEmailAccountInput,
+    CreateEmailTemplateInput,
+} from "./email-types"
 
 // ============================================
 // DATA OVERVIEW & AUTO SEEDER
