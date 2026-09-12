@@ -85,8 +85,8 @@
 - [x] **Customer Groups / Segments** 🔴
 - [x] **Customer Credit Limit** 🔴
 - [x] **Customer Ledger / Statement** 🔴 ✅
-- [ ] **Customer Portal** 🟡
-- [ ] **Walk-in / POS Sales** 🟡
+- [x] **Customer Portal** 🟡 ✅ (`/portal/[token]`) **(2026-09-12)**
+- [x] **Walk-in / POS Sales** 🟡 ✅ (`/sales/pos`) **(2026-09-12)**
 - [ ] **Customer Loyalty / Points** 🟢
 
 ---
@@ -118,7 +118,7 @@
 ## 🏭 Inventory & Warehouse
 
 - [x] **Stock Management** 🟡 ✅ **(2026-09-10)**
-- [ ] **Barcode / QR Code Support** 🟡
+- [x] **Barcode / QR Code Support** 🟡 ✅ **(2026-09-12)**
 - [x] **Stock Adjustments** 🟡 ✅ **(2026-09-10)**
 - [x] **Warehouse Management** 🟢 ✅ **(2026-09-10)**
 - [x] **Stock Transfers** 🟢 ✅ **(2026-09-10)**
@@ -148,21 +148,33 @@
 - [x] **GSTIN Validation** 🔴
 - [x] **Place of Supply Rules** 🔴
 - [x] **MSME / Udyam Display** 🔴
-- [ ] **TDS (Tax Deducted at Source)** 🟡
-- [ ] **E-Way Bill Integration** 🟡
-- [ ] **GST Returns Data (GSTR-1, GSTR-3B)** 🟡
+- [x] **TDS (Tax Deducted at Source)** 🟡 ✅
+- [x] **E-Way Bill Integration** 🟡 ✅
+- [x] **GST Returns Data (GSTR-1, GSTR-3B)** 🟡 ✅ (ALL INDIA TAX P1/P2 COMPLETE 🇮🇳)
 
 ### 🇦🇪 UAE (P2)
-- [ ] **VAT (5%)** 🟡
-- [ ] **TRN (Tax Registration Number)** 🟡
-- [ ] **VAT Return Data** 🟢
-- [ ] **Reverse Charge Mechanism** 🟢
+- [x] **VAT (5%)** 🟡 ✅
+- [x] **TRN (Tax Registration Number)** 🟡 ✅
+- [x] **VAT Return Data** 🟢 ✅
+- [x] **Reverse Charge Mechanism** 🟢 ✅ (ALL UAE TAX P2 COMPLETE 🇦🇪)
 
 ### 🇸🇦 Saudi Arabia (P2)
-- [ ] **VAT (15%)** 🟡
-- [ ] **ZATCA E-Invoicing (Fatoora)** 🟡
-- [ ] **QR Code on Invoices** 🟡
-- [ ] **Zakat Calculation** 🟢
+- [x] **VAT (15%)** 🟡 ✅
+- [x] **ZATCA E-Invoicing (Fatoora)** 🟡 ✅
+- [x] **QR Code on Invoices** 🟡 ✅
+- [x] **Zakat Calculation** 🟢 ✅ (ALL KSA TAX & ZATCA P2 COMPLETE 🇸🇦)
+
+### 🇦🇺 Australia (P2)
+- [x] **GST (10%)** 🟡 ✅
+- [x] **ABN (Australian Business Number) Validation** 🟡 ✅
+- [x] **BAS (Business Activity Statement) Engine** 🟡 ✅
+- [x] **PAYG Withholding & Tax Invoices** 🟢 ✅ (ALL AUSTRALIA TAX P2 COMPLETE 🇦🇺)
+
+### 🇬🇧 United Kingdom (P2)
+- [x] **VAT (20% Standard, 5% Reduced, 0% Zero)** 🟡 ✅
+- [x] **VRN (VAT Registration Number) Validation** 🟡 ✅
+- [x] **Making Tax Digital (MTD) 9-Box Return** 🟡 ✅
+- [x] **HMRC MTD JSON & CSV Export** 🟢 ✅ (ALL UK TAX P2 COMPLETE 🇬🇧)
 
 ### 🇺🇸 United States (P3)
 - [ ] **Sales Tax (State-wise)** 🟢
@@ -175,7 +187,7 @@
 - [x] **Tax Groups** 🔴
 - [x] **Auto Tax Detection** 🔴
 - [ ] **Tax Exemptions** 🟡
-- [ ] **Tax Reports** 🟡
+- [x] **Tax Reports** 🟡 ✅ (`/finance/reports`, regional tax return data) **(2026-09-12)**
 - [ ] **Withholding Tax** 🟢
 
 ---
@@ -193,10 +205,10 @@
 - [x] **Invoice Numbering** 🔴
 - [x] **PDF Generation** 🔴
 - [x] **Email Invoice** 🔴
-- [ ] **Terms & Conditions** 🟡
-- [ ] **Authorized Signature** 🟡
-- [ ] **Declaration / Notes** 🟡
-- [ ] **Proforma Invoice** 🟡
+- [x] **Terms & Conditions** 🟡 ✅ **(2026-09-12)**
+- [x] **Authorized Signature** 🟡 ✅ **(2026-09-12)**
+- [x] **Declaration / Notes** 🟡 ✅ **(2026-09-12)**
+- [x] **Proforma Invoice** 🟡 ✅ **(2026-09-12)**
 - [x] **Credit Note / Debit Note** 🟡 ✅ **(2026-09-12)**
 - [x] **Recurring Invoices** 🟡 ✅ (`/sales/invoices/recurring`)
 - [ ] **Delivery Challan** 🟢
@@ -265,12 +277,11 @@
 - [x] **User Roles & Permissions** 🔴
 - [x] **Company Settings** 🔴 ✅
 - [x] **Notification System** 🔴 ✅
-- [x] **Import / Export Data** 🔴 ✅
-- [ ] **Audit Logs** 🟡 (expand `AdminAuditLog`)
-- [ ] **Email Templates** 🟡
+- [x] **Audit Logs** 🟡 (expand `AdminAuditLog` with `EMAIL_TEMPLATE_UPDATE`, `EMAIL_TEMPLATE_RESET`, `EMAIL_TEMPLATE_TEST_DISPATCH`) ✅ **(2026-09-12)**
+- [x] **Email Templates** 🟡 (`/admin/email-templates`) ✅ **(2026-09-12)**
 - [ ] **Workflow Automation** 🟢
 - [ ] **API Access** 🟢
-- [ ] **Webhooks** 🟢
+- [x] **Webhooks** 🟢 ✅ (WhatsApp `/api/webhooks/whatsapp`, Stripe, Razorpay) **(2026-09-12)**
 - [ ] **White Labeling** 🟢
 
 ---
@@ -285,13 +296,15 @@
 - [x] **Tenant Management CRUD** (`/admin/tenants`, `/admin/tenants/[id]`, `/admin/tenants/new`) ✅ **(2026-09-10)**
 - [x] **Support Ticket Orchestration** from Command Center (`/admin/support`, `/admin/support/[id]`) ✅
 - [x] **Platform Security & Governance** (`/admin/security`) — Rate limiting, IP firewall, 2FA enforcement, audit feed ✅ **(2026-09-10)**
+- [x] **Plan Upgrade & Downgrade Engine**: Real-time proration math (used days, unused credit, net payable), scheduled downgrades at cycle end, and audit logging ✅ **(2026-09-12)**
+- [x] **Platform Subscription Invoicing & Printable Slips**: Automated B2B tax receipts (`SAAS-INV-YYYY-XXXX`), regional tax splits (IN 18%, GB 20%, AE 5%, SA 15%, AU 10%, US 0%), and instant printable HTML receipt modal ✅ **(2026-09-12)**
+- [x] **Tenant Billing Studio**: Monthly vs Annual frequency switcher (20% discount badge), 4-tier cards with current status, proration quote modal, and receipts ledger ✅ **(2026-09-12)**
 
 ---
 
 ## 🧩 Integrations (Future)
 
-- [ ] **WhatsApp Business API** 🟡
-- [ ] **Stripe / PayPal** 🟡
+- [x] **Stripe / PayPal Payment Gateway Suite**: Multi-currency checkout (Stripe Checkout Session, PayPal Orders v2 API), subunit normalization (cents, fils, paise, zero-decimal currencies), multi-tenant credentials settings (`/settings` Payment Gateways tab), test connection ping, customer portal 1-click Pay Online modal (`/portal/[token]`), invoice action toolbar payment link generator (`/sales/invoices/[id]`), and webhook receivers (`/api/webhooks/stripe`, `/api/webhooks/paypal`) with automated ledger settlement ✅ **(2026-09-13)**
 - [ ] **Twilio (SMS)** 🟢
 - [ ] **Tally / QuickBooks** 🟢
 - [ ] **Google Workspace** 🟢

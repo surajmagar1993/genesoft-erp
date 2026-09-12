@@ -98,6 +98,8 @@ model Tenant {
   emailTemplates     EmailTemplate[]
   webForms           WebForm[]
   formSubmissions    FormSubmission[]
+  portalTickets      PortalTicket[]
+  posSessions        POSSession[]
 
   @@map("tenants")
 }
@@ -187,6 +189,11 @@ model Contact {
   creditLimit  Decimal? @map("credit_limit") @db.Decimal(15, 2)
   balance      Decimal  @default(0) @db.Decimal(15, 2)
 
+  // Portal Access
+  portalEnabled    Boolean   @default(false) @map("portal_enabled")
+  portalToken      String?   @unique @map("portal_token")
+  portalLastAccess DateTime? @map("portal_last_access")
+
   // Meta
   tags      Json     @default("[]")
   notes     String?
@@ -218,11 +225,13 @@ model Contact {
   recurringProfiles  RecurringProfile[]
   emailMessages      EmailMessage[]
   formSubmissions    FormSubmission[]
+  portalTickets      PortalTicket[]
 
   @@index([tenantId])
   @@index([tenantId, email])
   @@index([tenantId, gstin])
   @@index([tenantId, priceListId])
+  @@index([portalToken])
   @@map("contacts")
 }
 
@@ -2581,5 +2590,74 @@ enum FormSubmissionStatus {
   SPAM
   CONVERTED
   FLAGGED
+}
+
+// ============================================
+// CUSTOMER PORTAL
+// ============================================
+
+model PortalTicket {
+  id          String             @id @default(cuid())
+  tenantId    String             @map("tenant_id") @db.Uuid
+  contactId   String             @map("contact_id") @db.Uuid
+  subject     String
+  category    String             @default("general") // billing, technical, general, feedback
+  status      PortalTicketStatus @default(OPEN)
+  priority    String             @default("MEDIUM")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  tenant   Tenant              @relation(fields: [tenantId], references: [id])
+  contact  Contact             @relation(fields: [contactId], references: [id])
+  messages PortalTicketMessage[]
+
+  @@index([tenantId])
+  @@index([contactId])
+  @@map("portal_tickets")
+}
+
+enum PortalTicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model PortalTicketMessage {
+  id             String   @id @default(cuid())
+  ticketId       String   @map("ticket_id")
+  senderName     String   @map("sender_name")
+  content        String
+  isFromCustomer Boolean  @default(true) @map("is_from_customer")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  ticket PortalTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("portal_ticket_messages")
+}
+
+// ============================================
+// POS — POINT OF SALE
+// ============================================
+
+model POSSession {
+  id          String    @id @default(cuid())
+  tenantId    String    @map("tenant_id") @db.Uuid
+  openedBy    String    @map("opened_by")
+  openedAt    DateTime  @default(now()) @map("opened_at")
+  closedAt    DateTime? @map("closed_at")
+  openingCash Decimal   @default(0) @map("opening_cash") @db.Decimal(15, 2)
+  closingCash Decimal?  @map("closing_cash") @db.Decimal(15, 2)
+  totalSales  Decimal   @default(0) @map("total_sales") @db.Decimal(15, 2)
+  totalTx     Int       @default(0) @map("total_tx")
+  notes       String?
+  status      String    @default("OPEN")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@map("pos_sessions")
 }
 

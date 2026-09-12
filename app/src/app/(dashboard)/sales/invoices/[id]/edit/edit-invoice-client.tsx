@@ -22,6 +22,7 @@ export default function EditInvoiceClient({ invoice }: Props) {
     // Adapt snake_case DB record → camelCase form data
     const initialData: InvoiceFormData = {
         id: invoice.id,
+        type: invoice.type === "PROFORMA" ? "PROFORMA" : "TAX_INVOICE",
         contactId: invoice.contact_id,
         invoiceNumber: invoice.invoice_number,
         customerName: invoice.customer_name,
@@ -34,6 +35,10 @@ export default function EditInvoiceClient({ invoice }: Props) {
         discountType: invoice.discount_type,
         notes: invoice.notes,
         termsAndConditions: invoice.terms_and_conditions,
+        declaration: invoice.declaration,
+        signatoryName: invoice.signatory_name,
+        signatoryDesignation: invoice.signatory_designation,
+        signatureUrl: invoice.signature_url ?? "",
         // GST header
         supplierGstin: invoice.supplier_gstin ?? "",
         customerGstin: invoice.customer_gstin ?? "",
@@ -56,6 +61,7 @@ export default function EditInvoiceClient({ invoice }: Props) {
         const { error } = await updateInvoice({
             id: invoice.id,
             invoice_number: data.invoiceNumber,
+            type: data.type || "TAX_INVOICE",
             customer_name: data.customerName,
             customer_email: data.customerEmail,
             invoice_date: data.invoiceDate,
@@ -66,6 +72,10 @@ export default function EditInvoiceClient({ invoice }: Props) {
             discount_type: data.discountType,
             notes: data.notes,
             terms_and_conditions: data.termsAndConditions,
+            declaration: data.declaration,
+            signatory_name: data.signatoryName,
+            signatory_designation: data.signatoryDesignation,
+            signature_url: data.signatureUrl,
             // GST header
             supplier_gstin: data.supplierGstin,
             customer_gstin: data.customerGstin,

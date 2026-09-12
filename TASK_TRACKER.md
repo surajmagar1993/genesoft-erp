@@ -1,6 +1,6 @@
 # ERP & CRM Multi-Platform SaaS — Master Task Tracker
 
-> **Last Updated:** 2026-09-10 (v8) | **Latest Commit:** `b1dc1ba` | **Branch:** `main`
+> **Last Updated:** 2026-09-12 (v9) | **Branch:** `main` | **P2 Progress:** ~98% Complete (WhatsApp Business API, POS, Multi-Country Tax Engines Live)
 
 ## Brainstorming Phase ✅
 - [x] Define purpose & scale
@@ -146,8 +146,8 @@
 
 - [x] CRM: Email Integration (`/crm/emails`) ✅ **(2026-09-12)**
 - [x] CRM: Web Forms / Lead Capture (`/crm/forms`) ✅ **(2026-09-12)**
-- [ ] Retail: Customer Portal
-- [ ] Retail: Walk-in / POS Sales
+- [x] Retail: Customer Portal (`/portal/[token]`, `/api/portal/`) ✅ **(2026-09-12)**
+- [x] Retail: Walk-in / POS Sales (`/sales/pos`, barcode & receipt slip) ✅ **(2026-09-12)**
 - [x] Sales: Credit Notes / Refunds (`/sales/credit-notes`) ✅ **(2026-09-12)**
 - [x] Sales: Price Lists (`/sales/price-lists`) ✅ **(2026-09-12)**
 - [x] Purchase: Vendor / Supplier Management (`/purchase`) ✅ **(2026-09-10)**
@@ -155,20 +155,22 @@
 - [x] Purchase: Bills / Vendor Invoices (AP Integration `/finance/bills`) ✅ **(2026-09-10)**
 - [x] Purchase: Purchase Receipts (Warehouse Intake `/inventory`) ✅ **(2026-09-10)**
 - [x] Inventory: Stock Management (`/inventory`) ✅ **(2026-09-10)**
-- [ ] Inventory: Barcode / QR Code Support
+- [x] Inventory: Barcode / QR Code Support (Code 128 / QR generator & scanner modals) ✅ **(2026-09-12)**
 - [x] Inventory: Stock Adjustments & Multi-Depot Transfers ✅ **(2026-09-10)**
 - [x] Finance: General Ledger (`/finance/expenses`) ✅ **(2026-09-12)**
 - [x] Finance: Bank Reconciliation (`/finance/bank-reconciliation`) ✅ **(2026-09-12)**
 - [x] Finance: Expense Management (`/finance/expenses`) ✅ **(2026-09-12)**
-- [ ] Tax (India): TDS
-- [ ] Tax (India): E-Way Bill Integration
-- [ ] Tax (India): GST Returns Data
-- [ ] Tax (UAE): VAT, TRN Validation
-- [ ] Tax (KSA): VAT, Fatoora E-Invoicing, QR Code
-- [ ] Invoice Features: Terms & Conditions
-- [ ] Invoice Features: Authorized Signature
-- [ ] Invoice Features: Declaration / Notes
-- [ ] Invoice Features: Proforma Invoice
+- [x] Tax (India): TDS & TCS Calculation Engine, Form 26Q/27Q (`/finance/tds`) ✅ **(2026-09-12)**
+- [x] Tax (India): E-Way Bill Integration (NIC/GSTN JSON exporter & distance calculator) (`/sales/eway-bills`) ✅ **(2026-09-12)**
+- [x] Tax (India): GST Returns Data (GSTR-1, GSTR-3B & 2B Reconciliation) (`/finance/gst-returns`) ✅ **(2026-09-12)**
+- [x] Tax (UAE): VAT (5%), TRN Validation, FAF Audit File & VAT 201 Return (`/finance/vat-uae`) ✅ **(2026-09-12)**
+- [x] Tax (KSA): VAT (15%), ZATCA Fatoora Phase 1 & 2 E-Invoicing, TLV QR Code & Zakat (`/finance/vat-ksa`) ✅ **(2026-09-12)**
+- [x] Tax (UK): HMRC MTD VAT 9-Box Return (20%, 5%, 0%), Modulus 97 VRN Validation (`/finance/vat-uk`) ✅ **(2026-09-12)**
+- [x] Tax (Australia): ATO Business Activity Statement (BAS) 10% GST & PAYG (`/finance/tax-australia`) ✅ **(2026-09-12)**
+- [x] Invoice Features: Terms & Conditions ✅ **(2026-09-12)**
+- [x] Invoice Features: Authorized Signature ✅ **(2026-09-12)**
+- [x] Invoice Features: Declaration / Notes ✅ **(2026-09-12)**
+- [x] Invoice Features: Proforma Invoice ✅ **(2026-09-12)**
 - [x] Invoice Features: Credit/Debit Note (`/sales/credit-notes`) ✅ **(2026-09-12)**
 - [x] Invoice Features: Recurring Invoices (`/sales/invoices/recurring`) ✅ **(2026-09-12)**
 - [x] HR: Employee Directory (`/hr`) ✅ **(2026-09-10)**
@@ -181,13 +183,13 @@
 - [x] Rentals: Agreements, Returns & Invoicing (`/sales/rental`) ✅ **(2026-09-12)**
 - [x] Admin: Audit Logs (expanded `AdminAuditLog` tracking platform security & governance) ✅
 - [x] SaaS: Platform Security & Governance (`/admin/security`) ✅
-- [ ] Admin: Email Templates
+- [x] Admin: Email Templates (`/admin/email-templates`) ✅ **(2026-09-12)**
 - [x] SaaS: Tenant Management CRUD page (`/admin/tenants`, `/admin/tenants/[id]`, `/admin/tenants/new`) ✅
 - [x] SaaS: Support Ticket management from Command Center (`/admin/support`, `/admin/support/[id]`) ✅
-- [ ] SaaS: Plan Upgrade/Downgrade (automated billing webhook sync)
-- [ ] SaaS: Invoice Generation
-- [ ] Integrations: WhatsApp Business API
-- [ ] Integrations: Stripe / PayPal
+- [x] SaaS: Plan Upgrade/Downgrade (automated billing webhook sync, proration engine, `/settings`) ✅ **(2026-09-12)**
+- [x] SaaS: Invoice Generation (platform B2B invoices `SAAS-INV-YYYY-XXXX`, printable receipts) ✅ **(2026-09-12)**
+- [x] Integrations: WhatsApp Business API (`/crm/whatsapp`, `/api/webhooks/whatsapp`, invoice dispatch) ✅ **(2026-09-12)**
+- [x] Integrations: Stripe & PayPal Multi-Currency Payment Gateway Suite (`/settings`, `/portal/[token]`, `/api/webhooks/stripe`, `/api/webhooks/paypal`, `/sales/invoices/[id]`) ✅ **(2026-09-13)**
 
 ---
 
@@ -200,8 +202,8 @@
 - [ ] Inventory: Stock Transfers
 - [ ] Inventory: Batch & Serial Tracking
 - [ ] Finance: Budgeting
-- [ ] Tax (UAE): VAT Return Data, Reverse Charge
-- [ ] Tax (KSA): Zakat Calculation
+- [x] Tax (UAE): VAT Return Data, Reverse Charge (`/finance/vat-uae`) ✅ **(2026-09-12)**
+- [x] Tax (KSA): Zakat Calculation (`/finance/vat-ksa`) ✅ **(2026-09-12)**
 - [ ] Tax (USA): Sales Tax Setup, 1099, Multi-State
 - [ ] Tax (Global): Withholding Tax
 - [ ] Invoice Features: Delivery Challan

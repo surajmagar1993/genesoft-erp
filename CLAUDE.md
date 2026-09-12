@@ -1,4 +1,4 @@
-> **Last Updated:** 2026-04-08 | **Active Block:** SaaS Super Admin Command Center ✅
+> **Last Updated:** 2026-09-12 | **Active Block:** P2 Integrations: WhatsApp Business API Live ✅ | Next: Stripe / PayPal 🔜
 
 ## 🎯 Project Overview
 Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Prisma, and Supabase.
@@ -136,8 +136,26 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
   - Added navigation item with `Globe` icon under CRM in `app/(dashboard)/layout.tsx`.
   - Verified type check (`tsc --noEmit` with 0 errors), Prisma validation (`prisma validate`), app build (`npm run build`), root monorepo build (exit code 0), and AST knowledge graph update (`graphify update .` -> 1437 nodes, 4781 edges, 93 communities).
 
+- Implemented P2 Retail & Self-Service: Customer Portal (`/portal/[token]`) & POS Terminal (`/sales/pos`):
+  - Token-authenticated client portal for invoices, payments, statements, and support tickets.
+  - Retail POS checkout register with product catalog grid, barcode wedge scanner, walk-in customer creation, multi-tender payments, and thermal receipt printing.
+
+- Implemented P2 Multi-Country Statutory Tax Engines (`app/src/lib/`):
+  - Pure TypeScript statutory computation for India (GST Returns GSTR-1/3B, E-Way Bill Rule 138, TDS & TCS Form 26Q), UAE (VAT 201, 7 Emirates split, FAF file), KSA (ZATCA Fatoora Phase 1 & 2 UBL 2.1 XML, TLV QR code, Zakat), UK (HMRC MTD VAT 9-Box return, Modulus 97 VRN), and Australia (ATO BAS Form, Modulus 89 ABN).
+
+- Implemented P2 SaaS Lifecycle & Administration:
+  - System Email Templates Studio (`/admin/email-templates`) with 6 transactional presets, dynamic merge tags, and Resend API fallback.
+  - SaaS Plan Upgrade/Downgrade Engine (`/settings`) with real-time proration mathematics and automated platform B2B invoicing (`SAAS-INV-YYYY-XXXX`).
+
+- Implemented P2 Integrations: WhatsApp Business API (`/crm/whatsapp`):
+  - Pure TS WhatsApp Engine (`app/src/lib/whatsapp-engine.ts`) with Meta Graph API v20.0 client, international E.164 phone normalizer (IN, US, UK, AE, SA, AU), 1-click `wa.me` links, and 7 statutory templates.
+  - WhatsApp Studio Hub (`/crm/whatsapp`) with 4 KPI cards, conversational WhatsApp bubble chat, invoice dispatcher, and Meta gateway configuration desk.
+  - Public webhook challenge verification and event receiver at `/api/webhooks/whatsapp`.
+  - In-place WhatsApp modal dispatch from the invoice action toolbar (`/sales/invoices/[id]`).
+  - Verified with 12 standalone test suites, `tsc --noEmit` (0 errors), `npm run build` (clean build), and `graphify update .` (1943 nodes, 6395 edges).
+
 ## 🔜 Next Active Block
-P2 Retail / B2C: Customer Portal (`/portal` or `/retail/portal`) — Self-service customer account center, invoices viewing, payment tracking, balance statements, and support tickets.
+P2 Integrations: Stripe / PayPal (`/settings` or `/finance`) — International multi-currency credit card checkout alongside domestic Razorpay.
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*

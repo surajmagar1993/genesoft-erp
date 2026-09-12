@@ -1,7 +1,7 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-09-12 | **Current Focus:** P2 Retail & B2C — Customer Portal & Self-Service Account Center
+> **Last Updated:** 2026-09-13 | **Status:** P1 100% COMPLETE ✅ | P2 100% COMPLETE ✅ | **Next Focus:** P3 — Scale Modules
 
 ---
 
@@ -15,7 +15,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 
 ---
 
-## 🟡 P2 — Growth (Pending)
+## 🟡 P2 — Growth (ALL COMPLETE ✅)
 
 ### 🔴 Immediate Next Steps (SaaS Admin)
 - [x] **Tenant Management CRUD Page** (`/admin/tenants`, `/admin/tenants/[id]`, `/admin/tenants/new`) ✅
@@ -36,17 +36,30 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **Invoice Features: Recurring Invoices** (`/sales/invoices/recurring`) — Automated subscription retainers, cyclical schedules, next run countdowns, and instant invoice generation ✅ **(2026-09-12)**
 - [x] **CRM: Email Integration** (`/crm/emails`) — Connect corporate IMAP/SMTP mailboxes, email thread synchronization, CRM entity linking, and merge-tag templates ✅ **(2026-09-12)**
 - [x] **CRM: Web Forms & Lead Capture** (`/crm/forms`) — Embeddable lead intake forms, public CORS intake API route (`/api/forms/[id]/submit`), honeypot spam protection, standalone public view (`/forms/[code]`), and Form Studio visual builder ✅ **(2026-09-12)**
+- [x] **Retail: Customer Portal** (`/portal/[token]`) — Token-authenticated self-service account center with 5-tab UI (Overview, Invoices, Payments, Statement, Support), PortalTicket system, invoice PDF download API, and admin portal management ✅ **(2026-09-12)**
+- [x] **Retail: Walk-in / POS Sales** (`/sales/pos`) — Full-screen POS terminal with product grid, cart, session management, quick walk-in customer creation, multi-payment (Cash/Card/UPI), auto-invoice generation ✅ **(2026-09-12)**
+- [x] **Invoice Features: Terms & Conditions, Authorized Signature, Statutory Declaration & Proforma Invoices** (`/sales/invoices`) — Configurable legal clauses with presets, digital signatory stamp & designation, statutory Indian GST declaration, proforma numbering (`PI-YYYY-YY-XXXX`), 1-click Convert to Tax Invoice, and dual-mode PDF rendering ✅ **(2026-09-12)**
 
-### 🟡 Next Focus: P2 Retail & Customer Portal
-- [ ] **Retail: Customer Portal** — Self-service customer account center, invoice viewing, payment status, support tickets
+- [x] **Inventory: Barcode / QR Code Support** (`/inventory`) — Vector SVG Code-128 & QR engine, printable A4/thermal sticker sheet studio with `@media print`, interactive camera & wedge scanner desk with sound and instant stock adjustment ✅ **(2026-09-12)**
+- [x] **Tax (India): TDS (Tax Deducted at Source)** (`/finance/tds`) — Pure TS calculation engine (194C, 194J, 194I, 194H, 194Q, 194A), Section 206AA 20% penalty enforcement, PAN & TAN validation, Challan 281 deposit recording, Form 26Q quarterly export, Form 16A certificate preview, and Vendor Bill withholding integration ✅ **(2026-09-12)**
+- [x] **Tax (India): E-Way Bill Integration** (`/sales/eway-bills`) — Statutory Rule 138 CGST engine, 12-digit EWB generation, Part-A & Part-B generation, distance-to-validity calculator (CBIC Notif 94/2020), 24h statutory cancellation enforcement, in-transit vehicle updater, Form EWB-01 printable slip with QR code, and NIC-compliant bulk upload JSON schema ✅ **(2026-09-12)**
+- [x] **Tax (India): GST Returns Data (GSTR-1, GSTR-3B)** (`/finance/gst-returns` & `/finance/reports`) — Pure TS statutory GST returns engine, Table 4 (B2B), Table 5 (B2CL), Table 7 (B2CS), Table 6 (EXP), Table 9B (CDNR), Table 12 (HSN Summary), Table 13 (Docs Issued), GSTR-3B Table 3.1, Table 4 Eligible ITC from vendor bills, Rule 88A tax set-off matrix, Form GSTR-3B printable slip, and official GST portal offline tool JSON & CSV exports ✅ **(2026-09-12)**
+- [x] **Tax (UAE): VAT (5%), TRN Validation, Form VAT201 & Reverse Charge Mechanism (RCM)** (`/finance/vat-uae`) — Pure TS statutory UAE VAT engine (Federal Decree-Law No. (8) of 2017), 15-digit TRN validation (`^100\d{12}$`), The 7 Emirates supply apportionment (Abu Dhabi 1a, Dubai 1b, Sharjah 1c, Ajman 1d, UAQ 1e, RAK 1f, Fujairah 1g), Article 48 RCM output/input balancing, zero-rated exports (0%), exempt supplies, quarterly filing calendar (28th day deadline), Form VAT201 printable declaration slip, and official FTA EmaraTax JSON & CSV exporters ✅ **(2026-09-12)**
+- [x] **Tax (Saudi Arabia / KSA): VAT (15%), ZATCA E-Invoicing (Fatoora Phase 1 & 2), QR Code & Zakat** (`/finance/vat-ksa`) — Pure TS statutory KSA VAT engine (Royal Order A/638, ZATCA Res. 19804 & Res. 2216), 15-digit ZATCA VAT number validation (`^3\d{13}3$`), UTF-8 TLV Base64 QR code encoding & decoding (Tags 1–5), official ZATCA UBL 2.1 e-invoicing XML generation (Standard B2B vs Simplified B2C), quarterly KSA VAT return compiler (15% Sales, Exports 0%, Purchases 15%, Imports), bilingual printable Tax Invoice slip, and statutory Zakat Base & liability calculation engine (2.5% Hijri / 2.5775% Gregorian) ✅ **(2026-09-12)**
+- [x] **Tax (Australia): GST (10%), ABN Validation & Business Activity Statement (BAS)** (`/finance/tax-australia`) — Pure TS statutory ATO GST engine, 11-digit ABN validation with official ATO Modulus 89 algorithm (`[10, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19]`), Australian FY (1 July – 30 June) with quarterly deadlines (Q2 extended to 28 Feb), official BAS Form calculation (G1, G2, G3, G4, G10, G11, 1A, 1B, 9), PAYG Option 4 withholding (W1, W2, 8A), ATO JSON & CSV exporters, and printable Australian Tax Invoice ✅ **(2026-09-12)**
+- [x] **Tax (United Kingdom): VAT (20%), VRN Validation & Making Tax Digital (MTD) 9-Box Return** (`/finance/vat-uk`) — Pure TS statutory HMRC VAT engine (VATA 1994), Standard 20%, Reduced 5%, and Zero-rate 0%, 9-digit VRN validation with official HMRC Modulus 97 algorithm, HMRC MTD 9-Box Return compiler (Box 1 to Box 9), EU dispatch & acquisition reverse charge, HMRC MTD API JSON and CSV exporters, and printable HMRC Return Certificate ✅ **(2026-09-12)**
+- [x] **Admin: System Email Templates & Audit Logging** (`/admin/email-templates`) — Pure TS transactional template engine (6 core presets: Invoice Sent, Payment Receipt, Welcome Onboarding, Payment Overdue Dunning, Support Ticket Update, Credit Note Issued), dynamic merge tag interpolation (`{{tag}}`), responsive HTML boilerplate with mobile/desktop live preview, test email dispatch (Resend API + simulated fallback), factory default reset, and expanded `AdminAuditLog` governance tracking ✅ **(2026-09-12)**
+- [x] **SaaS: Plan Upgrade/Downgrade, Subscription Lifecycle & Platform Invoicing** (`/settings` & `/admin/tenants/[id]`) — 4-tier matrix (`FREE`, `BASIC`, `PRO`, `ENTERPRISE`), multi-region pricing (INR, USD, GBP, AED, SAR, AUD), Monthly vs Annual switcher (20% discount), real-time proration mathematics (used days, unused credit, target plan charge, net payable today), downgrade scheduling at cycle end, automated platform B2B invoices (`SAAS-INV-YYYY-XXXX`) with regional tax splits (IN 18%, GB 20%, AE 5%, SA 15%, AU 10%, US 0%), printable receipt slip modal, and Super Admin manual invoice generator ✅ **(2026-09-12)**
+- [x] **Integrations: WhatsApp Business API** (`/crm/whatsapp`) — Meta Graph API v20.0 client, E.164 phone normalizer (IN, US, UK, AE, SA, AU), 7 statutory templates (Invoice, Receipt, Dunning, Order, Support, Welcome, Custom), 1-click wa.me direct links, webhook event verification and receiver (`/api/webhooks/whatsapp`), WhatsApp Studio 4-KPI dashboard & live conversational bubble chat, and 1-click Invoice modal dispatch (`/sales/invoices/[id]`) ✅ **(2026-09-12)**
+- [x] **Integrations: Stripe & PayPal Multi-Currency Payment Gateway Suite** (`/settings`, `/portal/[token]`, `/api/webhooks/stripe`, `/api/webhooks/paypal`, `/sales/invoices/[id]`) — Multi-currency subunit normalization (cents, fils, paise, zero-decimal currencies), Stripe Checkout Session compiler, PayPal Orders v2 API compiler, tenant payment gateway settings & credentials management, test connection verification, customer portal "Pay Online" modal dialog with instant balance settlement, invoice view payment link generator, and real-time webhook receivers (`/api/webhooks/stripe`, `/api/webhooks/paypal`) with automated ledger and invoice status transitions ✅ **(2026-09-13)**
 
 ### CRM (ALL P2 MODULES COMPLETE ✅)
 - [x] CRM: Email Integration (`/crm/emails`) ✅ **(2026-09-12)**
 - [x] CRM: Web Forms / Lead Capture (`/crm/forms`) ✅ **(2026-09-12)**
 
-### Retail
-- [ ] Retail: Customer Portal
-- [ ] Retail: Walk-in / POS Sales
+### Retail (ALL P2 MODULES COMPLETE ✅)
+- [x] Retail: Customer Portal (`/portal/[token]`) ✅ **(2026-09-12)**
+- [x] Retail: Walk-in / POS Sales (`/sales/pos`) ✅ **(2026-09-12)**
 
 ### Sales
 - [x] Sales: Credit Notes / Refunds (`/sales/credit-notes`) ✅ **(2026-09-12)**
@@ -58,9 +71,9 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] Purchase: Bills / Vendor Invoices (AP Integration `/finance/bills`) ✅ **(2026-09-10)**
 - [x] Purchase: Purchase Receipts (Warehouse Intake `/inventory`) ✅ **(2026-09-10)**
 
-### Inventory
+### Inventory (ALL P2 MODULES COMPLETE ✅)
 - [x] Inventory: Stock Management ✅ **(2026-09-10)**
-- [ ] Inventory: Barcode / QR Code Support
+- [x] Inventory: Barcode / QR Code Support ✅ **(2026-09-12)**
 - [x] Inventory: Stock Adjustments & Transfers ✅ **(2026-09-10)**
 
 ### Finance
@@ -68,43 +81,45 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] Finance: Bank Reconciliation (`/finance/bank-reconciliation`) ✅ **(2026-09-12)**
 - [x] Finance: Expense Management (`/finance/expenses`) ✅ **(2026-09-12)**
 
-### Tax
-- [ ] Tax (India): TDS
-- [ ] Tax (India): E-Way Bill Integration
-- [ ] Tax (India): GST Returns Data
-- [ ] Tax (UAE): VAT, TRN Validation
-- [ ] Tax (KSA): VAT, Fatoora E-Invoicing, QR Code
+### Tax (ALL P1/P2 REGIONAL TAX MODULES COMPLETE ✅)
+- [x] Tax (India): TDS (`/finance/tds`) ✅ **(2026-09-12)**
+- [x] Tax (India): E-Way Bill Integration (`/sales/eway-bills`) ✅ **(2026-09-12)**
+- [x] Tax (India): GST Returns Data (`/finance/gst-returns`) ✅ **(2026-09-12)** (ALL INDIA TAX P1/P2 COMPLETE 🇮🇳)
+- [x] Tax (UAE): VAT (5%), TRN Validation, Form VAT201, Reverse Charge (`/finance/vat-uae`) ✅ **(2026-09-12)** (ALL UAE TAX COMPLETE 🇦🇪)
+- [x] Tax (KSA): VAT (15%), ZATCA Fatoora E-Invoicing, TLV QR Code, Zakat (`/finance/vat-ksa`) ✅ **(2026-09-12)** (ALL KSA TAX COMPLETE 🇸🇦)
+- [x] Tax (Australia): GST (10%), ABN Modulus 89, BAS Form, PAYG (`/finance/tax-australia`) ✅ **(2026-09-12)** (ALL AUSTRALIA TAX COMPLETE 🇦🇺)
+- [x] Tax (UK): VAT (20%), VRN Modulus 97, MTD 9-Box Return (`/finance/vat-uk`) ✅ **(2026-09-12)** (ALL UK TAX COMPLETE 🇬🇧)
 
-### Invoice Features
-- [ ] Invoice Features: Terms & Conditions
-- [ ] Invoice Features: Authorized Signature
-- [ ] Invoice Features: Declaration / Notes
-- [ ] Invoice Features: Proforma Invoice
+### Invoice Features (ALL P2 MODULES COMPLETE ✅)
+- [x] Invoice Features: Terms & Conditions ✅ **(2026-09-12)**
+- [x] Invoice Features: Authorized Signature ✅ **(2026-09-12)**
+- [x] Invoice Features: Declaration / Notes ✅ **(2026-09-12)**
+- [x] Invoice Features: Proforma Invoice (`/sales/invoices`) ✅ **(2026-09-12)**
 - [x] Invoice Features: Credit/Debit Note (`/sales/credit-notes`) ✅ **(2026-09-12)**
 - [x] Invoice Features: Recurring Invoices (`/sales/invoices/recurring`) ✅ **(2026-09-12)**
 
-### HR
-- [ ] HR: Employee Directory
-- [ ] HR: Attendance Tracking
-- [ ] HR: Leave Management
+### HR (ALL P2 MODULES COMPLETE ✅)
+- [x] HR: Employee Directory (`/hr`) ✅ **(2026-09-10)**
+- [x] HR: Attendance Tracking (`/hr`) ✅ **(2026-09-10)**
+- [x] HR: Leave Management (`/hr`) ✅ **(2026-09-10)**
 
-### Projects
-- [ ] Projects: Projects & Teams
-- [ ] Projects: Tasks & Subtasks
-- [ ] Projects: Time Tracking
+### Projects (ALL P2 MODULES COMPLETE ✅)
+- [x] Projects: Projects & Teams (`/projects`) ✅ **(2026-09-10)**
+- [x] Projects: Tasks & Subtasks (`/projects`) ✅ **(2026-09-10)**
+- [x] Projects: Time Tracking (`/projects`) ✅ **(2026-09-10)**
 
 ### Rentals
 - [x] Rentals: Asset Management (`/sales/rental`) ✅ **(2026-09-12)**
 - [x] Rentals: Agreements, Returns & Invoicing (`/sales/rental`) ✅ **(2026-09-12)**
 
-### Admin / SaaS
-- [ ] Admin: Audit Logs (expand `AdminAuditLog`)
-- [ ] Admin: Email Templates
-- [ ] SaaS: Plan Upgrade/Downgrade
-- [ ] SaaS: Invoice Generation
+### Admin / SaaS (ALL P2 MODULES COMPLETE ✅)
+- [x] Admin: Audit Logs (expand `AdminAuditLog` with `EMAIL_TEMPLATE_UPDATE`, `EMAIL_TEMPLATE_RESET`, `EMAIL_TEMPLATE_TEST_DISPATCH`) ✅ **(2026-09-12)**
+- [x] Admin: Email Templates (`/admin/email-templates`) ✅ **(2026-09-12)**
+- [x] SaaS: Plan Upgrade/Downgrade (`/settings` Billing Tab & Actions) ✅ **(2026-09-12)**
+- [x] SaaS: Platform Subscription Invoice Generation (`/admin/tenants/[id]` & `/settings`) ✅ **(2026-09-12)**
 
 ### Integrations
-- [ ] Integrations: WhatsApp Business API
+- [x] Integrations: WhatsApp Business API (`/crm/whatsapp`) ✅ **(2026-09-12)**
 - [ ] Integrations: Stripe / PayPal
 
 ---
@@ -117,8 +132,8 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [ ] Inventory: Stock Transfers
 - [ ] Inventory: Batch & Serial Tracking
 - [ ] Finance: Budgeting
-- [ ] Tax (UAE): VAT Return Data, Reverse Charge
-- [ ] Tax (KSA): Zakat Calculation
+- [x] Tax (UAE): VAT Return Data, Reverse Charge (`/finance/vat-uae`) ✅ **(2026-09-12)**
+- [x] Tax (KSA): Zakat Calculation (`/finance/vat-ksa`) ✅ **(2026-09-12)**
 - [ ] Tax (USA): Sales Tax Setup, 1099, Multi-State
 - [ ] Tax (Global): Withholding Tax
 - [ ] Invoice Features: Delivery Challan

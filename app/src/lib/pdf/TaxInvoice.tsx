@@ -10,6 +10,7 @@ import {
   View,
   StyleSheet,
   Font,
+  Image,
 } from "@react-pdf/renderer"
 import type { InvoiceDB, InvoiceLineItemDB } from "@/app/actions/sales/invoices"
 import { computeInvoiceGstSummary, computeHsnSummary } from "@/lib/gst-engine"
@@ -200,6 +201,138 @@ const s = StyleSheet.create({
     marginBottom: 2,
   },
   sectionText: { fontSize: 7.5, color: colors.muted, marginBottom: 10 },
+  // ── Bottom Layout
+  bottomLayout: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  bottomLeftCol: {
+    width: "58%",
+  },
+  bottomRightCol: {
+    width: "38%",
+    alignItems: "flex-end",
+  },
+  declarationBox: {
+    border: `0.5 solid ${colors.border}`,
+    backgroundColor: colors.light,
+    borderRadius: 3,
+    padding: 6,
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  declarationTitle: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    color: colors.primary,
+    marginBottom: 2,
+    textTransform: "uppercase",
+  },
+  declarationText: {
+    fontSize: 6.5,
+    color: colors.text,
+    lineHeight: 1.3,
+  },
+  termsBox: {
+    marginTop: 6,
+    marginBottom: 6,
+  },
+  termLine: {
+    fontSize: 6.8,
+    color: colors.muted,
+    marginBottom: 2,
+    lineHeight: 1.25,
+  },
+  signatureCard: {
+    width: "100%",
+    border: `1 solid ${colors.border}`,
+    borderRadius: 4,
+    padding: 8,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+  },
+  signatureCompany: {
+    fontSize: 7.5,
+    fontFamily: "Helvetica-Bold",
+    color: colors.primary,
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  signatureArea: {
+    height: 46,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 4,
+  },
+  signatureImage: {
+    height: 42,
+    maxWidth: 130,
+    objectFit: "contain",
+  },
+  digitalSealBox: {
+    border: `1 dashed ${colors.primary}`,
+    borderRadius: 3,
+    padding: 4,
+    alignItems: "center",
+    backgroundColor: colors.light,
+    width: "100%",
+  },
+  digitalSealBadge: {
+    fontSize: 6.5,
+    fontFamily: "Helvetica-Bold",
+    color: colors.primary,
+    letterSpacing: 0.5,
+  },
+  digitalSealSignatory: {
+    fontSize: 7,
+    fontFamily: "Helvetica-Bold",
+    color: colors.text,
+    marginTop: 2,
+    textAlign: "center",
+  },
+  digitalSealMeta: {
+    fontSize: 6,
+    color: colors.muted,
+    textAlign: "center",
+  },
+  digitalSealDate: {
+    fontSize: 5.5,
+    color: colors.muted,
+    marginTop: 1,
+  },
+  signatoryFooter: {
+    borderTop: `0.5 solid ${colors.border}`,
+    width: "100%",
+    paddingTop: 4,
+    marginTop: 4,
+    alignItems: "center",
+  },
+  signatoryDesignationText: {
+    fontSize: 6.8,
+    fontFamily: "Helvetica-Bold",
+    color: colors.muted,
+    textTransform: "uppercase",
+  },
+  proformaTag: {
+    backgroundColor: "#fef3c7",
+    border: "0.5 solid #f59e0b",
+    borderRadius: 2,
+    paddingVertical: 1,
+    paddingHorizontal: 4,
+    alignSelf: "flex-end",
+    marginTop: 2,
+    marginBottom: 3,
+  },
+  proformaTagText: {
+    fontSize: 6,
+    fontFamily: "Helvetica-Bold",
+    color: "#b45309",
+    textTransform: "uppercase",
+  },
   // ── Footer
   footer: {
     position: "absolute",
@@ -320,6 +453,8 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
   const bank = tenant?.settings?.bank_details || {}
   const hasBank = bank.bank_name && bank.account_number
 
+  const isProforma = invoice.type === "PROFORMA"
+
   return (
     <Document>
       <Page size="A4" style={s.page}>
@@ -332,7 +467,14 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
             {supplierGstin ? <Text style={s.companyGstin}>GSTIN: {supplierGstin}</Text> : null}
           </View>
           <View>
-            <Text style={s.invoiceLabel}>TAX INVOICE</Text>
+            <Text style={[s.invoiceLabel, isProforma ? { color: "#b45309" } : {}]}>
+              {isProforma ? "PROFORMA INVOICE" : "TAX INVOICE"}
+            </Text>
+            {isProforma && (
+              <View style={s.proformaTag}>
+                <Text style={s.proformaTagText}>Quotation / Non-Tax Document</Text>
+              </View>
+            )}
             <Text style={s.invoiceMeta}>
               <Text>No: </Text>
               <Text style={s.invoiceMetaValue}>{invoice.invoice_number}</Text>
@@ -540,55 +682,110 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
           ))}
         </View>
 
-        {/* ── Bank Details ── */}
-        {hasBank && (
-          <View style={s.bankDetailsBox}>
-            <Text style={s.gstBoxTitle}>Bank Details for Payment</Text>
-            <View style={s.bankRow}>
-              <Text style={s.bankLabel}>Bank Name:</Text>
-              <Text style={s.bankValue}>{bank.bank_name}</Text>
-            </View>
-            <View style={s.bankRow}>
-              <Text style={s.bankLabel}>Account No:</Text>
-              <Text style={s.bankValue}>{bank.account_number}</Text>
-            </View>
-            <View style={s.bankRow}>
-              <Text style={s.bankLabel}>IFSC Code:</Text>
-              <Text style={s.bankValue}>{bank.ifsc_code}</Text>
-            </View>
-            {bank.branch_name && (
-              <View style={s.bankRow}>
-                <Text style={s.bankLabel}>Branch:</Text>
-                <Text style={s.bankValue}>{bank.branch_name}</Text>
+        {/* ── Bottom Section: Left (Bank, Notes, Declaration, T&C) + Right (Authorized Signatory) ── */}
+        <View style={s.bottomLayout}>
+          {/* Left Column */}
+          <View style={s.bottomLeftCol}>
+            {/* Bank Details */}
+            {hasBank && (
+              <View style={s.bankDetailsBox}>
+                <Text style={s.gstBoxTitle}>Bank Details for Payment</Text>
+                <View style={s.bankRow}>
+                  <Text style={s.bankLabel}>Bank Name:</Text>
+                  <Text style={s.bankValue}>{bank.bank_name}</Text>
+                </View>
+                <View style={s.bankRow}>
+                  <Text style={s.bankLabel}>Account No:</Text>
+                  <Text style={s.bankValue}>{bank.account_number}</Text>
+                </View>
+                <View style={s.bankRow}>
+                  <Text style={s.bankLabel}>IFSC Code:</Text>
+                  <Text style={s.bankValue}>{bank.ifsc_code}</Text>
+                </View>
+                {bank.branch_name && (
+                  <View style={s.bankRow}>
+                    <Text style={s.bankLabel}>Branch:</Text>
+                    <Text style={s.bankValue}>{bank.branch_name}</Text>
+                  </View>
+                )}
               </View>
             )}
+
+            {/* Customer Notes */}
+            {invoice.notes ? (
+              <View style={{ marginTop: 4, marginBottom: 4 }}>
+                <Text style={s.sectionTitle}>Notes & Remarks</Text>
+                <Text style={s.sectionText}>{invoice.notes}</Text>
+              </View>
+            ) : null}
+
+            {/* Statutory GST Declaration */}
+            <View style={s.declarationBox}>
+              <Text style={s.declarationTitle}>Declaration</Text>
+              <Text style={s.declarationText}>
+                {invoice.declaration ||
+                  "We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct."}
+              </Text>
+            </View>
+
+            {/* Terms & Conditions */}
+            {invoice.terms_and_conditions ? (
+              <View style={s.termsBox}>
+                <Text style={s.sectionTitle}>Terms & Conditions</Text>
+                {invoice.terms_and_conditions
+                  .split("\n")
+                  .filter(Boolean)
+                  .map((line, idx) => (
+                    <Text key={idx} style={s.termLine}>
+                      {line.trim()}
+                    </Text>
+                  ))}
+              </View>
+            ) : null}
           </View>
-        )}
 
-        {/* ── Notes ── */}
-        {invoice.notes ? (
-          <>
-            <Text style={s.sectionTitle}>Notes</Text>
-            <Text style={s.sectionText}>{invoice.notes}</Text>
-          </>
-        ) : null}
-
-        {/* ── Terms & Conditions ── */}
-        {invoice.terms_and_conditions ? (
-          <>
-            <Text style={s.sectionTitle}>Terms & Conditions</Text>
-            <Text style={s.sectionText}>{invoice.terms_and_conditions}</Text>
-          </>
-        ) : null}
+          {/* Right Column: Authorized Signatory Block */}
+          <View style={s.bottomRightCol}>
+            <View style={s.signatureCard}>
+              <Text style={s.signatureCompany}>For {supplierName}</Text>
+              <View style={s.signatureArea}>
+                {invoice.signature_url ? (
+                  <Image src={invoice.signature_url} style={s.signatureImage} />
+                ) : (
+                  <View style={s.digitalSealBox}>
+                    <Text style={s.digitalSealBadge}>✓ DIGITALLY AUTHENTICATED</Text>
+                    <Text style={s.digitalSealSignatory}>
+                      {invoice.signatory_name || "Authorized Representative"}
+                    </Text>
+                    <Text style={s.digitalSealMeta}>
+                      {invoice.signatory_designation || "Authorized Signatory"}
+                    </Text>
+                    <Text style={s.digitalSealDate}>{fmtDate(invoice.invoice_date)}</Text>
+                  </View>
+                )}
+              </View>
+              <View style={s.signatoryFooter}>
+                <Text style={s.signatoryDesignationText}>
+                  {invoice.signatory_designation || "Authorised Signatory"}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
 
         {/* ── Footer ── */}
         <View style={s.footer} fixed>
           <Text style={s.footerText}>
-            This is a computer-generated invoice and does not require a physical signature.
+            {isProforma
+              ? "This is a Proforma Invoice / Quotation only and does not constitute an official Tax Invoice."
+              : "This is a computer-generated tax invoice issued in accordance with applicable GST rules."}
           </Text>
-          <Text style={s.footerText} render={({ pageNumber, totalPages }) =>
-            `Page ${pageNumber} of ${totalPages}`
-          } />
+          <Text
+            style={s.footerText}
+            render={({ pageNumber, totalPages }) =>
+              `Page ${pageNumber} of ${totalPages}`
+            }
+          />
         </View>
 
       </Page>

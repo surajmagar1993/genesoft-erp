@@ -2,13 +2,14 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, Percent, AlertTriangle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ import {
   computeLineItemGst,
   computeInvoiceGstSummary,
 } from "@/lib/gst-engine"
+import { TDS_SECTIONS, calculateTds } from "@/lib/tds-engine"
 import { createBill, updateBill, BillStatus, BillItem } from "@/app/actions/finance/bills"
 import { toast } from "sonner"
 
@@ -58,6 +60,24 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
   const [discount, setDiscount] = useState(initialData?.discount || 0)
   const [supplyType, setSupplyType] = useState<SupplyType>("intra") // Default to intra for now
 
+  // Parse existing TDS deduction from notes if in edit mode
+  const initialTds = useMemo(() => {
+    if (initialData?.notes && initialData.notes.includes("TDS_DEDUCTION:")) {
+      try {
+        const jsonStr = initialData.notes.split("TDS_DEDUCTION:")[1]?.split("\n")[0]?.trim()
+        return JSON.parse(jsonStr)
+      } catch {
+        return null
+      }
+    }
+    return null
+  }, [initialData?.notes])
+
+  const [tdsEnabled, setTdsEnabled] = useState(!!initialTds)
+  const [tdsSection, setTdsSection] = useState<string>(initialTds?.sectionCode || "194C")
+
+  const selectedVendor = useMemo(() => vendors.find((v) => v.id === vendorId), [vendors, vendorId])
+
   const totals = useMemo(() => {
     return computeInvoiceGstSummary(
       items.map(item => ({
@@ -70,6 +90,16 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
       "FIXED"
     )
   }, [items, supplyType, discount])
+
+  const tdsCalc = useMemo(() => {
+    if (!tdsEnabled || totals.subtotal <= 0) return null
+    return calculateTds({
+      grossAmount: totals.subtotal,
+      sectionCode: tdsSection,
+      deducteePan: selectedVendor?.pan,
+      isIndividualOrHuf: selectedVendor?.type === "INDIVIDUAL",
+    })
+  }, [tdsEnabled, totals.subtotal, tdsSection, selectedVendor])
 
   const addLineItem = () => {
     setItems([...items, {
@@ -114,6 +144,19 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
       return
     }
 
+    let updatedNotes = (notes || "").replace(/TDS_DEDUCTION:.*(\r?\n)?/g, "").trim()
+    if (tdsEnabled && tdsCalc && tdsCalc.tdsAmount > 0) {
+      const meta = {
+        sectionCode: tdsCalc.sectionCode,
+        tdsRate: tdsCalc.appliedRate,
+        tdsAmount: tdsCalc.tdsAmount,
+        is206AAPenaltyApplied: tdsCalc.is206AAPenaltyApplied,
+      }
+      updatedNotes = updatedNotes
+        ? `${updatedNotes}\nTDS_DEDUCTION:${JSON.stringify(meta)}`
+        : `TDS_DEDUCTION:${JSON.stringify(meta)}`
+    }
+
     const data = {
       contactId: vendorId,
       billNumber,
@@ -125,7 +168,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
       discount,
       total: totals.grandTotal,
       currencyCode: "INR",
-      notes,
+      notes: updatedNotes,
       items
     }
 
@@ -345,10 +388,91 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
                 </div>
               </div>
               <div className="pt-4 border-t flex justify-between items-center">
-                <span className="font-bold">Total Amount</span>
+                <span className="font-bold">Total Bill Amount</span>
                 <span className="text-xl font-bold text-indigo-600">
                   {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(totals.grandTotal)}
                 </span>
+              </div>
+
+              {/* TDS Withholding Section */}
+              <div className="pt-3 border-t space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-xs font-semibold flex items-center gap-1.5 cursor-pointer">
+                      <Percent className="h-3.5 w-3.5 text-amber-600" />
+                      Apply Indian TDS Withholding
+                    </Label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Deduct tax at source per CBDT rates
+                    </p>
+                  </div>
+                  <Switch
+                    checked={tdsEnabled}
+                    onCheckedChange={setTdsEnabled}
+                  />
+                </div>
+
+                {tdsEnabled && (
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">TDS Section *</Label>
+                      <Select value={tdsSection} onValueChange={setTdsSection}>
+                        <SelectTrigger className="h-8 text-xs bg-background">
+                          <SelectValue placeholder="Select section" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(TDS_SECTIONS).map((sec) => (
+                            <SelectItem key={sec.code} value={sec.code} className="text-xs">
+                              {sec.code} - {sec.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedVendor && (
+                      <div className="text-xs space-y-1">
+                        <div className="flex items-center justify-between text-muted-foreground">
+                          <span>Vendor PAN:</span>
+                          <span className="font-mono font-medium text-foreground">
+                            {selectedVendor.pan || "Not Provided"}
+                          </span>
+                        </div>
+                        {tdsCalc?.is206AAPenaltyApplied && (
+                          <div className="flex items-start gap-1.5 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-1.5 rounded text-[11px]">
+                            <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                            <span>
+                              Sec 206AA: Missing/invalid PAN triggers 20% penalty TDS rate.
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {tdsCalc && (
+                      <div className="space-y-1 pt-1 border-t border-amber-500/20 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Applied Rate:</span>
+                          <span className="font-semibold text-amber-700 dark:text-amber-400">{tdsCalc.appliedRate}%</span>
+                        </div>
+                        <div className="flex justify-between font-medium">
+                          <span className="text-muted-foreground">TDS Deducted:</span>
+                          <span className="text-amber-700 dark:text-amber-400">
+                            - {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(tdsCalc.tdsAmount)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between font-semibold pt-1 border-t border-amber-500/20 text-foreground">
+                          <span>Net Payable to Vendor:</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                            {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
+                              Math.max(0, totals.grandTotal - tdsCalc.tdsAmount)
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
               <Button className="w-full mt-4" size="lg" onClick={handleSave}>

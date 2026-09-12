@@ -2,10 +2,11 @@
 
 import { useState, useMemo, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import {
   TrendingUp, TrendingDown, DollarSign, Wallet, ArrowUpRight,
   ArrowDownRight, BarChart3, FileText, Droplets, Users,
-  RefreshCw, Download
+  RefreshCw, Download, FileSpreadsheet, ArrowRight
 } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -188,6 +189,58 @@ export default function ReportsClient({
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* ── Statutory Indian Tax Banner ── */}
+      <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200/80 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-emerald-600 text-white rounded-lg shadow-sm">
+            <FileSpreadsheet className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm text-emerald-950">Indian Statutory GST Returns (GSTR-1 & GSTR-3B)</span>
+              <Badge variant="outline" className="bg-white/80 text-emerald-800 border-emerald-300 text-[10px]">
+                CGST & IGST Acts 2017
+              </Badge>
+            </div>
+            <p className="text-xs text-emerald-800/80 mt-0.5">
+              Access Outward Supplies (B2B, B2CL, B2CS, HSN Table 12), GSTR-3B monthly summary, Rule 88A tax set-off, and GSTN JSON exports.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <Button asChild size="sm" variant="outline" className="gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs">
+            <Link href="/finance/tax-australia">
+              🇦🇺 Australia BAS
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs">
+            <Link href="/finance/vat-uk">
+              🇬🇧 UK VAT (MTD)
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs">
+            <Link href="/finance/vat-ksa">
+              🇸🇦 KSA VAT
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline" className="gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs">
+            <Link href="/finance/vat-uae">
+              🇦🇪 UAE VAT
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+          <Button asChild size="sm" className="gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs">
+            <Link href="/finance/gst-returns">
+              🇮🇳 India GST
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* ── Tabbed Reports ── */}

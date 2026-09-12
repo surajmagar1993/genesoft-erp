@@ -38,6 +38,23 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 - **Multi-Currency Support**: Dynamic currency formatting ($, €, ₹, AED) and exchange rate-aware ledger balances.
 - **Invoice PDF Export**: Server-rendered PDF generation for Tax Invoices with HSN/SAC breakdown.
 
+### 💬 WhatsApp Business API Hub (`/crm/whatsapp`)
+- **Meta Cloud API v20.0**: Native WhatsApp messaging engine with webhook handshake and event ingestion (`/api/webhooks/whatsapp`).
+- **Triple Dispatch Modes**: Cloud API (official Meta gateway), Direct Link (`wa.me` deep links for WhatsApp Web/App), and Simulation.
+- **7 Statutory Templates**: Tax Invoices, Payment Receipts, Overdue Dunning, Sales Orders, Support Tickets, Welcome Onboarding, and Custom Messages with dynamic merge tags.
+- **1-Click Invoice Dispatch**: Direct WhatsApp modal dispatch from the invoice action toolbar (`/sales/invoices/[id]`).
+
+### 🛒 Retail POS & Customer Portal
+- **Walk-in / POS Terminal (`/sales/pos`)**: Fast-checkout register with product search, category filters, barcode wedge scanning, customer creation, split tender (Cash/Card/UPI), and instant thermal receipt printing.
+- **Customer Self-Service Portal (`/portal/[token]`)**: Client portal for viewing invoices, checking transaction history, making payments, and submitting support tickets without consuming user seats.
+
+### 🌍 Multi-Country Statutory Tax Engines
+- **India**: GST Returns GSTR-1 & GSTR-3B with Table 4 ITC balancing, E-Way Bill Rule 138 with distance calculators and NIC JSON, TDS & TCS with 206AA penalty and Form 26Q.
+- **UAE**: VAT (5%) Federal Decree-Law No. (8), 15-digit TRN, Form VAT201 7-Emirates supply apportionment, Article 48 RCM, and FTA FAF audit file exporter.
+- **Saudi Arabia (KSA)**: VAT (15%), ZATCA Fatoora Phase 1 & 2 UBL 2.1 XML, UTF-8 TLV Base64 QR code, bilingual invoices, and Zakat base calculator.
+- **United Kingdom**: HMRC MTD VAT (20%, 5%, 0%), 9-digit VRN Modulus 97 validation, MTD 9-Box return compiler, and HMRC JSON/CSV exports.
+- **Australia**: ATO GST (10%), 11-digit ABN Modulus 89 validation, BAS Form (G1-G11, 1A, 1B, 9), and PAYG withholding.
+
 ### 📤 Bulk Data Management
 - **Import/Export**: Bulk CSV import and export for Contacts & Products using `papaparse`.
 - **Batch Processing**: High-performance insertion using Supabase-native array batching.

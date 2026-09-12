@@ -30,6 +30,7 @@ function NewInvoiceFormWrapper() {
 
         const { error } = await createInvoice({
             invoice_number: data.invoiceNumber,
+            type: data.type || "TAX_INVOICE",
             customer_name: data.customerName,
             customer_email: data.customerEmail,
             invoice_date: data.invoiceDate,
@@ -40,6 +41,10 @@ function NewInvoiceFormWrapper() {
             discount_type: data.discountType,
             notes: data.notes,
             terms_and_conditions: data.termsAndConditions,
+            declaration: data.declaration,
+            signatory_name: data.signatoryName,
+            signatory_designation: data.signatoryDesignation,
+            signature_url: data.signatureUrl,
             // GST header
             supplier_gstin: data.supplierGstin,
             customer_gstin: data.customerGstin,

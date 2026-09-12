@@ -1,6 +1,6 @@
 # 🤖 AI System Context — Genesoft ERP & CRM
 
-> **Last Updated:** 2026-09-10
+> **Last Updated:** 2026-09-12
 
 ## 🎯 Project Overview
 This repository contains the **Genesoft ERP & CRM**, a multi-tenant SaaS application.
@@ -31,7 +31,7 @@ This project uses several Markdown files to track state and requirements:
 The database uses a strict multi-tenant architecture with Row-Level Security handled via Supabase RLS policies.
 *   **Tenant Mapping**: Every major table (`User`, `Contact`, `Product`, `Invoice`, etc.) **MUST** contain a `tenantId` mapping to the `Tenant` schema.
 *   **Users**: Linked to Supabase Auth via `authId` mapped against the `Tenant`.
-*   **Models built so far**: Accounts (CoA), Contacts, Companies, Leads, Deals, Products, TaxGroups, TaxRates, Invoices, InvoiceItems (`invoice_line_items`), Payments, Tasks, CommunicationLog, LedgerEntry, Bill, BillItem, SupportTicket, SupportMessage, AdminAuditLog, SystemLog, PricingPlan.
+*   **Models built**: Accounts (CoA), Contacts, Companies, Leads, Deals, Products, TaxGroups, TaxRates, Invoices, InvoiceItems (`invoice_line_items`), Payments, Tasks, CommunicationLog, LedgerEntry, Bill, BillItem, SupportTicket, SupportMessage, AdminAuditLog, SystemLog, PricingPlan, Warehouse, WarehouseStock, StockMovement, PurchaseOrder, PurchaseOrderItem, Form, FormSubmission, RentalAsset, RentalAgreement, PortalTicket, PortalTicketMessage.
 
 ## ⚠️ Critical Rules for AI Contributors
 
@@ -56,6 +56,12 @@ health.metrics?.tenants ?? 0
 ### Rule 4: React 19 Purity & State Sync
 *   **Impure Functions**: Never use `Date.now()`, `Math.random()`, or `new Date()` directly during the render phase or in `useState` initializers (unless using a stable ID). These cause hydration mismatches and React 19 lint errors. Generate these in `useEffect` or on the server.
 *   **State Synchronization**: Avoid calling `setState` inside `useEffect` logic if it's dependent on props (cascading renders). Instead, perform state updates during the render phase using the "derived state" or "previous prop check" pattern.
+
+### Rule 5: Tenant Context Helper Import
+Always import `getTenantId` from `@/lib/get-tenant-id` (NOT from `@/lib/auth`).
+
+### Rule 6: Knowledge Graph Synchronization
+Per user-defined rules, after completing code changes in a session, always execute `graphify update .` to keep the knowledge graph synchronized.
 
 ---
 
@@ -146,11 +152,30 @@ Full multi-depot stock management under `/inventory`:
 - **Database**: `warehouses`, `warehouse_stocks`, and `stock_movements` with RLS.
 - **Auto-Provisioning**: Automatically creates default `WH-MAIN` and links products upon initial tenant access.
 
+## 💬 WhatsApp Business API Hub (Completed — 2026-09-12)
+- **`app/src/lib/whatsapp-engine.ts`**: Meta Graph API v20.0 client, E.164 phone normalizer (IN, US, UK, AE, SA, AU), 7 statutory templates, 1-click `wa.me` links, and webhook parser.
+- **`app/src/app/actions/crm/whatsapp.ts`**: Config management, message/invoice dispatch, and communication timeline sync.
+- **`app/src/app/api/webhooks/whatsapp/route.ts`**: Public challenge verification and delivery event webhook receiver.
+- **`app/src/app/(dashboard)/crm/whatsapp/`**: 4-KPI studio with conversational WhatsApp bubbles, invoice dispatcher, and Meta gateway configuration desk.
+- **`app/src/app/(dashboard)/sales/invoices/[id]/`**: In-place WhatsApp modal dispatch from invoice action toolbar.
+
+## 🌍 Multi-Country Statutory Tax Engines (Completed — 2026-09-12)
+Pure TypeScript statutory tax calculation engines located in `app/src/lib/`:
+- **India**: `gst-returns-engine.ts` (GSTR-1, GSTR-3B), `eway-bill-engine.ts` (Rule 138 CGST, distance), `tds-engine.ts` (194C/J/I/H/Q/A, 206AA).
+- **UAE**: `uae-vat-engine.ts` (5% VAT, 15-digit TRN, Form VAT201, 7 Emirates supply split, FAF audit file).
+- **KSA**: `ksa-zatca-engine.ts` (15% VAT, ZATCA Fatoora Phase 1 & 2 UBL 2.1 XML, TLV Base64 QR code, Zakat base).
+- **UK**: `uk-vat-engine.ts` (20% Standard, 5% Reduced, 0% Zero, Modulus 97 VRN, HMRC MTD 9-Box return).
+- **Australia**: `australia-tax-engine.ts` (10% GST, Modulus 89 ABN, ATO BAS Form, PAYG Option 4).
+
+## 🛒 Retail POS & Customer Portal (Completed — 2026-09-12)
+- **`app/src/app/(dashboard)/sales/pos/`**: Full-screen retail POS terminal with product search, cart, barcode scanner, walk-in creation, multi-tender payment, and receipt printing.
+- **`app/src/app/portal/[token]/`**: Token-authenticated customer self-service center for viewing invoices, settling balances, and submitting support tickets without requiring a SaaS user seat.
+
 ## 🚦 Contribution Workflow (For AI Agents)
 1. **Never** deviate from `lucide-react` or `shadcn/ui` components for base UI.
 2. **Never** put hardcoded example data in form placeholders (see Rule 1 above).
 3. **Always** add `export const dynamic = "force-dynamic"` to new API routes (see Rule 2 above).
 4. Always write UI first in standard TSX, then wire it up to server actions.
 5. Once a module feature is complete, update `TASK_TRACKER.md` and remove it from `REMAINING_TASKS.md`.
-6. Ensure components that interact with the database utilize the `tenantId` parameter from the active session context.
-7. **Next active block**: P2 Core Operations: Purchase & Vendor Management (`/purchase`) — Supplier directory, Purchase Orders (PO) workflow, vendor bill linking, and receipt tracking.
+6. Ensure components that interact with the database utilize the `tenantId` parameter from `@/lib/get-tenant-id`.
+7. **Next active block**: Integrations: Stripe / PayPal (`/settings` or `/finance`) — International credit card checkout and multi-currency payment processing alongside Razorpay.

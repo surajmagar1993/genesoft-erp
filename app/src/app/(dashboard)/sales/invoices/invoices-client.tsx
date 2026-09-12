@@ -26,6 +26,10 @@ const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | 
     ACCEPTED: { label: "Accepted", variant: "outline", icon: CheckCircle2 },
     REJECTED: { label: "Rejected", variant: "destructive", icon: XCircle },
     EXPIRED: { label: "Expired", variant: "secondary", icon: Clock },
+    PAID: { label: "Paid", variant: "default", icon: CheckCircle2 },
+    PARTIALLY_PAID: { label: "Partially Paid", variant: "outline", icon: Clock },
+    OVERDUE: { label: "Overdue", variant: "destructive", icon: Clock },
+    CANCELLED: { label: "Cancelled", variant: "destructive", icon: XCircle },
 }
 
 import { formatCurrency } from "@/lib/utils"
@@ -52,6 +56,7 @@ export default function InvoicesClient({ invoices: initialInvoices }: Props) {
     const [invoices, setInvoices] = useState<InvoiceDB[]>(initialInvoices)
     const [searchQuery, setSearchQuery] = useState("")
     const [filterStatus, setFilterStatus] = useState<"all" | InvoiceStatus>("all")
+    const [filterType, setFilterType] = useState<"all" | "TAX_INVOICE" | "PROFORMA">("all")
     const [isPending, startTransition] = useTransition()
 
     const filteredInvoices = invoices.filter((inv) => {
@@ -59,7 +64,10 @@ export default function InvoicesClient({ invoices: initialInvoices }: Props) {
             inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
             inv.customer_name.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesStatus = filterStatus === "all" || inv.status === filterStatus
-        return matchesSearch && matchesStatus
+        const matchesType =
+            filterType === "all" ||
+            (filterType === "PROFORMA" ? inv.type === "PROFORMA" : inv.type !== "PROFORMA")
+        return matchesSearch && matchesStatus && matchesType
     })
 
     const handleDelete = (id: string) => {
@@ -166,14 +174,46 @@ export default function InvoicesClient({ invoices: initialInvoices }: Props) {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            <Badge
-                                variant={filterStatus === "all" ? "default" : "outline"}
-                                className="cursor-pointer px-3 py-1"
-                                onClick={() => setFilterStatus("all")}
-                            >
-                                All
-                            </Badge>
+                        {/* Document Type Tabs */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex rounded-md border p-0.5 bg-muted/40">
+                                <Button
+                                    type="button"
+                                    variant={filterType === "all" ? "default" : "ghost"}
+                                    size="sm"
+                                    className="h-7 text-xs px-2.5"
+                                    onClick={() => setFilterType("all")}
+                                >
+                                    All ({invoices.length})
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={filterType === "TAX_INVOICE" ? "default" : "ghost"}
+                                    size="sm"
+                                    className="h-7 text-xs px-2.5"
+                                    onClick={() => setFilterType("TAX_INVOICE")}
+                                >
+                                    Tax Invoices ({invoices.filter((i) => i.type !== "PROFORMA").length})
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant={filterType === "PROFORMA" ? "default" : "ghost"}
+                                    size="sm"
+                                    className="h-7 text-xs px-2.5 text-amber-700 dark:text-amber-400"
+                                    onClick={() => setFilterType("PROFORMA")}
+                                >
+                                    Proforma ({invoices.filter((i) => i.type === "PROFORMA").length})
+                                </Button>
+                            </div>
+
+                            <div className="flex flex-wrap gap-1.5 ml-auto">
+                                <Badge
+                                    variant={filterStatus === "all" ? "default" : "outline"}
+                                    className="cursor-pointer px-2.5 py-1 text-xs"
+                                    onClick={() => setFilterStatus("all")}
+                                >
+                                    All Statuses
+                                </Badge>
                             {(Object.keys(statusConfig) as InvoiceStatus[]).map((s) => {
                                 const cfg = statusConfig[s]
                                 return (
@@ -189,6 +229,7 @@ export default function InvoicesClient({ invoices: initialInvoices }: Props) {
                             })}
                         </div>
                     </div>
+                </div>
 
                     <div className="rounded-md border bg-muted/30">
                         <Table>
@@ -216,9 +257,18 @@ export default function InvoicesClient({ invoices: initialInvoices }: Props) {
                                         const cfg = statusConfig[inv.status]
                                         const StatusIcon = cfg.icon
                                         return (
-                                            <TableRow key={inv.id}>
-                                                <TableCell className="font-medium">{inv.invoice_number}</TableCell>
-                                                <TableCell>
+                                            <TableRow key={inv.id} className="cursor-pointer hover:bg-muted/40">
+                                                <TableCell className="font-medium" onClick={() => router.push(`/sales/invoices/${inv.id}`)}>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-primary">{inv.invoice_number}</span>
+                                                        {inv.type === "PROFORMA" && (
+                                                            <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-500/10 font-bold uppercase">
+                                                                PROFORMA
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell onClick={() => router.push(`/sales/invoices/${inv.id}`)}>
                                                     <div className="flex flex-col">
                                                         <span className="font-medium">{inv.customer_name}</span>
                                                         <span className="text-xs text-muted-foreground">{inv.customer_email}</span>

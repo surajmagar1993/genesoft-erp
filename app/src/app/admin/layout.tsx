@@ -21,6 +21,7 @@ import {
     Globe,
     Activity,
     Shield,
+    Mail,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -72,6 +73,7 @@ const adminNavigation = [
     {
         label: "Global Settings",
         items: [
+            { name: "Email Templates", href: "/admin/email-templates", icon: Mail },
             { name: "Regions", href: "/admin/regions", icon: Globe },
             { name: "Platform Security", href: "/admin/security", icon: Shield },
             { name: "System Health", href: "/admin/health", icon: Activity },

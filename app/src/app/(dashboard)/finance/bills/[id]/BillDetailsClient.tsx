@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, CreditCard, Pencil, Trash2, FileText, Wallet, Calendar, User } from "lucide-react"
+import { ArrowLeft, CreditCard, Pencil, Trash2, FileText, Wallet, Calendar, User, Percent, ExternalLink } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -61,7 +61,20 @@ export default function BillDetailsClient({ bill }: Props) {
     const payments = bill.payments || []
     const totalBillAmount = Number(bill.total || 0)
     const totalPaid = payments.reduce((acc: number, p: any) => acc + Number(p.amount), 0)
-    const balanceDue = Math.max(0, totalBillAmount - totalPaid)
+
+    const tdsInfo = useMemo(() => {
+        if (!bill.notes || !bill.notes.includes("TDS_DEDUCTION:")) return null
+        try {
+            const jsonStr = bill.notes.split("TDS_DEDUCTION:")[1]?.split("\n")[0]?.trim()
+            return JSON.parse(jsonStr)
+        } catch {
+            return null
+        }
+    }, [bill.notes])
+
+    const tdsAmount = tdsInfo ? Number(tdsInfo.tdsAmount || 0) : 0
+    const netPayable = Math.max(0, totalBillAmount - tdsAmount)
+    const balanceDue = tdsInfo ? Math.max(0, netPayable - totalPaid) : Math.max(0, totalBillAmount - totalPaid)
 
     // PAYMENT FORM MODAL STATE
     const [openPaymentModal, setOpenPaymentModal] = useState(false)
@@ -157,38 +170,81 @@ export default function BillDetailsClient({ bill }: Props) {
                         Pay Bill
                     </Button>
                 </div>
-            </div>
-
-            {/* Quick Stats Banner */}
+            </div>            {/* Quick Stats Banner */}
             <div className="grid gap-4 md:grid-cols-4">
                 <Card>
                     <CardContent className="pt-4 pb-3">
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Bill Amount</p>
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">
+                            {tdsInfo ? "Gross Bill Amount" : "Bill Amount"}
+                        </p>
                         <p className="text-xl font-bold">{formatCurrency(totalBillAmount, bill.currency_code)}</p>
                     </CardContent>
                 </Card>
-                <Card className="bg-emerald-500/10 border-emerald-500/20">
-                    <CardContent className="pt-4 pb-3">
-                        <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium uppercase tracking-wider mb-1">Paid</p>
-                        <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">
-                          {formatCurrency(totalPaid, bill.currency_code)}
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="bg-orange-500/10 border-orange-500/20 shadow-sm border-2">
-                    <CardContent className="pt-4 pb-3">
-                        <p className="text-xs text-orange-600 dark:text-orange-400 font-medium uppercase tracking-wider mb-1">Balance Due</p>
-                        <p className="text-xl font-bold text-orange-700 dark:text-orange-400">
-                          {formatCurrency(balanceDue, bill.currency_code)}
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-4 pb-3">
-                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Due Date</p>
-                        <p className="text-xl font-bold">{formatDate(bill.due_date)}</p>
-                    </CardContent>
-                </Card>
+
+                {tdsInfo ? (
+                    <Card className="bg-amber-500/10 border-amber-500/20 shadow-sm border-2">
+                        <CardContent className="pt-4 pb-3">
+                            <div className="flex items-center justify-between mb-1">
+                                <p className="text-xs text-amber-700 dark:text-amber-400 font-medium uppercase tracking-wider">
+                                    TDS Withheld ({tdsInfo.sectionCode})
+                                </p>
+                                <Badge variant="outline" className="text-[10px] bg-amber-100 text-amber-800 border-amber-300">
+                                    {tdsInfo.tdsRate}%
+                                </Badge>
+                            </div>
+                            <p className="text-xl font-bold text-amber-700 dark:text-amber-400">
+                                - {formatCurrency(tdsAmount, bill.currency_code)}
+                            </p>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <Card className="bg-emerald-500/10 border-emerald-500/20">
+                        <CardContent className="pt-4 pb-3">
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium uppercase tracking-wider mb-1">Paid</p>
+                            <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">
+                              {formatCurrency(totalPaid, bill.currency_code)}
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {tdsInfo ? (
+                    <Card className="bg-emerald-500/10 border-emerald-500/20">
+                        <CardContent className="pt-4 pb-3">
+                            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium uppercase tracking-wider mb-1">Paid</p>
+                            <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400">
+                              {formatCurrency(totalPaid, bill.currency_code)}
+                            </p>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <Card className="bg-orange-500/10 border-orange-500/20 shadow-sm border-2">
+                        <CardContent className="pt-4 pb-3">
+                            <p className="text-xs text-orange-600 dark:text-orange-400 font-medium uppercase tracking-wider mb-1">Balance Due</p>
+                            <p className="text-xl font-bold text-orange-700 dark:text-orange-400">
+                              {formatCurrency(balanceDue, bill.currency_code)}
+                            </p>
+                        </CardContent>
+                    </Card>
+                )}
+
+                {tdsInfo ? (
+                    <Card className="bg-orange-500/10 border-orange-500/20 shadow-sm border-2">
+                        <CardContent className="pt-4 pb-3">
+                            <p className="text-xs text-orange-600 dark:text-orange-400 font-medium uppercase tracking-wider mb-1">Net Balance Due</p>
+                            <p className="text-xl font-bold text-orange-700 dark:text-orange-400">
+                              {formatCurrency(balanceDue, bill.currency_code)}
+                            </p>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <Card>
+                        <CardContent className="pt-4 pb-3">
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Due Date</p>
+                            <p className="text-xl font-bold">{formatDate(bill.due_date)}</p>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -214,6 +270,19 @@ export default function BillDetailsClient({ bill }: Props) {
                                 <span className="text-muted-foreground">Currency</span>
                                 <span className="font-medium">{bill.currency_code}</span>
                             </div>
+                            {tdsInfo && (
+                                <div className="pt-2 border-t">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        className="w-full text-xs text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40" 
+                                        onClick={() => router.push("/finance/tds")}
+                                    >
+                                        <Percent className="mr-1.5 h-3.5 w-3.5 text-amber-600" />
+                                        Open TDS Studio
+                                    </Button>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -227,6 +296,13 @@ export default function BillDetailsClient({ bill }: Props) {
                              <p className="font-semibold text-base">{bill.contacts?.company_name || bill.contacts?.display_name}</p>
                              <p className="text-muted-foreground">{bill.contacts?.email}</p>
                              <p className="text-muted-foreground">{bill.contacts?.phone}</p>
+                             {bill.contacts?.pan && (
+                                 <div className="pt-2">
+                                     <span className="text-xs font-mono bg-muted px-2 py-1 rounded font-semibold text-foreground">
+                                         PAN: {bill.contacts.pan}
+                                     </span>
+                                 </div>
+                             )}
                         </CardContent>
                     </Card>
                 </div>
@@ -259,18 +335,36 @@ export default function BillDetailsClient({ bill }: Props) {
                                 </TableBody>
                             </Table>
                             <div className="p-6 border-t bg-muted/20 flex flex-col items-end space-y-2">
-                                <div className="flex justify-between w-full max-w-[200px] text-sm">
+                                <div className="flex justify-between w-full max-w-[260px] text-sm">
                                     <span className="text-muted-foreground">Subtotal:</span>
                                     <span>{formatCurrency(Number(bill.subtotal), bill.currency_code)}</span>
                                 </div>
-                                <div className="flex justify-between w-full max-w-[200px] text-sm">
-                                    <span className="text-muted-foreground">Tax:</span>
+                                <div className="flex justify-between w-full max-w-[260px] text-sm">
+                                    <span className="text-muted-foreground">Tax (GST):</span>
                                     <span>{formatCurrency(Number(bill.tax_amount), bill.currency_code)}</span>
                                 </div>
-                                <div className="flex justify-between w-full max-w-[200px] text-lg font-bold border-t pt-2">
-                                    <span>Total:</span>
-                                    <span className="text-primary">{formatCurrency(totalBillAmount, bill.currency_code)}</span>
+                                <div className="flex justify-between w-full max-w-[260px] text-base font-medium border-t pt-2">
+                                    <span>Gross Total:</span>
+                                    <span>{formatCurrency(totalBillAmount, bill.currency_code)}</span>
                                 </div>
+                                {tdsInfo && (
+                                    <>
+                                        <div className="flex justify-between w-full max-w-[260px] text-sm text-amber-700 dark:text-amber-400 font-medium">
+                                            <span>Less: TDS (Sec {tdsInfo.sectionCode} @ {tdsInfo.tdsRate}%):</span>
+                                            <span>- {formatCurrency(tdsAmount, bill.currency_code)}</span>
+                                        </div>
+                                        <div className="flex justify-between w-full max-w-[260px] text-lg font-bold border-t pt-2">
+                                            <span>Net Payable:</span>
+                                            <span className="text-emerald-600 dark:text-emerald-400">{formatCurrency(netPayable, bill.currency_code)}</span>
+                                        </div>
+                                    </>
+                                )}
+                                {!tdsInfo && (
+                                    <div className="flex justify-between w-full max-w-[260px] text-lg font-bold border-t pt-2">
+                                        <span>Total:</span>
+                                        <span className="text-primary">{formatCurrency(totalBillAmount, bill.currency_code)}</span>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -334,6 +428,20 @@ export default function BillDetailsClient({ bill }: Props) {
                         <DialogTitle>Record Payment</DialogTitle>
                     </DialogHeader>
                     <form onSubmit={handleRecordPayment} className="space-y-4 py-4">
+                        {tdsInfo && (
+                            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs space-y-1 text-amber-800 dark:text-amber-300">
+                                <div className="font-semibold flex items-center justify-between">
+                                    <span className="flex items-center gap-1.5">
+                                        <Percent className="h-3.5 w-3.5 text-amber-600" />
+                                        TDS Deducted at Source (Sec {tdsInfo.sectionCode} @ {tdsInfo.tdsRate}%)
+                                    </span>
+                                    <span>- {formatCurrency(tdsAmount, bill.currency_code)}</span>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground">
+                                    Gross Bill: {formatCurrency(totalBillAmount, bill.currency_code)} | Net Vendor Payable: {formatCurrency(netPayable, bill.currency_code)}
+                                </p>
+                            </div>
+                        )}
                         <div className="grid gap-2">
                             <Label htmlFor="amount">Amount *</Label>
                             <Input

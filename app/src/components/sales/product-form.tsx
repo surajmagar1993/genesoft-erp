@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
+import { BarcodeDisplay } from "@/components/inventory/barcode-display"
+import { Barcode as BarcodeIcon, Sparkles, QrCode as QrIcon } from "lucide-react"
 
 export interface ProductFormData {
     id?: string
@@ -21,6 +23,7 @@ export interface ProductFormData {
     modelNo: string
     serialNo: string
     sku: string
+    barcode?: string
     hsnSacCode: string
     description: string
     customAttributes: { key: string; value: string }[]
@@ -40,6 +43,7 @@ export const defaultProductForm: ProductFormData = {
     modelNo: "",
     serialNo: "",
     sku: "",
+    barcode: "",
     hsnSacCode: "",
     description: "",
     customAttributes: [],
@@ -61,13 +65,27 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
     const mode = initialData ? "edit" : "create"
     const [form, setForm] = useState<ProductFormData>(initialData || defaultProductForm)
     const [isSaving, setIsSaving] = useState(false)
+    const [previewBarcodeType, setPreviewBarcodeType] = useState<"CODE128" | "QR">("CODE128")
 
     useEffect(() => {
-        if (initialData) setForm(initialData)
+        if (initialData) {
+            let bVal = initialData.barcode || ""
+            if (!bVal && initialData.customAttributes) {
+                const entry = initialData.customAttributes.find((a: any) => a.key === "barcode")
+                if (entry) bVal = entry.value
+            }
+            setForm({ ...initialData, barcode: bVal })
+        }
     }, [initialData])
 
     const update = (field: keyof ProductFormData, value: any) => {
         setForm((prev) => ({ ...prev, [field]: value }))
+    }
+
+    const generateBarcode = () => {
+        const randomDigits = Math.floor(100000000 + Math.random() * 900000000).toString()
+        const code = `890${randomDigits}`
+        update("barcode", code)
     }
 
     const handleSave = async () => {
@@ -77,7 +95,12 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
         }
         setIsSaving(true)
         try {
-            await onSave(form)
+            const currentAttrs = [...(form.customAttributes || [])]
+            const filteredAttrs = currentAttrs.filter((a) => a.key !== "barcode")
+            if (form.barcode) {
+                filteredAttrs.push({ key: "barcode", value: form.barcode })
+            }
+            await onSave({ ...form, customAttributes: filteredAttrs })
         } catch (err) {
             console.error("onSave failed:", err)
         } finally {
@@ -197,7 +220,77 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                     id="sku"
                                     value={form.sku}
                                     onChange={(e) => update("sku", e.target.value)}
+                                    placeholder="e.g. SKU-PROD-001"
                                 />
+                            </div>
+                        </div>
+
+                        {/* Barcode & QR Code Section */}
+                        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 space-y-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div>
+                                    <Label htmlFor="barcode" className="font-bold flex items-center gap-1.5 text-slate-900 dark:text-slate-100">
+                                        <BarcodeIcon className="h-4 w-4 text-indigo-500" />
+                                        Barcode / EAN / UPC
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        Used for POS scanner checkout and inventory label printing. Falls back to SKU if blank.
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 text-xs gap-1 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800"
+                                        onClick={generateBarcode}
+                                    >
+                                        <Sparkles className="h-3 w-3" />
+                                        Auto-Generate
+                                    </Button>
+                                    <div className="flex rounded border p-0.5 bg-muted/40">
+                                        <Button
+                                            type="button"
+                                            variant={previewBarcodeType === "CODE128" ? "default" : "ghost"}
+                                            size="sm"
+                                            className="h-6 text-[11px] px-2"
+                                            onClick={() => setPreviewBarcodeType("CODE128")}
+                                        >
+                                            1D
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant={previewBarcodeType === "QR" ? "default" : "ghost"}
+                                            size="sm"
+                                            className="h-6 text-[11px] px-2"
+                                            onClick={() => setPreviewBarcodeType("QR")}
+                                        >
+                                            QR
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                                <div className="md:col-span-2">
+                                    <Input
+                                        id="barcode"
+                                        value={form.barcode || ""}
+                                        onChange={(e) => update("barcode", e.target.value)}
+                                        placeholder="Enter barcode or click Auto-Generate"
+                                        className="font-mono text-sm bg-white dark:bg-slate-800"
+                                    />
+                                </div>
+                                <div className="flex items-center justify-center p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 min-h-[56px]">
+                                    <BarcodeDisplay
+                                        value={form.barcode || form.sku || "SAMPLE-CODE"}
+                                        type={previewBarcodeType}
+                                        width={160}
+                                        height={45}
+                                        showText={true}
+                                        showActions={true}
+                                    />
+                                </div>
                             </div>
                         </div>
 

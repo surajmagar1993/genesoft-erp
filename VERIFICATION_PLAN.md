@@ -1,6 +1,6 @@
-# 🧪 Genesoft ERP & CRM — Phase 1 Verification Plan
+# 🧪 Genesoft ERP & CRM — Master Verification Plan (Phase 1 & Phase 2)
 
-This verification plan provides a systematic checklist and set of procedures to validate all Phase 1 (MVP) modules of the Genesoft ERP & CRM. It covers **automated checks**, **manual step-by-step UI test protocols**, and **database-level verification scripts**.
+This verification plan provides a systematic checklist and set of procedures to validate all Phase 1 (MVP) and Phase 2 (Growth) modules of the Genesoft ERP & CRM. It covers **automated checks**, **12 standalone verification scripts**, **manual step-by-step UI test protocols**, and **database-level verification scripts**.
 
 ---
 
@@ -23,6 +23,29 @@ Ensures that the database tables and columns match the active datamodel.
   npx prisma validate
   ```
 - **Expectation**: Schema compiles successfully without warnings or structural errors.
+
+### 1.3 Standalone Phase 2 Verification Test Suites (`app/scripts/`)
+Execute any of the 12 pure TypeScript verification suites to validate business logic, statutory calculations, and engine integrity:
+```bash
+# Integrations & Multi-Channel Communication
+npx tsx scripts/verify-whatsapp-integration.ts     # Meta Cloud API, E.164 normalization, templates, webhooks
+npx tsx scripts/verify-barcode-features.ts         # Code 128 / QR SVG rendering, stock adjustment logic
+
+# Multi-Country Tax & Statutory Compliance
+npx tsx scripts/verify-gst-returns.ts              # India GSTR-1, GSTR-3B & 2B reconciliation matrix
+npx tsx scripts/verify-eway-features.ts            # India E-Way Bill Rule 138, NIC JSON, distance calculation
+npx tsx scripts/verify-tds-features.ts             # India TDS/TCS sections, 206AA penalty, Form 26Q
+npx tsx scripts/verify-uae-vat.ts                  # UAE VAT (5%), 7 Emirates breakdown, FAF audit file
+npx tsx scripts/verify-ksa-zatca.ts                # KSA ZATCA Fatoora Phase 1 & 2, TLV QR, Zakat base
+npx tsx scripts/verify-uk-vat.ts                   # UK HMRC MTD VAT 9-Box, Modulus 97 VRN validation
+npx tsx scripts/verify-australia-tax.ts            # ATO BAS Form (G1-G11, 1A, 1B), Modulus 89 ABN validation
+
+# Platform Administration & SaaS Lifecycle
+npx tsx scripts/verify-email-templates.ts          # Transactional email presets, merge tags, Resend fallback
+npx tsx scripts/verify-saas-subscription.ts        # 4-Tier matrix, proration math, platform B2B invoices
+npx tsx scripts/verify-invoice-features.ts         # Terms & conditions, digital signatures, Proforma Invoices
+```
+- **Expectation**: All 12 test suites execute with code 0 and 100% assertions passing.
 
 ---
 

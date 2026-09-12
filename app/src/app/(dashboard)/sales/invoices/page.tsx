@@ -10,11 +10,12 @@ export default async function InvoicesPage({
 }) {
     const params = await searchParams
     const status = params.status as InvoiceStatus | undefined
+    const type = params.type as any
     const search = params.search as string | undefined
     const page = params.page ? parseInt(params.page as string) : 1
     const limit = params.limit ? parseInt(params.limit as string) : 20
 
-    const { data: invoices, total } = await getInvoices(page, limit, { status, search })
+    const { data: invoices, total } = await getInvoices(page, limit, { status, type, search })
     
     return <InvoicesClient initialInvoices={invoices} total={total} />
 }

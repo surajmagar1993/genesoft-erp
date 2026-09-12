@@ -394,7 +394,7 @@ export async function getVendors(limit: number = 100) {
 
   const { data, count, error } = await supabase
     .from("contacts")
-    .select("id, display_name, company_name", { count: "exact" })
+    .select("id, display_name, company_name, pan, type", { count: "exact" })
     .eq("tenant_id", tenantId)
     // .eq("type", "VENDOR") // Optional: filtering by type if enforced
     .eq("is_active", true)

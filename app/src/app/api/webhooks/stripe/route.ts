@@ -37,25 +37,73 @@ export async function POST(req: Request) {
 
   const session = event.data.object as Stripe.Checkout.Session
 
-  // 1. Handle Checkout Completion (First time sub)
+  // 1. Handle Checkout Completion
   if (event.type === "checkout.session.completed") {
-    const subscription = await stripe.subscriptions.retrieve(
-      session.subscription as string
-    )
+    // A. Check if this is a Customer Invoice Payment
+    if (session.metadata?.type === "INVOICE_PAYMENT" || session.metadata?.invoiceId) {
+      const invoiceId = session.metadata.invoiceId
+      const amount = session.amount_total ? session.amount_total / 100 : 0
+      const currency = (session.currency || "USD").toUpperCase()
 
-    if (!session?.metadata?.tenantId) {
-      return new NextResponse("Tenant ID missing in metadata", { status: 400 })
+      const invoice = await prisma.invoice.findUnique({
+        where: { id: invoiceId },
+        include: { contact: true },
+      })
+
+      if (invoice) {
+        await prisma.payment.create({
+          data: {
+            tenantId: invoice.tenantId,
+            invoiceId: invoice.id,
+            contactId: invoice.contactId,
+            amount: amount,
+            paymentDate: new Date(),
+            paymentMethod: "CREDIT_CARD",
+            type: "INBOUND",
+            reference: `STRIPE:${session.payment_intent || session.id}`,
+            notes: `Stripe online checkout completed (${session.id})`,
+            currencyCode: currency,
+          },
+        })
+
+        const allPayments = await prisma.payment.findMany({
+          where: { invoiceId: invoice.id },
+        })
+        const totalPaid = allPayments.reduce((s: number, p: any) => s + Number(p.amount), 0)
+        const isPaid = totalPaid >= Number(invoice.total)
+
+        await prisma.invoice.update({
+          where: { id: invoice.id },
+          data: { status: isPaid ? "PAID" : "PARTIAL" },
+        })
+      }
+
+      await prisma.processedStripeEvent.create({
+        data: { eventId: event.id },
+      })
+      return new NextResponse("Invoice payment processed", { status: 200 })
     }
 
-    await prisma.tenant.update({
-      where: { id: session.metadata.tenantId },
-      data: {
-        stripeSubscriptionId: subscription.id,
-        stripeCustomerId: subscription.customer as string,
-        plan: "PRO", // Defaulting to PRO or mapping from metadata.plan
-        isTrial: false,
-      },
-    })
+    // B. SaaS Subscription Checkout
+    if (session.subscription) {
+      const subscription = await stripe.subscriptions.retrieve(
+        session.subscription as string
+      )
+
+      if (!session?.metadata?.tenantId) {
+        return new NextResponse("Tenant ID missing in metadata", { status: 400 })
+      }
+
+      await prisma.tenant.update({
+        where: { id: session.metadata.tenantId },
+        data: {
+          stripeSubscriptionId: subscription.id,
+          stripeCustomerId: subscription.customer as string,
+          plan: "PRO",
+          isTrial: false,
+        },
+      })
+    }
   }
 
   // 2. Handle Subscription Updates (Renewals, Upgrades)

@@ -40,10 +40,36 @@ export interface InvoiceLineItem {
   hsnSac: string
 }
 
-export type InvoiceStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED"
+export type InvoiceStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "CANCELLED"
+
+export type InvoiceDocType = "TAX_INVOICE" | "PROFORMA"
+
+export const TERMS_PRESETS = [
+  {
+    id: "standard",
+    label: "Standard Commercial",
+    text: "1. Payment is due within 30 days of the invoice date.\n2. Overdue balances are subject to a late charge of 1.5% per month (18% per annum).\n3. Title of goods/licenses shall remain with the seller until full payment is received.\n4. Any disputes shall be subject to the exclusive jurisdiction of courts at seller's registered city.",
+  },
+  {
+    id: "saas",
+    label: "SaaS & Tech Services",
+    text: "1. Subscription access and service milestones are billed in advance.\n2. Deliverables are deemed accepted unless written notice is given within 7 calendar days.\n3. Uptime SLA commitments exclude scheduled maintenance and external network disruptions.\n4. All intellectual property remains the exclusive property of the service provider.",
+  },
+  {
+    id: "retail",
+    label: "Physical Goods & Delivery",
+    text: "1. Consignments must be inspected immediately upon physical receipt.\n2. In-transit damage or shortages must be notified in writing within 48 hours of delivery.\n3. Goods once sold are non-refundable without prior written Return Material Authorization (RMA).\n4. OEM manufacturer warranties apply directly as per product documentation.",
+  },
+  {
+    id: "consulting",
+    label: "Milestones & Retainer",
+    text: "1. Invoices are submitted upon milestone completion per the approved Statement of Work.\n2. Approved operational and travel disbursements will be invoiced at actuals with receipts.\n3. Professional liability is limited to the total service fees paid under this invoice.\n4. Governed by national commercial arbitration standards.",
+  },
+]
 
 export interface InvoiceFormData {
   id?: string
+  type?: InvoiceDocType
   contactId?: string
   invoiceNumber: string
   customerName: string
@@ -55,6 +81,10 @@ export interface InvoiceFormData {
   lineItems: InvoiceLineItem[]
   notes: string
   termsAndConditions: string
+  declaration?: string
+  signatoryName?: string
+  signatoryDesignation?: string
+  signatureUrl?: string
   discount: number
   discountType: "PERCENT" | "FIXED"
   // GST fields
@@ -65,6 +95,7 @@ export interface InvoiceFormData {
 }
 
 export const defaultInvoiceForm: InvoiceFormData = {
+  type: "TAX_INVOICE",
   contactId: "",
   invoiceNumber: "",
   customerName: "",
@@ -75,8 +106,11 @@ export const defaultInvoiceForm: InvoiceFormData = {
   status: "DRAFT",
   lineItems: [],
   notes: "",
-  termsAndConditions:
-    "1. Payment due within 30 days of invoice date.\n2. Prices are exclusive of applicable taxes unless otherwise stated.\n3. This quotation is valid for the period mentioned above.",
+  termsAndConditions: TERMS_PRESETS[0].text,
+  declaration:
+    "We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct.",
+  signatoryName: "Authorized Representative",
+  signatoryDesignation: "Authorized Signatory",
   discount: 0,
   discountType: "PERCENT",
   supplierGstin: "",
@@ -235,6 +269,46 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
 
           {/* ── Tab 1: Customer & Details ──────────────────────────────────── */}
           <TabsContent value="details" className="space-y-5">
+            {/* Document Type Selector (Tax Invoice vs Proforma) */}
+            <div className="p-4 rounded-lg border bg-muted/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <Label className="text-sm font-semibold">Document Type</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Choose between an official GST Tax Invoice or a Proforma Invoice (Quotation).
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={form.type !== "PROFORMA" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    update("type", "TAX_INVOICE")
+                    if (form.invoiceNumber.startsWith("PI-")) {
+                      update("invoiceNumber", form.invoiceNumber.replace(/^PI-/, "INV-"))
+                    }
+                  }}
+                  className="text-xs h-8"
+                >
+                  Tax Invoice (INV-)
+                </Button>
+                <Button
+                  type="button"
+                  variant={form.type === "PROFORMA" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    update("type", "PROFORMA")
+                    if (form.invoiceNumber.startsWith("INV-")) {
+                      update("invoiceNumber", form.invoiceNumber.replace(/^INV-/, "PI-"))
+                    }
+                  }}
+                  className="text-xs h-8 border-amber-500/40 text-amber-700 dark:text-amber-400"
+                >
+                  Proforma Invoice (PI-)
+                </Button>
+              </div>
+            </div>
+
             {/* Invoice metadata */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -692,20 +766,111 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="termsAndConditions">Terms &amp; Conditions</Label>
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <Label htmlFor="termsAndConditions" className="text-sm font-semibold">
+                  Terms &amp; Conditions
+                </Label>
+                {/* Presets Button Group */}
+                <div className="flex flex-wrap gap-1.5">
+                  {TERMS_PRESETS.map((preset) => (
+                    <Button
+                      key={preset.id}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs h-7 px-2.5"
+                      onClick={() => update("termsAndConditions", preset.text)}
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <Textarea
                 id="termsAndConditions"
                 value={form.termsAndConditions}
                 onChange={(e) => update("termsAndConditions", e.target.value)}
-                rows={6}
+                rows={5}
+                placeholder="Enter formal payment terms, delivery conditions, jurisdiction clauses..."
               />
+            </div>
+
+            {/* Statutory GST Declaration */}
+            <div className="space-y-2 rounded-lg border p-4 bg-muted/20">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="declaration" className="text-sm font-semibold">
+                  Statutory GST Declaration
+                </Label>
+                <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                  Statutory Rule
+                </Badge>
+              </div>
+              <Textarea
+                id="declaration"
+                value={
+                  form.declaration ??
+                  "We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct."
+                }
+                onChange={(e) => update("declaration", e.target.value)}
+                rows={2}
+                className="text-xs"
+              />
+            </div>
+
+            {/* Authorized Signatory Configuration */}
+            <div className="rounded-lg border p-4 bg-card space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">Authorized Signatory &amp; Seal</Label>
+                <Badge variant="outline" className="text-[10px] text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                  Digital Authenticated
+                </Badge>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="signatoryName" className="text-xs text-muted-foreground">
+                    Signatory Name
+                  </Label>
+                  <Input
+                    id="signatoryName"
+                    value={form.signatoryName ?? "Authorized Representative"}
+                    onChange={(e) => update("signatoryName", e.target.value)}
+                    placeholder="e.g. John Doe / Founder"
+                    className="text-sm h-8"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="signatoryDesignation" className="text-xs text-muted-foreground">
+                    Designation / Title
+                  </Label>
+                  <Input
+                    id="signatoryDesignation"
+                    value={form.signatoryDesignation ?? "Authorized Signatory"}
+                    onChange={(e) => update("signatoryDesignation", e.target.value)}
+                    placeholder="e.g. Director / Partner / Manager"
+                    className="text-sm h-8"
+                  />
+                </div>
+              </div>
             </div>
 
             {/* ── Final Summary Card ─────────────────────────────────────── */}
             <div className="rounded-lg border p-5 space-y-3">
               <h4 className="font-medium text-sm">Invoice Summary</h4>
               <div className="grid grid-cols-2 gap-y-2 text-sm">
+                <span className="text-muted-foreground">Document Type</span>
+                <span className="text-right font-medium">
+                  {form.type === "PROFORMA" ? (
+                    <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-700 dark:text-amber-400">
+                      Proforma Invoice
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs border-blue-500/40 text-blue-600">
+                      Tax Invoice
+                    </Badge>
+                  )}
+                </span>
+
                 <span className="text-muted-foreground">Customer</span>
                 <span className="text-right font-medium">{form.customerName || "—"}</span>
 

@@ -2,7 +2,7 @@
 
 **Project:** Multi-Platform SaaS ERP & CRM
 **Company:** Genesoft Infotech Private Limited
-**Date:** 2026-09-10 | **Status:** In Development (P1 MVP Complete + P2 Admin Governance, Platform Security & Multi-Warehouse Inventory Live)
+**Date:** 2026-09-12 | **Status:** P1 Complete + P2 Growth (~98% Complete: Multi-Country Tax Engines, Retail POS, Customer Portal, WhatsApp Business API, SaaS Subscription Lifecycle Live)
 
 ---
 
@@ -512,6 +512,11 @@ support_messages
 | 16 | **Multi-Warehouse 3-Tier Model** | Flat product stock | Enables localized SKU tracking and atomic inter-depot transfers with immutable audit ledger. |
 | 17 | **Platform Security & Governance Hub** | Ad-hoc env vars | Centralizes 2FA enforcement, IP firewall blocklists, and rate limits in `/admin/security`. |
 | 18 | **Monorepo Workspace Delegation** | Root standalone script | Guarantees standard Node.js hosting compatibility via root `package.json` with `"workspaces": ["app"]`. |
+| 19 | **Statutory Multi-Country Tax Engines** | 3rd-party tax APIs (Avalara, ClearTax) | Pure TypeScript engines for India, UAE, KSA, UK, and Australia provide zero-cost, offline-verifiable statutory returns and JSON/XML exports. |
+| 20 | **Multi-Mode WhatsApp Dispatch Engine** | Cloud API only | Support `CLOUD_API` (Meta Graph API v20.0), `DIRECT_LINK` (`wa.me`), and `SIMULATION` fallback modes for zero-friction invoice/receipt sharing. |
+| 21 | **Stateless Customer Portal Access** | Full SaaS user seat allocation | Time-bound token authentication allows clients to inspect invoices, make payments, and open support tickets without consuming user licenses. |
+| 22 | **Client-Side Barcode & Web Audio Engine** | Native device SDKs | HTML5 canvas SVG Code-128 / QR rendering and Web Audio API synthesizer provide fast, dependency-light scanner and POS hardware support. |
+| 23 | **SaaS Real-Time Proration Mathematics** | End-of-cycle only upgrades | Calculates used days, unused credit, and net payable today with automated platform B2B invoicing (`SAAS-INV-YYYY-XXXX`) and regional tax splits. |
 
 
 ---

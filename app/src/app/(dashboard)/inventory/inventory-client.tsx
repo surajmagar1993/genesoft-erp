@@ -28,8 +28,15 @@ import {
     MoveRight,
     SlidersHorizontal,
     Tag,
-    Pencil
+    Pencil,
+    Printer,
+    ScanLine,
+    Barcode as BarcodeIcon,
+    QrCode as QrIcon,
 } from "lucide-react"
+import { BarcodeDisplay } from "@/components/inventory/barcode-display"
+import { BarcodeLabelPrinter } from "@/components/inventory/barcode-label-printer"
+import { BarcodeScannerModal } from "@/components/inventory/barcode-scanner-modal"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -75,7 +82,11 @@ interface InventoryClientProps {
 export function InventoryClient({ initialData }: InventoryClientProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [activeTab, setActiveTab] = useState<"stocks" | "warehouses" | "movements" | "alerts">("stocks")
+    const [activeTab, setActiveTab] = useState<"stocks" | "warehouses" | "movements" | "alerts" | "barcodes">("stocks")
+    const [isScannerOpen, setIsScannerOpen] = useState(false)
+    const [isLabelPrinterOpen, setIsLabelPrinterOpen] = useState(false)
+    const [selectedProductsForLabel, setSelectedProductsForLabel] = useState<InventoryProduct[]>([])
+    const [barcodeTabFormat, setBarcodeTabFormat] = useState<"CODE128" | "QR">("CODE128")
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("")
@@ -123,6 +134,7 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
         const matchesSearch = 
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (p.sku?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+            (p.barcode?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
             (p.category?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
             (p.brand?.toLowerCase() || "").includes(searchQuery.toLowerCase())
 
@@ -350,6 +362,27 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                     <Button 
                         variant="outline" 
                         size="sm" 
+                        className="gap-2 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 font-semibold"
+                        onClick={() => setIsScannerOpen(true)}
+                    >
+                        <ScanLine className="h-4 w-4" />
+                        Scan Barcode
+                    </Button>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="gap-2 font-semibold"
+                        onClick={() => {
+                            setSelectedProductsForLabel(initialData.products)
+                            setIsLabelPrinterOpen(true)
+                        }}
+                    >
+                        <Printer className="h-4 w-4" />
+                        Print Labels
+                    </Button>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
                         className="gap-2"
                         onClick={() => {
                             if (initialData.products.length === 0) {
@@ -487,13 +520,17 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
 
             {/* Navigation Tabs & Main Views */}
             <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 max-w-2xl">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 max-w-3xl">
                     <TabsTrigger value="stocks" className="gap-2">
                         <Package className="h-4 w-4" />
                         Stock Levels
                         <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
                             {initialData.products.length}
                         </Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="barcodes" className="gap-2">
+                        <BarcodeIcon className="h-4 w-4 text-indigo-500" />
+                        Barcodes & Labels
                     </TabsTrigger>
                     <TabsTrigger value="warehouses" className="gap-2">
                         <WarehouseIcon className="h-4 w-4" />
@@ -588,6 +625,7 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                                 <TableRow>
                                     <TableHead>Product / Item</TableHead>
                                     <TableHead>SKU & Category</TableHead>
+                                    <TableHead>Barcode</TableHead>
                                     <TableHead>Depot Allocation</TableHead>
                                     <TableHead className="text-right">Total Units</TableHead>
                                     <TableHead className="text-right">Unit Price</TableHead>
@@ -599,7 +637,7 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                             <TableBody>
                                 {filteredProducts.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                                        <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                                             <Boxes className="h-10 w-10 mx-auto mb-3 opacity-30" />
                                             <p className="font-medium">No items matched your inventory filters.</p>
                                             <p className="text-xs mt-1">Try clearing your search query or add items in the Sales Products catalog.</p>
@@ -617,6 +655,24 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                                             <TableCell>
                                                 <div className="font-mono text-xs">{product.sku || "—"}</div>
                                                 <div className="text-xs text-muted-foreground">{product.category || "General"}</div>
+                                            </TableCell>
+                                            <TableCell>
+                                                {product.barcode || product.sku ? (
+                                                    <div className="flex items-center gap-1">
+                                                        <BarcodeDisplay 
+                                                            value={product.barcode || product.sku || ""} 
+                                                            format="CODE128" 
+                                                            width={90} 
+                                                            height={24}
+                                                            showValue={true}
+                                                            allowCopy={true}
+                                                            allowZoom={true}
+                                                            className="p-0.5"
+                                                        />
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-xs text-muted-foreground italic">No barcode</span>
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="space-y-1">
@@ -661,6 +717,19 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm" 
+                                                        className="h-8 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                                                        title="Print Barcode Label"
+                                                        onClick={() => {
+                                                            setSelectedProductsForLabel([product])
+                                                            setIsLabelPrinterOpen(true)
+                                                        }}
+                                                    >
+                                                        <Printer className="h-3.5 w-3.5" />
+                                                        <span className="sr-only sm:not-sr-only">Label</span>
+                                                    </Button>
                                                     <Button 
                                                         variant="ghost" 
                                                         size="sm" 
@@ -948,6 +1017,240 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                                                         <Plus className="h-3.5 w-3.5" />
                                                         Receive Stock
                                                     </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        )
+                                    })
+                                )}
+                            </TableBody>
+                        </Table>
+                    </Card>
+                </TabsContent>
+
+                {/* TAB 5: Barcodes & Labels Studio */}
+                <TabsContent value="barcodes" className="space-y-4">
+                    {/* Launch Cards Banner */}
+                    <div className="grid gap-4 md:grid-cols-3">
+                        <Card className="bg-gradient-to-br from-indigo-50/50 via-background to-background dark:from-indigo-950/20 border-indigo-200/50 dark:border-indigo-800/50">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                                        <ScanLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                                        Barcode Scanner Desk
+                                    </CardTitle>
+                                    <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 border-indigo-500/20 text-[10px]">
+                                        Live
+                                    </Badge>
+                                </div>
+                                <CardDescription className="text-xs">
+                                    Scan with your device camera or plug in any high-speed USB/Bluetooth barcode gun.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Button 
+                                    className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm"
+                                    onClick={() => setIsScannerOpen(true)}
+                                >
+                                    <ScanLine className="h-4 w-4" />
+                                    Launch Scanner Desk
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="bg-gradient-to-br from-purple-50/50 via-background to-background dark:from-purple-950/20 border-purple-200/50 dark:border-purple-800/50">
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                                        <Printer className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                                        Printable Label Studio
+                                    </CardTitle>
+                                    <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-[10px]">
+                                        A4 & Thermal
+                                    </Badge>
+                                </div>
+                                <CardDescription className="text-xs">
+                                    Print A4 sticky sheets (24, 30, 40, 65 per sheet) or continuous direct thermal rolls.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <Button 
+                                    variant="outline" 
+                                    className="w-full gap-2 border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-semibold"
+                                    onClick={() => {
+                                        setSelectedProductsForLabel(initialData.products)
+                                        setIsLabelPrinterOpen(true)
+                                    }}
+                                >
+                                    <Printer className="h-4 w-4" />
+                                    Print All Catalog Labels ({initialData.products.length})
+                                </Button>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between">
+                                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                                        <BarcodeIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                                        Catalog Coverage
+                                    </CardTitle>
+                                    <Badge variant="secondary" className="text-[10px]">
+                                        {Math.round((initialData.products.filter(p => !!p.barcode || !!p.sku).length / (initialData.products.length || 1)) * 100)}%
+                                    </Badge>
+                                </div>
+                                <CardDescription className="text-xs">
+                                    All products with valid SKU or assigned custom barcode ready for instant scanning.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                <div className="flex items-baseline justify-between">
+                                    <span className="text-2xl font-bold">
+                                        {initialData.products.filter(p => !!p.barcode || !!p.sku).length}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        of {initialData.products.length} total items
+                                    </span>
+                                </div>
+                                <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+                                    <div 
+                                        className="bg-emerald-500 h-full rounded-full transition-all"
+                                        style={{ 
+                                            width: `${Math.round((initialData.products.filter(p => !!p.barcode || !!p.sku).length / (initialData.products.length || 1)) * 100)}%` 
+                                        }}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Filter & Format Selector Bar */}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-muted/40 p-3 rounded-lg border">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input 
+                                placeholder="Search by item name, SKU, or barcode number..." 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-9 h-9 text-xs bg-background"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center bg-background rounded-md border p-0.5 text-xs">
+                                <button
+                                    type="button"
+                                    onClick={() => setBarcodeTabFormat("CODE128")}
+                                    className={`flex items-center gap-1.5 px-3 py-1 rounded transition-colors ${
+                                        barcodeTabFormat === "CODE128" 
+                                            ? "bg-primary text-primary-foreground font-semibold shadow-xs" 
+                                            : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                >
+                                    <BarcodeIcon className="h-3.5 w-3.5" />
+                                    1D Code-128
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setBarcodeTabFormat("QR")}
+                                    className={`flex items-center gap-1.5 px-3 py-1 rounded transition-colors ${
+                                        barcodeTabFormat === "QR" 
+                                            ? "bg-primary text-primary-foreground font-semibold shadow-xs" 
+                                            : "text-muted-foreground hover:text-foreground"
+                                    }`}
+                                >
+                                    <QrIcon className="h-3.5 w-3.5" />
+                                    2D QR Code
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Barcodes Directory Table */}
+                    <Card>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Product / Item</TableHead>
+                                    <TableHead>SKU & Category</TableHead>
+                                    <TableHead>Encoded Value</TableHead>
+                                    <TableHead>Vector Preview</TableHead>
+                                    <TableHead className="text-right">Stock on Hand</TableHead>
+                                    <TableHead className="text-right">Unit Price</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredProducts.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
+                                            <BarcodeIcon className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                                            <p className="font-medium">No items matched your search criteria.</p>
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    filteredProducts.map(product => {
+                                        const codeValue = product.barcode || product.sku || ""
+                                        return (
+                                            <TableRow key={product.id}>
+                                                <TableCell>
+                                                    <div className="font-semibold text-sm">{product.name}</div>
+                                                    {product.brand && (
+                                                        <div className="text-xs text-muted-foreground">Brand: {product.brand}</div>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="font-mono text-xs">{product.sku || "—"}</div>
+                                                    <div className="text-xs text-muted-foreground">{product.category || "General"}</div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="font-mono text-xs font-semibold bg-muted/60 px-2 py-1 rounded w-fit">
+                                                        {codeValue || "—"}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {codeValue ? (
+                                                        <BarcodeDisplay 
+                                                            value={codeValue}
+                                                            format={barcodeTabFormat}
+                                                            width={barcodeTabFormat === "QR" ? 64 : 120}
+                                                            height={barcodeTabFormat === "QR" ? 64 : 32}
+                                                            showValue={barcodeTabFormat === "CODE128"}
+                                                            allowCopy={true}
+                                                            allowZoom={true}
+                                                        />
+                                                    ) : (
+                                                        <span className="text-xs text-muted-foreground italic">No code assigned</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell className="text-right font-bold text-sm">
+                                                    {product.stockQty.toLocaleString()} {product.unit}
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs">
+                                                    {formatCurrency(product.unitPrice)}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-8 text-xs gap-1"
+                                                            onClick={() => {
+                                                                setSelectedProductsForLabel([product])
+                                                                setIsLabelPrinterOpen(true)
+                                                            }}
+                                                        >
+                                                            <Printer className="h-3.5 w-3.5" />
+                                                            Print Label
+                                                        </Button>
+                                                        <Button 
+                                                            variant="ghost" 
+                                                            size="sm" 
+                                                            className="h-8 text-xs gap-1 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40"
+                                                            onClick={() => setIsScannerOpen(true)}
+                                                        >
+                                                            <ScanLine className="h-3.5 w-3.5" />
+                                                            Scan
+                                                        </Button>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         )
@@ -1337,6 +1640,25 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                     </form>
                 </DialogContent>
             </Dialog>
+
+            {/* MODAL 4: Barcode Scanner Desk */}
+            <BarcodeScannerModal 
+                isOpen={isScannerOpen}
+                onClose={() => setIsScannerOpen(false)}
+                warehouses={initialData.warehouses}
+                onStockUpdated={() => {
+                    startTransition(() => {
+                        router.refresh()
+                    })
+                }}
+            />
+
+            {/* MODAL 5: Barcode Label Printing Studio */}
+            <BarcodeLabelPrinter 
+                isOpen={isLabelPrinterOpen}
+                onClose={() => setIsLabelPrinterOpen(false)}
+                products={selectedProductsForLabel}
+            />
         </div>
     )
 }

@@ -28,6 +28,7 @@ export interface InventoryProduct {
     id: string
     name: string
     sku: string | null
+    barcode: string | null
     category: string | null
     brand: string | null
     unit: string
@@ -224,10 +225,14 @@ export async function getInventoryOverview(): Promise<InventoryOverviewData> {
             reorderPoint: Number(ws.reorderPoint)
         }))
 
+        const customAttrs = (typeof p.customAttributes === "object" && p.customAttributes !== null) ? p.customAttributes : {}
+        const barcode = (customAttrs as any).barcode || p.sku || null
+
         return {
             id: p.id,
             name: p.name,
             sku: p.sku,
+            barcode,
             category: p.category,
             brand: p.brand,
             unit: p.unit || "Nos",
@@ -631,4 +636,104 @@ export async function transferStock(data: {
 
     revalidatePath("/inventory")
     return { success: true, newSourceQty, newDestQty }
+}
+
+// ────────────────────────────────────────────
+// Barcode & QR Code Actions
+// ────────────────────────────────────────────
+
+export async function getProductByBarcode(code: string): Promise<{ product: any | null }> {
+    const tenantId = await getTenantId()
+    const clean = code.trim()
+    if (!clean) return { product: null }
+
+    // Direct lookup by SKU, serial number, or exact ID
+    const directMatch = await prisma.product.findFirst({
+        where: {
+            tenantId,
+            OR: [
+                { sku: { equals: clean, mode: "insensitive" } },
+                { serialNo: { equals: clean, mode: "insensitive" } },
+                { modelNo: { equals: clean, mode: "insensitive" } },
+            ]
+        },
+        include: {
+            warehouseStocks: {
+                include: {
+                    warehouse: {
+                        select: { id: true, name: true, code: true }
+                    }
+                }
+            }
+        }
+    })
+
+    let product = directMatch
+
+    // Fallback: check customAttributes JSON or search all products
+    if (!product) {
+        const candidates = await prisma.product.findMany({
+            where: { tenantId, isActive: true },
+            include: {
+                warehouseStocks: {
+                    include: {
+                        warehouse: { select: { id: true, name: true, code: true } }
+                    }
+                }
+            },
+            take: 250
+        })
+
+        product = candidates.find((p: any) => {
+            const attrs = (typeof p.customAttributes === "object" && p.customAttributes !== null) ? p.customAttributes : {}
+            const b = (attrs as any).barcode
+            return b && String(b).toLowerCase() === clean.toLowerCase()
+        }) || null
+    }
+
+    if (!product) return { product: null }
+
+    const customAttrs = (typeof product.customAttributes === "object" && product.customAttributes !== null) ? product.customAttributes : {}
+    const barcode = (customAttrs as any).barcode || product.sku || null
+
+    return {
+        product: {
+            id: product.id,
+            name: product.name,
+            sku: product.sku,
+            barcode,
+            category: product.category,
+            brand: product.brand,
+            unit: product.unit || "Nos",
+            unitPrice: Number(product.unitPrice),
+            currency: product.currency || "INR",
+            stockQty: Number(product.stockQty),
+            isActive: product.isActive,
+            warehouseBreakdown: product.warehouseStocks.map((ws: any) => ({
+                warehouseId: ws.warehouseId,
+                warehouseName: ws.warehouse.name,
+                warehouseCode: ws.warehouse.code,
+                quantity: Number(ws.quantity),
+                reorderPoint: Number(ws.reorderPoint)
+            }))
+        }
+    }
+}
+
+export async function quickScanAdjustStock(params: {
+    productId: string
+    warehouseId: string
+    quantity: number
+    type: "IN" | "OUT"
+    reason: string
+    referenceNo?: string
+}) {
+    return adjustStock({
+        productId: params.productId,
+        warehouseId: params.warehouseId,
+        quantity: params.quantity,
+        type: params.type,
+        reason: params.reason,
+        referenceNo: params.referenceNo
+    })
 }

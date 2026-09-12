@@ -40,6 +40,9 @@ import {
     updateTenantPlan, 
     updateTenantDetails 
 } from "@/app/actions/saas/admin"
+import { generateSaaSInvoice } from "@/app/actions/saas/subscription"
+import { formatSaaSInvoiceReceiptHtml, PlanTier, BillingCycle } from "@/lib/saas-subscription-engine"
+import { Printer, PlusCircle } from "lucide-react"
 
 export function TenantDetailClient({ tenant }: { tenant: any }) {
     const router = useRouter()
@@ -60,6 +63,51 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
         isActive: tenant.isActive ?? true,
         isTrial: tenant.isTrial ?? false
     })
+
+    // Platform Invoicing State
+    const [isInvoicingOpen, setIsInvoicingOpen] = useState(false)
+    const [invoiceTier, setInvoiceTier] = useState<PlanTier>(tenant.plan || "PRO")
+    const [invoiceCycle, setInvoiceCycle] = useState<BillingCycle>("MONTHLY")
+    const [isIssuingInvoice, setIsIssuingInvoice] = useState(false)
+
+    // Receipt Modal State
+    const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
+    const [isReceiptOpen, setIsReceiptOpen] = useState(false)
+
+    const subMeta = (tenant.settings as any)?.subscription || {}
+    const saasInvoices: any[] = Array.isArray(subMeta.invoices) ? subMeta.invoices : []
+
+    const handleIssueInvoice = async () => {
+        try {
+            setIsIssuingInvoice(true)
+            const res = await generateSaaSInvoice({
+                tenantId: tenant.id,
+                plan: invoiceTier,
+                billingCycle: invoiceCycle,
+            })
+            if (res.success) {
+                toast.success(`Platform subscription invoice ${res.invoice?.invoiceNumber} generated!`)
+                setIsInvoicingOpen(false)
+                router.refresh()
+            } else {
+                toast.error(res.error || "Failed to generate invoice")
+            }
+        } catch (err: any) {
+            toast.error(err.message || "Invoice generation failed")
+        } finally {
+            setIsIssuingInvoice(false)
+        }
+    }
+
+    const printReceipt = (inv: any) => {
+        const win = window.open("", "_blank")
+        if (win) {
+            win.document.write(formatSaaSInvoiceReceiptHtml(inv))
+            win.document.close()
+            win.focus()
+            setTimeout(() => win.print(), 250)
+        }
+    }
 
     const handleExtendTrial = async () => {
         try {
@@ -311,81 +359,208 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
 
             {/* Tab 1: Overview & Settings */}
             {activeTab === "overview" && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card className="border-primary/10 shadow-sm bg-card/60 backdrop-blur">
-                        <CardHeader className="bg-muted/20 border-b pb-3">
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-primary" />
-                                Organization Profile
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-4 space-y-3 text-sm">
-                            <div className="flex justify-between py-1.5 border-b border-border/50">
-                                <span className="text-muted-foreground">Entity Name</span>
-                                <span className="font-semibold">{tenant.name}</span>
-                            </div>
-                            <div className="flex justify-between py-1.5 border-b border-border/50">
-                                <span className="text-muted-foreground">Domain Identifier</span>
-                                <span className="font-mono text-xs">{tenant.domain || "Standard Tenant Subdomain"}</span>
-                            </div>
-                            <div className="flex justify-between py-1.5 border-b border-border/50">
-                                <span className="text-muted-foreground">Official Email</span>
-                                <span>{tenant.email || "Not specified"}</span>
-                            </div>
-                            <div className="flex justify-between py-1.5 border-b border-border/50">
-                                <span className="text-muted-foreground">Phone</span>
-                                <span>{tenant.phone || "Not specified"}</span>
-                            </div>
-                            <div className="flex justify-between py-1.5 border-b border-border/50">
-                                <span className="text-muted-foreground">Website</span>
-                                <span>{tenant.website ? <a href={tenant.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">{tenant.website}</a> : "Not specified"}</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-primary/10 shadow-sm bg-card/60 backdrop-blur">
-                        <CardHeader className="bg-muted/20 border-b pb-3">
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <Sparkles className="h-4 w-4 text-primary" />
-                                Subscription & Regional Compliance
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-4 space-y-3 text-sm">
-                            <div className="flex justify-between py-1.5 border-b border-border/50 items-center">
-                                <span className="text-muted-foreground">Current Plan</span>
-                                <div className="flex items-center gap-2">
-                                    <Badge variant="outline" className="font-bold">{tenant.plan}</Badge>
-                                    <select
-                                        value={tenant.plan}
-                                        onChange={e => handlePlanChange(e.target.value)}
-                                        disabled={isLoading}
-                                        className="h-7 text-xs rounded border bg-background px-2"
-                                    >
-                                        <option value="FREE">FREE</option>
-                                        <option value="BASIC">BASIC</option>
-                                        <option value="PRO">PRO</option>
-                                        <option value="ENTERPRISE">ENTERPRISE</option>
-                                    </select>
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card className="border-primary/10 shadow-sm bg-card/60 backdrop-blur">
+                            <CardHeader className="bg-muted/20 border-b pb-3">
+                                <CardTitle className="text-base flex items-center gap-2">
+                                    <Building2 className="h-4 w-4 text-primary" />
+                                    Organization Profile
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-4 space-y-3 text-sm">
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Entity Name</span>
+                                    <span className="font-semibold">{tenant.name}</span>
                                 </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Domain Identifier</span>
+                                    <span className="font-mono text-xs">{tenant.domain || "Standard Tenant Subdomain"}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Official Email</span>
+                                    <span>{tenant.email || "Not specified"}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Phone</span>
+                                    <span>{tenant.phone || "Not specified"}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Website</span>
+                                    <span>{tenant.website ? <a href={tenant.website} target="_blank" rel="noreferrer" className="text-primary hover:underline">{tenant.website}</a> : "Not specified"}</span>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-primary/10 shadow-sm bg-card/60 backdrop-blur">
+                            <CardHeader className="bg-muted/20 border-b pb-3">
+                                <CardTitle className="text-base flex items-center gap-2">
+                                    <Sparkles className="h-4 w-4 text-primary" />
+                                    Subscription & Regional Compliance
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="pt-4 space-y-3 text-sm">
+                                <div className="flex justify-between py-1.5 border-b border-border/50 items-center">
+                                    <span className="text-muted-foreground">Current Plan</span>
+                                    <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className="font-bold">{tenant.plan}</Badge>
+                                        <select
+                                            value={tenant.plan}
+                                            onChange={e => handlePlanChange(e.target.value)}
+                                            disabled={isLoading}
+                                            className="h-7 text-xs rounded border bg-background px-2"
+                                        >
+                                            <option value="FREE">FREE</option>
+                                            <option value="BASIC">BASIC</option>
+                                            <option value="PRO">PRO</option>
+                                            <option value="ENTERPRISE">ENTERPRISE</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Billing Cycle</span>
+                                    <span className="font-semibold">{subMeta.billingCycle || "MONTHLY"}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Period Renewal</span>
+                                    <span className="font-medium">
+                                        {subMeta.currentPeriodEnd ? format(new Date(subMeta.currentPeriodEnd), "MMM d, yyyy") : "Active Continuous"}
+                                    </span>
+                                </div>
+                                {subMeta.scheduledDowngrade && (
+                                    <div className="flex justify-between py-1.5 border-b border-border/50 bg-amber-500/10 px-2 rounded">
+                                        <span className="text-amber-700 dark:text-amber-400 font-medium">Scheduled Downgrade</span>
+                                        <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                            To {subMeta.scheduledDowngrade.plan} on {format(new Date(subMeta.scheduledDowngrade.effectiveDate), "MMM d, yyyy")}
+                                        </span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Country Jurisdiction</span>
+                                    <span className="font-semibold">{tenant.countryCode}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Base Currency</span>
+                                    <span className="font-semibold">{tenant.currencyCode}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Fiscal Year Start Month</span>
+                                    <span>Month {tenant.fiscalYearStart || 4}</span>
+                                </div>
+                                <div className="flex justify-between py-1.5 border-b border-border/50">
+                                    <span className="text-muted-foreground">Trial Expiration</span>
+                                    <span className="font-medium text-amber-600">
+                                        {tenant.trialEndsAt ? format(new Date(tenant.trialEndsAt), "MMM d, yyyy (h:mm a)") : "No active trial expiration"}
+                                    </span>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Platform Subscription Invoices & Billing History */}
+                    <Card className="border-primary/10 shadow-sm bg-card/60 backdrop-blur overflow-hidden">
+                        <CardHeader className="bg-muted/20 border-b pb-3 flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="text-base flex items-center gap-2">
+                                    <Receipt className="h-4 w-4 text-primary" />
+                                    Platform Subscription Invoices & Receipts
+                                </CardTitle>
+                                <CardDescription>
+                                    Super Admin platform billing records, automated B2B receipts, and proration audit slips
+                                </CardDescription>
                             </div>
-                            <div className="flex justify-between py-1.5 border-b border-border/50">
-                                <span className="text-muted-foreground">Country Jurisdiction</span>
-                                <span className="font-semibold">{tenant.countryCode}</span>
-                            </div>
-                            <div className="flex justify-between py-1.5 border-b border-border/50">
-                                <span className="text-muted-foreground">Base Currency</span>
-                                <span className="font-semibold">{tenant.currencyCode}</span>
-                            </div>
-                            <div className="flex justify-between py-1.5 border-b border-border/50">
-                                <span className="text-muted-foreground">Fiscal Year Start Month</span>
-                                <span>Month {tenant.fiscalYearStart || 4} (April default for IN)</span>
-                            </div>
-                            <div className="flex justify-between py-1.5 border-b border-border/50">
-                                <span className="text-muted-foreground">Trial Expiration</span>
-                                <span className="font-medium text-amber-600">
-                                    {tenant.trialEndsAt ? format(new Date(tenant.trialEndsAt), "MMM d, yyyy (h:mm a)") : "No active trial expiration"}
-                                </span>
-                            </div>
+                            <Button
+                                size="sm"
+                                onClick={() => setIsInvoicingOpen(true)}
+                                className="gap-1.5 font-semibold text-xs h-8"
+                            >
+                                <PlusCircle className="h-3.5 w-3.5" />
+                                Issue Platform Invoice
+                            </Button>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            {saasInvoices.length > 0 ? (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>Invoice #</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead>Plan & Cycle</TableHead>
+                                            <TableHead>Subtotal / Tax</TableHead>
+                                            <TableHead>Total Paid</TableHead>
+                                            <TableHead>Status</TableHead>
+                                            <TableHead className="text-right">Action</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {saasInvoices.map((inv: any) => (
+                                            <TableRow key={inv.id}>
+                                                <TableCell className="font-mono text-xs font-semibold">
+                                                    {inv.invoiceNumber}
+                                                </TableCell>
+                                                <TableCell className="text-xs">
+                                                    {format(new Date(inv.date), "MMM d, yyyy")}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Badge variant="outline" className="text-[11px] font-bold">
+                                                            {inv.plan}
+                                                        </Badge>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            ({inv.billingCycle})
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-xs">
+                                                    <div>{inv.currency} {Number(inv.subtotal).toFixed(2)}</div>
+                                                    <div className="text-[10px] text-muted-foreground">
+                                                        Tax ({inv.taxRate}%): {inv.currency} {Number(inv.taxAmount).toFixed(2)}
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-sm font-bold">
+                                                    {inv.currency} {Number(inv.total).toFixed(2)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px] uppercase font-bold">
+                                                        {inv.status || "PAID"}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-7 text-xs gap-1"
+                                                            onClick={() => {
+                                                                setSelectedInvoice(inv)
+                                                                setIsReceiptOpen(true)
+                                                            }}
+                                                        >
+                                                            <FileText className="h-3 w-3" />
+                                                            View Slip
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-7 text-xs gap-1"
+                                                            onClick={() => printReceipt(inv)}
+                                                        >
+                                                            <Printer className="h-3 w-3" />
+                                                            Print
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            ) : (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <Receipt className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                                    <p className="text-sm font-medium">No platform invoices issued yet</p>
+                                    <p className="text-xs mt-0.5">Click &quot;Issue Platform Invoice&quot; to generate an official B2B subscription invoice for this organization.</p>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
@@ -716,6 +891,158 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                 </Button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Issue Platform Invoice Modal */}
+            {isInvoicingOpen && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-card border border-border/80 rounded-xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4">
+                        <div className="flex items-center justify-between border-b pb-3">
+                            <h2 className="text-lg font-bold flex items-center gap-2">
+                                <Receipt className="h-5 w-5 text-primary" />
+                                Issue Platform Subscription Invoice
+                            </h2>
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setIsInvoicingOpen(false)}
+                                className="h-7 w-7 p-0"
+                            >
+                                ✕
+                            </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-medium">Subscription Tier</Label>
+                                <select
+                                    value={invoiceTier}
+                                    onChange={e => setInvoiceTier(e.target.value as PlanTier)}
+                                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                                >
+                                    <option value="FREE">FREE ($0)</option>
+                                    <option value="BASIC">BASIC (Starter)</option>
+                                    <option value="PRO">PRO (Growth)</option>
+                                    <option value="ENTERPRISE">ENTERPRISE (Scale)</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-medium">Billing Frequency</Label>
+                                <select
+                                    value={invoiceCycle}
+                                    onChange={e => setInvoiceCycle(e.target.value as BillingCycle)}
+                                    className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
+                                >
+                                    <option value="MONTHLY">Monthly</option>
+                                    <option value="ANNUAL">Annual (20% Discount)</option>
+                                </select>
+                            </div>
+
+                            <div className="p-3 bg-muted/40 rounded-lg border border-border/50 text-xs space-y-1 text-muted-foreground">
+                                <p className="font-semibold text-foreground">Invoice Specifications:</p>
+                                <p>• Country Jurisdiction: <span className="font-medium text-foreground">{tenant.countryCode}</span></p>
+                                <p>• Currency: <span className="font-medium text-foreground">{tenant.currencyCode}</span></p>
+                                <p>• Sequential format: <span className="font-mono text-primary font-semibold">SAAS-INV-{new Date().getFullYear()}-XXXX</span></p>
+                                <p>• Status will be recorded as <span className="text-emerald-600 font-semibold">PAID</span> with regional tax breakdown.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 pt-3 border-t">
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setIsInvoicingOpen(false)}
+                                disabled={isIssuingInvoice}
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                type="button" 
+                                size="sm" 
+                                onClick={handleIssueInvoice}
+                                disabled={isIssuingInvoice}
+                                className="gap-1.5 font-semibold"
+                            >
+                                {isIssuingInvoice && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                Generate & Record Invoice
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Receipt Slip Modal */}
+            {isReceiptOpen && selectedInvoice && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-card border border-border/80 rounded-xl max-w-lg w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4">
+                        <div className="flex items-center justify-between border-b pb-3">
+                            <div>
+                                <h2 className="text-lg font-bold flex items-center gap-2">
+                                    <Receipt className="h-5 w-5 text-primary" />
+                                    {selectedInvoice.invoiceNumber}
+                                </h2>
+                                <p className="text-xs text-muted-foreground">Official Platform B2B Subscription Slip</p>
+                            </div>
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => setIsReceiptOpen(false)}
+                                className="h-7 w-7 p-0"
+                            >
+                                ✕
+                            </Button>
+                        </div>
+
+                        <div className="space-y-3 text-xs bg-muted/20 p-4 rounded-lg border border-border/60">
+                            <div className="flex justify-between py-1 border-b border-border/40">
+                                <span className="text-muted-foreground">Date:</span>
+                                <span className="font-semibold">{format(new Date(selectedInvoice.date), "PPP")}</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-border/40">
+                                <span className="text-muted-foreground">Billed To:</span>
+                                <span className="font-semibold">{selectedInvoice.tenantName}</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-border/40">
+                                <span className="text-muted-foreground">Plan Tier & Cycle:</span>
+                                <span className="font-semibold">{selectedInvoice.plan} ({selectedInvoice.billingCycle})</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-border/40">
+                                <span className="text-muted-foreground">Subtotal:</span>
+                                <span>{selectedInvoice.currency} {Number(selectedInvoice.subtotal).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-border/40">
+                                <span className="text-muted-foreground">Tax ({selectedInvoice.taxRate}%):</span>
+                                <span>{selectedInvoice.currency} {Number(selectedInvoice.taxAmount).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between py-1.5 font-bold text-sm text-foreground">
+                                <span>Total Paid:</span>
+                                <span className="text-primary">{selectedInvoice.currency} {Number(selectedInvoice.total).toFixed(2)}</span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-3 border-t">
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setIsReceiptOpen(false)}
+                            >
+                                Close
+                            </Button>
+                            <Button 
+                                type="button" 
+                                size="sm" 
+                                onClick={() => printReceipt(selectedInvoice)}
+                                className="gap-1.5 font-semibold"
+                            >
+                                <Printer className="h-3.5 w-3.5" />
+                                Print / Save PDF
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}

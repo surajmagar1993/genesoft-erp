@@ -34,6 +34,10 @@ const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | 
     ACCEPTED: { label: "Accepted", variant: "default", icon: CheckCircle2 },
     REJECTED: { label: "Rejected", variant: "destructive", icon: XCircle },
     EXPIRED: { label: "Expired", variant: "outline", icon: XCircle },
+    PAID: { label: "Paid", variant: "default", icon: CheckCircle2 },
+    PARTIALLY_PAID: { label: "Partially Paid", variant: "outline", icon: Clock },
+    OVERDUE: { label: "Overdue", variant: "destructive", icon: Clock },
+    CANCELLED: { label: "Cancelled", variant: "destructive", icon: XCircle },
 }
 
 const formatCurrency = (amount: number) =>
@@ -58,6 +62,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
     // Sync state with URL params
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "")
     const [filterStatus, setFilterStatus] = useState<string>(searchParams.get("status") || "all")
+    const [filterType, setFilterType] = useState<string>(searchParams.get("type") || "all")
     const [pendingId, setPendingId] = useState<string | null>(null)
 
     // Update URL when filters change
@@ -70,7 +75,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                 params.set(key, value.toString())
             }
         })
-        if (!newParams.page && (newParams.search !== undefined || newParams.status !== undefined)) {
+        if (!newParams.page && (newParams.search !== undefined || newParams.status !== undefined || newParams.type !== undefined)) {
             params.set("page", "1")
         }
         router.push(`${pathname}?${params.toString()}`)
@@ -152,25 +157,50 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="flex flex-wrap gap-2 p-1 bg-slate-100 dark:bg-slate-900 rounded-lg">
-                            <button
-                                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filterStatus === "all" ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-                                onClick={() => { setFilterStatus("all"); updateUrl({ status: "all" }) }}
-                            >
-                                All
-                            </button>
-                            {(Object.keys(statusConfig) as InvoiceStatus[]).map((s) => {
-                                const cfg = statusConfig[s]
-                                return (
-                                    <button
-                                        key={s}
-                                        className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filterStatus === s ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-                                        onClick={() => { setFilterStatus(s); updateUrl({ status: s }) }}
-                                    >
-                                        {cfg.label}
-                                    </button>
-                                )
-                            })}
+                        <div className="flex flex-wrap items-center gap-3">
+                            {/* Document Type Filter */}
+                            <div className="flex rounded-lg border p-1 bg-slate-100 dark:bg-slate-900">
+                                <button
+                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "all" ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                    onClick={() => { setFilterType("all"); updateUrl({ type: "all" }) }}
+                                >
+                                    All Invoices
+                                </button>
+                                <button
+                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "TAX_INVOICE" ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                    onClick={() => { setFilterType("TAX_INVOICE"); updateUrl({ type: "TAX_INVOICE" }) }}
+                                >
+                                    Tax Invoices
+                                </button>
+                                <button
+                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "PROFORMA" ? "bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                    onClick={() => { setFilterType("PROFORMA"); updateUrl({ type: "PROFORMA" }) }}
+                                >
+                                    Proforma Invoices
+                                </button>
+                            </div>
+
+                            {/* Status Filter */}
+                            <div className="flex flex-wrap gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-lg">
+                                <button
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "all" ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                    onClick={() => { setFilterStatus("all"); updateUrl({ status: "all" }) }}
+                                >
+                                    All Statuses
+                                </button>
+                                {(Object.keys(statusConfig) as InvoiceStatus[]).map((s) => {
+                                    const cfg = statusConfig[s]
+                                    return (
+                                        <button
+                                            key={s}
+                                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === s ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                            onClick={() => { setFilterStatus(s); updateUrl({ status: s }) }}
+                                        >
+                                            {cfg.label}
+                                        </button>
+                                    )
+                                })}
+                            </div>
                         </div>
                     </div>
 
@@ -198,8 +228,17 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                     const totalAmount = Number(inv.total || 0)
 
                                     return (
-                                        <TableRow key={inv.id} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors">
-                                            <TableCell className="font-bold text-indigo-600 dark:text-indigo-400">{inv.invoice_number}</TableCell>
+                                        <TableRow key={inv.id} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors cursor-pointer" onClick={() => router.push(`/sales/invoices/${inv.id}`)}>
+                                            <TableCell className="font-bold text-indigo-600 dark:text-indigo-400">
+                                                <div className="flex items-center gap-2">
+                                                    <span>{inv.invoice_number}</span>
+                                                    {inv.type === "PROFORMA" && (
+                                                        <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-500/10 font-bold uppercase px-2 py-0.5">
+                                                            PROFORMA
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
                                                     <span className="font-semibold text-slate-900 dark:text-slate-100">{inv.customer_name}</span>
@@ -215,7 +254,12 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <div className="flex items-center justify-end gap-1">
+                                                <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                                                    <a href={`/api/invoices/${inv.id}/pdf`} target="_blank" rel="noreferrer">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200 dark:hover:bg-slate-800" title="Download PDF">
+                                                            <Download className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                                                        </Button>
+                                                    </a>
                                                     <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200 dark:hover:bg-slate-800" onClick={() => router.push(`/sales/invoices/${inv.id}/edit`)}>
                                                         <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                                                     </Button>

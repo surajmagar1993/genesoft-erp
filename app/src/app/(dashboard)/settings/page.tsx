@@ -1,19 +1,23 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard } from "lucide-react"
+import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards } from "lucide-react"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
+import { getTenantPaymentGateways } from "@/app/actions/finance/gateways"
 import TaxConfigClient from "./tax-config-client"
 import BillingTab from "./billing-tab"
+import PaymentGatewaysTab from "./payment-gateways-tab"
 
 export default async function SettingsPage() {
     const settings = await getTenantSettings()
+    const gatewayConfig = await getTenantPaymentGateways()
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || ""
 
     return (
         <div className="space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
                 <p className="text-muted-foreground mt-1">
-                    Manage your organization and workspace configuration.
+                    Manage your organization, payment gateways, and workspace configuration.
                 </p>
             </div>
 
@@ -27,6 +31,9 @@ export default async function SettingsPage() {
                     </TabsTrigger>
                     <TabsTrigger value="account" className="flex items-center gap-2">
                         <Globe className="h-4 w-4" /> Regional
+                    </TabsTrigger>
+                    <TabsTrigger value="gateways" className="flex items-center gap-2">
+                        <WalletCards className="h-4 w-4" /> Payment Gateways
                     </TabsTrigger>
                     <TabsTrigger value="billing" className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4" /> Billing
@@ -145,6 +152,11 @@ export default async function SettingsPage() {
                             </div>
                         </CardContent>
                     </Card>
+                </TabsContent>
+
+                {/* Payment Gateways */}
+                <TabsContent value="gateways">
+                    <PaymentGatewaysTab initialConfig={gatewayConfig} appUrl={appUrl} />
                 </TabsContent>
 
                 {/* Billing Settings */}
