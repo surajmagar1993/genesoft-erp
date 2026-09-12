@@ -158,7 +158,7 @@
 - [ ] Inventory: Barcode / QR Code Support
 - [x] Inventory: Stock Adjustments & Multi-Depot Transfers ✅ **(2026-09-10)**
 - [x] Finance: General Ledger (`/finance/expenses`) ✅ **(2026-09-12)**
-- [ ] Finance: Bank Reconciliation
+- [x] Finance: Bank Reconciliation (`/finance/bank-reconciliation`) ✅ **(2026-09-12)**
 - [x] Finance: Expense Management (`/finance/expenses`) ✅ **(2026-09-12)**
 - [ ] Tax (India): TDS
 - [ ] Tax (India): E-Way Bill Integration

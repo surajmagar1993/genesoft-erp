@@ -134,7 +134,7 @@
 - [x] **Multi-Currency Support** 🔴 ✅
 - [x] **Financial Reports** 🔴 ✅
 - [x] **General Ledger** 🟡 ✅ (`/finance/expenses`)
-- [ ] **Bank Reconciliation** 🟡
+- [x] **Bank Reconciliation** 🟡 ✅ (`/finance/bank-reconciliation`)
 - [x] **Expense Management** 🟡 ✅ (`/finance/expenses`)
 - [ ] **Budgeting** 🟢
 

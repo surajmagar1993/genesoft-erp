@@ -465,3 +465,60 @@ LIMIT 10;
    - Click "Assign Customer", select a customer contact from CRM, select an assigned rate card, and confirm.
    - **Expectation**: Customer is linked to the price list; future sales documents and simulator lookups automatically inherit the contracted rate card.
 
+---
+
+### 3.16 Bank Reconciliation Protocols (`/finance/bank-reconciliation`)
+1. **Initial Provisioning & Account Telemetry**:
+   - Navigate to `/finance/bank-reconciliation`.
+   - **Expectation**:
+     - If no bank accounts exist for the tenant, the system auto-provisions realistic corporate bank accounts (*HDFC Primary Corporate Current Account* linked to CoA 1120 and *ICICI Forex & Escrow Current Account*) with an active March 2026 statement batch and diverse transaction lines.
+     - 4-column KPI telemetry renders real-time figures for:
+       - **Statement Balance**: Closing statement balance reported by the bank feed.
+       - **ERP Book Balance**: System general ledger balance from the linked Chart of Accounts node.
+       - **Cleared Balance**: Total cleared deposits and debits plus opening balance.
+       - **Reconciliation Variance ($\Delta$)**: Live mathematical difference between Statement Ending Balance and Cleared Balance. Displays a green "Balanced" badge when reconciled.
+2. **Reconciliation Match Desk (Split-Screen Workbench)**:
+   - Review the "Reconciliation Match Desk" tab.
+   - **Expectation**:
+     - Left pane lists all imported bank lines with Date, Transaction Type (`DEPOSIT` or `WITHDRAWAL`), Narration, Payee, Reference (UTR/Cheque/IMPS), Amount, and Status (`UNMATCHED`, `MATCHED`, `RECONCILED`).
+     - Right pane lists open ERP candidate records (Inbound Customer Payments, Outbound Vendor PO Payments, Operational Expenses).
+3. **Smart Rule-Based Auto-Matching Engine**:
+   - Click "Run Auto-Match".
+   - **Expectation**:
+     - The engine scans unmatched bank transactions against open ERP payments and expenses.
+     - Matches exact transaction references, invoice IDs, or identical amounts within $\pm 14$ days.
+     - Successfully matched lines update to `MATCHED` with a badge (`EXACT` or `RULE`), incrementing the Cleared Balance and shrinking the variance.
+4. **Manual Record Matching**:
+   - On an unmatched bank line, click "Match".
+   - Select an open ERP candidate payment or expense from the modal dialog.
+   - Click "Link".
+   - **Expectation**:
+     - Bank line links to the chosen system record, shifts to `MATCHED`, and updates running reconciliation balances.
+5. **Quick Expense & Instant Reconcile (Bank Charges / Interest)**:
+   - On an unmatched bank withdrawal (such as quarterly bank charges or interest debit), click "Quick Expense".
+   - Select Expense Category (e.g. *Bank Charges & Commission*), verify the prefilled amount, select the CoA expense account (e.g. `5700`), and click "Post & Instantly Reconcile".
+   - **Expectation**:
+     - An operational `Expense` voucher is created.
+     - A balanced General Ledger double-entry Journal Voucher (`JE-YYYY-XXXX`) is automatically posted (debiting Bank Charges, crediting Bank Account).
+     - The bank line is immediately marked `RECONCILED`.
+6. **Corporate Bank Account Management**:
+   - Switch to the "Bank Accounts Directory" tab.
+   - Click "Add Account", enter Bank Name (e.g. *State Bank of India*), Account Number, IFSC, Account Type (`CURRENT`), opening balance, and link to Chart of Accounts.
+   - Click "Create Account".
+   - **Expectation**:
+     - Account persists in `bank_accounts` table and displays in the directory with balance badges and routing information.
+7. **Statement Batch Import**:
+   - Switch to "Statement Batches & Periods" tab or click "Import Statement".
+   - Provide Statement Number (e.g. `STMT-2026-04-HDFC`), date range, opening/closing balances, and paste CSV lines.
+   - Click "Parse & Import Statement".
+   - **Expectation**:
+     - Creates `bank_statements` record and itemized `bank_transactions`.
+     - Appears in the statement history table with reconciled progress bar.
+8. **Finalizing & Locking Reconciliation**:
+   - Once all lines are cleared and variance reaches zero ($\Delta = ₹0.00$), click "Finalize".
+   - Confirm the lock prompt.
+   - **Expectation**:
+     - Statement status updates to `RECONCILED` with timestamp.
+     - All matched lines are locked as permanently `RECONCILED`.
+
+

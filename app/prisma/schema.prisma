@@ -87,6 +87,9 @@ model Tenant {
   journalEntryLines  JournalEntryLine[]
   priceLists         PriceList[]
   priceListItems     PriceListItem[]
+  bankAccounts       BankAccount[]
+  bankStatements     BankStatement[]
+  bankTransactions   BankTransaction[]
 
   @@map("tenants")
 }
@@ -776,6 +779,7 @@ model Payment {
   invoice       Invoice?      @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   bill          Bill?         @relation(fields: [billId], references: [id], onDelete: Cascade)
   contact       Contact       @relation(fields: [contactId], references: [id])
+  bankTransactions BankTransaction[]
 
   @@index([tenantId])
   @@index([invoiceId])
@@ -970,6 +974,7 @@ model Account {
   expensesAsExpense  Expense[]          @relation("ExpenseAccount")
   expensesAsPayment  Expense[]          @relation("PaymentAccount")
   journalEntryLines  JournalEntryLine[]
+  bankAccounts       BankAccount[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -1883,6 +1888,7 @@ model Expense {
   vendor           Contact?       @relation(fields: [vendorId], references: [id], onDelete: SetNull)
   employee         Employee?      @relation(fields: [employeeId], references: [id], onDelete: SetNull)
   journalEntry     JournalEntry?  @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+  bankTransactions BankTransaction[]
 
   @@unique([tenantId, expenseNumber])
   @@index([tenantId])
@@ -1914,6 +1920,7 @@ model JournalEntry {
   tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   lines        JournalEntryLine[]
   expenses     Expense[]
+  bankTransactions BankTransaction[]
 
   @@unique([tenantId, entryNumber])
   @@index([tenantId])
@@ -2042,4 +2049,153 @@ enum PricingScheme {
   FIXED_OVERRIDE
   PERCENTAGE_DISCOUNT
   PERCENTAGE_MARKUP
+}
+
+// ============================================
+// BANK RECONCILIATION
+// ============================================
+
+model BankAccount {
+  id               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId         String          @map("tenant_id") @db.Uuid
+  accountName      String          @map("account_name") // e.g. "HDFC Main Corporate Current Account"
+  accountNumber    String          @map("account_number") // e.g. "50200098765432"
+  bankName         String          @map("bank_name") // e.g. "HDFC Bank"
+  branchName       String?         @map("branch_name") // e.g. "Indiranagar, Bengaluru"
+  ifscRoutingCode  String?         @map("ifsc_routing_code") // e.g. "HDFC0000240"
+  swiftCode        String?         @map("swift_code")
+  currencyCode     String          @default("INR") @map("currency_code")
+  accountType      BankAccountType @default(CURRENT) @map("account_type")
+  
+  chartOfAccountId String?         @map("chart_of_account_id") @db.Uuid
+  openingBalance   Decimal         @default(0) @map("opening_balance") @db.Decimal(15, 2)
+  currentBalance   Decimal         @default(0) @map("current_balance") @db.Decimal(15, 2)
+  
+  isActive         Boolean         @default(true) @map("is_active")
+  isPrimary        Boolean         @default(false) @map("is_primary")
+  notes            String?
+  
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  tenant           Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  chartOfAccount   Account?        @relation(fields: [chartOfAccountId], references: [id], onDelete: SetNull)
+  statements       BankStatement[]
+  transactions     BankTransaction[]
+
+  @@unique([tenantId, accountNumber])
+  @@index([tenantId])
+  @@index([chartOfAccountId])
+  @@index([isActive])
+  @@map("bank_accounts")
+}
+
+model BankStatement {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String              @map("tenant_id") @db.Uuid
+  bankAccountId     String              @map("bank_account_id") @db.Uuid
+  statementNumber   String              @map("statement_number") // e.g. "STMT-2026-03-HDFC"
+  startDate         DateTime            @map("start_date")
+  endDate           DateTime            @map("end_date")
+  openingBalance    Decimal             @default(0) @map("opening_balance") @db.Decimal(15, 2)
+  closingBalance    Decimal             @default(0) @map("closing_balance") @db.Decimal(15, 2)
+  reconciledBalance Decimal             @default(0) @map("reconciled_balance") @db.Decimal(15, 2)
+  status            BankStatementStatus @default(DRAFT)
+  reconciledAt      DateTime?           @map("reconciled_at")
+  notes             String?
+  
+  createdAt         DateTime            @default(now()) @map("created_at")
+  updatedAt         DateTime            @updatedAt @map("updated_at")
+
+  tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bankAccount       BankAccount         @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  transactions      BankTransaction[]
+
+  @@unique([tenantId, statementNumber])
+  @@index([tenantId])
+  @@index([bankAccountId])
+  @@index([status])
+  @@map("bank_statements")
+}
+
+model BankTransaction {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String              @map("tenant_id") @db.Uuid
+  bankAccountId   String              @map("bank_account_id") @db.Uuid
+  statementId     String?             @map("statement_id") @db.Uuid
+  
+  transactionDate DateTime            @map("transaction_date")
+  valueDate       DateTime?           @map("value_date")
+  type            BankTransactionType
+  amount          Decimal             @db.Decimal(15, 2)
+  balance         Decimal?            @db.Decimal(15, 2) // Running balance reported by bank
+  payee           String?
+  description     String              // Transaction memo / narration
+  reference       String?             // Cheque No, UTR, Txn Ref, UPI Ref
+  
+  status          BankReconcileStatus @default(UNMATCHED)
+  matchedType     BankMatchedType?    @map("matched_type")
+  
+  // Matched record pointers
+  paymentId       String?             @map("payment_id")
+  expenseId       String?             @map("expense_id") @db.Uuid
+  journalEntryId  String?             @map("journal_entry_id") @db.Uuid
+  
+  matchedAt       DateTime?           @map("matched_at")
+  reconciledAt    DateTime?           @map("reconciled_at")
+  matchConfidence String?             @map("match_confidence") // "EXACT", "AMOUNT_ONLY", "RULE", "MANUAL"
+  notes           String?
+  
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bankAccount     BankAccount         @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  statement       BankStatement?      @relation(fields: [statementId], references: [id], onDelete: SetNull)
+  payment         Payment?            @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  expense         Expense?            @relation(fields: [expenseId], references: [id], onDelete: SetNull)
+  journalEntry    JournalEntry?       @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([bankAccountId])
+  @@index([statementId])
+  @@index([status])
+  @@index([paymentId])
+  @@index([expenseId])
+  @@index([journalEntryId])
+  @@map("bank_transactions")
+}
+
+enum BankAccountType {
+  CURRENT
+  SAVINGS
+  CHECKING
+  OVERDRAFT
+  CREDIT_CARD
+}
+
+enum BankStatementStatus {
+  DRAFT
+  IN_PROGRESS
+  RECONCILED
+  ARCHIVED
+}
+
+enum BankTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+}
+
+enum BankReconcileStatus {
+  UNMATCHED
+  MATCHED
+  RECONCILED
+  EXCLUDED
+}
+
+enum BankMatchedType {
+  PAYMENT
+  EXPENSE
+  JOURNAL_ENTRY
+  MANUAL_ADJUSTMENT
 }

@@ -32,10 +32,11 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **Sales: Credit Notes & Refunds** (`/sales/credit-notes`) — Customer refunds, returns against invoices, credit memo ledger, inventory restock ✅ **(2026-09-12)**
 - [x] **Finance: Expense Management & General Ledger** (`/finance/expenses`) — Operational business expenses, employee reimbursement claims, double-entry journal vouchers (`JE-YYYY-XXXX`), and Account T-Ledgers ✅ **(2026-09-12)**
 - [x] **Sales: Price Lists & Customer Tier Pricing** (`/sales/price-lists`) — Wholesale/retail rate cards, volume discount breaks, and interactive price resolution simulator ✅ **(2026-09-12)**
+- [x] **Finance: Bank Reconciliation** (`/finance/bank-reconciliation`) — Multi-bank accounts, statement batch imports, rule-based auto-matching engine, split-screen match desk, and discrepancy diagnostics ✅ **(2026-09-12)**
 
-### 🟡 Next Focus: P2 Finance & Automation Enhancements
-- [ ] **Finance: Bank Reconciliation** — Matching bank statements against system records
+### 🟡 Next Focus: P2 Automation & Invoice Features
 - [ ] **Invoice Features: Recurring Invoices** — Automated subscription & cyclical billing
+- [ ] **CRM: Email Integration** — Connect corporate IMAP/SMTP mailboxes
 
 ### CRM
 - [ ] CRM: Email Integration
@@ -62,7 +63,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 
 ### Finance
 - [x] Finance: General Ledger (`/finance/expenses`) ✅ **(2026-09-12)**
-- [ ] Finance: Bank Reconciliation
+- [x] Finance: Bank Reconciliation (`/finance/bank-reconciliation`) ✅ **(2026-09-12)**
 - [x] Finance: Expense Management (`/finance/expenses`) ✅ **(2026-09-12)**
 
 ### Tax
