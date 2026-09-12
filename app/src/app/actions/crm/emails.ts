@@ -3,13 +3,13 @@
 import { prisma } from "@/lib/prisma"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { CommunicationType } from "@prisma/client"
 import {
-    CommunicationType,
     EmailDirection,
     EmailStatus,
     EmailProvider,
     EmailTemplateCategory,
-} from "@prisma/client"
+} from "./email-types"
 import type {
     EmailAccountRecord,
     EmailMessageRecord,
