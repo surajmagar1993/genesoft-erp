@@ -737,3 +737,266 @@ export async function quickScanAdjustStock(params: {
         referenceNo: params.referenceNo
     })
 }
+
+// ── Inventory Reports & Valuation Engine ─────────────────────────────────────
+export interface StockValuationItem {
+    productId: string
+    productName: string
+    sku: string | null
+    barcode: string | null
+    category: string
+    stockQty: number
+    unit: string
+    costPrice: number
+    totalCostValue: number
+    sellingPrice: number
+    totalRetailValue: number
+    potentialMarginAmount: number
+    potentialMarginPercent: number
+    status: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK"
+    warehouseAllocations: {
+        warehouseId: string
+        warehouseName: string
+        warehouseCode: string
+        quantity: number
+    }[]
+}
+
+export interface StockVelocityItem {
+    productId: string
+    productName: string
+    sku: string | null
+    category: string
+    currentStock: number
+    totalInflow: number
+    totalOutflow: number
+    netChange: number
+    movementCount: number
+    turnoverVelocity: "FAST_MOVING" | "MODERATE" | "SLOW_MOVING" | "DEAD_STOCK"
+}
+
+export interface MultiDepotMatrixRow {
+    productId: string
+    productName: string
+    sku: string | null
+    category: string
+    totalQty: number
+    depotQuantities: Record<string, number>
+}
+
+export interface InventoryReportsResult {
+    kpis: {
+        totalAssetCostValue: number
+        totalRetailValue: number
+        potentialGrossProfit: number
+        grossMarginPercent: number
+        totalTrackedSKUs: number
+        deficitSKUCount: number
+    }
+    valuationReport: StockValuationItem[]
+    velocityReport: StockVelocityItem[]
+    matrixReport: {
+        warehouses: { id: string; name: string; code: string }[]
+        rows: MultiDepotMatrixRow[]
+    }
+}
+
+export async function getInventoryReportsData(
+    timeRange: "30d" | "90d" | "365d" | "all" = "30d"
+): Promise<InventoryReportsResult> {
+    const tenantId = await getTenantId()
+
+    try {
+        const [products, warehouses, movements] = await Promise.all([
+            prisma.product.findMany({
+                where: { tenantId, isActive: true },
+                include: {
+                    warehouseStocks: {
+                        include: { warehouse: true }
+                    },
+                    billItems: {
+                        take: 1,
+                        orderBy: { bill: { billDate: "desc" } },
+                        select: { unitPrice: true }
+                    }
+                },
+                orderBy: { name: "asc" }
+            }),
+            prisma.warehouse.findMany({
+                where: { tenantId, isActive: true },
+                orderBy: { name: "asc" }
+            }),
+            prisma.stockMovement.findMany({
+                where: {
+                    tenantId,
+                    ...(timeRange !== "all" ? {
+                        createdAt: {
+                            gte: new Date(Date.now() - (timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365) * 24 * 60 * 60 * 1000)
+                        }
+                    } : {})
+                },
+                select: {
+                    productId: true,
+                    type: true,
+                    quantity: true,
+                    createdAt: true
+                }
+            })
+        ])
+
+        const movementMap = new Map<string, { inflow: number; outflow: number; count: number }>()
+        for (const m of movements) {
+            const entry = movementMap.get(m.productId) || { inflow: 0, outflow: 0, count: 0 }
+            const qty = Number(m.quantity)
+            entry.count += 1
+            if (m.type === "IN" || m.type === "RETURN") {
+                entry.inflow += qty
+            } else if (m.type === "OUT" || m.type === "DAMAGE") {
+                entry.outflow += qty
+            }
+            movementMap.set(m.productId, entry)
+        }
+
+        let totalAssetCostValue = 0
+        let totalRetailValue = 0
+        let deficitSKUCount = 0
+
+        const valuationReport: StockValuationItem[] = []
+        const velocityReport: StockVelocityItem[] = []
+        const matrixRows: MultiDepotMatrixRow[] = []
+
+        for (const p of products) {
+            const stockQty = Number(p.stockQty)
+            const sellingPrice = Number(p.unitPrice)
+
+            let costPrice = 0
+            if (p.billItems && p.billItems.length > 0 && Number(p.billItems[0].unitPrice) > 0) {
+                costPrice = Number(p.billItems[0].unitPrice)
+            } else if (p.customAttributes && typeof p.customAttributes === "object" && (p.customAttributes as any).costPrice) {
+                costPrice = Number((p.customAttributes as any).costPrice) || 0
+            } else if (sellingPrice > 0) {
+                costPrice = parseFloat((sellingPrice * 0.65).toFixed(2))
+            }
+
+            const totalCost = parseFloat((stockQty * costPrice).toFixed(2))
+            const totalRetail = parseFloat((stockQty * sellingPrice).toFixed(2))
+            const marginAmount = parseFloat((totalRetail - totalCost).toFixed(2))
+            const marginPercent = totalRetail > 0 ? parseFloat(((marginAmount / totalRetail) * 100).toFixed(1)) : 0
+
+            totalAssetCostValue += totalCost
+            totalRetailValue += totalRetail
+
+            const minReorder = p.warehouseStocks.reduce((sum: number, ws: any) => sum + Number(ws.reorderPoint || 0), 0)
+            let status: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" = "IN_STOCK"
+            if (stockQty <= 0) {
+                status = "OUT_OF_STOCK"
+                deficitSKUCount += 1
+            } else if (stockQty <= minReorder && minReorder > 0) {
+                status = "LOW_STOCK"
+                deficitSKUCount += 1
+            }
+
+            const warehouseAllocations = p.warehouseStocks.map((ws: any) => ({
+                warehouseId: ws.warehouseId,
+                warehouseName: ws.warehouse.name,
+                warehouseCode: ws.warehouse.code,
+                quantity: Number(ws.quantity)
+            }))
+
+            valuationReport.push({
+                productId: p.id,
+                productName: p.name,
+                sku: p.sku,
+                barcode: (p.customAttributes as any)?.barcode || null,
+                category: p.category || "General",
+                stockQty,
+                unit: p.unit || "Nos",
+                costPrice,
+                totalCostValue: totalCost,
+                sellingPrice,
+                totalRetailValue: totalRetail,
+                potentialMarginAmount: marginAmount,
+                potentialMarginPercent: marginPercent,
+                status,
+                warehouseAllocations
+            })
+
+            const moves = movementMap.get(p.id) || { inflow: 0, outflow: 0, count: 0 }
+            let turnoverVelocity: "FAST_MOVING" | "MODERATE" | "SLOW_MOVING" | "DEAD_STOCK" = "DEAD_STOCK"
+            if (moves.outflow >= 50 || moves.count >= 15) {
+                turnoverVelocity = "FAST_MOVING"
+            } else if (moves.outflow >= 15 || moves.count >= 5) {
+                turnoverVelocity = "MODERATE"
+            } else if (moves.outflow > 0 || moves.inflow > 0) {
+                turnoverVelocity = "SLOW_MOVING"
+            } else {
+                turnoverVelocity = "DEAD_STOCK"
+            }
+
+            velocityReport.push({
+                productId: p.id,
+                productName: p.name,
+                sku: p.sku,
+                category: p.category || "General",
+                currentStock: stockQty,
+                totalInflow: moves.inflow,
+                totalOutflow: moves.outflow,
+                netChange: moves.inflow - moves.outflow,
+                movementCount: moves.count,
+                turnoverVelocity
+            })
+
+            const depotMap: Record<string, number> = {}
+            for (const w of warehouses) {
+                const alloc = p.warehouseStocks.find((ws: any) => ws.warehouseId === w.id)
+                depotMap[w.id] = alloc ? Number(alloc.quantity) : 0
+            }
+            matrixRows.push({
+                productId: p.id,
+                productName: p.name,
+                sku: p.sku,
+                category: p.category || "General",
+                totalQty: stockQty,
+                depotQuantities: depotMap
+            })
+        }
+
+        const potentialGrossProfit = parseFloat((totalRetailValue - totalAssetCostValue).toFixed(2))
+        const grossMarginPercent = totalRetailValue > 0 ? parseFloat(((potentialGrossProfit / totalRetailValue) * 100).toFixed(1)) : 0
+
+        return {
+            kpis: {
+                totalAssetCostValue: parseFloat(totalAssetCostValue.toFixed(2)),
+                totalRetailValue: parseFloat(totalRetailValue.toFixed(2)),
+                potentialGrossProfit,
+                grossMarginPercent,
+                totalTrackedSKUs: products.length,
+                deficitSKUCount
+            },
+            valuationReport,
+            velocityReport,
+            matrixReport: {
+                warehouses: warehouses.map((w: any) => ({ id: w.id, name: w.name, code: w.code })),
+                rows: matrixRows
+            }
+        }
+    } catch (error: any) {
+        console.error("Error in getInventoryReportsData:", error)
+        return {
+            kpis: {
+                totalAssetCostValue: 0,
+                totalRetailValue: 0,
+                potentialGrossProfit: 0,
+                grossMarginPercent: 0,
+                totalTrackedSKUs: 0,
+                deficitSKUCount: 0
+            },
+            valuationReport: [],
+            velocityReport: [],
+            matrixReport: {
+                warehouses: [],
+                rows: []
+            }
+        }
+    }
+}

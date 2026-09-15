@@ -134,6 +134,20 @@ export function computeLineItemGst(
   }
 }
 
+// ── Tax Exemption Definitions ────────────────────────────────────────────────
+export const TAX_EXEMPTION_REASONS = [
+  { id: "SEZ_DEVELOPER", label: "Special Economic Zone (SEZ) Unit / Developer", defaultNote: "Supplied to SEZ unit/developer under authorized Letter of Undertaking (LUT) without payment of integrated tax." },
+  { id: "GOVERNMENT_BODY", label: "Government Authority / Local Body", defaultNote: "Statutory supply to government body exempted under central/state notification." },
+  { id: "EXPORT_ZERO_RATED", label: "Export of Goods/Services (Zero-Rated)", defaultNote: "Zero-rated export supply made under LUT / bond without payment of tax." },
+  { id: "CHARITABLE_TRUST", label: "Registered Charitable / Non-Profit Institution", defaultNote: "Services by an entity registered under statutory non-profit/charity provisions." },
+  { id: "RESELLER_CERTIFICATE", label: "Reseller / Wholesale Exemption Certificate", defaultNote: "Purchase for resale under valid statutory resale exemption certificate." },
+  { id: "DIPLOMATIC_MISSION", label: "Diplomatic Mission / UN Consular Entity", defaultNote: "Supply to United Nations/Consulate entitled to exemption under international protocol." },
+  { id: "AGRICULTURAL_BASIC", label: "Essential Agricultural / Healthcare Commodity", defaultNote: "Exempt supply of unprocessed produce/essential healthcare listed in nil-rated schedule." },
+  { id: "OTHER", label: "Other Statutory Exemption", defaultNote: "Supply exempt under applicable statutory notifications." },
+] as const
+
+export type TaxExemptionReasonId = typeof TAX_EXEMPTION_REASONS[number]["id"]
+
 // ── Invoice-Level GST Summary ────────────────────────────────────────────────
 export interface InvoiceGstSummary {
   subtotal: number
@@ -144,12 +158,18 @@ export interface InvoiceGstSummary {
   discountAmount: number
   grandTotal: number
   supplyType: SupplyType
+  isTaxExempt?: boolean
+  taxExemptionReason?: string
+  taxExemptionCertificate?: string
+  taxExemptionNotice?: string
+  exemptSubtotal?: number
 }
 
 export interface SummaryLineItem {
   qty: number
   unitPrice: number
   gstRate: number
+  isExempt?: boolean
 }
 
 /**
@@ -159,19 +179,33 @@ export function computeInvoiceGstSummary(
   lineItems: SummaryLineItem[],
   supplyType: SupplyType,
   discount: number,
-  discountType: "PERCENT" | "FIXED"
+  discountType: "PERCENT" | "FIXED",
+  options?: {
+    isTaxExempt?: boolean
+    taxExemptionReason?: string
+    taxExemptionCertificate?: string
+  }
 ): InvoiceGstSummary {
   let subtotal = 0
   let cgstTotal = 0
   let sgstTotal = 0
   let igstTotal = 0
+  let exemptSubtotal = 0
+
+  const invoiceIsExempt = Boolean(options?.isTaxExempt)
 
   for (const item of lineItems) {
-    const gst = computeLineItemGst(item.qty, item.unitPrice, item.gstRate, supplyType)
+    const itemIsExempt = invoiceIsExempt || Boolean(item.isExempt)
+    const effectiveRate = itemIsExempt ? 0 : item.gstRate
+    const gst = computeLineItemGst(item.qty, item.unitPrice, effectiveRate, supplyType)
     subtotal += gst.taxableAmount
-    cgstTotal += gst.cgstAmount
-    sgstTotal += gst.sgstAmount
-    igstTotal += gst.igstAmount
+    if (itemIsExempt) {
+      exemptSubtotal += gst.taxableAmount
+    } else {
+      cgstTotal += gst.cgstAmount
+      sgstTotal += gst.sgstAmount
+      igstTotal += gst.igstAmount
+    }
   }
 
   const discountAmount =
@@ -184,6 +218,14 @@ export function computeInvoiceGstSummary(
     (subtotal + totalTax - discountAmount).toFixed(2)
   )
 
+  let taxExemptionNotice: string | undefined
+  if (invoiceIsExempt) {
+    const matched = TAX_EXEMPTION_REASONS.find(r => r.id === options?.taxExemptionReason)
+    const reasonText = matched ? matched.label : (options?.taxExemptionReason || "Statutory Exemption")
+    const certText = options?.taxExemptionCertificate ? ` (Cert/Ref: ${options.taxExemptionCertificate})` : ""
+    taxExemptionNotice = `Tax Exemption Applied: ${reasonText}${certText}. Assessed Tax Rate: 0.00%.`
+  }
+
   return {
     subtotal: parseFloat(subtotal.toFixed(2)),
     cgstTotal: parseFloat(cgstTotal.toFixed(2)),
@@ -193,6 +235,11 @@ export function computeInvoiceGstSummary(
     discountAmount,
     grandTotal,
     supplyType,
+    isTaxExempt: invoiceIsExempt,
+    taxExemptionReason: options?.taxExemptionReason,
+    taxExemptionCertificate: options?.taxExemptionCertificate,
+    taxExemptionNotice,
+    exemptSubtotal: parseFloat(exemptSubtotal.toFixed(2)),
   }
 }
 
@@ -218,7 +265,8 @@ export function computeHsnSummary(
 
   for (const item of lineItems) {
     const hsn = item.hsnSac || "Unspecified"
-    const gst = computeLineItemGst(item.qty, item.unitPrice, item.gstRate, supplyType)
+    const effectiveRate = item.isExempt ? 0 : item.gstRate
+    const gst = computeLineItemGst(item.qty, item.unitPrice, effectiveRate, supplyType)
 
     const existing = map.get(hsn)
     if (existing) {

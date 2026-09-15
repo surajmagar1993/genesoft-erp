@@ -426,15 +426,25 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
   const supplierGstin = invoice.supplier_gstin || COMPANY.gstin
   const supplierState = invoice.supplier_state || COMPANY.state
 
+  const isTaxExempt = Boolean((invoice as any).is_tax_exempt)
+  const taxExemptionReason = (invoice as any).tax_exemption_reason
+  const taxExemptionCertificate = (invoice as any).tax_exemption_certificate
+
   const summary = computeInvoiceGstSummary(
     items.map((li) => ({
       qty: li.qty,
       unitPrice: li.unit_price,
-      gstRate: li.tax_percent,
+      gstRate: isTaxExempt ? 0 : li.tax_percent,
+      isExempt: isTaxExempt,
     })),
     supplyType,
     invoice.discount ?? 0,
-    invoice.discount_type ?? "PERCENT"
+    invoice.discount_type ?? "PERCENT",
+    {
+      isTaxExempt,
+      taxExemptionReason,
+      taxExemptionCertificate,
+    }
   )
 
   const currencySymbol = getCurrencySymbol(invoice.currency_code)
@@ -443,8 +453,9 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
     items.map((li) => ({
       qty: li.qty,
       unitPrice: li.unit_price,
-      gstRate: li.tax_percent,
+      gstRate: isTaxExempt ? 0 : li.tax_percent,
       hsnSac: li.hsn_sac,
+      isExempt: isTaxExempt,
     })),
     supplyType
   )
@@ -648,6 +659,18 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
         <Text style={s.amountWords}>
           Amount in Words: {numToWords(summary.grandTotal, invoice.currency_code)}
         </Text>
+
+        {/* ── Statutory Tax Exemption Notice Banner ── */}
+        {isTaxExempt && (
+          <View style={{ marginTop: 6, marginBottom: 6, padding: 6, backgroundColor: "#F0FDF4", border: "1 solid #86EFAC", borderRadius: 3 }}>
+            <Text style={{ fontSize: 7.5, fontFamily: "Helvetica-Bold", color: "#166534" }}>
+              STATUTORY TAX EXEMPTION APPLIED
+            </Text>
+            <Text style={{ fontSize: 7, color: "#15803D", marginTop: 2 }}>
+              {summary.taxExemptionNotice || `Supplied under statutory tax exemption: ${taxExemptionReason || "Statutory Exemption"}${taxExemptionCertificate ? ` (Cert/Ref: ${taxExemptionCertificate})` : ""}. Tax assessed at 0.00%.`}
+            </Text>
+          </View>
+        )}
 
         {/* ── HSN Summary Table ── */}
         <View style={s.hsnTable}>

@@ -236,7 +236,11 @@ export default function DealsClient({ initialDeals, total }: Props) {
                                 ) : initialDeals.map((deal) => {
                                     const si = getStageInfo(deal.stage)
                                     return (
-                                        <TableRow key={deal.id} className="hover:bg-muted/50">
+                                        <TableRow
+                                            key={deal.id}
+                                            className="cursor-pointer hover:bg-muted/50"
+                                            onClick={() => router.push(`/crm/deals/${deal.id}`)}
+                                        >
                                             <TableCell>
                                                 <div><span className="font-medium">{deal.title}</span><p className="text-xs text-muted-foreground">{deal.contact_name}</p></div>
                                             </TableCell>
@@ -256,7 +260,7 @@ export default function DealsClient({ initialDeals, total }: Props) {
                                                     {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString() : "—"}
                                                 </div>
                                             </TableCell>
-                                            <TableCell><DealActions deal={deal} /></TableCell>
+                                            <TableCell onClick={(e) => e.stopPropagation()}><DealActions deal={deal} /></TableCell>
                                         </TableRow>
                                     )
                                 })}
@@ -281,11 +285,17 @@ export default function DealsClient({ initialDeals, total }: Props) {
                                 </div>
                                 <div className="flex-1 bg-muted/20 border border-dashed rounded-lg p-2 space-y-3">
                                     {colDeals.map((deal) => (
-                                        <Card key={deal.id} className="group cursor-pointer hover:border-primary/50 transition-all shadow-sm">
+                                        <Card
+                                            key={deal.id}
+                                            className="group cursor-pointer hover:border-primary/50 transition-all shadow-sm"
+                                            onClick={() => router.push(`/crm/deals/${deal.id}`)}
+                                        >
                                             <CardContent className="p-3">
                                                 <div className="flex justify-between items-start mb-1">
                                                     <p className="font-medium text-sm leading-tight line-clamp-2">{deal.title}</p>
-                                                    <DealActions deal={deal} />
+                                                    <div onClick={(e) => e.stopPropagation()}>
+                                                        <DealActions deal={deal} />
+                                                    </div>
                                                 </div>
                                                 <p className="text-[11px] text-muted-foreground mb-3">{deal.company}</p>
                                                 <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/30">

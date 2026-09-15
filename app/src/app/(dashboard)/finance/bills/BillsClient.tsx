@@ -42,12 +42,16 @@ interface BillsClientProps {
 
 export default function BillsClient({ bills, total }: BillsClientProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [selectedStatus, setSelectedStatus] = useState("ALL")
 
-  const filteredBills = bills.filter(bill => 
-    bill.bill_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bill.contact?.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    bill.contact?.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredBills = bills.filter(bill => {
+    const matchesSearch = 
+      bill.bill_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bill.contact?.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      bill.contact?.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = selectedStatus === "ALL" || bill.status === selectedStatus
+    return matchesSearch && matchesStatus
+  })
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -110,9 +114,24 @@ export default function BillsClient({ bills, total }: BillsClientProps) {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant={selectedStatus === "ALL" ? "outline" : "default"} size="icon" title="Filter by status">
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {["ALL", "OPEN", "PAID", "PARTIALLY_PAID", "DRAFT", "VOID"].map((st) => (
+                    <DropdownMenuItem 
+                      key={st} 
+                      onClick={() => setSelectedStatus(st)}
+                      className={selectedStatus === st ? "font-bold bg-accent" : ""}
+                    >
+                      {st === "ALL" ? "All Statuses" : st.replace("_", " ")}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>

@@ -479,34 +479,51 @@ export function TdsClient({ initialData }: TdsClientProps) {
 
       {/* Tabs Layout */}
       <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 max-w-3xl">
-          <TabsTrigger value="ledger" className="gap-2">
-            <FileText className="h-4 w-4" />
-            Deductions Ledger
-            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
-              {initialData.deductions.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="challans" className="gap-2">
-            <Landmark className="h-4 w-4" />
-            Challan 281 Desk
-            <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
-              {initialData.challans.length}
-            </Badge>
-          </TabsTrigger>
-          <TabsTrigger value="returns" className="gap-2">
-            <FileSpreadsheet className="h-4 w-4" />
-            Form 26Q Returns
-          </TabsTrigger>
-          <TabsTrigger value="calculator" className="gap-2">
-            <Calculator className="h-4 w-4" />
-            TDS Calculator
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="gap-2">
-            <Building2 className="h-4 w-4" />
-            TAN & Profile
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto pb-1 scrollbar-none">
+          <TabsList className="inline-flex h-auto p-1 bg-muted/60 border rounded-xl gap-1 shrink-0">
+            <TabsTrigger
+              value="ledger"
+              className="gap-2 px-3 py-2 text-xs font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs"
+            >
+              <FileText className="h-3.5 w-3.5 shrink-0" />
+              <span>Deductions Ledger</span>
+              <span className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full bg-muted-foreground/10 text-muted-foreground data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-600">
+                {initialData.deductions.length}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="challans"
+              className="gap-2 px-3 py-2 text-xs font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs"
+            >
+              <Landmark className="h-3.5 w-3.5 shrink-0" />
+              <span>Challan 281 Desk</span>
+              <span className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full bg-muted-foreground/10 text-muted-foreground data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600">
+                {initialData.challans.length}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="returns"
+              className="gap-2 px-3 py-2 text-xs font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" />
+              <span>Form 26Q Returns</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="calculator"
+              className="gap-2 px-3 py-2 text-xs font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs"
+            >
+              <Calculator className="h-3.5 w-3.5 shrink-0" />
+              <span>TDS Calculator</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="settings"
+              className="gap-2 px-3 py-2 text-xs font-semibold rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-xs"
+            >
+              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <span>TAN & Profile</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* ── TAB 1: DEDUCTIONS LEDGER ────────────────────────────────────── */}
         <TabsContent value="ledger" className="space-y-4">
@@ -522,9 +539,9 @@ export function TdsClient({ initialData }: TdsClientProps) {
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2">
               <Select value={sectionFilter} onValueChange={setSectionFilter}>
-                <SelectTrigger className="w-[140px] h-9 text-xs">
+                <SelectTrigger className="w-full sm:w-[140px] h-9 text-xs">
                   <SelectValue placeholder="All Sections" />
                 </SelectTrigger>
                 <SelectContent>
@@ -538,7 +555,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
               </Select>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[130px] h-9 text-xs">
+                <SelectTrigger className="w-full sm:w-[130px] h-9 text-xs">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -551,8 +568,10 @@ export function TdsClient({ initialData }: TdsClientProps) {
           </div>
 
           {/* Deductions Table */}
-          <Card>
-            <Table>
+          <Card className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+
               <TableHeader>
                 <TableRow>
                   <TableHead>Deductee / Vendor</TableHead>
@@ -651,29 +670,31 @@ export function TdsClient({ initialData }: TdsClientProps) {
                 )}
               </TableBody>
             </Table>
-          </Card>
-        </TabsContent>
-
-        {/* ── TAB 2: CHALLAN 281 DESK ────────────────────────────────────── */}
-        <TabsContent value="challans" className="space-y-4">
-          <div className="flex items-center justify-between bg-muted/40 p-4 rounded-lg border">
-            <div>
-              <h3 className="text-sm font-semibold">Income Tax ITNS 281 Challan Receipts</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Record government tax payments deposited with authorized banks (BSR Code, Challan No, CIN).
-              </p>
-            </div>
-            <Button
-              size="sm"
-              className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs"
-              onClick={() => openChallanForPending([])}
-            >
-              <Plus className="h-4 w-4" />
-              New Challan 281 Deposit
-            </Button>
           </div>
+        </Card>
+      </TabsContent>
 
-          <Card>
+      {/* ── TAB 2: CHALLAN 281 DESK ────────────────────────────────────── */}
+      <TabsContent value="challans" className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/40 p-4 rounded-lg border">
+          <div>
+            <h3 className="text-sm font-semibold">Income Tax ITNS 281 Challan Receipts</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Record government tax payments deposited with authorized banks (BSR Code, Challan No, CIN).
+            </p>
+          </div>
+          <Button
+            size="sm"
+            className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs shrink-0"
+            onClick={() => openChallanForPending([])}
+          >
+            <Plus className="h-4 w-4" />
+            New Challan 281 Deposit
+          </Button>
+        </div>
+
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -743,7 +764,9 @@ export function TdsClient({ initialData }: TdsClientProps) {
                 )}
               </TableBody>
             </Table>
-          </Card>
+          </div>
+        </Card>
+
         </TabsContent>
 
         {/* ── TAB 3: FORM 26Q QUARTERLY RETURN ───────────────────────────── */}
@@ -976,37 +999,39 @@ export function TdsClient({ initialData }: TdsClientProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-xs">Section</TableHead>
-                      <TableHead className="text-xs">Nature of Payment</TableHead>
-                      <TableHead className="text-right text-xs">Rate</TableHead>
-                      <TableHead className="text-right text-xs">Threshold</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Object.keys(TDS_SECTIONS).map((key) => {
-                      const s = TDS_SECTIONS[key]
-                      return (
-                        <TableRow key={key} className="text-xs">
-                          <TableCell className="font-mono font-bold">{s.code.split("_")[0]}</TableCell>
-                          <TableCell className="text-muted-foreground max-w-[150px] truncate" title={s.name}>
-                            {s.name}
-                          </TableCell>
-                          <TableCell className="text-right font-mono font-semibold">
-                            {s.individualHufRate === s.companyOtherRate
-                              ? `${s.individualHufRate}%`
-                              : `${s.individualHufRate}% / ${s.companyOtherRate}%`}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-muted-foreground">
-                            {formatCurrency(s.exemptionThreshold)}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-xs">Section</TableHead>
+                        <TableHead className="text-xs">Nature of Payment</TableHead>
+                        <TableHead className="text-right text-xs">Rate</TableHead>
+                        <TableHead className="text-right text-xs">Threshold</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.keys(TDS_SECTIONS).map((key) => {
+                        const s = TDS_SECTIONS[key]
+                        return (
+                          <TableRow key={key} className="text-xs">
+                            <TableCell className="font-mono font-bold">{s.code.split("_")[0]}</TableCell>
+                            <TableCell className="text-muted-foreground max-w-[150px] truncate" title={s.name}>
+                              {s.name}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-semibold">
+                              {s.individualHufRate === s.companyOtherRate
+                                ? `${s.individualHufRate}%`
+                                : `${s.individualHufRate}% / ${s.companyOtherRate}%`}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-muted-foreground">
+                              {formatCurrency(s.exemptionThreshold)}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -1026,7 +1051,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmitProfile} className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Deductor TAN *</Label>
                     <Input
@@ -1051,7 +1076,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Deductor Legal Name *</Label>
                     <Input
@@ -1082,7 +1107,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Principal Officer / Responsible Person
                   </h4>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-2">
                       <Label className="text-xs font-medium">Responsible Person Name *</Label>
                       <Input
@@ -1115,7 +1140,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">City / Town</Label>
                     <Input
@@ -1125,6 +1150,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       className="text-xs"
                     />
                   </div>
+
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">State</Label>
                     <Input
@@ -1187,7 +1213,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Deposit Date *</Label>
                 <Input
@@ -1251,7 +1277,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Tax Amount (INR) *</Label>
                 <Input

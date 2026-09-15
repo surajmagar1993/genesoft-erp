@@ -33,7 +33,16 @@ import {
     ScanLine,
     Barcode as BarcodeIcon,
     QrCode as QrIcon,
+    BarChart3,
+    Download,
+    FileSpreadsheet,
+    DollarSign,
+    Percent,
+    Flame,
+    CircleDollarSign,
 } from "lucide-react"
+import Papa from "papaparse"
+
 import { BarcodeDisplay } from "@/components/inventory/barcode-display"
 import { BarcodeLabelPrinter } from "@/components/inventory/barcode-label-printer"
 import { BarcodeScannerModal } from "@/components/inventory/barcode-scanner-modal"
@@ -67,6 +76,8 @@ import {
     InventoryProduct, 
     WarehouseItem, 
     StockMovementRecord,
+    InventoryReportsResult,
+    getInventoryReportsData,
     createWarehouse, 
     updateWarehouse, 
     adjustStock, 
@@ -77,12 +88,173 @@ import { StockMovementType } from "@prisma/client"
 
 interface InventoryClientProps {
     initialData: InventoryOverviewData
+    initialReportsData?: InventoryReportsResult
+    initialTab?: string
 }
 
-export function InventoryClient({ initialData }: InventoryClientProps) {
+export function InventoryClient({ initialData, initialReportsData, initialTab }: InventoryClientProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [activeTab, setActiveTab] = useState<"stocks" | "warehouses" | "movements" | "alerts" | "barcodes">("stocks")
+    const [activeTab, setActiveTab] = useState<"stocks" | "warehouses" | "movements" | "alerts" | "barcodes" | "reports">((initialTab as any) || "stocks")
+
+    // Reports Studio State
+    const [reportsData, setReportsData] = useState<InventoryReportsResult>(initialReportsData || {
+        kpis: {
+            totalAssetCostValue: 0,
+            totalRetailValue: 0,
+            potentialGrossProfit: 0,
+            grossMarginPercent: 0,
+            totalTrackedSKUs: 0,
+            deficitSKUCount: 0
+        },
+        valuationReport: [],
+        velocityReport: [],
+        matrixReport: { warehouses: [], rows: [] }
+    })
+    const [reportsTimeRange, setReportsTimeRange] = useState<"30d" | "90d" | "365d" | "all">("30d")
+    const [reportsSubView, setReportsSubView] = useState<"valuation" | "velocity" | "matrix">("valuation")
+    const [reportsCategoryFilter, setReportsCategoryFilter] = useState<string>("all")
+    const [reportsStatusFilter, setReportsStatusFilter] = useState<string>("all")
+    const [reportsSearchQuery, setReportsSearchQuery] = useState<string>("")
+    const [isLoadingReports, setIsLoadingReports] = useState(false)
+
+    const handleTimeRangeChange = async (range: "30d" | "90d" | "365d" | "all") => {
+        setReportsTimeRange(range)
+        setIsLoadingReports(true)
+        try {
+            const res = await getInventoryReportsData(range)
+            setReportsData(res)
+        } catch (e) {
+            console.error("Error updating reports:", e)
+            toast.error("Failed to load inventory reports data")
+        } finally {
+            setIsLoadingReports(false)
+        }
+    }
+
+    const reportCategories = Array.from(new Set(reportsData.valuationReport.map(item => item.category || "General")))
+
+    const exportValuationCsv = () => {
+        try {
+            const rows = reportsData.valuationReport.map(item => ({
+                "SKU": item.sku || "",
+                "Product Name": item.productName,
+                "Category": item.category,
+                "On Hand Stock": item.stockQty,
+                "Unit": item.unit,
+                "Cost Price (INR)": item.costPrice,
+                "Total Cost Basis (INR)": item.totalCostValue,
+                "Retail Selling Price (INR)": item.sellingPrice,
+                "Total Retail Value (INR)": item.totalRetailValue,
+                "Potential Gross Profit (INR)": item.potentialMarginAmount,
+                "Gross Margin (%)": `${item.potentialMarginPercent}%`,
+                "Status": item.status,
+            }))
+            const csv = Papa.unparse(rows)
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = url
+            link.setAttribute("download", `stock_valuation_report_${new Date().toISOString().split("T")[0]}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            toast.success("Stock valuation report exported successfully")
+        } catch (err) {
+            console.error("Valuation export error:", err)
+            toast.error("Failed to export valuation CSV")
+        }
+    }
+
+    const exportVelocityCsv = () => {
+        try {
+            const rows = reportsData.velocityReport.map(item => ({
+                "SKU": item.sku || "",
+                "Product Name": item.productName,
+                "Category": item.category,
+                "Current Stock": item.currentStock,
+                "Inflow (Receipts/Returns)": item.totalInflow,
+                "Outflow (Dispatches/Sales)": item.totalOutflow,
+                "Net Movement": item.netChange,
+                "Logged Movements": item.movementCount,
+                "Turnover Velocity": item.turnoverVelocity,
+            }))
+            const csv = Papa.unparse(rows)
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = url
+            link.setAttribute("download", `stock_turnover_velocity_${reportsTimeRange}_${new Date().toISOString().split("T")[0]}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            toast.success("Turnover velocity report exported successfully")
+        } catch (err) {
+            console.error("Velocity export error:", err)
+            toast.error("Failed to export velocity CSV")
+        }
+    }
+
+    const exportMatrixCsv = () => {
+        try {
+            const warehouses = reportsData.matrixReport.warehouses
+            const rows = reportsData.matrixReport.rows.map(row => {
+                const depotCols: Record<string, number> = {}
+                warehouses.forEach(w => {
+                    depotCols[`${w.name} (${w.code})`] = row.depotQuantities[w.id] || 0
+                })
+                return {
+                    "SKU": row.sku || "",
+                    "Product Name": row.productName,
+                    "Category": row.category,
+                    "Total Aggregated Qty": row.totalQty,
+                    ...depotCols
+                }
+            })
+            const csv = Papa.unparse(rows)
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement("a")
+            link.href = url
+            link.setAttribute("download", `multi_depot_distribution_matrix_${new Date().toISOString().split("T")[0]}.csv`)
+            document.body.appendChild(link)
+            link.click()
+            document.body.removeChild(link)
+            toast.success("Multi-depot matrix exported successfully")
+        } catch (err) {
+            console.error("Matrix export error:", err)
+            toast.error("Failed to export matrix CSV")
+        }
+    }
+
+    const filteredValuationItems = reportsData.valuationReport.filter(item => {
+        const matchesQuery = reportsSearchQuery === "" || 
+            item.productName.toLowerCase().includes(reportsSearchQuery.toLowerCase()) ||
+            (item.sku && item.sku.toLowerCase().includes(reportsSearchQuery.toLowerCase())) ||
+            item.category.toLowerCase().includes(reportsSearchQuery.toLowerCase())
+        const matchesCategory = reportsCategoryFilter === "all" || item.category === reportsCategoryFilter
+        const matchesStatus = reportsStatusFilter === "all" || item.status === reportsStatusFilter
+        return matchesQuery && matchesCategory && matchesStatus
+    })
+
+    const filteredVelocityItems = reportsData.velocityReport.filter(item => {
+        const matchesQuery = reportsSearchQuery === "" || 
+            item.productName.toLowerCase().includes(reportsSearchQuery.toLowerCase()) ||
+            (item.sku && item.sku.toLowerCase().includes(reportsSearchQuery.toLowerCase())) ||
+            item.category.toLowerCase().includes(reportsSearchQuery.toLowerCase())
+        const matchesCategory = reportsCategoryFilter === "all" || item.category === reportsCategoryFilter
+        return matchesQuery && matchesCategory
+    })
+
+    const filteredMatrixRows = reportsData.matrixReport.rows.filter(row => {
+        const matchesQuery = reportsSearchQuery === "" || 
+            row.productName.toLowerCase().includes(reportsSearchQuery.toLowerCase()) ||
+            (row.sku && row.sku.toLowerCase().includes(reportsSearchQuery.toLowerCase())) ||
+            row.category.toLowerCase().includes(reportsSearchQuery.toLowerCase())
+        const matchesCategory = reportsCategoryFilter === "all" || row.category === reportsCategoryFilter
+        return matchesQuery && matchesCategory
+    })
+
     const [isScannerOpen, setIsScannerOpen] = useState(false)
     const [isLabelPrinterOpen, setIsLabelPrinterOpen] = useState(false)
     const [selectedProductsForLabel, setSelectedProductsForLabel] = useState<InventoryProduct[]>([])
@@ -520,7 +692,7 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
 
             {/* Navigation Tabs & Main Views */}
             <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 max-w-3xl">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 max-w-4xl">
                     <TabsTrigger value="stocks" className="gap-2">
                         <Package className="h-4 w-4" />
                         Stock Levels
@@ -554,6 +726,13 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                                 {lowStockProducts.length}
                             </Badge>
                         )}
+                    </TabsTrigger>
+                    <TabsTrigger value="reports" className="gap-2">
+                        <BarChart3 className="h-4 w-4 text-emerald-500" />
+                        Reports Studio
+                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                            P2
+                        </Badge>
                     </TabsTrigger>
                 </TabsList>
 
@@ -1260,6 +1439,526 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                         </Table>
                     </Card>
                 </TabsContent>
+
+                {/* TAB 6: Inventory Reports & Valuation Studio */}
+                <TabsContent value="reports" className="space-y-6">
+                    {/* Header Controls Banner */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card p-5 rounded-2xl border shadow-sm">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+                                    <BarChart3 className="h-5 w-5 text-emerald-600" />
+                                    Inventory Valuation & Analytics Studio
+                                </h2>
+                                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
+                                    Live Financial Audit
+                                </Badge>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Detailed asset valuation basis, gross margin yields, multi-depot allocation, and turnover velocity.
+                            </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2.5">
+                            {/* Time-range switcher */}
+                            <div className="flex items-center rounded-lg border bg-muted/50 p-1 text-xs">
+                                {(["30d", "90d", "365d", "all"] as const).map(range => (
+                                    <button
+                                        key={range}
+                                        type="button"
+                                        onClick={() => handleTimeRangeChange(range)}
+                                        disabled={isLoadingReports}
+                                        className={`px-3 py-1.5 rounded-md font-medium transition-all ${
+                                            reportsTimeRange === range
+                                                ? "bg-background text-foreground shadow-xs font-semibold"
+                                                : "text-muted-foreground hover:text-foreground"
+                                        }`}
+                                    >
+                                        {range === "30d" ? "30 Days" : range === "90d" ? "90 Days" : range === "365d" ? "1 Year" : "All Time"}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Export CSV actions */}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 gap-1.5 text-xs font-medium"
+                                onClick={reportsSubView === "valuation" ? exportValuationCsv : reportsSubView === "velocity" ? exportVelocityCsv : exportMatrixCsv}
+                            >
+                                <Download className="h-3.5 w-3.5" />
+                                Export {reportsSubView === "valuation" ? "Valuation" : reportsSubView === "velocity" ? "Velocity" : "Matrix"} CSV
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-9 gap-1.5 text-xs font-medium"
+                                onClick={() => window.print()}
+                            >
+                                <Printer className="h-3.5 w-3.5" />
+                                Print Report
+                            </Button>
+
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-9 w-9 p-0"
+                                onClick={() => handleTimeRangeChange(reportsTimeRange)}
+                                disabled={isLoadingReports}
+                            >
+                                <RefreshCw className={`h-4 w-4 ${isLoadingReports ? "animate-spin text-primary" : "text-muted-foreground"}`} />
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* 4 KPI Cards */}
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <Card className="border-l-4 border-l-blue-500 shadow-sm">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Asset Cost Value
+                                </CardTitle>
+                                <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 flex items-center justify-center text-blue-600">
+                                    <Package className="h-4 w-4" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold tracking-tight">
+                                    {formatCurrency(reportsData.kpis.totalAssetCostValue)}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Total purchase/cost basis across all facilities
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-emerald-500 shadow-sm">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Retail Market Value
+                                </CardTitle>
+                                <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600">
+                                    <TrendingUp className="h-4 w-4" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold tracking-tight">
+                                    {formatCurrency(reportsData.kpis.totalRetailValue)}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Projected selling value of available on-hand stock
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-indigo-500 shadow-sm">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Gross Margin Yield
+                                </CardTitle>
+                                <div className="h-8 w-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600">
+                                    <Percent className="h-4 w-4" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-bold tracking-tight">
+                                        {formatCurrency(reportsData.kpis.potentialGrossProfit)}
+                                    </span>
+                                    <Badge variant="outline" className="text-xs font-semibold text-indigo-600 border-indigo-200">
+                                        {reportsData.kpis.grossMarginPercent}%
+                                    </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Projected gross profit upon full liquidation
+                                </p>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="border-l-4 border-l-amber-500 shadow-sm">
+                            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    Tracked SKUs & Health
+                                </CardTitle>
+                                <div className="h-8 w-8 rounded-lg bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600">
+                                    <Boxes className="h-4 w-4" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-baseline gap-2">
+                                    <span className="text-2xl font-bold tracking-tight">
+                                        {reportsData.kpis.totalTrackedSKUs} SKUs
+                                    </span>
+                                    {reportsData.kpis.deficitSKUCount > 0 ? (
+                                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                                            {reportsData.kpis.deficitSKUCount} Deficit
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-emerald-600 border-emerald-200">
+                                            100% Healthy
+                                        </Badge>
+                                    )}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                    Active catalog items under stock control
+                                </p>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Sub-view Navigation & Filters */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b pb-3">
+                        <div className="flex items-center gap-1 bg-muted p-1 rounded-xl w-fit">
+                            <button
+                                type="button"
+                                onClick={() => setReportsSubView("valuation")}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                    reportsSubView === "valuation"
+                                        ? "bg-background text-foreground shadow-xs font-semibold"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                <CircleDollarSign className="h-3.5 w-3.5 text-blue-500" />
+                                Stock Valuation Matrix
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                    {reportsData.valuationReport.length}
+                                </Badge>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setReportsSubView("velocity")}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                    reportsSubView === "velocity"
+                                        ? "bg-background text-foreground shadow-xs font-semibold"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                <Flame className="h-3.5 w-3.5 text-orange-500" />
+                                Turnover & Velocity Analysis
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                    {reportsData.velocityReport.length}
+                                </Badge>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setReportsSubView("matrix")}
+                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                    reportsSubView === "matrix"
+                                        ? "bg-background text-foreground shadow-xs font-semibold"
+                                        : "text-muted-foreground hover:text-foreground"
+                                }`}
+                            >
+                                <WarehouseIcon className="h-3.5 w-3.5 text-indigo-500" />
+                                Multi-Depot Distribution
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                    {reportsData.matrixReport.warehouses.length} Hubs
+                                </Badge>
+                            </button>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="relative w-48 sm:w-64">
+                                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                                <Input
+                                    placeholder="Filter report items..."
+                                    value={reportsSearchQuery}
+                                    onChange={(e) => setReportsSearchQuery(e.target.value)}
+                                    className="pl-8 h-8 text-xs"
+                                />
+                            </div>
+
+                            {reportsSubView === "valuation" && (
+                                <Select value={reportsStatusFilter} onValueChange={setReportsStatusFilter}>
+                                    <SelectTrigger className="h-8 text-xs w-32">
+                                        <SelectValue placeholder="All Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Status</SelectItem>
+                                        <SelectItem value="IN_STOCK">In Stock</SelectItem>
+                                        <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
+                                        <SelectItem value="OUT_OF_STOCK">Out of Stock</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            )}
+
+                            {reportCategories.length > 0 && (
+                                <Select value={reportsCategoryFilter} onValueChange={setReportsCategoryFilter}>
+                                    <SelectTrigger className="h-8 text-xs w-36">
+                                        <SelectValue placeholder="All Categories" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Categories</SelectItem>
+                                        {reportCategories.map(cat => (
+                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* SUB-VIEW 1: Stock Valuation Matrix Table */}
+                    {reportsSubView === "valuation" && (
+                        <Card>
+                            <CardHeader className="pb-3 border-b">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-sm font-semibold">Stock Valuation Breakdown</CardTitle>
+                                        <CardDescription className="text-xs">
+                                            Asset acquisition cost vs. current catalog selling price and unrealized gross margin per SKU.
+                                        </CardDescription>
+                                    </div>
+                                    <Badge variant="outline" className="text-xs">
+                                        Showing {filteredValuationItems.length} of {reportsData.valuationReport.length} items
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="bg-muted/40">
+                                        <TableHead className="w-[240px]">Product / Item</TableHead>
+                                        <TableHead>SKU / Barcode</TableHead>
+                                        <TableHead className="text-right">On Hand Stock</TableHead>
+                                        <TableHead className="text-right">Cost Price</TableHead>
+                                        <TableHead className="text-right">Total Cost Basis</TableHead>
+                                        <TableHead className="text-right">Selling Price</TableHead>
+                                        <TableHead className="text-right">Total Retail Value</TableHead>
+                                        <TableHead className="text-right">Potential Margin</TableHead>
+                                        <TableHead className="text-center">Status</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredValuationItems.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                                                <Package className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                                                <p className="font-medium text-sm">No valuation records found</p>
+                                                <p className="text-xs">Adjust your search or filter settings.</p>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        filteredValuationItems.map(item => (
+                                            <TableRow key={item.productId} className="hover:bg-muted/30">
+                                                <TableCell>
+                                                    <div className="font-semibold text-sm">{item.productName}</div>
+                                                    <div className="text-xs text-muted-foreground">{item.category}</div>
+                                                </TableCell>
+                                                <TableCell className="font-mono text-xs">
+                                                    <div>{item.sku || "—"}</div>
+                                                    {item.barcode && <div className="text-[10px] text-muted-foreground">{item.barcode}</div>}
+                                                </TableCell>
+                                                <TableCell className="text-right font-medium">
+                                                    {item.stockQty.toLocaleString()} {item.unit}
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                                                    {formatCurrency(item.costPrice)}
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs font-semibold text-blue-600 dark:text-blue-400">
+                                                    {formatCurrency(item.totalCostValue)}
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                                                    {formatCurrency(item.sellingPrice)}
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                                    {formatCurrency(item.totalRetailValue)}
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs">
+                                                    <div className="font-semibold text-indigo-600 dark:text-indigo-400">
+                                                        {formatCurrency(item.potentialMarginAmount)}
+                                                    </div>
+                                                    <div className="text-[10px] text-muted-foreground">
+                                                        {item.potentialMarginPercent}%
+                                                    </div>
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    <Badge
+                                                        variant={item.status === "IN_STOCK" ? "outline" : item.status === "LOW_STOCK" ? "secondary" : "destructive"}
+                                                        className={`text-[10px] ${
+                                                            item.status === "IN_STOCK"
+                                                                ? "border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
+                                                                : item.status === "LOW_STOCK"
+                                                                ? "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                                                                : ""
+                                                        }`}
+                                                    >
+                                                        {item.status === "IN_STOCK" ? "In Stock" : item.status === "LOW_STOCK" ? "Low Stock" : "Out of Stock"}
+                                                    </Badge>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </Card>
+                    )}
+
+                    {/* SUB-VIEW 2: Turnover & Velocity Analysis Table */}
+                    {reportsSubView === "velocity" && (
+                        <Card>
+                            <CardHeader className="pb-3 border-b">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-sm font-semibold">Stock Turnover & Movement Velocity</CardTitle>
+                                        <CardDescription className="text-xs">
+                                            Aggregated inflow vs outflow velocity during the selected time period ({reportsTimeRange === "30d" ? "last 30 days" : reportsTimeRange === "90d" ? "last 90 days" : reportsTimeRange === "365d" ? "last 365 days" : "all-time"}).
+                                        </CardDescription>
+                                    </div>
+                                    <Badge variant="outline" className="text-xs">
+                                        Showing {filteredVelocityItems.length} items
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow className="bg-muted/40">
+                                        <TableHead className="w-[260px]">Product / Item</TableHead>
+                                        <TableHead>SKU</TableHead>
+                                        <TableHead className="text-right">Current Stock</TableHead>
+                                        <TableHead className="text-right text-emerald-600">Total Inflow (+)</TableHead>
+                                        <TableHead className="text-right text-rose-600">Total Outflow (-)</TableHead>
+                                        <TableHead className="text-right">Net Change</TableHead>
+                                        <TableHead className="text-right">Log Count</TableHead>
+                                        <TableHead className="text-center">Turnover Velocity</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredVelocityItems.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                                                <History className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                                                <p className="font-medium text-sm">No velocity movement records</p>
+                                                <p className="text-xs">Select a wider time window or adjust filters.</p>
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        filteredVelocityItems.map(item => (
+                                            <TableRow key={item.productId} className="hover:bg-muted/30">
+                                                <TableCell>
+                                                    <div className="font-semibold text-sm">{item.productName}</div>
+                                                    <div className="text-xs text-muted-foreground">{item.category}</div>
+                                                </TableCell>
+                                                <TableCell className="font-mono text-xs">{item.sku || "—"}</TableCell>
+                                                <TableCell className="text-right font-medium">{item.currentStock}</TableCell>
+                                                <TableCell className="text-right font-mono text-xs font-semibold text-emerald-600">
+                                                    +{item.totalInflow}
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs font-semibold text-rose-600">
+                                                    -{item.totalOutflow}
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs font-semibold">
+                                                    <span className={item.netChange > 0 ? "text-emerald-600" : item.netChange < 0 ? "text-rose-600" : "text-muted-foreground"}>
+                                                        {item.netChange > 0 ? `+${item.netChange}` : item.netChange}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                                                    {item.movementCount}
+                                                </TableCell>
+                                                <TableCell className="text-center">
+                                                    {item.turnoverVelocity === "FAST_MOVING" && (
+                                                        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1 text-[10px]">
+                                                            <Flame className="h-3 w-3 text-emerald-600 fill-emerald-600" />
+                                                            Fast Moving
+                                                        </Badge>
+                                                    )}
+                                                    {item.turnoverVelocity === "MODERATE" && (
+                                                        <Badge variant="secondary" className="bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30 gap-1 text-[10px]">
+                                                            <TrendingUp className="h-3 w-3 text-blue-600" />
+                                                            Moderate
+                                                        </Badge>
+                                                    )}
+                                                    {item.turnoverVelocity === "SLOW_MOVING" && (
+                                                        <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px]">
+                                                            Slow Moving
+                                                        </Badge>
+                                                    )}
+                                                    {item.turnoverVelocity === "DEAD_STOCK" && (
+                                                        <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30 text-[10px]">
+                                                            Dead Stock (0 Moves)
+                                                        </Badge>
+                                                    )}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </Card>
+                    )}
+
+                    {/* SUB-VIEW 3: Multi-Depot Distribution Matrix Table */}
+                    {reportsSubView === "matrix" && (
+                        <Card>
+                            <CardHeader className="pb-3 border-b">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle className="text-sm font-semibold">Multi-Depot Inventory Distribution Matrix</CardTitle>
+                                        <CardDescription className="text-xs">
+                                            Side-by-side stock allocation across all registered company warehouses and facilities.
+                                        </CardDescription>
+                                    </div>
+                                    <Badge variant="outline" className="text-xs">
+                                        {reportsData.matrixReport.warehouses.length} Warehouses Listed
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-muted/40">
+                                            <TableHead className="w-[240px] sticky left-0 bg-background z-10">Product / Item</TableHead>
+                                            <TableHead>SKU</TableHead>
+                                            <TableHead className="text-right font-bold">Total Aggregated</TableHead>
+                                            {reportsData.matrixReport.warehouses.map(w => (
+                                                <TableHead key={w.id} className="text-right min-w-[120px]">
+                                                    <div className="font-semibold">{w.name}</div>
+                                                    <div className="text-[10px] text-muted-foreground font-mono">{w.code}</div>
+                                                </TableHead>
+                                            ))}
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredMatrixRows.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={3 + reportsData.matrixReport.warehouses.length} className="text-center py-12 text-muted-foreground">
+                                                    <WarehouseIcon className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                                                    <p className="font-medium text-sm">No items in distribution matrix</p>
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            filteredMatrixRows.map(row => (
+                                                <TableRow key={row.productId} className="hover:bg-muted/30">
+                                                    <TableCell className="sticky left-0 bg-background z-10 font-semibold text-sm">
+                                                        <div>{row.productName}</div>
+                                                        <div className="text-xs text-muted-foreground font-normal">{row.category}</div>
+                                                    </TableCell>
+                                                    <TableCell className="font-mono text-xs">{row.sku || "—"}</TableCell>
+                                                    <TableCell className="text-right font-bold text-sm">
+                                                        {row.totalQty.toLocaleString()}
+                                                    </TableCell>
+                                                    {reportsData.matrixReport.warehouses.map(w => {
+                                                        const qty = row.depotQuantities[w.id] || 0
+                                                        return (
+                                                            <TableCell key={w.id} className="text-right font-mono text-xs">
+                                                                {qty > 0 ? (
+                                                                    <span className="font-medium text-foreground">{qty.toLocaleString()}</span>
+                                                                ) : (
+                                                                    <span className="text-muted-foreground/50">—</span>
+                                                                )}
+                                                            </TableCell>
+                                                        )
+                                                    })}
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </Card>
+                    )}
+                </TabsContent>
             </Tabs>
 
             {/* MODAL 1: Adjust Stock Dialog */}
@@ -1529,8 +2228,8 @@ export function InventoryClient({ initialData }: InventoryClientProps) {
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleWarehouseSubmit} className="space-y-4 py-2">
-                        <div className="grid grid-cols-3 gap-3">
-                            <div className="col-span-2 space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="col-span-1 sm:col-span-2 space-y-2">
                                 <Label className="text-xs font-medium">Warehouse Name *</Label>
                                 <Input 
                                     placeholder="e.g. West Coast Distribution"

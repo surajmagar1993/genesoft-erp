@@ -19,7 +19,7 @@ export default async function WhatsAppHubPage() {
         )
     }
 
-    const [config, tenant, contacts, invoices] = await Promise.all([
+    const [config, tenant, rawContacts, rawInvoices] = await Promise.all([
         getWhatsAppConfig(),
         prisma.tenant.findUnique({
             where: { id: tenantId },
@@ -32,7 +32,7 @@ export default async function WhatsAppHubPage() {
             },
             select: {
                 id: true,
-                name: true,
+                displayName: true,
                 phone: true,
                 email: true,
                 type: true,
@@ -43,17 +43,34 @@ export default async function WhatsAppHubPage() {
         }),
         prisma.invoice.findMany({
             where: {
-                tenant_id: tenantId,
+                tenantId,
             },
             include: {
                 contact: {
-                    select: { id: true, name: true, phone: true },
+                    select: { id: true, displayName: true, phone: true },
                 },
             },
             take: 30,
-            orderBy: { issue_date: "desc" },
+            orderBy: { invoiceDate: "desc" },
         }),
     ])
+
+    const contacts = rawContacts.map((c: any) => ({
+        ...c,
+        name: c.displayName,
+    }))
+
+    const invoices = rawInvoices.map((inv: any) => ({
+
+        ...inv,
+        contact: inv.contact
+            ? {
+                  id: inv.contact.id,
+                  name: inv.contact.displayName,
+                  phone: inv.contact.phone,
+              }
+            : null,
+    })) as any
 
     const settings = (tenant?.settings as any) || {}
     const messages = Array.isArray(settings.whatsapp?.messages) ? settings.whatsapp.messages : []

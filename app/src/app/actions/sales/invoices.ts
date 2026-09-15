@@ -29,6 +29,7 @@ export interface InvoiceLineItemDB {
   cgst_amount: number
   sgst_amount: number
   igst_amount: number
+  is_exempt?: boolean
   tenant_id: string
 }
 
@@ -73,6 +74,10 @@ export interface InvoiceDB {
   tenant_id: string
   contact_id: string
   currency_code: string
+  // Tax Exemption
+  is_tax_exempt?: boolean
+  tax_exemption_reason?: string | null
+  tax_exemption_certificate?: string | null
   created_at: string
   updated_at: string
   invoice_line_items?: InvoiceLineItemDB[]
@@ -114,6 +119,9 @@ function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB } {
     tenant_id: inv.tenantId,
     contact_id: inv.contactId,
     currency_code: inv.currencyCode || "INR",
+    is_tax_exempt: (inv as any).isTaxExempt || false,
+    tax_exemption_reason: (inv as any).taxExemptionReason || null,
+    tax_exemption_certificate: (inv as any).taxExemptionCertificate || null,
     created_at: inv.createdAt ? new Date(inv.createdAt).toISOString() : new Date().toISOString(),
     updated_at: inv.updatedAt ? new Date(inv.updatedAt).toISOString() : new Date().toISOString(),
     invoice_line_items: (inv.items || []).map((li: any) => ({
@@ -295,6 +303,9 @@ export interface CreateInvoicePayload {
   place_of_supply: string
   supply_type: "intra" | "inter"
   contact_id: string
+  is_tax_exempt?: boolean
+  tax_exemption_reason?: string
+  tax_exemption_certificate?: string
   line_items: Array<{
     product_name: string
     description: string
@@ -320,17 +331,44 @@ export async function createInvoice(
     const isProforma = payload.type === "PROFORMA"
     const finalType: InvoiceTypeEnum = isProforma ? "PROFORMA" : "TAX_INVOICE"
 
+    // Auto-detect tax exemption from contact if not explicitly provided
+    let isTaxExempt = Boolean(payload.is_tax_exempt)
+    let taxExemptionReason = payload.tax_exemption_reason
+    let taxExemptionCertificate = payload.tax_exemption_certificate
+
+    if (payload.contact_id && !isTaxExempt) {
+      try {
+        const contact = await prisma.contact.findUnique({
+          where: { id: payload.contact_id },
+          select: { isTaxExempt: true, taxExemptionReason: true, taxExemptionCertificate: true }
+        })
+        if (contact?.isTaxExempt) {
+          isTaxExempt = true
+          taxExemptionReason = taxExemptionReason || contact.taxExemptionReason || undefined
+          taxExemptionCertificate = taxExemptionCertificate || contact.taxExemptionCertificate || undefined
+        }
+      } catch (e) {
+        // Ignore contact lookup failure during build/offline
+      }
+    }
+
     // Compute GST summaries
     const items = payload.line_items.map((li) => ({
       qty: li.qty,
       unitPrice: li.unit_price,
-      gstRate: li.tax_percent,
+      gstRate: isTaxExempt ? 0 : li.tax_percent,
+      isExempt: isTaxExempt,
     }))
     const summary = computeInvoiceGstSummary(
       items,
       payload.supply_type || "intra",
       payload.discount || 0,
-      payload.discount_type || "PERCENT"
+      payload.discount_type || "PERCENT",
+      {
+        isTaxExempt,
+        taxExemptionReason,
+        taxExemptionCertificate,
+      }
     )
 
     const billToPayload = {
@@ -363,6 +401,9 @@ export async function createInvoice(
         total: summary.grandTotal,
         currencyCode: "INR",
         taxSummary: summary as any,
+        isTaxExempt,
+        taxExemptionReason: taxExemptionReason || null,
+        taxExemptionCertificate: taxExemptionCertificate || null,
         paymentTerms: "Due on receipt",
         notes: payload.notes || null,
         terms: payload.terms_and_conditions || null,
@@ -428,16 +469,26 @@ export async function updateInvoice(
     const isProforma = payload.type === "PROFORMA"
     const finalType: InvoiceTypeEnum = isProforma ? "PROFORMA" : "TAX_INVOICE"
 
+    let isTaxExempt = Boolean(payload.is_tax_exempt)
+    let taxExemptionReason = payload.tax_exemption_reason
+    let taxExemptionCertificate = payload.tax_exemption_certificate
+
     const items = payload.line_items.map((li) => ({
       qty: li.qty,
       unitPrice: li.unit_price,
-      gstRate: li.tax_percent,
+      gstRate: isTaxExempt ? 0 : li.tax_percent,
+      isExempt: isTaxExempt,
     }))
     const summary = computeInvoiceGstSummary(
       items,
       payload.supply_type || "intra",
       payload.discount || 0,
-      payload.discount_type || "PERCENT"
+      payload.discount_type || "PERCENT",
+      {
+        isTaxExempt,
+        taxExemptionReason,
+        taxExemptionCertificate,
+      }
     )
 
     const billToPayload = {
@@ -475,6 +526,9 @@ export async function updateInvoice(
           discount: summary.discountAmount,
           total: summary.grandTotal,
           taxSummary: summary as any,
+          isTaxExempt,
+          taxExemptionReason: taxExemptionReason || null,
+          taxExemptionCertificate: taxExemptionCertificate || null,
           notes: payload.notes || null,
           terms: payload.terms_and_conditions || null,
           signatureUrl: payload.signature_url || null,

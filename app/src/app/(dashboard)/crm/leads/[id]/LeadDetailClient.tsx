@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { Lead, LeadStatus } from "@/app/actions/crm/leads"
-import { convertLeadToDeal } from "@/app/actions/crm/leads"
+import { convertLeadToDeal, updateLead } from "@/app/actions/crm/leads"
 import { toast } from "sonner"
 import EntityTasks from "@/components/crm/EntityTasks"
 import EntityCommunications from "@/components/crm/EntityCommunications"
@@ -36,8 +36,29 @@ interface Props {
 export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Props) {
   const router = useRouter()
   const [isConverting, setIsConverting] = useState(false)
+  const [currentScore, setCurrentScore] = useState<number>(lead.score ?? 50)
+  const [isUpgradingScore, setIsUpgradingScore] = useState(false)
   const status = statusConfig[lead.status]
   const StatusIcon = status.icon
+
+  const handleUpgradeScore = async () => {
+    try {
+      setIsUpgradingScore(true)
+      const nextScore = Math.min(100, (currentScore || 0) + 15)
+      const res = await updateLead(lead.id, { score: nextScore })
+      if (res.error) {
+        toast.error(res.error)
+      } else {
+        setCurrentScore(nextScore)
+        toast.success(`Lead rank successfully upgraded to ${nextScore} points!`)
+        router.refresh()
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upgrade lead rank")
+    } finally {
+      setIsUpgradingScore(false)
+    }
+  }
 
   const handleConvert = async () => {
     try {
@@ -229,8 +250,8 @@ export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Pr
              </CardHeader>
              <CardContent>
                 <div className="flex flex-col items-center justify-center py-4 bg-background rounded-xl border border-primary/10 shadow-sm">
-                   <span className={`text-5xl font-black ${lead.score >= 70 ? 'text-emerald-500' : 'text-amber-500'}`}>
-                     {lead.score}<span className="text-2xl">%</span>
+                   <span className={`text-5xl font-black ${currentScore >= 70 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                     {currentScore}<span className="text-2xl">%</span>
                    </span>
                    <p className="text-xs text-muted-foreground uppercase tracking-widest font-bold mt-2">Conversion Probability</p>
                 </div>
@@ -249,8 +270,13 @@ export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Pr
                   </div>
                 </div>
                 <div className="mt-8">
-                   <Button className="w-full shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform" size="default">
-                     Upgrade Lead Rank
+                   <Button 
+                     className="w-full shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform" 
+                     size="default"
+                     onClick={handleUpgradeScore}
+                     disabled={isUpgradingScore || currentScore >= 100}
+                   >
+                     {isUpgradingScore ? "Upgrading..." : currentScore >= 100 ? "Maximum Rank Achieved" : "Upgrade Lead Rank (+15)"}
                    </Button>
                 </div>
              </CardContent>

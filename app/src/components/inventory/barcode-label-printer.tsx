@@ -190,8 +190,9 @@ export function BarcodeLabelPrinter({
   return (
     <>
       {/* ── Print-Only Styles ── */}
-      <style jsx global>{`
+      <style>{`
         @media print {
+
           @page {
             size: ${currentCfg.type === "a4" ? "A4 portrait" : `${currentCfg.labelWidthMm}mm ${currentCfg.labelHeightMm}mm`};
             margin: ${currentCfg.type === "a4" ? "8mm" : "0mm"};

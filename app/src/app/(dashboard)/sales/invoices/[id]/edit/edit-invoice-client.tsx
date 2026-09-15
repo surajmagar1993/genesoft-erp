@@ -44,6 +44,9 @@ export default function EditInvoiceClient({ invoice }: Props) {
         customerGstin: invoice.customer_gstin ?? "",
         supplierState: invoice.supplier_state ?? "",
         placeOfSupply: invoice.place_of_supply ?? "",
+        isTaxExempt: Boolean(invoice.is_tax_exempt),
+        taxExemptionReason: invoice.tax_exemption_reason ?? "",
+        taxExemptionCertificate: invoice.tax_exemption_certificate ?? "",
         lineItems: (invoice.invoice_line_items ?? []).map((li) => ({
             id: li.id,
             productName: li.product_name,
@@ -83,8 +86,12 @@ export default function EditInvoiceClient({ invoice }: Props) {
             place_of_supply: data.placeOfSupply,
             supply_type: supplyType,
             contact_id: data.contactId || invoice.contact_id,
+            is_tax_exempt: data.isTaxExempt,
+            tax_exemption_reason: data.taxExemptionReason,
+            tax_exemption_certificate: data.taxExemptionCertificate,
             line_items: data.lineItems.map((li) => {
-                const gst = computeLineItemGst(li.qty, li.unitPrice, li.gstRate, supplyType)
+                const effectiveRate = data.isTaxExempt ? 0 : li.gstRate
+                const gst = computeLineItemGst(li.qty, li.unitPrice, effectiveRate, supplyType)
                 return {
                     product_name: li.productName,
                     description: li.description,

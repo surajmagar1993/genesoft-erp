@@ -181,7 +181,7 @@ export async function getEwayBillsOverview(
       where: {
         tenantId,
         type: "TAX_INVOICE",
-        status: { notIn: ["CANCELLED", "REJECTED", "DRAFT"] },
+        status: { notIn: ["CANCELLED", "DRAFT"] },
       },
       include: {
         contact: true,

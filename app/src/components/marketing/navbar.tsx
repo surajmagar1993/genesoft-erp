@@ -75,14 +75,16 @@ export function PublicNavbar() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-col gap-4 animate-in slide-in-from-top duration-200">
-          <Link href="/#features" className="text-lg font-medium p-2">Features</Link>
-          <Link href="/#solutions" className="text-lg font-medium p-2">Solutions</Link>
-          <Link href="/pricing" className="text-lg font-medium p-2">Pricing</Link>
-          <Link href="/login" className="text-lg font-medium p-2 border-t pt-4">Login</Link>
+        <div className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-col gap-4 animate-in slide-in-from-top duration-200 shadow-xl">
+          <Link href="/#features" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 hover:text-orange-600 transition-colors">Features</Link>
+          <Link href="/#solutions" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 hover:text-orange-600 transition-colors">Solutions</Link>
+          <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 hover:text-orange-600 transition-colors">Pricing</Link>
+          <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 hover:text-orange-600 transition-colors">Contact</Link>
+          <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 border-t border-slate-100 dark:border-slate-800 pt-3">Login</Link>
           <Link 
             href="/register" 
-            className="inline-flex items-center justify-center w-full px-5 py-3 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 transition-all"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="inline-flex items-center justify-center w-full px-5 py-3 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 transition-all shadow-md"
           >
             Get Started Free
           </Link>

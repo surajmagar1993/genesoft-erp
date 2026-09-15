@@ -52,8 +52,12 @@ function NewInvoiceFormWrapper() {
             place_of_supply: data.placeOfSupply,
             supply_type: supplyType,
             contact_id: data.contactId,
+            is_tax_exempt: data.isTaxExempt,
+            tax_exemption_reason: data.taxExemptionReason,
+            tax_exemption_certificate: data.taxExemptionCertificate,
             line_items: data.lineItems.map((li) => {
-                const gst = computeLineItemGst(li.qty, li.unitPrice, li.gstRate, supplyType)
+                const effectiveRate = data.isTaxExempt ? 0 : li.gstRate
+                const gst = computeLineItemGst(li.qty, li.unitPrice, effectiveRate, supplyType)
                 return {
                     product_name: li.productName,
                     description: li.description,

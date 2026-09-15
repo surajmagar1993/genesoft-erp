@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
@@ -34,6 +35,30 @@ export default function ReceivableClient({ summary, debtors }: ReceivableClientP
 
   const maxBucketValue = Math.max(...agingBuckets.map(b => b.value), 1)
 
+  const [filterOverdue, setFilterOverdue] = useState(false)
+
+  const displayedDebtors = filterOverdue 
+    ? debtors.filter(d => d.overdue > 0)
+    : debtors
+
+  const handleExport = () => {
+    const headers = ["Customer", "Total Owed", "Overdue", "Currency"]
+    const rows = displayedDebtors.map(d => [
+      `"${d.displayName.replace(/"/g, '""')}"`,
+      d.totalOwed,
+      d.overdue,
+      summary.currency
+    ])
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n")
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `accounts-receivable-${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
@@ -42,11 +67,15 @@ export default function ReceivableClient({ summary, debtors }: ReceivableClientP
           <p className="text-muted-foreground">Manage and track outstanding customer balances.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" /> Export Report
           </Button>
-          <Button size="sm">
-            <Filter className="mr-2 h-4 w-4" /> Filter
+          <Button 
+            size="sm" 
+            variant={filterOverdue ? "default" : "outline"}
+            onClick={() => setFilterOverdue(!filterOverdue)}
+          >
+            <Filter className="mr-2 h-4 w-4" /> {filterOverdue ? "Showing Overdue" : "Filter Overdue"}
           </Button>
         </div>
       </div>
@@ -163,14 +192,14 @@ export default function ReceivableClient({ summary, debtors }: ReceivableClientP
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {debtors.length === 0 ? (
+                {displayedDebtors.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                       No active debtors found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  debtors.map((debtor) => (
+                  displayedDebtors.map((debtor) => (
                     <TableRow key={debtor.contactId} className="hover:bg-muted/50 transition-colors">
                       <TableCell className="pl-6 font-medium">
                         {debtor.displayName}

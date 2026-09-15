@@ -1,4 +1,4 @@
-import { getInventoryOverview } from "@/app/actions/inventory"
+import { getInventoryOverview, getInventoryReportsData } from "@/app/actions/inventory"
 import { InventoryClient } from "./inventory-client"
 
 export const dynamic = "force-dynamic"
@@ -8,8 +8,24 @@ export const metadata = {
     description: "Multi-facility stock tracking, adjustments, transfers, and procurement alerts.",
 }
 
-export default async function InventoryPage() {
-    const overviewData = await getInventoryOverview()
+export default async function InventoryPage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ tab?: string }> | { tab?: string }
+}) {
+    const resolvedParams = searchParams ? await Promise.resolve(searchParams) : {}
+    const initialTab = resolvedParams?.tab
 
-    return <InventoryClient initialData={overviewData} />
+    const [overviewData, reportsData] = await Promise.all([
+        getInventoryOverview(),
+        getInventoryReportsData("30d"),
+    ])
+
+    return (
+        <InventoryClient
+            initialData={overviewData}
+            initialReportsData={reportsData}
+            initialTab={initialTab}
+        />
+    )
 }

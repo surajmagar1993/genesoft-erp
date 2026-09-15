@@ -36,6 +36,24 @@ export default function PayableClient({ summary, creditors }: PayableClientProps
 
   const maxBucketValue = Math.max(...agingBuckets.map(b => b.value), 1)
 
+  const handleExport = () => {
+    const headers = ["Vendor", "Total Owed", "Overdue", "Currency"]
+    const rows = creditors.map(c => [
+      `"${c.displayName.replace(/"/g, '""')}"`,
+      c.totalOwed,
+      c.overdue,
+      summary.currency
+    ])
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n")
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `accounts-payable-${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6">
       <div className="flex items-center justify-between">
@@ -49,7 +67,7 @@ export default function PayableClient({ summary, creditors }: PayableClientProps
               <span className="mr-2">+</span> New Bill
             </Button>
           </Link>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" /> Export
           </Button>
         </div>

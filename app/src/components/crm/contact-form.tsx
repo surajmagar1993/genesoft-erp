@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Save, X, Loader2 } from "lucide-react"
 import { COUNTRIES } from "@/lib/constants/countries"
 import { createContact, updateContact } from "@/app/actions/crm/contacts"
+import { TAX_EXEMPTION_REASONS } from "@/lib/gst-engine"
+import { Switch } from "@/components/ui/switch"
 
 export interface ContactFormData {
     type: "INDIVIDUAL" | "COMPANY"
@@ -44,6 +46,9 @@ export interface ContactFormData {
     billingState: string
     billingZip: string
     billingCountry: string
+    isTaxExempt: boolean
+    taxExemptionReason: string
+    taxExemptionCertificate: string
     notes: string
 }
 
@@ -78,6 +83,9 @@ export const emptyContactForm: ContactFormData = {
     billingState: "",
     billingZip: "",
     billingCountry: "India",
+    isTaxExempt: false,
+    taxExemptionReason: "SEZ_DEVELOPER",
+    taxExemptionCertificate: "",
     notes: "",
 }
 
@@ -127,6 +135,9 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
             vat_number_ksa: form.vatNumberKsa || null,
             cr_number: form.crNumber || null,
             ein: form.ein || null,
+            is_tax_exempt: form.isTaxExempt,
+            tax_exemption_reason: form.isTaxExempt ? form.taxExemptionReason : null,
+            tax_exemption_certificate: form.isTaxExempt ? form.taxExemptionCertificate : null,
             credit_limit: form.creditLimit ? parseFloat(form.creditLimit) : null,
             balance: 0,
             billing_address: {
@@ -406,6 +417,63 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                 {form.countryCode !== "IN" && form.countryCode !== "AE" && form.countryCode !== "US" && (
                                     <div className="col-span-2 text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg text-center">
                                         Generic tax validation applies for this region. Please add notes for specific IDs.
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* ── Tax Exemption Card ── */}
+                            <div className="pt-6 border-t space-y-4">
+                                <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <Label htmlFor="isTaxExempt" className="text-base font-medium cursor-pointer">Tax Exemption Status</Label>
+                                            {form.isTaxExempt && <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200">Exempt (0.00%)</Badge>}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                            Enable if this customer is statutorily exempt from GST / VAT (e.g., SEZ Developer, Government Body, or Export).
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        id="isTaxExempt"
+                                        checked={form.isTaxExempt}
+                                        onCheckedChange={(checked) => setForm((prev) => ({ ...prev, isTaxExempt: checked }))}
+                                    />
+                                </div>
+
+                                {form.isTaxExempt && (
+                                    <div className="grid grid-cols-2 gap-4 p-4 bg-emerald-50/50 border border-emerald-200/60 rounded-lg animate-in fade-in-50 duration-200">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="taxExemptionReason">Exemption Category / Reason</Label>
+                                            <Select
+                                                value={form.taxExemptionReason}
+                                                onValueChange={(v) => update("taxExemptionReason", v)}
+                                            >
+                                                <SelectTrigger id="taxExemptionReason" className="bg-background">
+                                                    <SelectValue placeholder="Select exemption reason" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {TAX_EXEMPTION_REASONS.map((r) => (
+                                                        <SelectItem key={r.id} value={r.id}>
+                                                            {r.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="taxExemptionCertificate">Certificate / LUT / Registration Ref</Label>
+                                            <Input
+                                                id="taxExemptionCertificate"
+                                                className="bg-background"
+                                                value={form.taxExemptionCertificate}
+                                                onChange={(e) => update("taxExemptionCertificate", e.target.value)}
+                                                placeholder="e.g., LUT-2026-001, SEZ/CERT/9823"
+                                            />
+                                        </div>
+                                        <p className="col-span-2 text-xs text-emerald-800">
+                                            ℹ Invoices created for this customer will automatically assess 0.00% tax and display a statutory exemption notice.
+                                        </p>
                                     </div>
                                 )}
                             </div>

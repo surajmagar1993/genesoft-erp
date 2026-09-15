@@ -8,6 +8,7 @@ import {
     ArrowDownRight,
     Target,
     LayoutDashboard,
+    Package,
 } from "lucide-react"
 import { getDashboardStats, getRecentActivities, getDashboardTrends } from "@/app/actions/reports/stats"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
@@ -158,11 +159,12 @@ export default async function DashboardPage() {
                         <CardDescription>Shortcut to major modules</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {[
                                 { label: "New Lead", icon: Users, href: "/crm/leads" },
                                 { label: "New Invoice", icon: Receipt, href: "/sales/invoices/new" },
                                 { label: "Inventory", icon: LayoutDashboard, href: "/inventory" },
+                                { label: "Inventory Reports", icon: Package, href: "/inventory?tab=reports" },
                                 { label: "Active Deals", icon: Target, href: "/crm/deals" },
                             ].map((action) => (
                                 <a

@@ -225,7 +225,11 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
                                 </TableCell>
                             </TableRow>
                         ) : initialContacts.map((contact) => (
-                            <TableRow key={contact.id}>
+                            <TableRow 
+                                key={contact.id}
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => router.push(`/crm/contacts/${contact.id}`)}
+                            >
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -286,7 +290,7 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
                                         <span className="text-muted-foreground">{formatCurrency(0, baseCurrency)}</span>
                                     )}
                                 </TableCell>
-                                <TableCell>
+                                <TableCell onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon" disabled={deletingId === contact.id}>

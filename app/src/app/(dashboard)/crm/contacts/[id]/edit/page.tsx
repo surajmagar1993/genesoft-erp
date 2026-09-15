@@ -61,6 +61,9 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
         billingState: billingAdd.state ?? "",
         billingZip: billingAdd.zip ?? "",
         billingCountry: billingAdd.country ?? "India",
+        isTaxExempt: Boolean(data.is_tax_exempt),
+        taxExemptionReason: data.tax_exemption_reason ?? "SEZ_DEVELOPER",
+        taxExemptionCertificate: data.tax_exemption_certificate ?? "",
         notes: data.notes ?? "",
     }
 

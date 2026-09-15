@@ -1,15 +1,31 @@
 "use client"
 
-import { QuoteForm } from "@/components/sales/quote-form"
-import { useRouter } from "next/navigation"
+import { useMemo } from "react"
+import { QuoteForm, defaultQuoteForm } from "@/components/sales/quote-form"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createQuote } from "@/app/actions/sales/quotes"
 import { toast } from "sonner"
 
 export default function NewQuotePage() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+
+    const initialData = useMemo(() => {
+        const customer = searchParams.get("customer")
+        const dealId = searchParams.get("dealId")
+
+        if (customer || dealId) {
+            return {
+                ...defaultQuoteForm,
+                customerName: customer || "",
+                reference: dealId ? `Deal ID: ${dealId}` : "",
+            }
+        }
+        return undefined
+    }, [searchParams])
 
     const handleSave = async (data: any) => {
-        const { id, error } = await createQuote({
+        const { error } = await createQuote({
             quote_number: data.quoteNumber,
             customer_name: data.customerName,
             customer_email: data.customerEmail,
@@ -21,7 +37,7 @@ export default function NewQuotePage() {
             discount_type: data.discountType,
             notes: data.notes,
             terms_and_conditions: data.termsAndConditions,
-            currency_code: "INR", // TODO: Get from form or settings
+            currency_code: data.currencyCode || "INR",
             line_items: data.lineItems.map((li: any) => ({
                 product_name: li.productName,
                 description: li.description,
@@ -41,7 +57,7 @@ export default function NewQuotePage() {
 
     return (
         <div className="p-6">
-            <QuoteForm onSave={handleSave} />
+            <QuoteForm initialData={initialData} onSave={handleSave} />
         </div>
     )
 }

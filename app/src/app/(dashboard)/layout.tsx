@@ -21,6 +21,8 @@ import {
     LayoutDashboard,
     Warehouse,
     Truck,
+    PackageCheck,
+    Factory,
     DollarSign,
     UserCog,
     FolderKanban,
@@ -81,6 +83,17 @@ import { Badge } from "@/components/ui/badge"
 import { useTheme } from "next-themes"
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import Script from "next/script"
+import { getTaxJurisdiction, isTaxRouteApplicable } from "@/lib/tax-jurisdiction"
+import { getTenantSettings } from "@/app/actions/settings/tenant"
+
+const STATUTORY_TAX_ROUTES = [
+    "/finance/gst-returns",
+    "/finance/tds",
+    "/finance/vat-uae",
+    "/finance/vat-ksa",
+    "/finance/tax-australia",
+    "/finance/vat-uk",
+]
 
 const navigation = [
     {
@@ -110,6 +123,7 @@ const navigation = [
             { name: "Quotations", href: "/sales/quotes", icon: FileText },
             { name: "Orders", href: "/sales/orders", icon: ShoppingCart },
             { name: "Invoices", href: "/sales/invoices", icon: Receipt },
+            { name: "Delivery Challans", href: "/sales/delivery-challans", icon: PackageCheck },
             { name: "E-Way Bills", href: "/sales/eway-bills", icon: Truck },
             { name: "Recurring Invoices", href: "/sales/invoices/recurring", icon: Repeat },
             { name: "Credit Notes", href: "/sales/credit-notes", icon: FileMinus },
@@ -141,6 +155,7 @@ const navigation = [
         items: [
             { name: "Purchase", href: "/purchase", icon: Truck },
             { name: "Inventory", href: "/inventory", icon: Warehouse },
+            { name: "Manufacturing", href: "/manufacturing", icon: Factory },
             { name: "HR", href: "/hr", icon: UserCog },
             { name: "Projects", href: "/projects", icon: FolderKanban },
         ],
@@ -159,8 +174,37 @@ const navigation = [
     },
 ]
 
-function AppSidebar() {
+interface AppSidebarProps {
+    countryCode: string
+    multiJurisdiction: boolean
+    tenantName?: string
+}
+
+function AppSidebar({ countryCode, multiJurisdiction, tenantName }: AppSidebarProps) {
     const pathname = usePathname()
+    const jurisdiction = getTaxJurisdiction(countryCode)
+
+    const filteredNavigation = navigation.map((group) => {
+        if (group.label === "Finance") {
+            const items = group.items.filter((item) => {
+                if (STATUTORY_TAX_ROUTES.includes(item.href)) {
+                    return isTaxRouteApplicable(item.href, countryCode, multiJurisdiction)
+                }
+                return true
+            })
+            return { ...group, items }
+        }
+        if (group.label === "Sales") {
+            const items = group.items.filter((item) => {
+                if (item.href === "/sales/eway-bills") {
+                    return countryCode === "IN" || multiJurisdiction
+                }
+                return true
+            })
+            return { ...group, items }
+        }
+        return group
+    })
 
     return (
         <Sidebar collapsible="icon" variant="sidebar">
@@ -179,9 +223,13 @@ function AppSidebar() {
                                     />
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-semibold text-base">Genesoft ERP</span>
-                                    <span className="truncate text-xs text-muted-foreground">
-                                        Enterprise Platform
+                                    <span className="truncate font-semibold text-base">
+                                        {tenantName || "Genesoft ERP"}
+                                    </span>
+                                    <span className="truncate text-xs text-muted-foreground flex items-center gap-1">
+                                        <span>{jurisdiction.flag} {jurisdiction.taxLabel}</span>
+                                        <span>•</span>
+                                        <span>{jurisdiction.currencyCode}</span>
                                     </span>
                                 </div>
                             </Link>
@@ -191,9 +239,16 @@ function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                {navigation.map((group) => (
+                {filteredNavigation.map((group) => (
                     <SidebarGroup key={group.label}>
-                        <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+                        <SidebarGroupLabel className="flex items-center justify-between">
+                            <span>{group.label}</span>
+                            {group.label === "Finance" && (
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-sidebar-accent text-sidebar-foreground/80">
+                                    {jurisdiction.flag} {jurisdiction.taxLabel}
+                                </span>
+                            )}
+                        </SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
                                 {group.items.map((item) => {
@@ -218,6 +273,7 @@ function AppSidebar() {
                     </SidebarGroup>
                 ))}
             </SidebarContent>
+
 
             <SidebarFooter className="border-t border-sidebar-border">
                 <SidebarMenu>
@@ -252,9 +308,11 @@ function AppSidebar() {
                             >
                                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem>
-                                    <Settings className="mr-2 h-4 w-4" />
-                                    Settings
+                                <DropdownMenuItem asChild>
+                                    <Link href="/settings" className="flex items-center cursor-pointer w-full">
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        Settings
+                                    </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <LogoutMenuItem />
@@ -276,13 +334,13 @@ function TopBar() {
             <Separator orientation="vertical" className="mr-2 h-4" />
 
             {/* Search */}
-            <div className="flex-1 max-w-md">
+            <div className="flex-1 max-w-xs sm:max-w-md">
                 <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         type="search"
-                        placeholder="Search contacts, invoices, products..."
-                        className="pl-8 h-9 bg-muted/50"
+                        placeholder="Search ERP..."
+                        className="pl-8 h-9 bg-muted/50 text-xs sm:text-sm"
                     />
                 </div>
             </div>
@@ -313,6 +371,29 @@ export default function DashboardLayout({
     children: React.ReactNode
 }) {
     const pathname = usePathname()
+    const [tenantCountry, setTenantCountry] = useState<string>("IN")
+    const [multiJurisdiction, setMultiJurisdiction] = useState<boolean>(false)
+    const [tenantName, setTenantName] = useState<string>("")
+
+    useEffect(() => {
+        let isMounted = true
+        getTenantSettings()
+            .then((settings) => {
+                if (isMounted && settings) {
+                    if (settings.country_code) setTenantCountry(settings.country_code)
+                    if (settings.name) setTenantName(settings.name)
+                    if (settings.settings?.enable_multijurisdiction) {
+                        setMultiJurisdiction(true)
+                    }
+                }
+            })
+            .catch((err) => {
+                console.error("Error loading tenant settings:", err)
+            })
+        return () => {
+            isMounted = false
+        }
+    }, [])
 
     useEffect(() => {
         const checkRole = async () => {
@@ -338,15 +419,21 @@ export default function DashboardLayout({
 
     return (
         <SidebarProvider>
-            <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
-            <AppSidebar />
+            <Script {...({ id: "razorpay-checkout", src: "https://checkout.razorpay.com/v1/checkout.js", strategy: "lazyOnload" } as any)} />
+            <AppSidebar
+
+                countryCode={tenantCountry}
+                multiJurisdiction={multiJurisdiction}
+                tenantName={tenantName}
+            />
             <SidebarInset>
                 <TopBar />
-                <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden p-6 w-full">
+                <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-6 w-full">
                     {children}
                 </div>
             </SidebarInset>
         </SidebarProvider>
     )
 }
+
 

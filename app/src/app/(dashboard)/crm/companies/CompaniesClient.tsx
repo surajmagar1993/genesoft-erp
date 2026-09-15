@@ -113,7 +113,11 @@ export default function CompaniesClient({ initialCompanies, total }: Props) {
                                 <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">No companies found.</TableCell>
                             </TableRow>
                         ) : initialCompanies.map((company) => (
-                            <TableRow key={company.id} className="cursor-pointer hover:bg-muted/50">
+                            <TableRow
+                                key={company.id}
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => router.push(`/crm/companies/${company.id}`)}
+                            >
                                 <TableCell>
                                     <div className="flex items-center gap-3">
                                         <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-white text-sm font-bold shrink-0">
@@ -150,7 +154,7 @@ export default function CompaniesClient({ initialCompanies, total }: Props) {
                                         {company.is_active ? "Active" : "Inactive"}
                                     </Badge>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8" disabled={deletingId === company.id}>
@@ -160,7 +164,9 @@ export default function CompaniesClient({ initialCompanies, total }: Props) {
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => router.push(`/crm/companies/${company.id}`)}>
+                                                <Eye className="mr-2 h-4 w-4" />View
+                                            </DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => router.push(`/crm/companies/${company.id}/edit`)}>
                                                 <Pencil className="mr-2 h-4 w-4" />Edit
                                             </DropdownMenuItem>

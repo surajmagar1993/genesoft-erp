@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useTransition } from "react"
+import { useState, useMemo, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -8,6 +8,9 @@ import {
   ArrowDownRight, BarChart3, FileText, Droplets, Users,
   RefreshCw, Download, FileSpreadsheet, ArrowRight
 } from "lucide-react"
+import { getTaxJurisdiction } from "@/lib/tax-jurisdiction"
+import { getTenantSettings } from "@/app/actions/settings/tenant"
+
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -58,6 +61,21 @@ export default function ReportsClient({
 
   const currentYear = new Date().getFullYear()
   const years = [currentYear, currentYear - 1, currentYear - 2]
+
+  const [countryCode, setCountryCode] = useState<string>("IN")
+  const [multiJurisdiction, setMultiJurisdiction] = useState<boolean>(false)
+
+  useEffect(() => {
+    getTenantSettings()
+      .then((settings) => {
+        if (settings?.country_code) setCountryCode(settings.country_code)
+        if (settings?.settings?.enable_multijurisdiction) setMultiJurisdiction(true)
+      })
+      .catch(() => {})
+  }, [])
+
+  const jurisdiction = useMemo(() => getTaxJurisdiction(countryCode), [countryCode])
+
 
   const handleFilter = (year: string, quarter: string) => {
     startTransition(() => {
@@ -205,43 +223,36 @@ export default function ReportsClient({
               </Badge>
             </div>
             <p className="text-xs text-emerald-800/80 mt-0.5">
-              Access Outward Supplies (B2B, B2CL, B2CS, HSN Table 12), GSTR-3B monthly summary, Rule 88A tax set-off, and GSTN JSON exports.
+              Statutory tax returns & withholding filings for {jurisdiction.countryName} ({jurisdiction.regimeName}).
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          <Button asChild size="sm" variant="outline" className="gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs">
-            <Link href="/finance/tax-australia">
-              🇦🇺 Australia BAS
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
-          <Button asChild size="sm" variant="outline" className="gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs">
-            <Link href="/finance/vat-uk">
-              🇬🇧 UK VAT (MTD)
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
-          <Button asChild size="sm" variant="outline" className="gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs">
-            <Link href="/finance/vat-ksa">
-              🇸🇦 KSA VAT
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
-          <Button asChild size="sm" variant="outline" className="gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs">
-            <Link href="/finance/vat-uae">
-              🇦🇪 UAE VAT
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
-          <Button asChild size="sm" className="gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs">
-            <Link href="/finance/gst-returns">
-              🇮🇳 India GST
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </Button>
+          {jurisdiction.financeTaxItems.map((item, idx) => (
+            <Button
+              key={item.href}
+              asChild
+              size="sm"
+              className={idx === 0
+                ? "gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
+                : "gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs"
+              }
+              variant={idx === 0 ? "default" : "outline"}
+            >
+              <Link href={item.href}>
+                {item.shortName}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          ))}
+          {multiJurisdiction && (
+            <Button asChild size="sm" variant="ghost" className="text-xs text-muted-foreground hover:text-foreground">
+              <Link href="/settings">Global Tax Config</Link>
+            </Button>
+          )}
         </div>
       </div>
+
 
       {/* ── Tabbed Reports ── */}
       <Tabs defaultValue="pnl">

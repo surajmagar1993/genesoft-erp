@@ -56,9 +56,9 @@ export default async function CRMPage() {
   const stats = await getCRMStats();
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-white/90">CRM Dashboard</h1>
+    <div className="flex-1 space-y-4 p-2 sm:p-4 md:p-6 lg:p-8 pt-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white/90">CRM Dashboard</h1>
         <div className="flex items-center space-x-2">
           <Link href="/crm/deals/new">
             <Button className="bg-blue-600 hover:bg-blue-500 text-white">
@@ -185,8 +185,8 @@ export default async function CRMPage() {
       </div>
 
       {/* Recent Activity */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 bg-white/5 border-white/10">
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+        <Card className="col-span-1 lg:col-span-4 bg-white/5 border-white/10">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white">Recent Leads</CardTitle>
             <Link href="/crm/leads/new">
@@ -206,7 +206,7 @@ export default async function CRMPage() {
             ) : (
               <div className="space-y-3">
                 {stats.recentLeads.map((lead: { id: string; name: string; status: string; created_at: string }) => (
-                  <Link key={lead.id} href={`/crm/leads/${lead.id}/edit`}>
+                  <Link key={lead.id} href={`/crm/leads/${lead.id}`}>
                     <div className="flex items-center justify-between py-2 border-b border-white/5 hover:bg-white/5 px-2 rounded transition-colors cursor-pointer">
                       <div>
                         <p className="text-white text-sm font-medium">{lead.name}</p>
@@ -223,7 +223,7 @@ export default async function CRMPage() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-3 bg-white/5 border-white/10">
+        <Card className="col-span-1 lg:col-span-3 bg-white/5 border-white/10">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white">Recent Deals</CardTitle>
             <Link href="/crm/deals/new">

@@ -62,6 +62,7 @@ export default function TasksClient({ initialTasks, total }: Props) {
     const [searchQuery, setSearchQuery] = useState("")
     const [filterStatus, setFilterStatus] = useState<string>("all")
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [editingId, setEditingId] = useState<string | null>(null)
     const [pendingId, setPendingId] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
     const [isPending, startTransition] = useTransition()
@@ -79,6 +80,24 @@ export default function TasksClient({ initialTasks, total }: Props) {
         priority: "MEDIUM" as TaskPriority,
         due_date: "",
     })
+
+    const handleOpenCreate = () => {
+        setEditingId(null)
+        setFormData({ title: "", description: "", status: "TODO", priority: "MEDIUM", due_date: "" })
+        setIsDialogOpen(true)
+    }
+
+    const handleOpenEdit = (task: Task) => {
+        setEditingId(task.id)
+        setFormData({
+            title: task.title,
+            description: task.description || "",
+            status: task.status,
+            priority: task.priority,
+            due_date: task.due_date ? new Date(task.due_date).toISOString().split('T')[0] : "",
+        })
+        setIsDialogOpen(true)
+    }
 
     const handleSearch = (query: string) => {
         setSearchQuery(query)
@@ -109,14 +128,24 @@ export default function TasksClient({ initialTasks, total }: Props) {
     const limit = 10
     const totalPages = Math.ceil(total / limit)
 
-    const handleCreateTask = async (e: React.FormEvent) => {
+    const handleSaveTask = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsSaving(true)
-        const { error, data } = await createTask(formData)
-        if (!error && data) {
-            setTasks([data, ...tasks])
-            setIsDialogOpen(false)
-            setFormData({ title: "", description: "", status: "TODO", priority: "MEDIUM", due_date: "" })
+        if (editingId) {
+            const { error } = await updateTask(editingId, formData)
+            if (!error) {
+                setTasks((prev) => prev.map((t) => t.id === editingId ? { ...t, ...formData } : t))
+                setIsDialogOpen(false)
+                setEditingId(null)
+                setFormData({ title: "", description: "", status: "TODO", priority: "MEDIUM", due_date: "" })
+            }
+        } else {
+            const { error, data } = await createTask(formData)
+            if (!error && data) {
+                setTasks([data, ...tasks])
+                setIsDialogOpen(false)
+                setFormData({ title: "", description: "", status: "TODO", priority: "MEDIUM", due_date: "" })
+            }
         }
         setIsSaving(false)
     }
@@ -146,18 +175,24 @@ export default function TasksClient({ initialTasks, total }: Props) {
                     <h1 className="text-3xl font-bold tracking-tight">CRM Tasks</h1>
                     <p className="text-muted-foreground mt-1">Manage activities, follow-ups and meetings</p>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button size="sm">
-                            <Plus className="h-4 w-4 mr-2" /> New Task
-                        </Button>
-                    </DialogTrigger>
+                <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                    setIsDialogOpen(open)
+                    if (!open) {
+                        setEditingId(null)
+                        setFormData({ title: "", description: "", status: "TODO", priority: "MEDIUM", due_date: "" })
+                    }
+                }}>
+                    <Button size="sm" onClick={handleOpenCreate}>
+                        <Plus className="h-4 w-4 mr-2" /> New Task
+                    </Button>
                     <DialogContent>
                         <DialogHeader>
-                            <DialogTitle>Create New Task</DialogTitle>
-                            <DialogDescription>Add a new activity to your CRM schedule.</DialogDescription>
+                            <DialogTitle>{editingId ? "Edit Task" : "Create New Task"}</DialogTitle>
+                            <DialogDescription>
+                                {editingId ? "Update task parameters and schedule." : "Add a new activity to your CRM schedule."}
+                            </DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleCreateTask} className="space-y-4 pt-4">
+                        <form onSubmit={handleSaveTask} className="space-y-4 pt-4">
                             <div className="space-y-2">
                                 <Label htmlFor="title">Task Title</Label>
                                 <Input 
@@ -209,7 +244,7 @@ export default function TasksClient({ initialTasks, total }: Props) {
                                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
                                 <Button type="submit" disabled={isSaving}>
                                     {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Create Task
+                                    {editingId ? "Save Changes" : "Create Task"}
                                 </Button>
                             </DialogFooter>
                         </form>
@@ -334,7 +369,7 @@ export default function TasksClient({ initialTasks, total }: Props) {
                                                     <DropdownMenuItem onClick={() => handleStatusUpdate(task.id, "IN_PROGRESS")}>
                                                         <Clock className="mr-2 h-4 w-4" /> Mark In Progress
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleOpenEdit(task)}>
                                                         <Pencil className="mr-2 h-4 w-4" /> Edit Details
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />

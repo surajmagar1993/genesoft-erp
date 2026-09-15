@@ -114,10 +114,11 @@ export function NotificationsDropdown() {
                                     <Link 
                                         href={n.link} 
                                         className="text-[10px] text-primary hover:underline mt-1 font-medium"
-                                        onClick={(e) => e.stopPropagation()}
+                                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                     >
                                         View details
                                     </Link>
+
                                 )}
                             </DropdownMenuItem>
                         ))

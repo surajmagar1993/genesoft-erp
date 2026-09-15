@@ -40,3 +40,7 @@ app/check-plans.js
 app/check-user.ts
 app/test-db.js
 app/test-us-east.js
+
+# Local testing assets & scratch files
+screenshot_*.png
+*.sql

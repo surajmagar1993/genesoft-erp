@@ -325,6 +325,23 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                 </div>
             )}
 
+            {/* Statutory Tax Exemption Notice */}
+            {Boolean(invoice.is_tax_exempt) && (
+                <div className="p-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-emerald-800 dark:text-emerald-300">
+                    <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <span>
+                            <strong>Statutory Tax Exemption:</strong> Supplied at 0.00% tax under exemption category{" "}
+                            <span className="font-semibold">{invoice.tax_exemption_reason || "Statutory Exemption"}</span>
+                            {invoice.tax_exemption_certificate && <span className="font-mono ml-1 font-medium">[{invoice.tax_exemption_certificate}]</span>}.
+                        </span>
+                    </div>
+                    <Badge variant="outline" className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-400">
+                        Tax Exempt (0.00%)
+                    </Badge>
+                </div>
+            )}
+
             {/* Quick Stats Banner */}
             <div className="grid gap-4 md:grid-cols-4">
                 <Card className="bg-muted/30">

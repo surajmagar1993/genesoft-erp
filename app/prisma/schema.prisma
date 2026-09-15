@@ -100,6 +100,16 @@ model Tenant {
   formSubmissions    FormSubmission[]
   portalTickets      PortalTicket[]
   posSessions        POSSession[]
+  salaryStructures   SalaryStructure[]
+  payrollRuns        PayrollRun[]
+  payslips           Payslip[]
+  boms               BillOfMaterials[]
+  workOrders         WorkOrder[]
+  qualityInspections QualityInspection[]
+  jobOpenings        JobOpening[]
+  jobApplicants      JobApplicant[]
+  applicantInterviews ApplicantInterview[]
+  deliveryChallans   DeliveryChallan[]
 
   @@map("tenants")
 }
@@ -184,6 +194,11 @@ model Contact {
   taxNumber   String? @map("tax_number")
   countryCode String? @map("country_code")
 
+  // Tax Exemption
+  isTaxExempt             Boolean @default(false) @map("is_tax_exempt")
+  taxExemptionReason      String? @map("tax_exemption_reason")
+  taxExemptionCertificate String? @map("tax_exemption_certificate")
+
   // Financial
   currencyCode String   @default("INR") @map("currency_code")
   creditLimit  Decimal? @map("credit_limit") @db.Decimal(15, 2)
@@ -226,6 +241,7 @@ model Contact {
   emailMessages      EmailMessage[]
   formSubmissions    FormSubmission[]
   portalTickets      PortalTicket[]
+  deliveryChallans   DeliveryChallan[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -342,6 +358,10 @@ model Product {
   creditNoteItems    CreditNoteItem[]
   priceListItems     PriceListItem[]
   recurringProfileItems RecurringProfileItem[]
+  bomsAsFinishedGood    BillOfMaterials[]     @relation("ProductBOMs")
+  bomItemsAsComponent   BillOfMaterialsItem[] @relation("ProductBOMComponents")
+  workOrders            WorkOrder[]           @relation("ProductWorkOrders")
+  deliveryChallanItems  DeliveryChallanItem[]
 
   @@index([tenantId])
   @@index([tenantId, sku])
@@ -380,6 +400,9 @@ model Warehouse {
   purchaseOrders  PurchaseOrder[]
   rentalAssets    RentalAsset[]
   creditNoteItems CreditNoteItem[]
+  workOrdersSource WorkOrder[]      @relation("WorkOrderSourceWarehouse")
+  workOrdersTarget WorkOrder[]      @relation("WorkOrderTargetWarehouse")
+  deliveryChallans DeliveryChallan[] @relation("WarehouseDeliveryChallans")
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -503,8 +526,11 @@ model Invoice {
   totalInWords String? @map("total_in_words")
   currencyCode String  @default("INR") @map("currency_code")
 
-  // Tax Summary
-  taxSummary Json? @map("tax_summary") // HSN/SAC breakup table
+  // Tax Summary & Exemption
+  taxSummary              Json?   @map("tax_summary") // HSN/SAC breakup table
+  isTaxExempt             Boolean @default(false) @map("is_tax_exempt")
+  taxExemptionReason      String? @map("tax_exemption_reason")
+  taxExemptionCertificate String? @map("tax_exemption_certificate")
 
   // Payment & Terms
   paymentTerms String? @map("payment_terms")
@@ -529,6 +555,7 @@ model Invoice {
   recurringProfileId String?            @map("recurring_profile_id") @db.Uuid
   recurringProfile   RecurringProfile?  @relation(fields: [recurringProfileId], references: [id], onDelete: SetNull)
   recurringExecutions RecurringExecution[]
+  convertedChallans   DeliveryChallan[]   @relation("InvoiceConvertedChallan")
 
   @@unique([tenantId, invoiceNumber])
   @@index([tenantId])
@@ -573,7 +600,8 @@ model InvoiceItem {
   vatRate    Decimal? @map("vat_rate") @db.Decimal(5, 2)
   vatAmount  Decimal? @map("vat_amount") @db.Decimal(15, 2)
 
-  // Totals
+  // Totals & Exemption
+  isExempt  Boolean @default(false) @map("is_exempt")
   discount  Decimal @default(0) @db.Decimal(15, 2)
   lineTotal Decimal @map("line_total") @db.Decimal(15, 2)
 
@@ -749,6 +777,7 @@ model SalesOrder {
   contact Contact?         @relation(fields: [contactId], references: [id])
   quote   Quote?           @relation(fields: [quoteId], references: [id])
   items   SalesOrderItem[]
+  deliveryChallans DeliveryChallan[]
 
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
@@ -1270,6 +1299,7 @@ model Department {
   manager      Employee?     @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
   employees    Employee[]    @relation("DepartmentEmployees")
   designations Designation[]
+  jobOpenings  JobOpening[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -1286,9 +1316,10 @@ model Designation {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
-  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  employees  Employee[]
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  department  Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  employees   Employee[]
+  jobOpenings JobOpening[]
 
   @@unique([tenantId, title])
   @@index([tenantId])
@@ -1315,6 +1346,7 @@ model Employee {
   departmentId     String?        @map("department_id") @db.Uuid
   designationId    String?        @map("designation_id") @db.Uuid
   managerId        String?        @map("manager_id") @db.Uuid
+  salaryStructureId String?       @map("salary_structure_id") @db.Uuid
   
   basicSalary      Decimal?       @map("basic_salary") @db.Decimal(15, 2)
   currencyCode     String         @default("INR") @map("currency_code")
@@ -1340,6 +1372,10 @@ model Employee {
   assignedTasks      ProjectTask[]
   timeEntries        ProjectTimeEntry[]
   expenses           Expense[]
+  salaryStructure    SalaryStructure?   @relation(fields: [salaryStructureId], references: [id], onDelete: SetNull)
+  payslips           Payslip[]
+  convertedApplicant JobApplicant?      @relation("ApplicantConvertedEmployee")
+  interviews         ApplicantInterview[] @relation("EmployeeInterviews")
 
   @@unique([tenantId, employeeNumber])
   @@unique([tenantId, email])
@@ -2660,4 +2696,570 @@ model POSSession {
   @@index([tenantId])
   @@map("pos_sessions")
 }
+
+// ============================================
+// PAYROLL, SALARY STRUCTURES & PAYSLIPS
+// ============================================
+
+enum PayrollRunStatus {
+  DRAFT
+  APPROVED
+  PROCESSED
+  PAID
+  VOID
+}
+
+enum PayslipStatus {
+  DRAFT
+  CONFIRMED
+  PAID
+}
+
+model SalaryStructure {
+  id                  String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId            String      @map("tenant_id") @db.Uuid
+  name                String      // e.g. "Standard Corporate Full-Time"
+  code                String      // e.g. "SAL-CORP-01"
+  description         String?
+  isActive            Boolean     @default(true) @map("is_active")
+
+  // Earnings configuration (percentages or fixed)
+  basicPercentage     Decimal     @default(50.0) @map("basic_percentage") @db.Decimal(5, 2)
+  hraPercentage       Decimal     @default(20.0) @map("hra_percentage") @db.Decimal(5, 2)
+  conveyanceMonthly   Decimal     @default(1600.0) @map("conveyance_monthly") @db.Decimal(10, 2)
+  medicalMonthly      Decimal     @default(1250.0) @map("medical_monthly") @db.Decimal(10, 2)
+  specialAllowancePct Decimal     @default(15.0) @map("special_allowance_pct") @db.Decimal(5, 2)
+
+  // Statutory deductions configuration
+  pfEmployeeRate      Decimal     @default(12.0) @map("pf_employee_rate") @db.Decimal(5, 2)
+  pfEmployerRate      Decimal     @default(12.0) @map("pf_employer_rate") @db.Decimal(5, 2)
+  esiEmployeeRate     Decimal     @default(0.75) @map("esi_employee_rate") @db.Decimal(5, 2)
+  esiEmployerRate     Decimal     @default(3.25) @map("esi_employer_rate") @db.Decimal(5, 2)
+  professionalTax     Decimal     @default(200.0) @map("professional_tax") @db.Decimal(10, 2)
+  tdsPercentage       Decimal     @default(0.0) @map("tds_percentage") @db.Decimal(5, 2)
+
+  createdAt           DateTime    @default(now()) @map("created_at")
+  updatedAt           DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  tenant              Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employees           Employee[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("salary_structures")
+}
+
+model PayrollRun {
+  id                  String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId            String            @map("tenant_id") @db.Uuid
+  runNumber           String            @map("run_number")
+  periodMonth         Int               @map("period_month")
+  periodYear          Int               @map("period_year")
+  payDate             DateTime          @map("pay_date")
+  status              PayrollRunStatus  @default(DRAFT)
+  
+  employeeCount       Int               @default(0) @map("employee_count")
+  totalGross          Decimal           @default(0.0) @map("total_gross") @db.Decimal(15, 2)
+  totalDeductions     Decimal           @default(0.0) @map("total_deductions") @db.Decimal(15, 2)
+  totalNetPay         Decimal           @default(0.0) @map("total_net_pay") @db.Decimal(15, 2)
+  
+  paymentMethod       String?           @map("payment_method")
+  paymentReference    String?           @map("payment_reference")
+  notes               String?
+  
+  approvedAt          DateTime?         @map("approved_at")
+  approvedById        String?           @map("approved_by_id") @db.Uuid
+  paidAt              DateTime?         @map("paid_at")
+
+  createdAt           DateTime          @default(now()) @map("created_at")
+  updatedAt           DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  tenant              Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payslips            Payslip[]
+
+  @@unique([tenantId, periodYear, periodMonth])
+  @@index([tenantId])
+  @@index([status])
+  @@map("payroll_runs")
+}
+
+model Payslip {
+  id                  String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId            String         @map("tenant_id") @db.Uuid
+  payrollRunId        String         @map("payroll_run_id") @db.Uuid
+  employeeId          String         @map("employee_id") @db.Uuid
+  slipNumber          String         @map("slip_number")
+  
+  periodMonth         Int            @map("period_month")
+  periodYear          Int            @map("period_year")
+  status              PayslipStatus  @default(DRAFT)
+
+  // Attendance factor
+  workingDays         Int            @default(30) @map("working_days")
+  presentDays         Decimal        @default(30) @map("present_days") @db.Decimal(5, 1)
+  paidLeaveDays       Decimal        @default(0) @map("paid_leave_days") @db.Decimal(5, 1)
+  unpaidLeaveDays     Decimal        @default(0) @map("unpaid_leave_days") @db.Decimal(5, 1)
+
+  // Earnings breakdown
+  basicSalary         Decimal        @default(0.0) @map("basic_salary") @db.Decimal(12, 2)
+  hra                 Decimal        @default(0.0) @db.Decimal(12, 2)
+  conveyance          Decimal        @default(0.0) @db.Decimal(12, 2)
+  medical             Decimal        @default(0.0) @db.Decimal(12, 2)
+  specialAllowance    Decimal        @default(0.0) @map("special_allowance") @db.Decimal(12, 2)
+  bonus               Decimal        @default(0.0) @db.Decimal(12, 2)
+  totalGross          Decimal        @default(0.0) @map("total_gross") @db.Decimal(12, 2)
+
+  // Deductions breakdown
+  pfEmployee          Decimal        @default(0.0) @map("pf_employee") @db.Decimal(12, 2)
+  esiEmployee         Decimal        @default(0.0) @map("esi_employee") @db.Decimal(12, 2)
+  professionalTax     Decimal        @default(0.0) @map("professional_tax") @db.Decimal(12, 2)
+  tdsDeduction        Decimal        @default(0.0) @map("tds_deduction") @db.Decimal(12, 2)
+  unpaidLeaveDeduction Decimal       @default(0.0) @map("unpaid_leave_deduction") @db.Decimal(12, 2)
+  otherDeductions     Decimal        @default(0.0) @map("other_deductions") @db.Decimal(12, 2)
+  totalDeductions     Decimal        @default(0.0) @map("total_deductions") @db.Decimal(12, 2)
+
+  // Net payable
+  netSalary           Decimal        @default(0.0) @map("net_salary") @db.Decimal(12, 2)
+
+  // Employee Bank Snapshot
+  bankName            String?        @map("bank_name")
+  bankAccountNumber   String?        @map("bank_account_number")
+  bankIfsc            String?        @map("bank_ifsc")
+  paymentDate         DateTime?      @map("payment_date")
+  paymentMethod       String?        @map("payment_method")
+  transactionRef      String?        @map("transaction_ref")
+
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  tenant              Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payrollRun          PayrollRun     @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee            Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([payrollRunId, employeeId])
+  @@unique([tenantId, slipNumber])
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([payrollRunId])
+  @@map("payslips")
+}
+
+// ============================================
+// MANUFACTURING & MRP (MATERIAL REQUIREMENTS PLANNING)
+// ============================================
+
+enum BOMStatus {
+  DRAFT
+  ACTIVE
+  REVISED
+  ARCHIVED
+}
+
+enum WorkOrderStatus {
+  PLANNED
+  CONFIRMED
+  IN_PROGRESS
+  QUALITY_CHECK
+  COMPLETED
+  CANCELLED
+}
+
+enum WorkOrderPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum QCStatus {
+  PENDING
+  PASSED
+  FAILED
+  CONDITIONALLY_PASSED
+}
+
+model BillOfMaterials {
+  id                 String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId           String                @map("tenant_id") @db.Uuid
+  bomNumber          String                @map("bom_number")
+  name               String                
+  productId          String                @map("product_id") @db.Uuid
+  quantity           Decimal               @default(1.0) @db.Decimal(15, 2)
+  unit               String                @default("Nos")
+  version            String                @default("1.0")
+  status             BOMStatus             @default(ACTIVE)
+  
+  laborCost          Decimal               @default(0.0) @map("labor_cost") @db.Decimal(15, 2)
+  overheadCost       Decimal               @default(0.0) @map("overhead_cost") @db.Decimal(15, 2)
+  estimatedTotalCost Decimal               @default(0.0) @map("estimated_total_cost") @db.Decimal(15, 2)
+  notes              String?
+  
+  createdAt          DateTime              @default(now()) @map("created_at")
+  updatedAt          DateTime              @updatedAt @map("updated_at")
+
+  // Relations
+  tenant             Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product            Product               @relation("ProductBOMs", fields: [productId], references: [id], onDelete: Cascade)
+  items              BillOfMaterialsItem[]
+  workOrders         WorkOrder[]
+
+  @@unique([tenantId, bomNumber])
+  @@index([tenantId])
+  @@index([productId])
+  @@map("bill_of_materials")
+}
+
+model BillOfMaterialsItem {
+  id                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bomId              String          @map("bom_id") @db.Uuid
+  productId          String          @map("product_id") @db.Uuid
+  quantity           Decimal         @default(1.0) @db.Decimal(15, 4)
+  unit               String          @default("Nos")
+  unitCost           Decimal         @default(0.0) @map("unit_cost") @db.Decimal(15, 2)
+  totalCost          Decimal         @default(0.0) @map("total_cost") @db.Decimal(15, 2)
+  scrapPercentage    Decimal         @default(0.0) @map("scrap_percentage") @db.Decimal(5, 2)
+  notes              String?
+
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  bom                BillOfMaterials @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  product            Product         @relation("ProductBOMComponents", fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([bomId])
+  @@index([productId])
+  @@map("bill_of_materials_items")
+}
+
+model WorkOrder {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId           String               @map("tenant_id") @db.Uuid
+  orderNumber        String               @map("order_number")
+  bomId              String               @map("bom_id") @db.Uuid
+  productId          String               @map("product_id") @db.Uuid
+  
+  plannedQuantity    Decimal              @db.Decimal(15, 2)
+  producedQuantity   Decimal              @default(0.0) @map("produced_quantity") @db.Decimal(15, 2)
+  scrapQuantity      Decimal              @default(0.0) @map("scrap_quantity") @db.Decimal(15, 2)
+  
+  sourceWarehouseId  String               @map("source_warehouse_id") @db.Uuid
+  targetWarehouseId  String               @map("target_warehouse_id") @db.Uuid
+  
+  startDate          DateTime?            @map("start_date")
+  dueDate            DateTime             @map("due_date")
+  completedAt        DateTime?            @map("completed_at")
+  
+  status             WorkOrderStatus      @default(PLANNED)
+  priority           WorkOrderPriority    @default(MEDIUM)
+  assignedTo         String?              @map("assigned_to")
+  
+  estimatedTotalCost Decimal              @default(0.0) @map("estimated_total_cost") @db.Decimal(15, 2)
+  actualTotalCost    Decimal              @default(0.0) @map("actual_total_cost") @db.Decimal(15, 2)
+  notes              String?
+  
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+
+  // Relations
+  tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bom                BillOfMaterials      @relation(fields: [bomId], references: [id], onDelete: Restrict)
+  product            Product              @relation("ProductWorkOrders", fields: [productId], references: [id], onDelete: Restrict)
+  sourceWarehouse    Warehouse            @relation("WorkOrderSourceWarehouse", fields: [sourceWarehouseId], references: [id], onDelete: Restrict)
+  targetWarehouse    Warehouse            @relation("WorkOrderTargetWarehouse", fields: [targetWarehouseId], references: [id], onDelete: Restrict)
+  qcInspections      QualityInspection[]
+
+  @@unique([tenantId, orderNumber])
+  @@index([tenantId])
+  @@index([productId])
+  @@index([bomId])
+  @@index([status])
+  @@map("work_orders")
+}
+
+model QualityInspection {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId           String               @map("tenant_id") @db.Uuid
+  workOrderId        String               @map("work_order_id") @db.Uuid
+  inspectionNumber   String               @map("inspection_number")
+  
+  inspectedQuantity  Decimal              @map("inspected_quantity") @db.Decimal(15, 2)
+  passedQuantity     Decimal              @default(0.0) @map("passed_quantity") @db.Decimal(15, 2)
+  failedQuantity     Decimal              @default(0.0) @map("failed_quantity") @db.Decimal(15, 2)
+  status             QCStatus             @default(PENDING)
+  defectReason       String?              @map("defect_reason")
+  inspectorName      String?              @map("inspector_name")
+  notes              String?
+  inspectedAt        DateTime             @default(now()) @map("inspected_at")
+  
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+
+  // Relations
+  tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workOrder          WorkOrder            @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, inspectionNumber])
+  @@index([tenantId])
+  @@index([workOrderId])
+  @@map("quality_inspections")
+}
+
+// ============================================
+// HR RECRUITMENT & APPLICANT TRACKING (ATS)
+// ============================================
+
+enum JobStatus {
+  DRAFT
+  PUBLISHED
+  ON_HOLD
+  CLOSED
+}
+
+enum ApplicantStage {
+  APPLIED
+  SCREENING
+  INTERVIEWING
+  OFFERED
+  HIRED
+  REJECTED
+}
+
+enum InterviewStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum InterviewRecommendation {
+  STRONG_HIRE
+  HIRE
+  NEUTRAL
+  NO_HIRE
+}
+
+model JobOpening {
+  id              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String         @map("tenant_id") @db.Uuid
+  jobCode         String         @map("job_code")
+  title           String
+  departmentId    String?        @map("department_id") @db.Uuid
+  designationId   String?        @map("designation_id") @db.Uuid
+  employmentType  EmploymentType @default(FULL_TIME) @map("employment_type")
+  location        String         @default("On-site")
+  positionsCount  Int            @default(1) @map("positions_count")
+  description     String?
+  requirements    String?
+  salaryMin       Decimal?       @map("salary_min") @db.Decimal(15, 2)
+  salaryMax       Decimal?       @map("salary_max") @db.Decimal(15, 2)
+  currencyCode    String         @default("INR") @map("currency_code")
+  status          JobStatus      @default(PUBLISHED)
+  targetDate      DateTime?      @map("target_date")
+
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  tenant          Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  department      Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  designation     Designation?   @relation(fields: [designationId], references: [id], onDelete: SetNull)
+  applicants      JobApplicant[]
+
+  @@unique([tenantId, jobCode])
+  @@index([tenantId])
+  @@index([departmentId])
+  @@index([designationId])
+  @@index([status])
+  @@map("job_openings")
+}
+
+model JobApplicant {
+  id                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId             String               @map("tenant_id") @db.Uuid
+  jobOpeningId         String               @map("job_opening_id") @db.Uuid
+  applicantNumber      String               @map("applicant_number")
+  fullName             String               @map("full_name")
+  email                String
+  phone                String?
+  currentCompany       String?              @map("current_company")
+  currentRole          String?              @map("current_role")
+  experienceYears      Decimal?             @map("experience_years") @db.Decimal(4, 1)
+  currentSalary        Decimal?             @map("current_salary") @db.Decimal(15, 2)
+  expectedSalary       Decimal?             @map("expected_salary") @db.Decimal(15, 2)
+  noticePeriodDays     Int?                 @default(30) @map("notice_period_days")
+  resumeUrl            String?              @map("resume_url")
+  portfolioUrl         String?              @map("portfolio_url")
+  stage                ApplicantStage       @default(APPLIED)
+  rating               Int?                 @default(0)
+  notes                String?
+  rejectionReason      String?              @map("rejection_reason")
+  hiredDate            DateTime?            @map("hired_date")
+  convertedEmployeeId  String?              @unique @map("converted_employee_id") @db.Uuid
+
+  createdAt            DateTime             @default(now()) @map("created_at")
+  updatedAt            DateTime             @updatedAt @map("updated_at")
+
+  // Relations
+  tenant               Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  jobOpening           JobOpening           @relation(fields: [jobOpeningId], references: [id], onDelete: Cascade)
+  convertedEmployee    Employee?            @relation("ApplicantConvertedEmployee", fields: [convertedEmployeeId], references: [id], onDelete: SetNull)
+  interviews           ApplicantInterview[]
+
+  @@unique([tenantId, applicantNumber])
+  @@index([tenantId])
+  @@index([jobOpeningId])
+  @@index([stage])
+  @@index([email])
+  @@map("job_applicants")
+}
+
+model ApplicantInterview {
+  id              String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String                  @map("tenant_id") @db.Uuid
+  applicantId     String                  @map("applicant_id") @db.Uuid
+  roundName       String                  @map("round_name")
+  interviewerId   String?                 @map("interviewer_id") @db.Uuid
+  interviewerName String?                 @map("interviewer_name")
+  scheduledAt     DateTime                @map("scheduled_at")
+  durationMinutes Int                     @default(45) @map("duration_minutes")
+  meetingLink     String?                 @map("meeting_link")
+  status          InterviewStatus         @default(SCHEDULED)
+  rating          Int?                    @default(0)
+  feedback        String?
+  recommendation  InterviewRecommendation?
+
+  createdAt       DateTime                @default(now()) @map("created_at")
+  updatedAt       DateTime                @updatedAt @map("updated_at")
+
+  // Relations
+  tenant          Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  applicant       JobApplicant            @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  interviewer     Employee?               @relation("EmployeeInterviews", fields: [interviewerId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([applicantId])
+  @@index([interviewerId])
+  @@index([scheduledAt])
+  @@map("applicant_interviews")
+}
+
+// ============================================
+// LOGISTICS & SALES: DELIVERY CHALLAN ENGINE (RULE 55)
+// ============================================
+
+enum ChallanReason {
+  JOB_WORK
+  SUPPLY_ON_APPROVAL
+  EXHIBITION_DEMO
+  WAREHOUSE_TRANSFER
+  LINE_SALE
+  OTHERS
+}
+
+enum ChallanStatus {
+  DRAFT
+  ISSUED
+  IN_TRANSIT
+  DELIVERED
+  RETURNED
+  CANCELLED
+  CONVERTED_TO_INVOICE
+}
+
+enum TransportMode {
+  ROAD
+  RAIL
+  AIR
+  SHIP
+}
+
+model DeliveryChallan {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId           String           @map("tenant_id") @db.Uuid
+  challanNumber      String           @map("challan_number")
+  challanDate        DateTime         @default(now()) @map("challan_date")
+  
+  contactId          String?          @map("contact_id") @db.Uuid
+  recipientName      String           @map("recipient_name")
+  recipientEmail     String?          @map("recipient_email")
+  recipientPhone     String?          @map("recipient_phone")
+  recipientGstin     String?          @map("recipient_gstin")
+  
+  dispatchAddress    Json             @map("dispatch_address")
+  deliveryAddress    Json             @map("delivery_address")
+  placeOfSupply      String?          @map("place_of_supply")
+  
+  reason             ChallanReason    @default(SUPPLY_ON_APPROVAL)
+  status             ChallanStatus    @default(DRAFT)
+  
+  // Transport Details (Rule 55)
+  transportMode      TransportMode    @default(ROAD) @map("transport_mode")
+  transporterName    String?          @map("transporter_name")
+  transporterId      String?          @map("transporter_id")
+  vehicleNumber      String?          @map("vehicle_number")
+  lrNumber           String?          @map("lr_number")
+  lrDate             DateTime?        @map("lr_date")
+  
+  sourceWarehouseId  String?          @map("source_warehouse_id") @db.Uuid
+  salesOrderId       String?          @map("sales_order_id") @db.Uuid
+  convertedInvoiceId String?          @map("converted_invoice_id")
+  
+  totalQuantity      Decimal          @default(0) @map("total_quantity") @db.Decimal(15, 2)
+  taxableAmount      Decimal          @default(0) @map("taxable_amount") @db.Decimal(15, 2)
+  taxAmount          Decimal          @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  totalValue         Decimal          @default(0) @map("total_value") @db.Decimal(15, 2)
+  
+  notes              String?
+  terms              String?
+  
+  createdAt          DateTime         @default(now()) @map("created_at")
+  updatedAt          DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  tenant             Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contact            Contact?         @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  sourceWarehouse    Warehouse?       @relation("WarehouseDeliveryChallans", fields: [sourceWarehouseId], references: [id], onDelete: SetNull)
+  salesOrder         SalesOrder?      @relation(fields: [salesOrderId], references: [id], onDelete: SetNull)
+  convertedInvoice   Invoice?         @relation("InvoiceConvertedChallan", fields: [convertedInvoiceId], references: [id], onDelete: SetNull)
+  items              DeliveryChallanItem[]
+
+  @@unique([tenantId, challanNumber])
+  @@index([tenantId])
+  @@index([contactId])
+  @@index([sourceWarehouseId])
+  @@index([salesOrderId])
+  @@index([convertedInvoiceId])
+  @@index([status])
+  @@map("delivery_challans")
+}
+
+model DeliveryChallanItem {
+  id                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  challanId          String           @map("challan_id") @db.Uuid
+  productId          String?          @map("product_id") @db.Uuid
+  productName        String           @map("product_name")
+  description        String?
+  hsnCode            String?          @map("hsn_code")
+  quantity           Decimal          @db.Decimal(15, 2)
+  unit               String           @default("PCS")
+  unitPrice          Decimal          @default(0) @map("unit_price") @db.Decimal(15, 2)
+  taxRate            Decimal          @default(18) @map("tax_rate") @db.Decimal(5, 2)
+  taxableAmount      Decimal          @default(0) @map("taxable_amount") @db.Decimal(15, 2)
+  taxAmount          Decimal          @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  totalAmount        Decimal          @default(0) @map("total_amount") @db.Decimal(15, 2)
+
+  // Relations
+  challan            DeliveryChallan  @relation(fields: [challanId], references: [id], onDelete: Cascade)
+  product            Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([challanId])
+  @@index([productId])
+  @@map("delivery_challan_items")
+}
+
+
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Plus, Trash2, AlertCircle } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, AlertCircle, ShieldCheck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +27,7 @@ import {
   computeLineItemGst,
   computeInvoiceGstSummary,
   isValidGstin,
+  TAX_EXEMPTION_REASONS,
 } from "@/lib/gst-engine"
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
@@ -92,6 +93,9 @@ export interface InvoiceFormData {
   customerGstin: string
   supplierState: string
   placeOfSupply: string
+  isTaxExempt?: boolean
+  taxExemptionReason?: string
+  taxExemptionCertificate?: string
 }
 
 export const defaultInvoiceForm: InvoiceFormData = {
@@ -117,6 +121,9 @@ export const defaultInvoiceForm: InvoiceFormData = {
   customerGstin: "",
   supplierState: "",
   placeOfSupply: "",
+  isTaxExempt: false,
+  taxExemptionReason: "",
+  taxExemptionCertificate: "",
 }
 
 const emptyLineItem: InvoiceLineItem = {
@@ -190,20 +197,26 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
     update("lineItems", form.lineItems.filter((li) => li.id !== id))
   }
 
-  /* ── Totals (with GST) ───────────────────────────────────────────────────── */
+  /* ── Totals (with GST & Tax Exemption) ─────────────────────────────────── */
   const gstSummary = useMemo(
     () =>
       computeInvoiceGstSummary(
         form.lineItems.map((li) => ({
           qty: li.qty,
           unitPrice: li.unitPrice,
-          gstRate: li.gstRate,
+          gstRate: form.isTaxExempt ? 0 : li.gstRate,
+          isExempt: form.isTaxExempt,
         })),
         supplyType,
         form.discount,
-        form.discountType
+        form.discountType,
+        {
+          isTaxExempt: form.isTaxExempt,
+          taxExemptionReason: form.taxExemptionReason,
+          taxExemptionCertificate: form.taxExemptionCertificate,
+        }
       ),
-    [form.lineItems, supplyType, form.discount, form.discountType]
+    [form.lineItems, supplyType, form.discount, form.discountType, form.isTaxExempt, form.taxExemptionReason, form.taxExemptionCertificate]
   )
 
   /* ── Save ────────────────────────────────────────────────────────────────── */
@@ -347,13 +360,20 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                     onValueChange={(val) => {
                       const selected = contacts.find((c) => c.id === val)
                       if (selected) {
+                        const isExempt = Boolean(selected.is_tax_exempt || selected.isTaxExempt)
+                        const exemptReason = selected.tax_exemption_reason || selected.taxExemptionReason || ""
+                        const exemptCert = selected.tax_exemption_certificate || selected.taxExemptionCertificate || ""
+
                         setForm((prev) => ({
                           ...prev,
                           contactId: val,
                           customerName: selected.display_name,
                           customerEmail: selected.email || "",
                           customerGstin: selected.gstin || "",
-                          placeOfSupply: selected.billing_address?.state || (selected.country_code === "IN" ? "Maharashtra" : "")
+                          placeOfSupply: selected.billing_address?.state || (selected.country_code === "IN" ? "Maharashtra" : ""),
+                          isTaxExempt: isExempt,
+                          taxExemptionReason: exemptReason,
+                          taxExemptionCertificate: exemptCert,
                         }))
                       }
                     }}
@@ -395,6 +415,24 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                 />
               </div>
             </div>
+
+            {/* Tax Exemption Alert Banner */}
+            {form.isTaxExempt && (
+              <div className="p-3 bg-emerald-50/80 border border-emerald-300/80 rounded-lg flex items-start gap-2.5 text-xs text-emerald-900 animate-in fade-in-50">
+                <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="space-y-0.5 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-emerald-800">Statutory Tax Exemption Applied</span>
+                    <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] py-0">0.00% Tax</Badge>
+                  </div>
+                  <p className="text-emerald-700">
+                    Customer is tax exempt ({TAX_EXEMPTION_REASONS.find(r => r.id === form.taxExemptionReason)?.label || form.taxExemptionReason || "Statutory Exemption"})
+                    {form.taxExemptionCertificate && <span className="font-mono ml-1 font-medium">[{form.taxExemptionCertificate}]</span>}.
+                    CGST, SGST, IGST and VAT are automatically zeroed.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Dates */}
             <div className="grid grid-cols-2 gap-4">

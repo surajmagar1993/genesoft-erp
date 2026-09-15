@@ -1048,7 +1048,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="space-y-1.5">
                                 <label className="font-semibold text-foreground">Billing Cadence *</label>
                                 <select
@@ -1085,7 +1085,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="space-y-1.5">
                                 <label className="font-semibold text-foreground">Max Cycles (Blank = Ongoing)</label>
                                 <Input

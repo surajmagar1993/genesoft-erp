@@ -122,3 +122,76 @@ export async function deleteDeal(id: string): Promise<{ error: string | null }> 
   revalidatePath("/crm/deals")
   return { error: null }
 }
+
+const stageProbability: Record<DealStage, number> = {
+  PROSPECTING: 20,
+  QUALIFICATION: 40,
+  PROPOSAL: 60,
+  NEGOTIATION: 80,
+  CLOSED_WON: 100,
+  CLOSED_LOST: 0,
+}
+
+export async function updateDealStage(
+  id: string,
+  stage: DealStage
+): Promise<{ error: string | null }> {
+  const probability = stageProbability[stage] ?? 50
+  const result = await updateDeal(id, { stage, probability })
+  if (!result.error) {
+    revalidatePath(`/crm/deals/${id}`)
+    revalidatePath("/crm/deals")
+  }
+  return result
+}
+
+export interface DealRelationsData {
+  deal: Deal | null
+  contact: any | null
+  company: any | null
+}
+
+export async function getDealWithRelations(id: string): Promise<DealRelationsData> {
+  const supabase = await createClient()
+  const tenantId = await getTenantId()
+
+  const { data: deal, error } = await supabase
+    .from("deals")
+    .select("*")
+    .eq("id", id)
+    .eq("tenant_id", tenantId)
+    .single()
+
+  if (error || !deal) {
+    return { deal: null, contact: null, company: null }
+  }
+
+  const [contactRes, companyRes] = await Promise.all([
+    deal.contact_name
+      ? Promise.resolve(
+          supabase
+            .from("contacts")
+            .select("id, display_name, email, phone, mobile, customer_group, balance, currency_code")
+            .eq("tenant_id", tenantId)
+            .eq("display_name", deal.contact_name)
+            .maybeSingle()
+        )
+      : Promise.resolve({ data: null }),
+    deal.company
+      ? Promise.resolve(
+          supabase
+            .from("companies")
+            .select("id, name, industry, website, phone, email, city, country, country_code, is_active")
+            .eq("tenant_id", tenantId)
+            .eq("name", deal.company)
+            .maybeSingle()
+        )
+      : Promise.resolve({ data: null })
+  ])
+
+  return {
+    deal,
+    contact: contactRes.data ?? null,
+    company: companyRes.data ?? null
+  }
+}

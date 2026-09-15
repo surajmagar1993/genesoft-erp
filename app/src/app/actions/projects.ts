@@ -476,7 +476,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
     const rawProjects = await prisma.project.findMany({
         where: { tenantId },
         include: {
-            client: { select: { id: true, name: true } },
+            client: { select: { id: true, displayName: true } },
             manager: { select: { id: true, displayName: true } },
             tasks: {
                 select: {
@@ -515,7 +515,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
             budget: p.budget ? Number(p.budget) : null,
             currencyCode: p.currencyCode,
             clientId: p.clientId,
-            clientName: p.client?.name || null,
+            clientName: p.client?.displayName || null,
             managerId: p.managerId,
             managerName: p.manager?.displayName || null,
             tasksCount: totalTasks,
@@ -539,7 +539,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
         const fullProj = await prisma.project.findUnique({
             where: { id: targetProjectId, tenantId },
             include: {
-                client: { select: { id: true, name: true } },
+                client: { select: { id: true, displayName: true } },
                 manager: { select: { id: true, displayName: true } },
                 members: {
                     include: {
@@ -594,7 +594,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
                 budget: fullProj.budget ? Number(fullProj.budget) : null,
                 currencyCode: fullProj.currencyCode,
                 clientId: fullProj.clientId,
-                clientName: fullProj.client?.name || null,
+                clientName: fullProj.client?.displayName || null,
                 managerId: fullProj.managerId,
                 managerName: fullProj.manager?.displayName || null,
                 tasksCount: fullProj.tasks.length,
@@ -737,11 +737,17 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
     }))
 
     // 4. Fetch available contacts (clients) and employees for selection dropdowns
-    const availableClients = await prisma.contact.findMany({
+    const availableClientsRaw = await prisma.contact.findMany({
         where: { tenantId, isActive: true },
-        select: { id: true, name: true },
-        orderBy: { name: "asc" }
+        select: { id: true, displayName: true },
+        orderBy: { displayName: "asc" }
     })
+
+    const availableClients = availableClientsRaw.map((c: any) => ({
+        id: c.id,
+        name: c.displayName,
+    }))
+
 
     const availableEmployeesRaw = await prisma.employee.findMany({
         where: { tenantId, status: "ACTIVE" },

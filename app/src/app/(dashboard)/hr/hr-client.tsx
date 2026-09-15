@@ -1,7 +1,11 @@
 "use client"
 
 import { useState, useTransition, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { PayrollClient } from "./payroll-client"
+import { PayrollOverviewData } from "@/app/actions/payroll"
+import { RecruitmentClient } from "./recruitment/recruitment-client"
+import { RecruitmentOverviewData } from "@/app/actions/recruitment"
 import {
     Users,
     UserPlus,
@@ -83,12 +87,18 @@ import {
 
 interface HRClientProps {
     initialData: HROverviewData
+    payrollData?: PayrollOverviewData
+    recruitmentData?: RecruitmentOverviewData
 }
 
-export function HRClient({ initialData }: HRClientProps) {
+export function HRClient({ initialData, payrollData, recruitmentData }: HRClientProps) {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const tabParam = searchParams.get("tab")
     const [isPending, startTransition] = useTransition()
-    const [activeTab, setActiveTab] = useState<"employees" | "attendance" | "leaves" | "org">("employees")
+    const [activeTab, setActiveTab] = useState<"employees" | "attendance" | "leaves" | "org" | "payroll" | "recruitment">(
+        tabParam === "payroll" ? "payroll" : tabParam === "recruitment" ? "recruitment" : "employees"
+    )
 
     // Filter states: Employees
     const [employeeSearch, setEmployeeSearch] = useState("")
@@ -768,11 +778,11 @@ export function HRClient({ initialData }: HRClientProps) {
             {/* Main Tabs Section */}
             <Tabs
                 value={activeTab}
-                onValueChange={(val) => setActiveTab(val as "employees" | "attendance" | "leaves" | "org")}
+                onValueChange={(val) => setActiveTab(val as "employees" | "attendance" | "leaves" | "org" | "payroll")}
                 className="space-y-4"
             >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <TabsList className="grid w-full grid-cols-4 sm:w-auto">
+                    <TabsList className="grid w-full grid-cols-2 sm:flex sm:w-auto h-auto p-1 gap-1">
                         <TabsTrigger value="employees" className="flex items-center gap-2">
                             <Users className="h-4 w-4" />
                             <span>Directory</span>
@@ -796,6 +806,24 @@ export function HRClient({ initialData }: HRClientProps) {
                         <TabsTrigger value="org" className="flex items-center gap-2">
                             <Building2 className="h-4 w-4" />
                             <span>Organization</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="payroll" className="flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-emerald-600" />
+                            <span>Payroll</span>
+                            {payrollData && payrollData.telemetry.pendingApprovals > 0 && (
+                                <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs bg-emerald-500/20 text-emerald-700 dark:text-emerald-400">
+                                    {payrollData.telemetry.pendingApprovals}
+                                </Badge>
+                            )}
+                        </TabsTrigger>
+                        <TabsTrigger value="recruitment" className="flex items-center gap-2">
+                            <Briefcase className="h-4 w-4 text-blue-600" />
+                            <span>Recruitment</span>
+                            {recruitmentData && recruitmentData.stats.activeJobsCount > 0 && (
+                                <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs bg-blue-500/20 text-blue-700 dark:text-blue-400">
+                                    {recruitmentData.stats.activeJobsCount}
+                                </Badge>
+                            )}
                         </TabsTrigger>
                     </TabsList>
                 </div>
@@ -1380,6 +1408,28 @@ export function HRClient({ initialData }: HRClientProps) {
                             </Table>
                         </div>
                     </div>
+                </TabsContent>
+
+                {/* Tab 5: Payroll & Compensation Engine */}
+                <TabsContent value="payroll" className="space-y-4">
+                    {payrollData ? (
+                        <PayrollClient initialData={payrollData} />
+                    ) : (
+                        <div className="p-8 text-center text-muted-foreground text-xs">
+                            No payroll configuration available.
+                        </div>
+                    )}
+                </TabsContent>
+
+                {/* Tab 6: Recruitment & Applicant Tracking (ATS) */}
+                <TabsContent value="recruitment" className="space-y-4">
+                    {recruitmentData ? (
+                        <RecruitmentClient initialData={recruitmentData} />
+                    ) : (
+                        <div className="p-8 text-center text-muted-foreground text-xs">
+                            No recruitment data available.
+                        </div>
+                    )}
                 </TabsContent>
             </Tabs>
 

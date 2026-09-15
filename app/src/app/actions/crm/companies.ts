@@ -114,3 +114,74 @@ export async function deleteCompany(id: string): Promise<{ error: string | null 
   revalidatePath("/crm/companies")
   return { error: null }
 }
+
+export interface CompanyRelationsData {
+  company: Company | null
+  contacts: any[]
+  deals: any[]
+  metrics: {
+    totalContacts: number
+    totalDeals: number
+    activePipelineValue: number
+    closedWonRevenue: number
+  }
+}
+
+export async function getCompanyWithRelations(id: string): Promise<CompanyRelationsData> {
+  const supabase = await createClient()
+  const tenantId = await getTenantId()
+
+  const { data: company, error } = await supabase
+    .from("companies")
+    .select("*")
+    .eq("id", id)
+    .eq("tenant_id", tenantId)
+    .single()
+
+  if (error || !company) {
+    return {
+      company: null,
+      contacts: [],
+      deals: [],
+      metrics: { totalContacts: 0, totalDeals: 0, activePipelineValue: 0, closedWonRevenue: 0 }
+    }
+  }
+
+  const [contactsRes, dealsRes] = await Promise.all([
+    supabase
+      .from("contacts")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("company_name", company.name)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("deals")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .eq("company", company.name)
+      .order("created_at", { ascending: false })
+  ])
+
+  const contacts = contactsRes.data ?? []
+  const deals = dealsRes.data ?? []
+
+  const activePipelineValue = deals
+    .filter((d: any) => !["CLOSED_WON", "CLOSED_LOST"].includes(d.stage))
+    .reduce((sum: number, d: any) => sum + (Number(d.value) || 0), 0)
+
+  const closedWonRevenue = deals
+    .filter((d: any) => d.stage === "CLOSED_WON")
+    .reduce((sum: number, d: any) => sum + (Number(d.value) || 0), 0)
+
+  return {
+    company,
+    contacts,
+    deals,
+    metrics: {
+      totalContacts: contacts.length,
+      totalDeals: deals.length,
+      activePipelineValue,
+      closedWonRevenue
+    }
+  }
+}

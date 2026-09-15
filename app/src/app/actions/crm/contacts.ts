@@ -26,6 +26,9 @@ export interface Contact {
   cr_number?: string | null
   ein?: string | null
   tax_number?: string | null
+  is_tax_exempt?: boolean | null
+  tax_exemption_reason?: string | null
+  tax_exemption_certificate?: string | null
   customer_group: string
   country_code?: string | null
   currency_code: string

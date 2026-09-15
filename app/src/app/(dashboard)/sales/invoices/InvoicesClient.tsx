@@ -146,20 +146,20 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
 
             {/* Search & Filters */}
             <Card className="border-none shadow-md overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800">
-                <div className="bg-white dark:bg-slate-950 p-6 space-y-6">
+                <div className="bg-white dark:bg-slate-950 p-4 sm:p-6 space-y-6">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         <div className="relative max-w-md w-full">
                             {isPending ? <Loader2 className="absolute left-3 top-3 h-4 w-4 animate-spin text-indigo-500" /> : <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />}
                             <Input
                                 placeholder="Search by invoice number or customer name..."
-                                className="pl-10 h-10 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-900 transition-all"
+                                className="pl-10 h-10 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-900 transition-all text-xs sm:text-sm"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-                        <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                             {/* Document Type Filter */}
-                            <div className="flex rounded-lg border p-1 bg-slate-100 dark:bg-slate-900">
+                            <div className="flex overflow-x-auto max-w-full rounded-lg border p-1 bg-slate-100 dark:bg-slate-900">
                                 <button
                                     className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "all" ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
                                     onClick={() => { setFilterType("all"); updateUrl({ type: "all" }) }}

@@ -1470,7 +1470,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="space-y-1.5">
                                 <label className="font-semibold text-foreground">IFSC / Routing Code</label>
                                 <Input
@@ -1593,7 +1593,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                     </DialogHeader>
 
                     <form onSubmit={handleImportSubmit} className="space-y-4 text-xs">
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="space-y-1.5">
                                 <label className="font-semibold text-foreground">Statement # *</label>
                                 <Input

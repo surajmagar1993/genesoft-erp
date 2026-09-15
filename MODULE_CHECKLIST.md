@@ -67,12 +67,12 @@
 
 ## 🤝 CRM — Customer Relationship Management
 
-- [x] **Contacts Management** 🔴 — People, phone, email, addresses, tags
-- [x] **Company/Organization Management** 🔴 — Company profiles, linked contacts
-- [x] **Lead Management** 🔴 — Capture, score, assign, convert leads
-- [x] **Deals / Opportunities** 🔴 — Sales pipeline, stages, win/loss tracking
+- [x] **Contacts Management** 🔴 — People, phone, email, addresses, tags, customer ledger, communications & tasks ✅
+- [x] **Company/Organization Management** 🔴 — 360-degree company hub (`/crm/companies/[id]`), linked contacts, linked deals, pipeline analytics, interactive tabs & direct creation links ✅ **(2026-09-14)**
+- [x] **Lead Management** 🔴 — Capture, score, assign, convert leads to deals (`/crm/leads/[id]`) ✅
+- [x] **Deals / Opportunities** 🔴 — Sales pipeline, interactive stage progression stepper, auto-calibrated probabilities, weighted forecast, linked tasks & communications, quote generator (`/crm/deals/[id]`) ✅ **(2026-09-14)**
 - [x] **Tasks & Activities** 🔴 — Follow-ups, calls, meetings, reminders ✅
-- [x] **Notes & Communication Log** 🔴 — Track all interactions per contact ✅
+- [x] **Notes & Communication Log** 🔴 — Track all interactions per contact, lead & deal ✅
 - [x] **Email Integration** 🟡 — Send/receive emails within CRM, templates ✅
 - [x] **Web Forms / Lead Capture** 🟡 — Embeddable forms for website ✅ (2026-09-12)
 
@@ -185,8 +185,7 @@
 ### 🌐 General Tax Features
 - [x] **Configurable Tax Engine** 🔴
 - [x] **Tax Groups** 🔴
-- [x] **Auto Tax Detection** 🔴
-- [ ] **Tax Exemptions** 🟡
+- [x] **Tax Exemptions** 🟡 — Statutory zero-rated supply (SEZ, Export, Govt, NGO, Reseller), certificate tracking on Contacts & Invoices, line-level exemption, dynamic statutory notice injection on PDF & web ✅ **(2026-09-14)**
 - [x] **Tax Reports** 🟡 ✅ (`/finance/reports`, regional tax return data) **(2026-09-12)**
 - [ ] **Withholding Tax** 🟢
 
@@ -211,7 +210,7 @@
 - [x] **Proforma Invoice** 🟡 ✅ **(2026-09-12)**
 - [x] **Credit Note / Debit Note** 🟡 ✅ **(2026-09-12)**
 - [x] **Recurring Invoices** 🟡 ✅ (`/sales/invoices/recurring`)
-- [ ] **Delivery Challan** 🟢
+- [x] **Delivery Challan** 🟢 — Rule 55 CGST Rules compliance, multi-purpose dispatch tracking, multi-copy printable slips (Consignee/Transporter/Consignor), and 1-click Tax Invoice conversion (`/sales/delivery-challans`) ✅ **(2026-09-14)**
 - [ ] **Multi-Template Support** 🟢
 
 ---
@@ -220,9 +219,8 @@
 
 - [x] **Employee Directory** 🟡 ✅ **(2026-09-10)**
 - [x] **Attendance Tracking** 🟡 ✅ **(2026-09-10)**
-- [x] **Leave Management** 🟡 ✅ **(2026-09-10)**
-- [ ] **Payroll Processing** 🟢
-- [ ] **Recruitment / Hiring** 🟢
+- [x] **Payroll Processing** 🟢 — Salary structures, allowances, statutory deductions (PF, ESI, PT, TDS), attendance sync, monthly pay runs, and printable payslip slips (`/hr?tab=payroll` & `/hr/payroll`) ✅ **(2026-09-14)**
+- [x] **Recruitment / Hiring** 🟢 — Applicant Tracking System (ATS), job requisition publishing (`JOB-YYYY-XXX`), visual candidate pipeline (Kanban & Table), multi-round interview scheduling with video links & scorecards, and 1-click hire conversion to Employee Directory (`/hr?tab=recruitment` & `/hr/recruitment`) ✅ **(2026-09-14)**
 - [ ] **Employee Self-Service Portal** 🟢
 - [ ] **Performance Reviews** 🟢
 - [ ] **Training & Development** 🟢
@@ -252,10 +250,10 @@
 
 ## 🔧 Manufacturing (Optional)
 
-- [ ] **Bill of Materials (BOM)** 🟢
-- [ ] **Work Orders** 🟢
-- [ ] **Quality Control** 🟢
-- [ ] **Raw Material Planning** 🟢
+- [x] **Bill of Materials (BOM)** 🟢 — Multi-level component formulas, scrap allowance %, labor & machine overhead computation, batch unit costs (`/manufacturing?tab=boms`) ✅ **(2026-09-14)**
+- [x] **Work Orders** 🟢 — Shop floor production execution (`PLANNED` ➔ `CONFIRMED` ➔ `IN_PROGRESS` ➔ `QUALITY_CHECK` ➔ `COMPLETED`), priority scheduling, automated source warehouse component deduction & target warehouse finished good addition (`/manufacturing?tab=work-orders`) ✅ **(2026-09-14)**
+- [x] **Quality Control** 🟢 — Inspection checkpoints, criteria parameters, pass/fail/conditional verdicts with lot tracing (`/manufacturing?tab=qc`) ✅ **(2026-09-14)**
+- [x] **Raw Material Planning** 🟢 — Stock shortage evaluation, warehouse-aware component availability checking prior to production dispatch ✅ **(2026-09-14)**
 
 ---
 
@@ -265,7 +263,7 @@
 - [x] **Sales Reports** 🔴 ✅
 - [x] **Financial Reports** 🔴 ✅
 - [x] **Export (PDF/Excel/CSV)** 🔴 ✅
-- [ ] **Inventory Reports** 🟡
+- [x] **Inventory Reports** 🟡 — Stock Valuation (Cost basis vs Retail value, Gross margin yields), Turnover & Movement Velocity analysis, Multi-Depot Distribution matrix, CSV & print exports (`/inventory?tab=reports`) ✅ **(2026-09-14)**
 - [ ] **HR Reports** 🟢
 - [ ] **Custom Report Builder** 🟢
 
