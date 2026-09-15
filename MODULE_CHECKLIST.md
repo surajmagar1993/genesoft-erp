@@ -277,6 +277,9 @@
 - [x] **Notification System** 🔴 ✅
 - [x] **Audit Logs** 🟡 (expand `AdminAuditLog` with `EMAIL_TEMPLATE_UPDATE`, `EMAIL_TEMPLATE_RESET`, `EMAIL_TEMPLATE_TEST_DISPATCH`) ✅ **(2026-09-12)**
 - [x] **Email Templates** 🟡 (`/admin/email-templates`) ✅ **(2026-09-12)**
+- [x] **Platform System Settings & Broadcast Engine** 🟡 — Emergency maintenance lockdown, self-serve registration gate, and live real-time announcement broadcast strip for all tenant dashboards (`/admin/settings`) ✅ **(2026-09-15)**
+- [x] **Global Cross-Tenant User Directory** 🟡 — Comprehensive platform accounts ledger, real-time cross-tenant search, role management, and account activation/suspension controls (`/admin/users`) ✅ **(2026-09-15)**
+- [x] **Multi-Region Cloud Mesh & Edge Telemetry** 🟡 — Live jurisdiction tenant distribution, distributed cloud edge clusters (`BOM1`, `DXB1`, `RUH1`, `IAD1`, `LHR1`, `SYD1`), latency metrics, and statutory tax engines (`/admin/regions`) ✅ **(2026-09-15)**
 - [ ] **Workflow Automation** 🟢
 - [ ] **API Access** 🟢
 - [x] **Webhooks** 🟢 ✅ (WhatsApp `/api/webhooks/whatsapp`, Stripe, Razorpay) **(2026-09-12)**
@@ -289,12 +292,13 @@
 - [x] **Subscription Plans**: Free, Basic, Pro, Enterprise tiers ✅
 - [x] **Razorpay Integration**: Payment processing ✅
 - [x] **Trial Management**: 15-day PRO trial infrastructure ✅
-- [x] **Super Admin Command Center**: Platform intelligence hub with recharts ✅ **(2026-04-08)**
+- [x] **Super Admin Command Center**: Platform intelligence hub with recharts and 6-node quick action operations (`/admin/dashboard`) ✅ **(2026-09-15)**
 - [x] **Live Support Chat**: Real-time tenant support ✅
 - [x] **Tenant Management CRUD** (`/admin/tenants`, `/admin/tenants/[id]`, `/admin/tenants/new`) ✅ **(2026-09-10)**
-- [x] **Support Ticket Orchestration** from Command Center (`/admin/support`, `/admin/support/[id]`) ✅
+- [x] **Support Ticket Orchestration** from Command Center (`/admin/support`, `/admin/support/[id]`) with fixed routing ✅ **(2026-09-15)**
 - [x] **Platform Security & Governance** (`/admin/security`) — Rate limiting, IP firewall, 2FA enforcement, audit feed ✅ **(2026-09-10)**
 - [x] **Plan Upgrade & Downgrade Engine**: Real-time proration math (used days, unused credit, net payable), scheduled downgrades at cycle end, and audit logging ✅ **(2026-09-12)**
+- [x] **Platform Subscriptions & MRR Ledger** (`/admin/subscriptions`): Live revenue metrics (MRR/ARR), plan tier distributions, tenant trial expiration tracking, and issued B2B invoice ledger ✅ **(2026-09-15)**
 - [x] **Platform Subscription Invoicing & Printable Slips**: Automated B2B tax receipts (`SAAS-INV-YYYY-XXXX`), regional tax splits (IN 18%, GB 20%, AE 5%, SA 15%, AU 10%, US 0%), and instant printable HTML receipt modal ✅ **(2026-09-12)**
 - [x] **Tenant Billing Studio**: Monthly vs Annual frequency switcher (20% discount badge), 4-tier cards with current status, proration quote modal, and receipts ledger ✅ **(2026-09-12)**
 
