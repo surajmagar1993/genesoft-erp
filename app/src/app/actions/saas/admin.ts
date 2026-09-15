@@ -882,3 +882,245 @@ export async function removeBlockedIp(ip: string) {
     revalidatePath("/admin/security")
     return { success: true }
 }
+
+/**
+ * Global Platform Settings & Announcement Engine
+ */
+export async function getGlobalSettings() {
+    try {
+        let settings = await prisma.globalSettings.findUnique({
+            where: { id: "system_config" }
+        })
+
+        if (!settings) {
+            settings = await prisma.globalSettings.create({
+                data: {
+                    id: "system_config",
+                    maintenanceMode: false,
+                    allowSignups: true,
+                    bannerMessage: null
+                }
+            })
+        }
+
+        return settings
+    } catch (error) {
+        console.error("getGlobalSettings error:", error)
+        return {
+            id: "system_config",
+            maintenanceMode: false,
+            allowSignups: true,
+            bannerMessage: null,
+            updatedAt: new Date()
+        }
+    }
+}
+
+export async function updateGlobalSettings(data: {
+    maintenanceMode?: boolean
+    allowSignups?: boolean
+    bannerMessage?: string | null
+}) {
+    await ensureSuperAdmin()
+
+    const updated = await prisma.globalSettings.upsert({
+        where: { id: "system_config" },
+        update: {
+            ...(data.maintenanceMode !== undefined && { maintenanceMode: data.maintenanceMode }),
+            ...(data.allowSignups !== undefined && { allowSignups: data.allowSignups }),
+            ...(data.bannerMessage !== undefined && { bannerMessage: data.bannerMessage?.trim() || null })
+        },
+        create: {
+            id: "system_config",
+            maintenanceMode: data.maintenanceMode ?? false,
+            allowSignups: data.allowSignups ?? true,
+            bannerMessage: data.bannerMessage?.trim() || null
+        }
+    })
+
+    await logAdminAction("GLOBAL_SETTINGS_UPDATE", "system_config", "SYSTEM", data)
+
+    revalidatePath("/admin/settings")
+    revalidatePath("/admin/dashboard")
+    revalidatePath("/(dashboard)", "layout")
+    return updated
+}
+
+/**
+ * Global User Directory (Cross-Tenant User Management)
+ */
+export async function getGlobalUsers(params: {
+    search?: string
+    role?: string
+    status?: string
+    page?: number
+    limit?: number
+} = {}) {
+    await ensureSuperAdmin()
+    const { search, role, status, page = 1, limit = 20 } = params
+
+    const where: any = {}
+
+    if (search && search.trim()) {
+        const query = search.trim()
+        where.OR = [
+            { fullName: { contains: query, mode: "insensitive" } },
+            { email: { contains: query, mode: "insensitive" } },
+            { phone: { contains: query, mode: "insensitive" } }
+        ]
+    }
+
+    if (role && role !== "ALL") {
+        where.role = role as any
+    }
+
+    if (status && status !== "ALL") {
+        where.isActive = status === "ACTIVE"
+    }
+
+    try {
+        const [users, totalCount] = await Promise.all([
+            prisma.user.findMany({
+                where,
+                include: {
+                    tenant: {
+                        select: {
+                            id: true,
+                            name: true,
+                            plan: true,
+                            countryCode: true
+                        }
+                    }
+                },
+                orderBy: { createdAt: "desc" },
+                skip: (page - 1) * limit,
+                take: limit
+            }),
+            prisma.user.count({ where })
+        ])
+
+        return { users, totalCount, page, limit }
+    } catch (error) {
+        console.error("getGlobalUsers error:", error)
+        return { users: [], totalCount: 0, page, limit }
+    }
+}
+
+export async function toggleUserStatus(userId: string, isActive: boolean) {
+    await ensureSuperAdmin()
+
+    const updated = await prisma.user.update({
+        where: { id: userId },
+        data: { isActive }
+    })
+
+    await logAdminAction(isActive ? "USER_ACTIVATE" : "USER_DEACTIVATE", userId, "USER", {
+        userEmail: updated.email,
+        tenantId: updated.tenantId
+    })
+
+    revalidatePath("/admin/users")
+    return updated
+}
+
+export async function updateUserRole(userId: string, role: any) {
+    await ensureSuperAdmin()
+
+    const updated = await prisma.user.update({
+        where: { id: userId },
+        data: { role }
+    })
+
+    // Synchronize Supabase profiles role if available
+    try {
+        const supabase = await createClient()
+        await supabase
+            .from("profiles")
+            .update({ role })
+            .eq("id", userId)
+    } catch (supaErr) {
+        console.warn("Failed to sync Supabase profile role for user:", userId, supaErr)
+    }
+
+    await logAdminAction("USER_ROLE_UPDATE", userId, "USER", {
+        newRole: role,
+        userEmail: updated.email
+    })
+
+    revalidatePath("/admin/users")
+    return updated
+}
+
+/**
+ * Platform Subscriptions & MRR Ledger
+ */
+export async function getPlatformSubscriptions() {
+    await ensureSuperAdmin()
+
+    try {
+        const tenants = await prisma.tenant.findMany({
+            select: {
+                id: true,
+                name: true,
+                domain: true,
+                email: true,
+                plan: true,
+                isActive: true,
+                isTrial: true,
+                trialEndsAt: true,
+                countryCode: true,
+                currencyCode: true,
+                createdAt: true,
+                settings: true
+            },
+            orderBy: { createdAt: "desc" }
+        })
+
+        const planMonthlyRate: Record<string, number> = {
+            FREE: 0,
+            BASIC: 499,
+            PRO: 999,
+            ENTERPRISE: 4999
+        }
+
+        let totalMrr = 0
+        const planCounts: Record<string, number> = { FREE: 0, BASIC: 0, PRO: 0, ENTERPRISE: 0 }
+        const allInvoices: any[] = []
+
+        tenants.forEach((t: any) => {
+            const planKey = (t.plan || "FREE") as string
+            planCounts[planKey] = (planCounts[planKey] || 0) + 1
+            totalMrr += planMonthlyRate[planKey] || 0
+
+            const subMeta = (t.settings as any)?.subscription || {}
+            if (Array.isArray(subMeta.invoices)) {
+                subMeta.invoices.forEach((inv: any) => {
+                    allInvoices.push({
+                        ...inv,
+                        tenantId: t.id,
+                        tenantName: t.name
+                    })
+                })
+            }
+        })
+
+        allInvoices.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+
+        return {
+            totalTenants: tenants.length,
+            totalMrr,
+            planCounts,
+            tenants,
+            invoices: allInvoices.slice(0, 30)
+        }
+    } catch (error) {
+        console.error("getPlatformSubscriptions error:", error)
+        return {
+            totalTenants: 0,
+            totalMrr: 0,
+            planCounts: { FREE: 0, BASIC: 0, PRO: 0, ENTERPRISE: 0 },
+            tenants: [],
+            invoices: []
+        }
+    }
+}

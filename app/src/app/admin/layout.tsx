@@ -22,6 +22,8 @@ import {
     Activity,
     Shield,
     Mail,
+    Users,
+    Receipt,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -60,6 +62,8 @@ const adminNavigation = [
         items: [
             { name: "Admin Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
             { name: "Tenants", href: "/admin/tenants", icon: Building2 },
+            { name: "Users", href: "/admin/users", icon: Users },
+            { name: "Subscriptions", href: "/admin/subscriptions", icon: Receipt },
             { name: "Pricing & Plans", href: "/admin/pricing", icon: CreditCard },
         ],
     },
@@ -73,6 +77,7 @@ const adminNavigation = [
     {
         label: "Global Settings",
         items: [
+            { name: "System Settings", href: "/admin/settings", icon: Settings },
             { name: "Email Templates", href: "/admin/email-templates", icon: Mail },
             { name: "Regions", href: "/admin/regions", icon: Globe },
             { name: "Platform Security", href: "/admin/security", icon: Shield },

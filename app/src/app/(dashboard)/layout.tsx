@@ -50,6 +50,7 @@ import {
     FileSpreadsheet,
     ShieldCheck,
     MessageSquare,
+    Megaphone,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -85,6 +86,7 @@ import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import Script from "next/script"
 import { getTaxJurisdiction, isTaxRouteApplicable } from "@/lib/tax-jurisdiction"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
+import { getGlobalSettings } from "@/app/actions/saas/admin"
 
 const STATUTORY_TAX_ROUTES = [
     "/finance/gst-returns",
@@ -374,6 +376,7 @@ export default function DashboardLayout({
     const [tenantCountry, setTenantCountry] = useState<string>("IN")
     const [multiJurisdiction, setMultiJurisdiction] = useState<boolean>(false)
     const [tenantName, setTenantName] = useState<string>("")
+    const [bannerMessage, setBannerMessage] = useState<string | null>(null)
 
     useEffect(() => {
         let isMounted = true
@@ -390,6 +393,17 @@ export default function DashboardLayout({
             .catch((err) => {
                 console.error("Error loading tenant settings:", err)
             })
+
+        getGlobalSettings()
+            .then((settings) => {
+                if (isMounted && settings?.bannerMessage) {
+                    setBannerMessage(settings.bannerMessage)
+                }
+            })
+            .catch((err) => {
+                console.error("Error loading global settings:", err)
+            })
+
         return () => {
             isMounted = false
         }
@@ -421,7 +435,6 @@ export default function DashboardLayout({
         <SidebarProvider>
             <Script {...({ id: "razorpay-checkout", src: "https://checkout.razorpay.com/v1/checkout.js", strategy: "lazyOnload" } as any)} />
             <AppSidebar
-
                 countryCode={tenantCountry}
                 multiJurisdiction={multiJurisdiction}
                 tenantName={tenantName}
@@ -429,6 +442,21 @@ export default function DashboardLayout({
             <SidebarInset>
                 <TopBar />
                 <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-6 w-full">
+                    {bannerMessage && (
+                        <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-300 text-xs font-medium flex items-center justify-between shadow-sm animate-in fade-in">
+                            <div className="flex items-center gap-2">
+                                <Megaphone className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                                <span>{bannerMessage}</span>
+                            </div>
+                            <button
+                                onClick={() => setBannerMessage(null)}
+                                className="text-muted-foreground hover:text-foreground text-xs p-1"
+                                title="Dismiss notice"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                    )}
                     {children}
                 </div>
             </SidebarInset>
