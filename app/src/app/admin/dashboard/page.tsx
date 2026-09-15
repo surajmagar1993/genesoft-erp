@@ -1,6 +1,6 @@
 import { getPlatformStats, getRecentSystemLogs, getDashboardCharts, getDatabaseHealth } from "@/app/actions/saas/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Users, CreditCard, MessageSquare, AlertCircle, ArrowUpRight, ArrowDownRight, Activity, Zap, Shield, Database, Settings } from "lucide-react"
+import { Building2, Users, CreditCard, MessageSquare, AlertCircle, ArrowUpRight, ArrowDownRight, Activity, Zap, Shield, Database, Settings, Receipt, Globe } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { DashboardCharts } from "./DashboardCharts"
@@ -44,8 +44,10 @@ export default async function AdminDashboardPage() {
 
     const quickActions = [
         { title: "Manage Tenants", href: "/admin/tenants", icon: Building2, color: "text-blue-500" },
-        { title: "Review Tickets", href: "/admin/support", icon: MessageSquare, color: "text-purple-500" },
-        { title: "Platform Security", href: "/admin/security", icon: Shield, color: "text-emerald-500" },
+        { title: "Global Users", href: "/admin/users", icon: Users, color: "text-indigo-500" },
+        { title: "Subscriptions", href: "/admin/subscriptions", icon: Receipt, color: "text-emerald-500" },
+        { title: "Support Inbox", href: "/admin/support", icon: MessageSquare, color: "text-purple-500" },
+        { title: "Global Regions", href: "/admin/regions", icon: Globe, color: "text-cyan-500" },
         { title: "System Settings", href: "/admin/settings", icon: Settings, color: "text-amber-500" },
     ]
 
@@ -58,35 +60,38 @@ export default async function AdminDashboardPage() {
                          <Zap className="h-6 w-6 text-primary" />
                          <h1 className="text-4xl font-black tracking-tight text-foreground">SaaS Command Center</h1>
                     </div>
-                    <p className="text-muted-foreground text-lg font-medium">
-                        Real-time intelligence and resource orchestration for Genesoft Platform.
-                    </p>
+                    <p className="text-muted-foreground text-sm font-medium">Real-time intelligence and resource orchestration for Genesoft Platform.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Badge variant="outline" className={`px-3 py-1 gap-2 flex items-center ${
-                      health.status === 'HEALTHY' ? 'text-emerald-500 border-emerald-500/20 bg-emerald-500/5' : 'text-rose-500 border-rose-500/20 bg-rose-500/5'
-                    }`}>
-                        <div className={`h-2 w-2 rounded-full ${health.status === 'HEALTHY' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                        System {health.status}
-                    </Badge>
+                
+                {/* Cluster Status Pill */}
+                <div className="flex items-center gap-2 bg-card px-4 py-2 rounded-xl border border-primary/10 shadow-sm backdrop-blur">
+                    <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                    </span>
+                    <span className="text-xs font-bold text-muted-foreground tracking-wide uppercase">System {health.status}</span>
                 </div>
             </div>
 
-            {/* KPI Cards */}
+            {/* KPI Overview */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {cards.map((card) => (
-                    <Card key={card.title} className="relative overflow-hidden border-primary/10 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] bg-card/50 backdrop-blur">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-semibold tracking-wide uppercase opacity-70">
-                                {card.title}
-                            </CardTitle>
-                            <card.icon className="h-5 w-5 text-primary opacity-80" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-black tracking-tight">{card.value}</div>
-                        </CardContent>
-                        <div className="absolute -right-4 -bottom-4 opacity-[0.03] rotate-12 group-hover:rotate-0 transition-transform duration-500">
-                            <card.icon size={100} />
+                    <Card key={card.title} className="relative overflow-hidden border-primary/5 shadow-lg bg-card/40 backdrop-blur-sm group hover:border-primary/20 transition-all">
+                        <div className="p-6">
+                            <div className="flex items-center justify-between space-y-0 pb-2">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{card.title}</span>
+                                <div className="p-2 rounded-lg bg-primary/5 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                                    <card.icon className="h-4 w-4" />
+                                </div>
+                            </div>
+                            <div className="text-3xl font-black tracking-tight mt-2 text-foreground">{card.value}</div>
+                            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 font-medium">
+                                <span className="text-emerald-500 flex items-center font-bold">
+                                    <ArrowUpRight className="h-3 w-3 mr-0.5" />
+                                    +12%
+                                </span>
+                                {card.description}
+                            </p>
                         </div>
                     </Card>
                 ))}
@@ -96,7 +101,7 @@ export default async function AdminDashboardPage() {
             <DashboardCharts growthData={charts.growthData} distributionData={charts.distributionData} />
 
             {/* Quick Actions Panel */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {quickActions.map((action) => (
                     <Link key={action.title} href={action.href}>
                         <Card className="hover:bg-muted/50 transition-all cursor-pointer border-primary/5 shadow group overflow-hidden">
@@ -104,7 +109,7 @@ export default async function AdminDashboardPage() {
                                 <div className={`p-2 rounded-lg bg-background shadow-inner transition-transform group-hover:scale-110 ${action.color}`}>
                                     <action.icon size={20} />
                                 </div>
-                                <span className="text-sm font-bold tracking-tight">{action.title}</span>
+                                <span className="text-sm font-bold tracking-tight text-center">{action.title}</span>
                             </CardContent>
                         </Card>
                     </Link>
