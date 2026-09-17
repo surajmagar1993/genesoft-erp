@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { Search, Plus, Pencil, Trash2, FileText, Send, CheckCircle2, XCircle, Clock, MoreHorizontal, Download, Eye, Loader2, Receipt } from "lucide-react"
+import { Search, Plus, Pencil, Trash2, FileText, Send, CheckCircle2, XCircle, Clock, MoreHorizontal, Download, Eye, Loader2, Receipt, Palette } from "lucide-react"
 import { toast } from "sonner"
 
 import { Input } from "@/components/ui/input"
@@ -201,6 +201,16 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                     )
                                 })}
                             </div>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs gap-1.5 border-indigo-500/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
+                                onClick={() => router.push("/sales/invoices/templates")}
+                            >
+                                <Palette className="h-3.5 w-3.5 text-indigo-600" />
+                                Templates
+                            </Button>
                         </div>
                     </div>
 

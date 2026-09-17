@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, ArrowLeft, Download, Send, CreditCard, Pencil, Trash2, Calendar, FileText, CheckCircle2, IndianRupee, ArrowRightLeft, Stamp, ShieldCheck, Scale, Truck, MessageSquare, ExternalLink, Loader2, Link2, Copy, Check } from "lucide-react"
+import { Plus, ArrowLeft, Download, Send, CreditCard, Pencil, Trash2, Calendar, FileText, CheckCircle2, IndianRupee, ArrowRightLeft, Stamp, ShieldCheck, Scale, Truck, MessageSquare, ExternalLink, Loader2, Link2, Copy, Check, Palette } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -28,11 +28,13 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-import { InvoiceDB, deleteInvoice, sendInvoiceEmail, convertProformaToInvoice } from "@/app/actions/sales/invoices"
+import { InvoiceDB, InvoiceTemplateId, deleteInvoice, sendInvoiceEmail, convertProformaToInvoice } from "@/app/actions/sales/invoices"
 import { PaymentDB, createPayment, deletePayment, CreatePaymentPayload, PaymentMethod } from "@/app/actions/finance/payments"
 import { sendInvoiceViaWhatsApp } from "@/app/actions/crm/whatsapp"
 import { generateWhatsAppDirectLink } from "@/lib/whatsapp-engine"
 import { COMPANY } from "@/lib/constants/company"
+import { InvoiceTemplateDialog } from "@/components/invoices/invoice-template-dialog"
+import { INVOICE_TEMPLATES } from "@/components/invoices/templates/invoice-templates"
 
 const formatCurrency = (amount: number, currency: string = "INR") =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(amount)
@@ -59,6 +61,12 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
     const router = useRouter()
     const [payments, setPayments] = useState<PaymentDB[]>(initialPayments)
     const [isPending, startTransition] = useTransition()
+
+    // Invoice presentation template state
+    const [openTemplateModal, setOpenTemplateModal] = useState(false)
+    const [currentTemplate, setCurrentTemplate] = useState<InvoiceTemplateId>(
+        invoice.template_id || "MODERN"
+    )
     
     // Status color mapping
     const getVariant = (s: string) => {
@@ -232,7 +240,16 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <a href={`/api/invoices/${invoice.id}/pdf`} target="_blank" rel="noreferrer">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-indigo-500/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 font-semibold"
+                        onClick={() => setOpenTemplateModal(true)}
+                    >
+                        <Palette className="mr-1.5 h-4 w-4 text-indigo-600" />
+                        Template: {INVOICE_TEMPLATES[currentTemplate]?.name || "Modern"}
+                    </Button>
+                    <a href={`/api/invoices/${invoice.id}/pdf?template=${currentTemplate.toLowerCase()}`} target="_blank" rel="noreferrer">
                         <Button variant="outline" size="sm">
                             <Download className="mr-2 h-4 w-4" />
                             PDF
@@ -842,6 +859,14 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Invoice Template Studio Modal */}
+            <InvoiceTemplateDialog
+                open={openTemplateModal}
+                onOpenChange={setOpenTemplateModal}
+                invoice={{ ...invoice, template_id: currentTemplate }}
+                onTemplateChanged={(newTpl) => setCurrentTemplate(newTpl)}
+            />
         </div>
     )
 }

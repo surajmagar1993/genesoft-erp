@@ -9,17 +9,19 @@ import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
 export const dynamic = "force-dynamic"
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  const { searchParams } = new URL(req.url)
+  const template = searchParams.get("template") || undefined
   const invoice = await getInvoiceById(id)
 
   if (!invoice) {
     return NextResponse.json({ error: "Invoice not found" }, { status: 404 })
   }
 
-  const buffer = await renderInvoicePdf(invoice)
+  const buffer = await renderInvoicePdf(invoice, template)
   const filename = `Invoice-${invoice.invoice_number}.pdf`
 
   return new Response(new Uint8Array(buffer), {

@@ -13,6 +13,7 @@ import { recordTransaction } from "@/app/actions/crm/ledger"
 /* ── Types ── */
 export type InvoiceStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "CANCELLED"
 export type InvoiceTypeEnum = "TAX_INVOICE" | "PROFORMA" | "CREDIT_NOTE" | "DEBIT_NOTE"
+export type InvoiceTemplateId = "MODERN" | "CLASSIC" | "MINIMALIST" | "COMPACT" | "CREATIVE"
 
 export interface InvoiceLineItemDB {
   id: string
@@ -74,6 +75,7 @@ export interface InvoiceDB {
   tenant_id: string
   contact_id: string
   currency_code: string
+  template_id?: InvoiceTemplateId
   // Tax Exemption
   is_tax_exempt?: boolean
   tax_exemption_reason?: string | null
@@ -119,6 +121,7 @@ function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB } {
     tenant_id: inv.tenantId,
     contact_id: inv.contactId,
     currency_code: inv.currencyCode || "INR",
+    template_id: (billTo.templateId as InvoiceTemplateId) || (tenantSettings.invoice_template as InvoiceTemplateId) || "MODERN",
     is_tax_exempt: (inv as any).isTaxExempt || false,
     tax_exemption_reason: (inv as any).taxExemptionReason || null,
     tax_exemption_certificate: (inv as any).taxExemptionCertificate || null,
@@ -798,3 +801,73 @@ export async function sendInvoiceEmail(
   revalidatePath(`/sales/invoices/${id}`)
   return { error: null }
 }
+
+/**
+ * Updates the presentation template preference for a specific invoice.
+ */
+export async function updateInvoiceTemplate(
+  id: string,
+  templateId: InvoiceTemplateId
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const tenantId = await getTenantId()
+    const invoice = await prisma.invoice.findUnique({
+      where: { id, tenantId },
+      select: { billTo: true }
+    })
+
+    if (!invoice) {
+      return { success: false, error: "Invoice not found" }
+    }
+
+    const currentBillTo = (invoice.billTo as Record<string, any>) || {}
+    const updatedBillTo = { ...currentBillTo, templateId }
+
+    await prisma.invoice.update({
+      where: { id, tenantId },
+      data: { billTo: updatedBillTo }
+    })
+
+    revalidatePath("/sales/invoices")
+    revalidatePath(`/sales/invoices/${id}`)
+    return { success: true }
+  } catch (err: any) {
+    console.error("Failed to update invoice template:", err)
+    return { success: false, error: err.message || "Failed to update template" }
+  }
+}
+
+/**
+ * Updates the organization-wide default invoice template in tenant settings.
+ */
+export async function updateTenantDefaultTemplate(
+  templateId: InvoiceTemplateId
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const tenantId = await getTenantId()
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { settings: true }
+    })
+
+    if (!tenant) {
+      return { success: false, error: "Tenant not found" }
+    }
+
+    const currentSettings = (tenant.settings as Record<string, any>) || {}
+    const updatedSettings = { ...currentSettings, invoice_template: templateId }
+
+    await prisma.tenant.update({
+      where: { id: tenantId },
+      data: { settings: updatedSettings }
+    })
+
+    revalidatePath("/sales/invoices")
+    revalidatePath("/sales/invoices/templates")
+    return { success: true }
+  } catch (err: any) {
+    console.error("Failed to update tenant default template:", err)
+    return { success: false, error: err.message || "Failed to update default template" }
+  }
+}
+

@@ -399,12 +399,24 @@ function numToWords(n: number, currencyCode: string = "INR"): string {
   return words + " Only"
 }
 
+export const TEMPLATE_PALETTES: Record<string, { primary: string; light: string; border: string }> = {
+  MODERN: { primary: "#4f46e5", light: "#eef2ff", border: "#c7d2fe" },
+  CLASSIC: { primary: "#0f172a", light: "#f8fafc", border: "#64748b" },
+  MINIMALIST: { primary: "#18181b", light: "#ffffff", border: "#e4e4e7" },
+  COMPACT: { primary: "#0d9488", light: "#f0fdfa", border: "#99f6e4" },
+  CREATIVE: { primary: "#7c3aed", light: "#f5f3ff", border: "#ddd6fe" },
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 interface TaxInvoiceProps {
   invoice: InvoiceDB
+  templateId?: "MODERN" | "CLASSIC" | "MINIMALIST" | "COMPACT" | "CREATIVE"
 }
 
-export function TaxInvoice({ invoice }: TaxInvoiceProps) {
+export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
+  const chosenTemplate = (templateId || invoice.template_id || "MODERN").toUpperCase()
+  const palette = TEMPLATE_PALETTES[chosenTemplate] || TEMPLATE_PALETTES.MODERN
+
   const items: InvoiceLineItemDB[] = invoice.invoice_line_items ?? []
   const supplyType = invoice.supply_type ?? "intra"
   const isIntra = supplyType === "intra"
@@ -471,14 +483,14 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
       <Page size="A4" style={s.page}>
 
         {/* ── Header ── */}
-        <View style={s.headerRow}>
+        <View style={[s.headerRow, { borderBottomColor: palette.primary }]}>
           <View>
-            <Text style={s.companyName}>{supplierName}</Text>
+            <Text style={[s.companyName, { color: palette.primary }]}>{supplierName}</Text>
             {supplierAddress ? <Text style={s.companyAddress}>{supplierAddress}</Text> : null}
             {supplierGstin ? <Text style={s.companyGstin}>GSTIN: {supplierGstin}</Text> : null}
           </View>
           <View>
-            <Text style={[s.invoiceLabel, isProforma ? { color: "#b45309" } : {}]}>
+            <Text style={[s.invoiceLabel, isProforma ? { color: "#b45309" } : { color: palette.primary }]}>
               {isProforma ? "PROFORMA INVOICE" : "TAX INVOICE"}
             </Text>
             {isProforma && (
@@ -541,7 +553,7 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
         {/* ── Line Items Table ── */}
         <View style={s.table}>
           {/* Header */}
-          <View style={s.tableHeaderRow}>
+          <View style={[s.tableHeaderRow, { backgroundColor: palette.primary }]}>
             <Text style={[s.thText, s.colSr]}>#</Text>
             <Text style={[s.thText, s.colName]}>Item / Description</Text>
             <Text style={[s.thText, s.colHsn]}>HSN/SAC</Text>
@@ -650,7 +662,7 @@ export function TaxInvoice({ invoice }: TaxInvoiceProps) {
             </View>
             <View style={s.grandTotalRow}>
               <Text style={s.grandTotalLabel}>Grand Total</Text>
-              <Text style={s.grandTotalValue}>₹{fmt(summary.grandTotal)}</Text>
+              <Text style={[s.grandTotalValue, { color: palette.primary }]}>₹{fmt(summary.grandTotal)}</Text>
             </View>
           </View>
         </View>

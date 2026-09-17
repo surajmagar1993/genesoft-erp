@@ -8,6 +8,7 @@ import { TaxInvoice } from "./TaxInvoice"
 import type { InvoiceDB } from "@/app/actions/sales/invoices"
 import React from "react"
 
-export async function renderInvoicePdf(invoice: InvoiceDB): Promise<Buffer> {
-  return renderToBuffer(<TaxInvoice invoice={invoice} /> as any)
+export async function renderInvoicePdf(invoice: InvoiceDB, templateId?: string): Promise<Buffer> {
+  const chosenTemplate = (templateId?.toUpperCase() || invoice.template_id || "MODERN") as any
+  return renderToBuffer(<TaxInvoice invoice={invoice} templateId={chosenTemplate} /> as any)
 }

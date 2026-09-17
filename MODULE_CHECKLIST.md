@@ -209,7 +209,7 @@
 - [x] **Credit Note / Debit Note** 🟡 ✅ **(2026-09-12)**
 - [x] **Recurring Invoices** 🟡 ✅ (`/sales/invoices/recurring`)
 - [x] **Delivery Challan** 🟢 — Rule 55 CGST Rules compliance, multi-purpose dispatch tracking, multi-copy printable slips (Consignee/Transporter/Consignor), and 1-click Tax Invoice conversion (`/sales/delivery-challans`) ✅ **(2026-09-14)**
-- [ ] **Multi-Template Support** 🟢
+- [x] **Multi-Template Support** 🟢 — 5 professional design presets (Modern Executive, Classic Corporate, Swiss Minimalist, Compact/POS Thermal, Creative Bold), live Template Studio dialog, per-invoice & org defaults, web print styles, and multi-template PDF generation (`/sales/invoices/templates`) ✅ **(2026-09-17)** (ALL INVOICE FEATURES COMPLETE 📄)
 
 ---
 
