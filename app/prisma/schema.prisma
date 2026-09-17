@@ -122,6 +122,8 @@ model Tenant {
   trainingPrograms   TrainingProgram[]
   trainingEnrollments TrainingEnrollment[]
   customReports      CustomReport[]
+  workflowRules      WorkflowRule[]
+  workflowExecutions WorkflowExecution[]
 
   @@map("tenants")
 }
@@ -3794,5 +3796,56 @@ model CustomReport {
   @@index([tenantId])
   @@index([dataset])
   @@map("custom_reports")
+}
+
+// ============================================================================
+// Administration: Workflow Automation
+// ============================================================================
+
+model WorkflowRule {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId       String              @map("tenant_id") @db.Uuid
+  code           String
+  name           String
+  description    String?
+  triggerEvent   String              @map("trigger_event")
+  entityType     String              @map("entity_type")
+  conditions     Json                @default("[]")
+  actions        Json                @default("[]")
+  isActive       Boolean             @default(true) @map("is_active")
+  executionCount Int                 @default(0) @map("execution_count")
+  lastRunAt      DateTime?           @map("last_run_at") @db.Timestamptz(6)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  executions     WorkflowExecution[]
+
+  @@unique([tenantId, code], map: "uq_workflow_rules_tenant_code")
+  @@index([tenantId, triggerEvent], map: "idx_workflow_rules_tenant_trigger")
+  @@index([tenantId, isActive], map: "idx_workflow_rules_tenant_active")
+  @@map("workflow_rules")
+}
+
+model WorkflowExecution {
+  id                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId            String       @map("tenant_id") @db.Uuid
+  workflowId          String       @map("workflow_id") @db.Uuid
+  triggerEvent        String       @map("trigger_event")
+  entityId            String?      @map("entity_id")
+  status              String       @default("SUCCESS")
+  executedActions     Json         @default("[]") @map("executed_actions")
+  errorDetails        String?      @map("error_details")
+  executionDurationMs Int?         @map("execution_duration_ms")
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  tenant              Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  workflow            WorkflowRule @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status], map: "idx_workflow_executions_tenant_status")
+  @@index([workflowId, createdAt(sort: Desc)], map: "idx_workflow_executions_workflow_created")
+  @@map("workflow_executions")
 }
 

@@ -1,6 +1,7 @@
+import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards } from "lucide-react"
+import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards, Zap } from "lucide-react"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
 import { getTenantPaymentGateways } from "@/app/actions/finance/gateways"
 import TaxConfigClient from "./tax-config-client"
@@ -14,11 +15,20 @@ export default async function SettingsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-                <p className="text-muted-foreground mt-1">
-                    Manage your organization, payment gateways, and workspace configuration.
-                </p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+                    <p className="text-muted-foreground mt-1">
+                        Manage your organization, payment gateways, and workspace configuration.
+                    </p>
+                </div>
+                <Link
+                    href="/settings/workflows"
+                    className="inline-flex items-center gap-2 px-3.5 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                >
+                    <Zap className="h-4 w-4" />
+                    Workflow Automation
+                </Link>
             </div>
 
             <Tabs defaultValue="organization" className="space-y-4">

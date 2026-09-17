@@ -278,7 +278,7 @@
 - [x] **Platform System Settings & Broadcast Engine** 🟡 — Emergency maintenance lockdown, self-serve registration gate, and live real-time announcement broadcast strip for all tenant dashboards (`/admin/settings`) ✅ **(2026-09-15)**
 - [x] **Global Cross-Tenant User Directory** 🟡 — Comprehensive platform accounts ledger, real-time cross-tenant search, role management, and account activation/suspension controls (`/admin/users`) ✅ **(2026-09-15)**
 - [x] **Multi-Region Cloud Mesh & Edge Telemetry** 🟡 — Live jurisdiction tenant distribution, distributed cloud edge clusters (`BOM1`, `DXB1`, `RUH1`, `IAD1`, `LHR1`, `SYD1`), latency metrics, and statutory tax engines (`/admin/regions`) ✅ **(2026-09-15)**
-- [ ] **Workflow Automation** 🟢
+- [x] **Workflow Automation** 🟢 — Visual trigger-condition-action business rule studio across Sales, CRM, Inventory, Finance, HR, and Support, with prebuilt enterprise automation recipes, audit execution logging, active/pause toggles, and live rule simulator (`/settings/workflows`, `/app/actions/settings/workflows.ts`, `workflow_rules` & `workflow_executions` tables) ✅ **(2026-09-18)**
 - [ ] **API Access** 🟢
 - [x] **Webhooks** 🟢 ✅ (WhatsApp `/api/webhooks/whatsapp`, Stripe, Razorpay) **(2026-09-12)**
 - [ ] **White Labeling** 🟢

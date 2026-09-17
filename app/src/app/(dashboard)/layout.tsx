@@ -53,6 +53,7 @@ import {
     Megaphone,
     UserCheck,
     Award,
+    Zap,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -178,6 +179,7 @@ const navigation = [
         label: "System",
         items: [
             { name: "Settings", href: "/settings", icon: Settings },
+            { name: "Workflows", href: "/settings/workflows", icon: Zap },
         ],
     },
 ]

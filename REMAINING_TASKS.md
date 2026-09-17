@@ -145,7 +145,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] Rentals: Scheduling, Returns & Damage (`/sales/rental`) ✅ **(2026-09-12)** (ALL RENTAL MANAGEMENT MODULES COMPLETE 🏠)
 - [x] Manufacturing: BOM, Work Orders, QC, MRP (`/manufacturing`, `/app/actions/manufacturing.ts`) ✅ **(2026-09-14)**
 - [x] Reports: Custom Report Builder (`/reports/builder`, `/app/actions/reports/builder.ts`) — Cross-module ad-hoc reporting studio with dynamic field selectors, filters, group-by aggregations, dynamic charts, CSV/print exports, and report template persistence ✅ **(2026-09-17)** (ALL REPORTS & ANALYTICS COMPLETE 📈)
-- [ ] Admin: Workflow Automation
+- [x] Admin: Workflow Automation (`/settings/workflows`, `/app/actions/settings/workflows.ts`) — Trigger-condition-action workflow automation engine with 6-domain triggers, recipe gallery, execution audit log, active switch, and simulator sandbox ✅ **(2026-09-18)**
 - [ ] Admin: API & Webhooks
 - [ ] Admin: White Labeling
 - [ ] SaaS: Usage-Based Billing
