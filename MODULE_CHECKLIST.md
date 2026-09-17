@@ -218,8 +218,7 @@
 - [x] **Employee Directory** 🟡 ✅ **(2026-09-10)**
 - [x] **Attendance Tracking** 🟡 ✅ **(2026-09-10)**
 - [x] **Payroll Processing** 🟢 — Salary structures, allowances, statutory deductions (PF, ESI, PT, TDS), attendance sync, monthly pay runs, and printable payslip slips (`/hr?tab=payroll` & `/hr/payroll`) ✅ **(2026-09-14)**
-- [x] **Recruitment / Hiring** 🟢 — Applicant Tracking System (ATS), job requisition publishing (`JOB-YYYY-XXX`), visual candidate pipeline (Kanban & Table), multi-round interview scheduling with video links & scorecards, and 1-click hire conversion to Employee Directory (`/hr?tab=recruitment` & `/hr/recruitment`) ✅ **(2026-09-14)**
-- [ ] **Employee Self-Service Portal** 🟢
+- [x] **Employee Self-Service Portal** 🟢 — Personal profile hub, manager perspective switcher, live IST clock-in/out desk, leave quota trackers (Casual, Sick, Annual) with leave application modal, payslip breakdown with printable view, and deliverables task management (`/hr/portal`, `/app/actions/hr/portal.ts`) ✅ **(2026-09-17)**
 - [ ] **Performance Reviews** 🟢
 - [ ] **Training & Development** 🟢
 

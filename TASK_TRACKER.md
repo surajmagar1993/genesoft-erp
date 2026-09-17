@@ -208,9 +208,8 @@
 - [ ] Tax (Global): Withholding Tax
 - [x] Invoice Features: Delivery Challan (`/sales/delivery-challans`, `/app/actions/sales/delivery-challan.ts`) ✅ **(2026-09-14)**
 - [x] Invoice Features: Multi-Template Support (`/sales/invoices/templates`, `/sales/invoices/[id]`) ✅ **(2026-09-17)** (ALL INVOICE FEATURES COMPLETE 📄)
-- [x] HR: Payroll Processing (`/hr?tab=payroll`, `/hr/payroll`, `/app/actions/payroll.ts`) ✅ **(2026-09-14)**
 - [x] HR: Recruitment (`/hr?tab=recruitment`, `/hr/recruitment`, `/app/actions/recruitment.ts`) ✅ **(2026-09-14)**
-- [ ] HR: Employee Portal
+- [x] HR: Employee Portal (`/hr/portal`, `/app/actions/hr/portal.ts`) ✅ **(2026-09-17)**
 - [ ] HR: Performance & Training
 - [x] Projects: Milestones, Gantt, Billing (`/projects?tab=gantt`) ✅ **(2026-09-17)** (ALL PROJECT MANAGEMENT COMPLETE 📁)
 - [x] Rentals: Scheduling, Returns & Damage (`/sales/rental`) ✅ **(2026-09-12)** (ALL RENTAL MANAGEMENT COMPLETE 🏠)

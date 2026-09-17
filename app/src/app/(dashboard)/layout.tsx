@@ -51,6 +51,7 @@ import {
     ShieldCheck,
     MessageSquare,
     Megaphone,
+    UserCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -160,6 +161,7 @@ const navigation = [
             { name: "Inventory", href: "/inventory", icon: Warehouse },
             { name: "Manufacturing", href: "/manufacturing", icon: Factory },
             { name: "HR", href: "/hr", icon: UserCog },
+            { name: "Employee Portal", href: "/hr/portal", icon: UserCheck },
             { name: "Projects", href: "/projects", icon: FolderKanban },
         ],
     },

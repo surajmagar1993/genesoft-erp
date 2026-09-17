@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { PayrollClient } from "./payroll-client"
 import { PayrollOverviewData } from "@/app/actions/payroll"
 import { RecruitmentClient } from "./recruitment/recruitment-client"
@@ -661,6 +662,17 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                     >
                         <RefreshCw className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`} />
                         Refresh
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20"
+                    >
+                        <Link href="/hr/portal">
+                            <UserCheck className="mr-2 h-4 w-4" />
+                            Employee Portal
+                        </Link>
                     </Button>
                     <Button
                         variant="outline"
