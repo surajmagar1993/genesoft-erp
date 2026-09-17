@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     Users,
@@ -9,6 +10,7 @@ import {
     Target,
     LayoutDashboard,
     Package,
+    FileSpreadsheet,
 } from "lucide-react"
 import { getDashboardStats, getRecentActivities, getDashboardTrends } from "@/app/actions/reports/stats"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
@@ -67,12 +69,21 @@ export default async function DashboardPage() {
                 description={`Insights and performance for ${settings?.name || "Your Workspace"}`}
                 icon={LayoutDashboard}
             >
-                <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                    </span>
-                    Live Data
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/reports/builder"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                    >
+                        <FileSpreadsheet className="h-4 w-4" />
+                        Custom Report Builder
+                    </Link>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                        </span>
+                        Live Data
+                    </div>
                 </div>
             </PageHeader>
 

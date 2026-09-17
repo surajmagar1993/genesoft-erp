@@ -121,6 +121,7 @@ model Tenant {
   employeeGoals      EmployeeGoal[]
   trainingPrograms   TrainingProgram[]
   trainingEnrollments TrainingEnrollment[]
+  customReports      CustomReport[]
 
   @@map("tenants")
 }
@@ -3770,5 +3771,28 @@ model TrainingEnrollment {
   @@index([employeeId])
   @@index([status])
   @@map("training_enrollments")
+}
+
+// ============================================================================
+// Reports: Custom Report Builder
+// ============================================================================
+
+model CustomReport {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  name        String
+  description String?
+  dataset     String
+  config      Json
+  isPrebuilt  Boolean  @default(false) @map("is_prebuilt")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([dataset])
+  @@map("custom_reports")
 }
 

@@ -262,8 +262,8 @@
 - [x] **Financial Reports** 🔴 ✅
 - [x] **Export (PDF/Excel/CSV)** 🔴 ✅
 - [x] **Inventory Reports** 🟡 — Stock Valuation (Cost basis vs Retail value, Gross margin yields), Turnover & Movement Velocity analysis, Multi-Depot Distribution matrix, CSV & print exports (`/inventory?tab=reports`) ✅ **(2026-09-14)**
-- [ ] **HR Reports** 🟢
-- [ ] **Custom Report Builder** 🟢
+- [x] **HR Reports** 🟢 — Workforce headcount distribution, department salaries, compensation breakdown (`/reports/builder` with `HR_WORKFORCE` dataset, `/hr`) ✅ **(2026-09-17)**
+- [x] **Custom Report Builder** 🟢 — Multi-dataset ad-hoc report studio across Sales, Inventory, Bills, Expenses, Workforce, and Projects with additive filter builder, group-by aggregations (SUM/AVG/COUNT/MIN/MAX), Recharts visualizations (Bar, Line, Area, Pie), column totals footer, 1-click PapaParse CSV download, print view, and persistent templates (`/reports/builder`, `/app/actions/reports/builder.ts`, `custom_reports` table) ✅ **(2026-09-17)** (ALL REPORTS & ANALYTICS COMPLETE 📈)
 
 ---
 

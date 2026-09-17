@@ -170,7 +170,8 @@ const navigation = [
     {
         label: "Analytics",
         items: [
-            { name: "Reports", href: "/reports", icon: BarChart3 },
+            { name: "Overview", href: "/reports", icon: BarChart3 },
+            { name: "Report Builder", href: "/reports/builder", icon: FileSpreadsheet },
         ],
     },
     {
