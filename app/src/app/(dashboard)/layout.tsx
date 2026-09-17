@@ -139,6 +139,7 @@ const navigation = [
             { name: "Chart of Accounts", href: "/finance/accounts", icon: Landmark },
             { name: "Expenses & Ledger", href: "/finance/expenses", icon: ReceiptText },
             { name: "Bank Reconciliation", href: "/finance/bank-reconciliation", icon: Scale },
+            { name: "Budgets & Variance", href: "/finance/budgets", icon: Target },
             { name: "Receivables", href: "/finance/receivable", icon: TrendingUp },
             { name: "Payables", href: "/finance/payable", icon: Wallet },
             { name: "Bills", href: "/finance/bills", icon: FileText },

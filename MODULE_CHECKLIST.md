@@ -134,7 +134,7 @@
 - [x] **General Ledger** 🟡 ✅ (`/finance/expenses`)
 - [x] **Bank Reconciliation** 🟡 ✅ (`/finance/bank-reconciliation`)
 - [x] **Expense Management** 🟡 ✅ (`/finance/expenses`)
-- [ ] **Budgeting** 🟢
+- [x] **Budgeting** 🟢 — Departmental/cost-center budget planning, fiscal year targets, line-item expense caps, dynamic GL actuals aggregation, variance analysis (favorable vs unfavorable), spend threshold watchdog, and CSV reporting (`/finance/budgets`, `/app/actions/finance/budgets.ts`) ✅ **(2026-09-17)** (ALL FINANCE & ACCOUNTING COMPLETE 📊)
 
 ---
 

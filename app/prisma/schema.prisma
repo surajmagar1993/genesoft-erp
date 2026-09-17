@@ -114,6 +114,8 @@ model Tenant {
   rfqVendorQuotes    RfqVendorQuote[]
   batches            ProductBatch[]
   serials            ProductSerial[]
+  budgets            Budget[]
+  budgetItems        BudgetItem[]
 
   @@map("tenants")
 }
@@ -1044,6 +1046,7 @@ model Account {
   expensesAsPayment  Expense[]          @relation("PaymentAccount")
   journalEntryLines  JournalEntryLine[]
   bankAccounts       BankAccount[]
+  budgetItems        BudgetItem[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -1312,6 +1315,7 @@ model Department {
   employees    Employee[]    @relation("DepartmentEmployees")
   designations Designation[]
   jobOpenings  JobOpening[]
+  budgets      Budget[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -3479,4 +3483,77 @@ enum SerialStatus {
   DEFECTIVE
   MAINTENANCE
   RETURNED
+}
+
+// ============================================
+// FINANCE: BUDGETING & VARIANCE ANALYSIS
+// ============================================
+
+model Budget {
+  id                       String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId                 String           @map("tenant_id") @db.Uuid
+  name                     String
+  fiscalYear               String           @map("fiscal_year")
+  periodType               BudgetPeriodType @default(ANNUAL) @map("period_type")
+  startDate                DateTime         @map("start_date")
+  endDate                  DateTime         @map("end_date")
+  status                   BudgetStatus     @default(DRAFT)
+  departmentId             String?          @map("department_id") @db.Uuid
+  totalBudgetedAmount      Decimal          @default(0) @map("total_budgeted_amount") @db.Decimal(15, 2)
+  alertThresholdPercent    Int              @default(80) @map("alert_threshold_percent")
+  criticalThresholdPercent  Int              @default(100) @map("critical_threshold_percent")
+  notes                    String?
+  approvedBy               String?          @map("approved_by")
+  approvedAt               DateTime?        @map("approved_at")
+  createdAt                DateTime         @default(now()) @map("created_at")
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  tenant                   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  department               Department?      @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  items                    BudgetItem[]
+
+  @@index([tenantId])
+  @@index([departmentId])
+  @@index([status])
+  @@index([fiscalYear])
+  @@index([startDate, endDate])
+  @@map("budgets")
+}
+
+model BudgetItem {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  budgetId       String   @map("budget_id") @db.Uuid
+  accountId      String   @map("account_id") @db.Uuid
+  category       String?
+  budgetedAmount Decimal  @default(0) @map("budgeted_amount") @db.Decimal(15, 2)
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  budget         Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  account        Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([budgetId])
+  @@index([accountId])
+  @@map("budget_items")
+}
+
+enum BudgetPeriodType {
+  ANNUAL
+  QUARTERLY
+  MONTHLY
+}
+
+enum BudgetStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  ACTIVE
+  REVISED
+  CLOSED
 }
