@@ -196,9 +196,7 @@
 ---
 
 ## 🟢 P3 — Scale (Month 7+)
-
-- [ ] Retail: Customer Loyalty / Points
-- [ ] Sales: Discount & Coupon Management
+ 
 - [ ] Purchase: Request for Quotation (RFQ)
 - [ ] Inventory: Warehouse Management
 - [ ] Inventory: Stock Transfers

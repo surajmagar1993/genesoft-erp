@@ -127,8 +127,6 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 ---
 
 ## 🟢 P3 — Scale (Pending)
-- [ ] Retail: Customer Loyalty / Points
-- [ ] Sales: Discount & Coupon Management
 - [ ] Purchase: Request for Quotation (RFQ)
 - [ ] Inventory: Warehouse Management
 - [ ] Inventory: Stock Transfers

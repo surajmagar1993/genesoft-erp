@@ -87,7 +87,6 @@
 - [x] **Customer Ledger / Statement** 🔴 ✅
 - [x] **Customer Portal** 🟡 ✅ (`/portal/[token]`) **(2026-09-12)**
 - [x] **Walk-in / POS Sales** 🟡 ✅ (`/sales/pos`) **(2026-09-12)**
-- [ ] **Customer Loyalty / Points** 🟢
 
 ---
 
@@ -101,7 +100,6 @@
 - [x] **Payment Tracking** 🔴 ✅
 - [x] **Credit Notes / Refunds** 🟡 ✅ **(2026-09-12)**
 - [x] **Price Lists** 🟡 ✅ (`/sales/price-lists`) **(2026-09-12)**
-- [ ] **Discount & Coupon Management** 🟢
 
 ---
 
@@ -322,8 +320,8 @@
 |---|---|---|
 | 🔴 **P1 — MVP** | ~47 modules | CRM, Sales, Invoicing, India GST, Dashboard, Admin, SaaS Command Center, Multi-Currency |
 | 🟡 **P2 — Growth** | ~40 modules | Purchase, Inventory, HR basics, UAE/KSA Tax, Rental, Projects |
-| 🟢 **P3 — Scale** | ~35 modules | Manufacturing, USA Tax, Advanced Features, Integrations |
-| **TOTAL** | **~122 modules** | **Full ERP/CRM Suite** |
+| 🟢 **P3 — Scale** | ~33 modules | Manufacturing, USA Tax, Advanced Features, Integrations |
+| **TOTAL** | **~120 modules** | **Full ERP/CRM Suite** |
 
 ---
 

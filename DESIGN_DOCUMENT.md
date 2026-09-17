@@ -471,7 +471,6 @@ support_messages
 
 | Category | Key Modules |
 |---|---|
-| **Sales** | Discounts & Coupons |
 | **Inventory** | Warehouse, Transfers, Batch/Serial Tracking |
 | **Finance** | Budgeting |
 | **Tax (USA)** | State Sales Tax, Exemptions, 1099 |
@@ -485,7 +484,6 @@ support_messages
 | **Reports** | HR Reports, Custom Report Builder |
 | **Admin** | Workflow Automation, API, Webhooks, White Labeling |
 | **Integrations** | Tally, Google, Microsoft, Zapier, Shopify |
-| **Retail** | Loyalty/Points Program |
 | **SaaS** | Usage-Based Billing |
 
 ---
