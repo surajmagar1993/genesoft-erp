@@ -109,7 +109,7 @@
 - [x] **Purchase Orders** 🟡 ✅ **(2026-09-10)**
 - [x] **Bills / Vendor Invoices** 🟡 ✅ **(2026-09-10)**
 - [x] **Purchase Receipts** 🟡 ✅ **(2026-09-10)**
-- [ ] **Request for Quotation (RFQ)** 🟢
+- [x] **Request for Quotation (RFQ)** 🟢 — Multi-vendor tender solicitation, side-by-side bid comparison matrix, line-level pricing & variance analysis, printable tender slips, and 1-click Purchase Order awarding (`/purchase/rfq`) ✅ **(2026-09-17)** (ALL PURCHASE & PROCUREMENT COMPLETE 📦)
 
 ---
 

@@ -651,6 +651,16 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                         <RefreshCw className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`} />
                         Refresh
                     </Button>
+                    <Link href="/purchase/rfq">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-primary/30 text-primary hover:bg-primary/10"
+                        >
+                            <FileText className="mr-2 h-4 w-4" />
+                            RFQ Tenders
+                        </Button>
+                    </Link>
                     <Button
                         variant="outline"
                         size="sm"
@@ -783,6 +793,12 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                             </Badge>
                         </TabsTrigger>
                     </TabsList>
+                    <Link href="/purchase/rfq">
+                        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary gap-1.5">
+                            <FileText className="h-3.5 w-3.5 text-primary" />
+                            Multi-Vendor RFQ Tenders Studio ➔
+                        </Button>
+                    </Link>
                 </div>
 
                 {/* Tab 1: Purchase Orders */}

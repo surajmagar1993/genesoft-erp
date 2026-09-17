@@ -127,7 +127,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 ---
 
 ## 🟢 P3 — Scale (Pending)
-- [ ] Purchase: Request for Quotation (RFQ)
+- [x] Purchase: Request for Quotation (RFQ) (`/purchase/rfq`, `/app/actions/rfq.ts`) ✅ **(2026-09-17)**
 - [ ] Inventory: Warehouse Management
 - [ ] Inventory: Stock Transfers
 - [ ] Inventory: Batch & Serial Tracking

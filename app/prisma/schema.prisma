@@ -110,6 +110,8 @@ model Tenant {
   jobApplicants      JobApplicant[]
   applicantInterviews ApplicantInterview[]
   deliveryChallans   DeliveryChallan[]
+  rfqs               RequestForQuotation[]
+  rfqVendorQuotes    RfqVendorQuote[]
 
   @@map("tenants")
 }
@@ -242,6 +244,7 @@ model Contact {
   formSubmissions    FormSubmission[]
   portalTickets      PortalTicket[]
   deliveryChallans   DeliveryChallan[]
+  rfqVendorQuotes    RfqVendorQuote[]
 
   @@index([tenantId])
   @@index([tenantId, email])
@@ -362,6 +365,7 @@ model Product {
   bomItemsAsComponent   BillOfMaterialsItem[] @relation("ProductBOMComponents")
   workOrders            WorkOrder[]           @relation("ProductWorkOrders")
   deliveryChallanItems  DeliveryChallanItem[]
+  rfqItems              RfqItem[]
 
   @@index([tenantId])
   @@index([tenantId, sku])
@@ -967,6 +971,7 @@ model PurchaseOrder {
   warehouse Warehouse?          @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
   bill      Bill?               @relation(fields: [billId], references: [id], onDelete: SetNull)
   items     PurchaseOrderItem[]
+  rfqs      RequestForQuotation[]
 
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
@@ -3261,5 +3266,126 @@ model DeliveryChallanItem {
   @@map("delivery_challan_items")
 }
 
+// ============================================
+// PROCUREMENT: REQUEST FOR QUOTATION (RFQ)
+// ============================================
 
+model RequestForQuotation {
+  id            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId      String              @map("tenant_id") @db.Uuid
+  rfqNumber     String              @map("rfq_number")
+  title         String
+  status        RfqStatus           @default(DRAFT)
+  issueDate     DateTime            @default(now()) @map("issue_date")
+  dueDate       DateTime            @map("due_date")
+  notes         String?
+  terms         String?
+  convertedPoId String?             @map("converted_po_id") @db.Uuid
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
 
+  // Relations
+  tenant        Tenant              @relation(fields: [tenantId], references: [id])
+  convertedPo   PurchaseOrder?      @relation(fields: [convertedPoId], references: [id], onDelete: SetNull)
+  items         RfqItem[]
+  vendors       RfqVendorQuote[]
+
+  @@unique([tenantId, rfqNumber])
+  @@index([tenantId])
+  @@index([status])
+  @@index([convertedPoId])
+  @@map("request_for_quotations")
+}
+
+model RfqItem {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rfqId           String              @map("rfq_id") @db.Uuid
+  productId       String?             @map("product_id") @db.Uuid
+  description     String
+  quantity        Decimal             @db.Decimal(15, 2)
+  targetUnitPrice Decimal?            @map("target_unit_price") @db.Decimal(15, 2)
+  unit            String              @default("pcs")
+  hsnSacCode      String?             @map("hsn_sac_code")
+  notes           String?
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  rfq             RequestForQuotation @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  product         Product?            @relation(fields: [productId], references: [id], onDelete: SetNull)
+  quoteItems      RfqVendorQuoteItem[]
+
+  @@index([rfqId])
+  @@index([productId])
+  @@map("rfq_items")
+}
+
+model RfqVendorQuote {
+  id             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId       String              @map("tenant_id") @db.Uuid
+  rfqId          String              @map("rfq_id") @db.Uuid
+  vendorId       String              @map("vendor_id") @db.Uuid
+  status         RfqVendorStatus     @default(INVITED)
+  quoteReference String?             @map("quote_reference")
+  quoteDate      DateTime?           @map("quote_date")
+  validUntil     DateTime?           @map("valid_until")
+  currencyCode   String              @default("INR") @map("currency_code")
+  subtotal       Decimal             @default(0) @db.Decimal(15, 2)
+  taxAmount      Decimal             @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  totalAmount    Decimal             @default(0) @map("total_amount") @db.Decimal(15, 2)
+  leadTimeDays   Int?                @map("lead_time_days")
+  notes          String?
+  isWinner       Boolean             @default(false) @map("is_winner")
+  awardedAt      DateTime?           @map("awarded_at")
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  tenant         Tenant              @relation(fields: [tenantId], references: [id])
+  rfq            RequestForQuotation @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  vendor         Contact             @relation(fields: [vendorId], references: [id])
+  items          RfqVendorQuoteItem[]
+
+  @@unique([rfqId, vendorId])
+  @@index([tenantId])
+  @@index([rfqId])
+  @@index([vendorId])
+  @@map("rfq_vendor_quotes")
+}
+
+model RfqVendorQuoteItem {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  quoteId      String         @map("quote_id") @db.Uuid
+  rfqItemId    String         @map("rfq_item_id") @db.Uuid
+  unitPrice    Decimal        @default(0) @map("unit_price") @db.Decimal(15, 2)
+  taxPercent   Decimal        @default(0) @map("tax_percent") @db.Decimal(5, 2)
+  taxAmount    Decimal        @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  lineTotal    Decimal        @default(0) @map("line_total") @db.Decimal(15, 2)
+  availableQty Decimal?       @map("available_qty") @db.Decimal(15, 2)
+  notes        String?
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  quote        RfqVendorQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  rfqItem      RfqItem        @relation(fields: [rfqItemId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+  @@index([rfqItemId])
+  @@map("rfq_vendor_quote_items")
+}
+
+enum RfqStatus {
+  DRAFT
+  SENT
+  BIDDING_CLOSED
+  CONVERTED
+  CANCELLED
+}
+
+enum RfqVendorStatus {
+  INVITED
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+}
