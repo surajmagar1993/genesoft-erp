@@ -181,10 +181,10 @@ export interface CreateProjectTaskInput {
 export interface UpdateProjectTaskInput {
     title?: string
     description?: string
-    milestoneId?: string
+    milestoneId?: string | null
     status?: ProjectTaskStatus
     priority?: ProjectPriority
-    assignedEmployeeId?: string
+    assignedEmployeeId?: string | null
     estimatedHours?: number
     actualHours?: number
     startDate?: string

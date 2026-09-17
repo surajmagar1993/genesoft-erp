@@ -67,6 +67,7 @@ import {
     updateProject,
     deleteProject,
     createProjectTask,
+    updateProjectTask,
     updateProjectTaskStatus,
     deleteProjectTask,
     createMilestone,
@@ -77,6 +78,7 @@ import {
     logProjectTime,
     deleteProjectTime,
 } from "@/app/actions/projects"
+import { GanttChartView } from "@/components/projects/gantt-chart-view"
 import {
     ProjectStatus,
     ProjectPriority,
@@ -205,6 +207,18 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
 
         return tasks
     }, [data.allTasks, selectedProjectId, taskSearch, taskPriorityFilter])
+
+    // Tasks for Gantt Chart (all tasks or scoped by project dropdown, without kanban text search)
+    const ganttTasks = useMemo(() => {
+        return selectedProjectId === "all"
+            ? data.allTasks
+            : data.allTasks.filter(t => t.projectId === selectedProjectId)
+    }, [data.allTasks, selectedProjectId])
+
+    const currentProject = useMemo(() => {
+        if (selectedProjectId === "all") return null
+        return data.projects.find(p => p.id === selectedProjectId) || data.selectedProject?.project || null
+    }, [data.projects, data.selectedProject, selectedProjectId])
 
     // Milestones for active project
     const scopedMilestones = useMemo(() => {
@@ -382,6 +396,23 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                 toast.error(res.error || "Failed to update task status")
             }
         })
+    }
+
+    const handleUpdateTaskFromGantt = async (
+        taskId: string,
+        input: {
+            startDate?: string
+            dueDate?: string
+            status?: ProjectTaskStatus
+            priority?: ProjectPriority
+            milestoneId?: string | null
+        }
+    ) => {
+        const res = await updateProjectTask(taskId, input)
+        if (res.success) {
+            router.refresh()
+        }
+        return res
     }
 
     const handleDeleteTask = async (taskId: string) => {
@@ -730,6 +761,10 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                         <FolderKanban className="h-4 w-4" />
                         Kanban Board
                     </TabsTrigger>
+                    <TabsTrigger value="gantt" className="flex items-center gap-1.5">
+                        <Calendar className="h-4 w-4" />
+                        Gantt & Timeline
+                    </TabsTrigger>
                     <TabsTrigger value="projects" className="flex items-center gap-1.5">
                         <Layers className="h-4 w-4" />
                         Projects Directory ({data.projects.length})
@@ -907,6 +942,19 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             )
                         })}
                     </div>
+                </TabsContent>
+
+                {/* ========================================================================= */}
+                {/* TAB 1.5: GANTT CHART & TIMELINE VIEW */}
+                {/* ========================================================================= */}
+                <TabsContent value="gantt" className="space-y-4">
+                    <GanttChartView
+                        project={currentProject}
+                        tasks={ganttTasks}
+                        milestones={scopedMilestones}
+                        members={scopedMembers}
+                        onUpdateTask={handleUpdateTaskFromGantt}
+                    />
                 </TabsContent>
 
                 {/* ========================================================================= */}
