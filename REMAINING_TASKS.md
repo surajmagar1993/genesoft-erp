@@ -140,7 +140,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] Invoice Features: Multi-Template Support (`/sales/invoices/templates`, `/sales/invoices/[id]`) ✅ **(2026-09-17)** (ALL INVOICE FEATURES COMPLETE 📄)
 - [x] HR: Payroll Processing (`/hr?tab=payroll`, `/hr/payroll`, `/app/actions/payroll.ts`) ✅ **(2026-09-14)**
 - [x] HR: Employee Portal (`/hr/portal`, `/app/actions/hr/portal.ts`) — Personal profile hub, manager perspective switcher, live IST clock-in/out desk, leave quota trackers (Casual, Sick, Annual) with leave application modal, payslip breakdown with printable view, and deliverables task management ✅ **(2026-09-17)**
-- [ ] HR: Performance & Training
+- [x] HR: Performance & Training (`/hr/performance`, `/app/actions/hr/performance.ts`) — 360 appraisal cycles, employee self-reviews, manager evaluation scorecards, competency scoring radar, OKRs/goals matrix, training course catalog, and employee certifications ✅ **(2026-09-17)** (ALL HR & PEOPLE MODULES COMPLETE 👥)
 - [x] Projects: Milestones, Gantt, Billing (`/projects?tab=gantt`) ✅ **(2026-09-17)** (ALL PROJECT MANAGEMENT MODULES COMPLETE 📁)
 - [x] Rentals: Scheduling, Returns & Damage (`/sales/rental`) ✅ **(2026-09-12)** (ALL RENTAL MANAGEMENT MODULES COMPLETE 🏠)
 - [x] Manufacturing: BOM, Work Orders, QC, MRP (`/manufacturing`, `/app/actions/manufacturing.ts`) ✅ **(2026-09-14)**

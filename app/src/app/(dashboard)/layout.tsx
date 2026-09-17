@@ -52,6 +52,7 @@ import {
     MessageSquare,
     Megaphone,
     UserCheck,
+    Award,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -162,6 +163,7 @@ const navigation = [
             { name: "Manufacturing", href: "/manufacturing", icon: Factory },
             { name: "HR", href: "/hr", icon: UserCog },
             { name: "Employee Portal", href: "/hr/portal", icon: UserCheck },
+            { name: "Performance & Training", href: "/hr/performance", icon: Award },
             { name: "Projects", href: "/projects", icon: FolderKanban },
         ],
     },

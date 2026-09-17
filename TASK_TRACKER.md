@@ -210,7 +210,7 @@
 - [x] Invoice Features: Multi-Template Support (`/sales/invoices/templates`, `/sales/invoices/[id]`) ✅ **(2026-09-17)** (ALL INVOICE FEATURES COMPLETE 📄)
 - [x] HR: Recruitment (`/hr?tab=recruitment`, `/hr/recruitment`, `/app/actions/recruitment.ts`) ✅ **(2026-09-14)**
 - [x] HR: Employee Portal (`/hr/portal`, `/app/actions/hr/portal.ts`) ✅ **(2026-09-17)**
-- [ ] HR: Performance & Training
+- [x] HR: Performance & Training (`/hr/performance`, `/app/actions/hr/performance.ts`) ✅ **(2026-09-17)** (ALL HR & PEOPLE COMPLETE 👥)
 - [x] Projects: Milestones, Gantt, Billing (`/projects?tab=gantt`) ✅ **(2026-09-17)** (ALL PROJECT MANAGEMENT COMPLETE 📁)
 - [x] Rentals: Scheduling, Returns & Damage (`/sales/rental`) ✅ **(2026-09-12)** (ALL RENTAL MANAGEMENT COMPLETE 🏠)
 - [x] Manufacturing: BOM, Work Orders, QC, MRP (`/manufacturing`, `/app/actions/manufacturing.ts`) ✅ **(2026-09-14)**

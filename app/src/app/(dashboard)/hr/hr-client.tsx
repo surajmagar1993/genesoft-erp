@@ -35,6 +35,7 @@ import {
     UserCheck,
     CalendarDays,
     FileText,
+    Award,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -672,6 +673,17 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                         <Link href="/hr/portal">
                             <UserCheck className="mr-2 h-4 w-4" />
                             Employee Portal
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border-indigo-500/20"
+                    >
+                        <Link href="/hr/performance">
+                            <Award className="mr-2 h-4 w-4" />
+                            Performance & Training
                         </Link>
                     </Button>
                     <Button

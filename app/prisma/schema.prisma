@@ -116,6 +116,11 @@ model Tenant {
   serials            ProductSerial[]
   budgets            Budget[]
   budgetItems        BudgetItem[]
+  appraisalCycles    AppraisalCycle[]
+  performanceReviews PerformanceReview[]
+  employeeGoals      EmployeeGoal[]
+  trainingPrograms   TrainingProgram[]
+  trainingEnrollments TrainingEnrollment[]
 
   @@map("tenants")
 }
@@ -1392,6 +1397,10 @@ model Employee {
   payslips           Payslip[]
   convertedApplicant JobApplicant?      @relation("ApplicantConvertedEmployee")
   interviews         ApplicantInterview[] @relation("EmployeeInterviews")
+  performanceReviews PerformanceReview[]  @relation("EmployeeReviews")
+  conductedReviews   PerformanceReview[]  @relation("ReviewerConductedReviews")
+  goals              EmployeeGoal[]
+  trainingEnrollments TrainingEnrollment[]
 
   @@unique([tenantId, employeeNumber])
   @@unique([tenantId, email])
@@ -3557,3 +3566,209 @@ enum BudgetStatus {
   REVISED
   CLOSED
 }
+
+// ============================================================================
+// HR: Performance Reviews, Goals (OKRs) & Training
+// ============================================================================
+
+enum AppraisalCycleStatus {
+  PLANNING
+  ACTIVE
+  EVALUATION
+  COMPLETED
+}
+
+enum ReviewStatus {
+  DRAFT
+  SELF_REVIEW
+  MANAGER_REVIEW
+  COMPLETED
+}
+
+enum GoalCategory {
+  PERFORMANCE
+  DEVELOPMENT
+  LEADERSHIP
+  PROJECT
+}
+
+enum GoalStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ACHIEVED
+  CANCELLED
+}
+
+enum TrainingCategory {
+  TECHNICAL
+  COMPLIANCE
+  LEADERSHIP
+  SOFT_SKILLS
+  PRODUCT
+}
+
+enum TrainingMode {
+  ONLINE
+  CLASSROOM
+  HYBRID
+}
+
+enum TrainingProgramStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum EnrollmentStatus {
+  ENROLLED
+  IN_PROGRESS
+  COMPLETED
+  DROPPED
+}
+
+model AppraisalCycle {
+  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId    String               @map("tenant_id") @db.Uuid
+  cycleCode   String               @map("cycle_code")
+  title       String
+  startDate   DateTime             @map("start_date")
+  endDate     DateTime             @map("end_date")
+  status      AppraisalCycleStatus @default(PLANNING)
+  description String?
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+
+  // Relations
+  tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reviews     PerformanceReview[]
+  goals       EmployeeGoal[]
+
+  @@unique([tenantId, cycleCode])
+  @@index([tenantId])
+  @@index([status])
+  @@map("appraisal_cycles")
+}
+
+model PerformanceReview {
+  id                   String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId             String       @map("tenant_id") @db.Uuid
+  reviewCode           String       @map("review_code")
+  cycleId              String       @map("cycle_id") @db.Uuid
+  employeeId           String       @map("employee_id") @db.Uuid
+  reviewerId           String?      @map("reviewer_id") @db.Uuid
+  status               ReviewStatus @default(DRAFT)
+  selfRating           Decimal?     @map("self_rating") @db.Decimal(3, 1)
+  managerRating        Decimal?     @map("manager_rating") @db.Decimal(3, 1)
+  finalRating          Decimal?     @map("final_rating") @db.Decimal(3, 1)
+  selfFeedback         String?      @map("self_feedback")
+  managerFeedback      String?      @map("manager_feedback")
+  strengths            String?
+  areasOfImprovement   String?      @map("areas_of_improvement")
+  promotionRecommended Boolean      @default(false) @map("promotion_recommended")
+  competencies         Json?
+  completedAt          DateTime?    @map("completed_at")
+  createdAt            DateTime     @default(now()) @map("created_at")
+  updatedAt            DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  tenant               Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  cycle                AppraisalCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  employee             Employee     @relation("EmployeeReviews", fields: [employeeId], references: [id], onDelete: Cascade)
+  reviewer             Employee?    @relation("ReviewerConductedReviews", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, reviewCode])
+  @@index([tenantId])
+  @@index([cycleId])
+  @@index([employeeId])
+  @@index([reviewerId])
+  @@index([status])
+  @@map("performance_reviews")
+}
+
+model EmployeeGoal {
+  id           String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId     String       @map("tenant_id") @db.Uuid
+  goalCode     String       @map("goal_code")
+  employeeId   String       @map("employee_id") @db.Uuid
+  cycleId      String?      @map("cycle_id") @db.Uuid
+  title        String
+  description  String?
+  category     GoalCategory @default(PERFORMANCE)
+  targetMetric String?      @map("target_metric")
+  progress     Int          @default(0)
+  weightage    Int          @default(25)
+  status       GoalStatus   @default(NOT_STARTED)
+  dueDate      DateTime?    @map("due_date")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  employee     Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  cycle        AppraisalCycle? @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, goalCode])
+  @@index([tenantId])
+  @@index([employeeId])
+  @@index([cycleId])
+  @@index([status])
+  @@map("employee_goals")
+}
+
+model TrainingProgram {
+  id              String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String                @map("tenant_id") @db.Uuid
+  programCode     String                @map("program_code")
+  title           String
+  category        TrainingCategory      @default(TECHNICAL)
+  trainer         String?
+  durationHours   Decimal?              @map("duration_hours") @db.Decimal(5, 1)
+  mode            TrainingMode          @default(ONLINE)
+  description     String?
+  syllabusUrl     String?               @map("syllabus_url")
+  status          TrainingProgramStatus @default(UPCOMING)
+  startDate       DateTime?             @map("start_date")
+  endDate         DateTime?             @map("end_date")
+  maxParticipants Int                   @default(20) @map("max_participants")
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+
+  // Relations
+  tenant          Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  enrollments     TrainingEnrollment[]
+
+  @@unique([tenantId, programCode])
+  @@index([tenantId])
+  @@index([status])
+  @@index([category])
+  @@map("training_programs")
+}
+
+model TrainingEnrollment {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId       String           @map("tenant_id") @db.Uuid
+  programId      String           @map("program_id") @db.Uuid
+  employeeId     String           @map("employee_id") @db.Uuid
+  status         EnrollmentStatus @default(ENROLLED)
+  enrolledAt     DateTime         @default(now()) @map("enrolled_at")
+  completedAt    DateTime?        @map("completed_at")
+  score          Decimal?         @db.Decimal(5, 2)
+  feedback       String?
+  certificateUrl String?          @map("certificate_url")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  program        TrainingProgram  @relation(fields: [programId], references: [id], onDelete: Cascade)
+  employee       Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, programId, employeeId])
+  @@index([tenantId])
+  @@index([programId])
+  @@index([employeeId])
+  @@index([status])
+  @@map("training_enrollments")
+}
+
