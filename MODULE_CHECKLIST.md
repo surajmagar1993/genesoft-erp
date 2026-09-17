@@ -120,7 +120,7 @@
 - [x] **Stock Adjustments** 🟡 ✅ **(2026-09-10)**
 - [x] **Warehouse Management** 🟢 ✅ **(2026-09-10)**
 - [x] **Stock Transfers** 🟢 ✅ **(2026-09-10)**
-- [ ] **Batch & Serial Number Tracking** 🟢
+- [x] **Batch & Serial Number Tracking** 🟢 — Production lots, manufacturing & expiration dates, shelf-life watchdog & quarantine recalls, single/range serial generation, barcode preview, and universal provenance investigator (`/inventory?tab=batch-serial`, `/app/actions/batch-serial.ts`) ✅ **(2026-09-17)** (ALL INVENTORY & WAREHOUSE COMPLETE 🏭)
 
 ---
 

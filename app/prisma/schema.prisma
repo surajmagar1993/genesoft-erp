@@ -112,6 +112,8 @@ model Tenant {
   deliveryChallans   DeliveryChallan[]
   rfqs               RequestForQuotation[]
   rfqVendorQuotes    RfqVendorQuote[]
+  batches            ProductBatch[]
+  serials            ProductSerial[]
 
   @@map("tenants")
 }
@@ -366,6 +368,8 @@ model Product {
   workOrders            WorkOrder[]           @relation("ProductWorkOrders")
   deliveryChallanItems  DeliveryChallanItem[]
   rfqItems              RfqItem[]
+  batches               ProductBatch[]
+  serials               ProductSerial[]
 
   @@index([tenantId])
   @@index([tenantId, sku])
@@ -407,6 +411,8 @@ model Warehouse {
   workOrdersSource WorkOrder[]      @relation("WorkOrderSourceWarehouse")
   workOrdersTarget WorkOrder[]      @relation("WorkOrderTargetWarehouse")
   deliveryChallans DeliveryChallan[] @relation("WarehouseDeliveryChallans")
+  batches          ProductBatch[]
+  serials          ProductSerial[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -972,6 +978,7 @@ model PurchaseOrder {
   bill      Bill?               @relation(fields: [billId], references: [id], onDelete: SetNull)
   items     PurchaseOrderItem[]
   rfqs      RequestForQuotation[]
+  serials   ProductSerial[]
 
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
@@ -3388,4 +3395,88 @@ enum RfqVendorStatus {
   SUBMITTED
   ACCEPTED
   REJECTED
+}
+
+// ============================================
+// INVENTORY: BATCHES & SERIAL NUMBERS
+// ============================================
+
+model ProductBatch {
+  id                String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId          String          @map("tenant_id") @db.Uuid
+  productId         String          @map("product_id") @db.Uuid
+  warehouseId       String          @map("warehouse_id") @db.Uuid
+  batchNumber       String          @map("batch_number")
+  initialQty        Decimal         @default(0) @map("initial_qty") @db.Decimal(15, 2)
+  currentQty        Decimal         @default(0) @map("current_qty") @db.Decimal(15, 2)
+  manufacturingDate DateTime?       @map("manufacturing_date")
+  expiryDate        DateTime?       @map("expiry_date")
+  status            BatchStatus     @default(ACTIVE)
+  costPrice         Decimal?        @map("cost_price") @db.Decimal(15, 2)
+  supplierBatchNo   String?         @map("supplier_batch_no")
+  notes             String?
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  tenant            Tenant          @relation(fields: [tenantId], references: [id])
+  product           Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse         Warehouse       @relation(fields: [warehouseId], references: [id])
+  serials           ProductSerial[]
+
+  @@unique([tenantId, productId, batchNumber])
+  @@index([tenantId])
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([expiryDate])
+  @@index([status])
+  @@map("product_batches")
+}
+
+model ProductSerial {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId        String          @map("tenant_id") @db.Uuid
+  productId       String          @map("product_id") @db.Uuid
+  warehouseId     String?         @map("warehouse_id") @db.Uuid
+  batchId         String?         @map("batch_id") @db.Uuid
+  serialNumber    String          @map("serial_number")
+  status          SerialStatus    @default(AVAILABLE)
+  purchaseOrderId String?         @map("purchase_order_id") @db.Uuid
+  warrantyMonths  Int?            @map("warranty_months")
+  warrantyExpiry  DateTime?       @map("warranty_expiry")
+  notes           String?
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  tenant          Tenant          @relation(fields: [tenantId], references: [id])
+  product         Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse       Warehouse?      @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  batch           ProductBatch?   @relation(fields: [batchId], references: [id], onDelete: SetNull)
+  purchaseOrder   PurchaseOrder?  @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+
+  @@unique([tenantId, productId, serialNumber])
+  @@index([tenantId])
+  @@index([productId])
+  @@index([warehouseId])
+  @@index([batchId])
+  @@index([purchaseOrderId])
+  @@index([status])
+  @@map("product_serials")
+}
+
+enum BatchStatus {
+  ACTIVE
+  EXPIRED
+  RECALLED
+  DEPLETED
+}
+
+enum SerialStatus {
+  AVAILABLE
+  ALLOCATED
+  SOLD
+  DEFECTIVE
+  MAINTENANCE
+  RETURNED
 }

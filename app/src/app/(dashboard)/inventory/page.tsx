@@ -1,4 +1,5 @@
 import { getInventoryOverview, getInventoryReportsData } from "@/app/actions/inventory"
+import { getBatchSerialOverview } from "@/app/actions/batch-serial"
 import { InventoryClient } from "./inventory-client"
 
 export const dynamic = "force-dynamic"
@@ -16,15 +17,17 @@ export default async function InventoryPage({
     const resolvedParams = searchParams ? await Promise.resolve(searchParams) : {}
     const initialTab = resolvedParams?.tab
 
-    const [overviewData, reportsData] = await Promise.all([
+    const [overviewData, reportsData, batchSerialData] = await Promise.all([
         getInventoryOverview(),
         getInventoryReportsData("30d"),
+        getBatchSerialOverview(),
     ])
 
     return (
         <InventoryClient
             initialData={overviewData}
             initialReportsData={reportsData}
+            initialBatchSerialData={batchSerialData}
             initialTab={initialTab}
         />
     )

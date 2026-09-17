@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { 
     Warehouse as WarehouseIcon, 
@@ -83,19 +83,48 @@ import {
     adjustStock, 
     transferStock 
 } from "@/app/actions/inventory"
+import { BatchSerialOverviewData } from "@/app/actions/batch-serial"
+import { BatchSerialTab } from "@/components/inventory/batch-serial-tab"
 import { formatCurrency } from "@/lib/utils"
 import { StockMovementType } from "@prisma/client"
 
 interface InventoryClientProps {
     initialData: InventoryOverviewData
     initialReportsData?: InventoryReportsResult
+    initialBatchSerialData?: BatchSerialOverviewData
     initialTab?: string
 }
 
-export function InventoryClient({ initialData, initialReportsData, initialTab }: InventoryClientProps) {
+export function InventoryClient({ initialData, initialReportsData, initialBatchSerialData, initialTab }: InventoryClientProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [activeTab, setActiveTab] = useState<"stocks" | "warehouses" | "movements" | "alerts" | "barcodes" | "reports">((initialTab as any) || "stocks")
+    const [activeTab, setActiveTab] = useState<"stocks" | "warehouses" | "movements" | "alerts" | "barcodes" | "reports" | "batch-serial">((initialTab as any) || "stocks")
+
+    const [batchSerialData, setBatchSerialData] = useState<BatchSerialOverviewData>(initialBatchSerialData || {
+        telemetry: {
+            totalBatches: 0,
+            activeBatches: 0,
+            expiringSoonBatches: 0,
+            expiredBatches: 0,
+            recalledBatches: 0,
+            totalSerials: 0,
+            availableSerials: 0,
+            allocatedSerials: 0,
+            soldSerials: 0,
+            defectiveSerials: 0,
+            maintenanceSerials: 0
+        },
+        batches: [],
+        serials: [],
+        products: [],
+        warehouses: []
+    })
+
+    useEffect(() => {
+        if (initialBatchSerialData) {
+            setBatchSerialData(initialBatchSerialData)
+        }
+    }, [initialBatchSerialData])
 
     // Reports Studio State
     const [reportsData, setReportsData] = useState<InventoryReportsResult>(initialReportsData || {
@@ -692,7 +721,7 @@ export function InventoryClient({ initialData, initialReportsData, initialTab }:
 
             {/* Navigation Tabs & Main Views */}
             <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 max-w-4xl">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-7 max-w-5xl">
                     <TabsTrigger value="stocks" className="gap-2">
                         <Package className="h-4 w-4" />
                         Stock Levels
@@ -700,9 +729,16 @@ export function InventoryClient({ initialData, initialReportsData, initialTab }:
                             {initialData.products.length}
                         </Badge>
                     </TabsTrigger>
+                    <TabsTrigger value="batch-serial" className="gap-2">
+                        <QrIcon className="h-4 w-4 text-purple-500" />
+                        Batch &amp; Serial
+                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                            {batchSerialData.telemetry.totalBatches}
+                        </Badge>
+                    </TabsTrigger>
                     <TabsTrigger value="barcodes" className="gap-2">
                         <BarcodeIcon className="h-4 w-4 text-indigo-500" />
-                        Barcodes & Labels
+                        Barcodes &amp; Labels
                     </TabsTrigger>
                     <TabsTrigger value="warehouses" className="gap-2">
                         <WarehouseIcon className="h-4 w-4" />
@@ -713,14 +749,14 @@ export function InventoryClient({ initialData, initialReportsData, initialTab }:
                     </TabsTrigger>
                     <TabsTrigger value="movements" className="gap-2">
                         <History className="h-4 w-4" />
-                        Movement Ledger
+                        Movements
                         <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
                             {initialData.recentMovements.length}
                         </Badge>
                     </TabsTrigger>
                     <TabsTrigger value="alerts" className="gap-2">
                         <AlertTriangle className="h-4 w-4" />
-                        Reorder Alerts
+                        Alerts
                         {lowStockProducts.length > 0 && (
                             <Badge variant="destructive" className="ml-1 text-[10px] px-1.5 py-0">
                                 {lowStockProducts.length}
@@ -1958,6 +1994,18 @@ export function InventoryClient({ initialData, initialReportsData, initialTab }:
                             </div>
                         </Card>
                     )}
+                </TabsContent>
+
+                {/* TAB 7: Batch & Serial Number Tracking */}
+                <TabsContent value="batch-serial" className="space-y-4">
+                    <BatchSerialTab
+                        data={batchSerialData}
+                        onRefresh={() => {
+                            startTransition(() => {
+                                router.refresh()
+                            })
+                        }}
+                    />
                 </TabsContent>
             </Tabs>
 
