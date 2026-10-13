@@ -13,6 +13,9 @@ import TeamTab from "./team-tab"
 import { getTenantRole } from "@/lib/get-tenant-id"
 import { getTeamMembers } from "@/app/actions/settings/team"
 import { getBillingPricing } from "@/app/actions/saas/subscription"
+import { getEmailPreferences } from "@/app/actions/settings/email-preferences"
+import { EmailPreferencesCard } from "./email-preferences-card"
+import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
 
 const SETTINGS_TABS = ["organization", "taxation", "account", "gateways", "billing", "team"]
 
@@ -32,6 +35,10 @@ export default async function SettingsPage({
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN"
     const teamMembers = isAdmin ? await getTeamMembers() : []
     const siteUrl = appUrl()
+    const emailPrefs = await getEmailPreferences()
+    const regime = resolveTaxRegime(settings?.country_code, null, settings?.currency_code)
+    const sampleNumber = new Intl.NumberFormat(regime.locale, { minimumFractionDigits: 2 }).format(100000)
+    const sampleDate = new Intl.DateTimeFormat(regime.locale, { day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(2026, 11, 31))
 
     return (
         <div className="space-y-6">
@@ -105,28 +112,31 @@ export default async function SettingsPage({
                                     <p className="text-sm text-muted-foreground">All transactions will be normalized to this currency.</p>
                                 </div>
                                 <div className="px-6 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary font-mono font-bold text-xl">
-                                    {settings?.currency_code || "INR"}
+                                    {settings?.currency_code || regime.currencyCode}
                                 </div>
                             </div>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <Card className="border-dashed bg-muted/5 p-4 flex flex-col justify-between">
                                  <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Primary Region</label>
-                                    <p className="font-semibold mt-1">India (IN)</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Business country</p>
+                                    <p className="font-semibold mt-1">{regime.countryName} ({regime.countryCode})</p>
                                  </div>
-                                 <p className="text-xs text-muted-foreground mt-4 italic">Uses DD/MM/YYYY date format</p>
+                                 <p className="text-xs text-muted-foreground mt-4 italic">Dates look like {sampleDate}</p>
                               </Card>
                               <Card className="border-dashed bg-muted/5 p-4 flex flex-col justify-between">
                                  <div>
-                                    <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Number Format</label>
-                                    <p className="font-semibold mt-1">Indian Numbering System</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Number format</p>
+                                    <p className="font-semibold mt-1">{regime.locale}</p>
                                  </div>
-                                 <p className="text-xs text-muted-foreground mt-4 italic">Example: 1,00,000.00</p>
+                                 <p className="text-xs text-muted-foreground mt-4 italic">Example: {sampleNumber}</p>
                               </Card>
                             </div>
                         </CardContent>
                     </Card>
+                    <div className="mt-4">
+                        <EmailPreferencesCard initial={emailPrefs} />
+                    </div>
                 </TabsContent>
 
                 {/* Payment Gateways */}

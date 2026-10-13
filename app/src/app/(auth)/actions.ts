@@ -69,6 +69,7 @@ export async function register(formData: FormData) {
   } else {
     currencyCode = getTaxJurisdiction(countryChoice).currencyCode
   }
+  const marketingOptIn = formData.get('marketingOptIn') === 'yes'
   const intendedPlan = ['BASIC', 'PRO', 'ENTERPRISE'].includes(requestedPlan) ? requestedPlan : null
 
   if (!(await getPlatformGate()).allowSignups) {
@@ -101,6 +102,10 @@ export async function register(formData: FormData) {
       data: {
         full_name: fullName,
         company_name: company,
+        // Marketing email consent: unticked by default, recorded with a timestamp
+        marketing_opt_in: marketingOptIn,
+        marketing_consent_at: new Date().toISOString(),
+        marketing_consent_source: 'signup',
       },
     },
   })

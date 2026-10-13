@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { register } from '../actions'
-import { Button } from '@/components/ui/button'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/ui/password-input'
@@ -110,16 +109,24 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           />
         </div>
 
+        <label htmlFor="marketingOptIn" className="flex items-start gap-2.5 text-xs text-muted-foreground leading-relaxed cursor-pointer">
+          <input
+            id="marketingOptIn"
+            name="marketingOptIn"
+            type="checkbox"
+            value="yes"
+            className="mt-0.5 h-4 w-4 shrink-0 rounded border-input accent-primary"
+          />
+          <span>
+            Send me product news, tips and offers by email. Optional. You can unsubscribe anytime.
+          </span>
+        </label>
+
         <p className="text-[11px] text-muted-foreground leading-relaxed">
           By creating an account you agree to our{' '}
-          <span className="underline cursor-pointer hover:text-foreground">
-            Terms of Service
-          </span>{' '}
-          and{' '}
-          <span className="underline cursor-pointer hover:text-foreground">
-            Privacy Policy
-          </span>
-          .
+          <Link href="/terms" target="_blank" className="underline hover:text-foreground">Terms of Service</Link>,{' '}
+          <Link href="/privacy" target="_blank" className="underline hover:text-foreground">Privacy Policy</Link> and{' '}
+          <Link href="/refund-policy" target="_blank" className="underline hover:text-foreground">Refund Policy</Link>.
         </p>
 
         <SubmitButton className="w-full h-10 font-medium" loadingText="Creating account...">

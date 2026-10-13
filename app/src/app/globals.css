@@ -2,7 +2,8 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* .light opts a subtree (the public website) out of dark mode */
+@custom-variant dark (&:is(.dark *):not(.light, .light *));
 
 @theme inline {
   --color-background: var(--background);
@@ -47,7 +48,8 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
-:root {
+:root,
+.light {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

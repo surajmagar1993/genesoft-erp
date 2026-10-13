@@ -1,95 +1,83 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import Image from "next/image";
-import { useState, useEffect } from "react";
-import { Menu, X, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Link from "next/link"
+import Image from "next/image"
+import { usePathname } from "next/navigation"
+import { Menu } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { cn } from "@/lib/utils"
+
+const LINKS = [
+    { href: "/#features", label: "Features" },
+    { href: "/#countries", label: "Countries" },
+    { href: "/pricing", label: "Pricing" },
+    { href: "/contact", label: "Contact" },
+]
 
 export function PublicNavbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const pathname = usePathname()
 
-  useEffect(() => {
-    const handleScroll = () => {
-        setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    return (
+        <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/75">
+            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
+                <Link href="/" className="flex items-center gap-2.5" aria-label="Genesoft ERP home">
+                    <Image src="/logo.png" alt="" width={32} height={32} className="h-8 w-8 rounded-md object-contain" priority />
+                    <span className="text-[15px] font-semibold tracking-tight text-slate-900">Genesoft ERP</span>
+                </Link>
 
-  return (
-    <nav 
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b",
-        isScrolled 
-          ? "bg-white/80 dark:bg-slate-950/80 backdrop-blur-lg border-slate-200 dark:border-slate-800 py-3" 
-          : "bg-transparent border-transparent py-5"
-      )}
-    >
-      <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="relative h-9 w-28 md:h-10 md:w-32 transition-transform group-hover:scale-105">
-             <Image 
-               src="/logo.png" 
-               alt="Genesoft Logo" 
-               fill
-               className="object-contain dark:brightness-110"
-               priority
-             />
-          </div>
-        </Link>
+                <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
+                    {LINKS.map((link) => (
+                        <Link
+                            key={link.href}
+                            href={link.href}
+                            className={cn(
+                                "rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900",
+                                pathname === link.href && "text-slate-900"
+                            )}
+                        >
+                            {link.label}
+                        </Link>
+                    ))}
+                </nav>
 
-        {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-8">
-          <Link href="/#features" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Features</Link>
-          <Link href="/#solutions" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Solutions</Link>
-          <Link href="/pricing" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Pricing</Link>
-          <Link href="/contact" className="text-sm font-medium text-slate-600 hover:text-orange-500 transition-colors">Contact</Link>
-        </div>
+                <div className="hidden items-center gap-2 md:flex">
+                    <Button asChild variant="ghost" className="text-slate-700 hover:bg-slate-100 hover:text-slate-900">
+                        <Link href="/login">Sign in</Link>
+                    </Button>
+                    <Button asChild className="bg-blue-600 text-white hover:bg-blue-700">
+                        <Link href="/register">Start free trial</Link>
+                    </Button>
+                </div>
 
-        <div className="hidden md:flex items-center gap-4">
-          <Link 
-            href="/login" 
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-          >
-            Login
-          </Link>
-          <Link 
-            href="/register" 
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-orange-600 text-white text-sm font-semibold hover:bg-orange-700 transition-all shadow-lg shadow-orange-600/20 active:scale-95"
-          >
-            Get Started
-            <ArrowRight className="ml-2 w-4 h-4" />
-          </Link>
-        </div>
-
-        {/* Mobile Toggle */}
-        <button 
-          className="md:hidden p-2 text-slate-600 hover:text-slate-900"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 p-4 flex flex-col gap-4 animate-in slide-in-from-top duration-200 shadow-xl">
-          <Link href="/#features" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 hover:text-orange-600 transition-colors">Features</Link>
-          <Link href="/#solutions" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 hover:text-orange-600 transition-colors">Solutions</Link>
-          <Link href="/pricing" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 hover:text-orange-600 transition-colors">Pricing</Link>
-          <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 hover:text-orange-600 transition-colors">Contact</Link>
-          <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium p-2 border-t border-slate-100 dark:border-slate-800 pt-3">Login</Link>
-          <Link 
-            href="/register" 
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="inline-flex items-center justify-center w-full px-5 py-3 rounded-xl bg-orange-600 text-white font-semibold hover:bg-orange-700 transition-all shadow-md"
-          >
-            Get Started Free
-          </Link>
-        </div>
-      )}
-    </nav>
-  );
+                <Sheet>
+                    <SheetTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-slate-700 md:hidden" aria-label="Open menu">
+                            <Menu className="h-5 w-5" />
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="right" className="light w-72 bg-white text-slate-900">
+                        <SheetHeader>
+                            <SheetTitle className="text-left text-slate-900">Genesoft ERP</SheetTitle>
+                        </SheetHeader>
+                        <nav className="mt-2 flex flex-col gap-1 px-4" aria-label="Mobile">
+                            {LINKS.map((link) => (
+                                <Link key={link.href} href={link.href} className="rounded-md px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100">
+                                    {link.label}
+                                </Link>
+                            ))}
+                            <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4">
+                                <Button asChild variant="outline" className="border-slate-300 bg-white text-slate-800">
+                                    <Link href="/login">Sign in</Link>
+                                </Button>
+                                <Button asChild className="bg-blue-600 text-white hover:bg-blue-700">
+                                    <Link href="/register">Start free trial</Link>
+                                </Button>
+                            </div>
+                        </nav>
+                    </SheetContent>
+                </Sheet>
+            </div>
+        </header>
+    )
 }
