@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import {
     CreditNoteStatus,
@@ -487,6 +488,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
  */
 export async function createCreditNote(input: CreateCreditNoteInput) {
     const tenantId = await getTenantManagerId()
+    await assertTenantRefs(tenantId, { contact: input.contactId, invoice: input.invoiceId, product: input.items.map((i) => i.productId), warehouse: input.items.map((i) => i.warehouseId) })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     if (!input.contactId) throw new Error("Customer contact is required")

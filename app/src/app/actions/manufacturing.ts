@@ -325,6 +325,11 @@ export async function createBOM(input: {
     }[]
 }) {
     const tenantId = await getTenantWriterId()
+
+    const productIds = [...new Set([input.productId, ...input.items.map(i => i.productId)])]
+    const ownProducts = await prisma.product.count({ where: { tenantId, id: { in: productIds } } })
+    if (ownProducts !== productIds.length) throw new Error("Product not found")
+
     const count = await prisma.billOfMaterials.count({ where: { tenantId } })
     const currentYear = new Date().getFullYear()
     const bomNumber = `BOM-${currentYear}-${String(count + 1).padStart(3, "0")}`
@@ -418,6 +423,10 @@ export async function createWorkOrder(input: {
     })
 
     if (!bom) throw new Error("Bill of Materials not found")
+
+    const warehouseIds = [...new Set([input.sourceWarehouseId, input.targetWarehouseId])]
+    const ownWarehouses = await prisma.warehouse.count({ where: { tenantId, id: { in: warehouseIds } } })
+    if (ownWarehouses !== warehouseIds.length) throw new Error("Warehouse not found")
 
     const bomQty = Number(bom.quantity) || 1
     const costPerFinishedUnit = Number(bom.estimatedTotalCost) / bomQty

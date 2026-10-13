@@ -955,7 +955,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                     {filteredOpenings.length === 0 ? (
                                         <TableRow>
                                             <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
-                                                No job openings found. Click "Create Opening" to publish a requisition.
+                                                No job openings found. Click &quot;Create Opening&quot; to publish a requisition.
                                             </TableCell>
                                         </TableRow>
                                     ) : (

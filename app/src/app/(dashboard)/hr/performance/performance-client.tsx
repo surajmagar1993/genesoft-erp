@@ -92,6 +92,7 @@ import {
     TrainingProgramStatus,
     EnrollmentStatus
 } from "@prisma/client"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface PerformanceClientProps {
     initialData: PerformanceOverviewData
@@ -495,22 +496,22 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                             Employee Portal
                         </Link>
                     </Button>
-                    <Button
+                    <RequireRole min="MANAGER"><Button
                         variant="outline"
                         size="sm"
                         onClick={() => setIsNewCycleOpen(true)}
                     >
                         <Calendar className="mr-1.5 h-3.5 w-3.5" />
                         New Cycle
-                    </Button>
-                    <Button
+                    </Button></RequireRole>
+                    <RequireRole min="MANAGER"><Button
                         size="sm"
                         className="bg-indigo-600 hover:bg-indigo-700 text-white"
                         onClick={() => setIsNewReviewOpen(true)}
                     >
                         <Plus className="mr-1.5 h-3.5 w-3.5" />
                         Conduct Appraisal
-                    </Button>
+                    </Button></RequireRole>
                 </div>
             </div>
 
@@ -957,7 +958,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                             className="pl-8 text-xs h-9"
                                         />
                                     </div>
-                                    <Button
+                                    <RequireRole min="MANAGER"><Button
                                         variant="outline"
                                         size="sm"
                                         className="text-xs h-9"
@@ -965,11 +966,11 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                     >
                                         <Users className="mr-1.5 h-3.5 w-3.5 text-primary" />
                                         Enroll Employee
-                                    </Button>
-                                    <Button size="sm" onClick={() => setIsNewProgramOpen(true)} className="text-xs h-9">
+                                    </Button></RequireRole>
+                                    <RequireRole min="MANAGER"><Button size="sm" onClick={() => setIsNewProgramOpen(true)} className="text-xs h-9">
                                         <Plus className="mr-1.5 h-3.5 w-3.5" />
                                         New Program
-                                    </Button>
+                                    </Button></RequireRole>
                                 </div>
                             </div>
                         </CardHeader>
@@ -1039,7 +1040,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                     <span className="text-xs text-emerald-600 font-medium">
                                                         {p.completedCount} completed
                                                     </span>
-                                                    <Button
+                                                    <RequireRole min="MANAGER"><Button
                                                         variant="outline"
                                                         size="sm"
                                                         className="h-7 text-xs"
@@ -1049,7 +1050,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                         }}
                                                     >
                                                         Enroll Staff
-                                                    </Button>
+                                                    </Button></RequireRole>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -1219,9 +1220,9 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                             />
                         </div>
                         <DialogFooter className="pt-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => setIsNewCycleOpen(false)}>
+                            <RequireRole min="MANAGER"><Button type="button" variant="outline" size="sm" onClick={() => setIsNewCycleOpen(false)}>
                                 Cancel
-                            </Button>
+                            </Button></RequireRole>
                             <Button type="submit" size="sm" disabled={isPending}>
                                 Create Cycle
                             </Button>
@@ -1294,9 +1295,9 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                             </Select>
                         </div>
                         <DialogFooter className="pt-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => setIsNewReviewOpen(false)}>
+                            <RequireRole min="MANAGER"><Button type="button" variant="outline" size="sm" onClick={() => setIsNewReviewOpen(false)}>
                                 Cancel
-                            </Button>
+                            </Button></RequireRole>
                             <Button type="submit" size="sm" disabled={isPending}>
                                 Initiate Review
                             </Button>
@@ -1762,9 +1763,9 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                             />
                         </div>
                         <DialogFooter className="pt-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => setIsNewProgramOpen(false)}>
+                            <RequireRole min="MANAGER"><Button type="button" variant="outline" size="sm" onClick={() => setIsNewProgramOpen(false)}>
                                 Cancel
-                            </Button>
+                            </Button></RequireRole>
                             <Button type="submit" size="sm" disabled={isPending}>
                                 Publish Program
                             </Button>
@@ -1820,9 +1821,9 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                             </Select>
                         </div>
                         <DialogFooter className="pt-2">
-                            <Button type="button" variant="outline" size="sm" onClick={() => setIsEnrollOpen(false)}>
+                            <RequireRole min="MANAGER"><Button type="button" variant="outline" size="sm" onClick={() => setIsEnrollOpen(false)}>
                                 Cancel
-                            </Button>
+                            </Button></RequireRole>
                             <Button type="submit" size="sm" disabled={isPending}>
                                 Enroll Now
                             </Button>

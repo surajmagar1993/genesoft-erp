@@ -271,6 +271,13 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-4">
+                            <div className="flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
+                                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                                <p>
+                                    Not enforced yet: these settings are saved, but 2FA, the session timeout and the failed-login lockout
+                                    aren&apos;t applied at sign-in. Supabase Auth&apos;s own rate limits apply. Maintenance mode, the signup switch and the IP blocklist below are enforced.
+                                </p>
+                            </div>
                             <div className="flex items-center justify-between p-3.5 rounded-lg border bg-muted/20">
                                 <div className="space-y-0.5">
                                     <Label className="text-sm font-semibold">Enforce Two-Factor Authentication (2FA)</Label>
@@ -466,6 +473,13 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-4">
+                            <div className="flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
+                                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                                <p>
+                                    Not enforced yet: these limits are saved but no request limiter reads them. Vercel&apos;s platform DDoS
+                                    protection and the 5-per-10-minutes limit on public web forms do apply.
+                                </p>
+                            </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="rateLimit" className="text-sm font-medium">

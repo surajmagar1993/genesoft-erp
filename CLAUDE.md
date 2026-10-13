@@ -36,7 +36,10 @@ Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Pri
 - **Webhooks fail closed.** Verify the gateway signature on the raw body before trusting any field.
 - **No demo data in real tenants.** Sample seeders run only when `ENABLE_DEMO_SEED=true`.
 - **Next.js 16:** request interception lives in `src/proxy.ts` (export `proxy`); `params`/`searchParams` are Promises and must be awaited.
-- **Simulated features** (label them as such in the UI until real): e-way bill numbers are drafts (real ones come from the NIC portal), workflow rules don't fire automatically, mailbox IMAP sync and live Stripe/PayPal checkout aren't wired, portal online payment is off (`PORTAL_ONLINE_PAYMENTS_ENABLED`).
+- **Reference ids from the client:** call `assertTenantRefs(tenantId, { contact, product, warehouse, ... })` (`src/lib/tenant-refs.ts`) before writing them. Employee self-service goes through `assertCanActForEmployee` (`src/lib/employee-access.ts`): staff act only for themselves, managers for anyone.
+- **Workflows:** after a business event, call `fireWorkflowEvent(tenantId, "EVENT", payload, entityId)` (`src/lib/workflow-engine.ts`); it runs after the response and never throws. Time-based events, recurring invoices and IMAP sync run in the daily cron `/api/cron/workflows` (`CRON_SECRET`).
+- **Tests:** `npm test` (Vitest, `src/**/*.test.ts`).
+- **Simulated features** (label them as such in the UI until real): e-way bill numbers are drafts (real ones come from the NIC portal), live Stripe/PayPal invoice checkout isn't wired, portal online payment is off (`PORTAL_ONLINE_PAYMENTS_ENABLED`), workflow "update status" actions only run in the simulator, platform 2FA / session timeout / rate limits are saved but not enforced, web forms have no CAPTCHA.
 
 ## 📝 Design Patterns
 - **Forms**: Dedicated full pages, not modals.

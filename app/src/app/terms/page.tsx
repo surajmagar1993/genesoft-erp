@@ -23,7 +23,7 @@ export default function TermsPage() {
 
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">1. Scope of Services & Multi-Country Use</h2>
               <p className="leading-relaxed">
-                Genesoft Infotech Private Limited ("Genesoft") grants you a non-exclusive, non-transferable, revocable license to access our platform solely for your business operations. The services support multi-country localizations including currency conversions, dynamic tax calculations (GST, VAT, Sales Tax), and warehouse controls. You are responsible for ensuring that your usage of Genesoft matches your local municipal, state, and national compliance regulations.
+                Genesoft Infotech Private Limited (&quot;Genesoft&quot;) grants you a non-exclusive, non-transferable, revocable license to access our platform solely for your business operations. The services support multi-country localizations including currency conversions, dynamic tax calculations (GST, VAT, Sales Tax), and warehouse controls. You are responsible for ensuring that your usage of Genesoft matches your local municipal, state, and national compliance regulations.
               </p>
 
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">2. Subscription Billing, Fees & Disputes</h2>
@@ -43,7 +43,7 @@ export default function TermsPage() {
 
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">5. Limitation of Liability & Warranties</h2>
               <p className="leading-relaxed">
-                Genesoft is provided on an "as-is" and "as-available" basis without any express or implied warranties. In no event shall Genesoft Infotech Private Limited be liable for any indirect, incidental, or consequential damages (including loss of business profits, data, or operational interruptions) arising out of the use of our SaaS software.
+                Genesoft is provided on an &quot;as-is&quot; and &quot;as-available&quot; basis without any express or implied warranties. In no event shall Genesoft Infotech Private Limited be liable for any indirect, incidental, or consequential damages (including loss of business profits, data, or operational interruptions) arising out of the use of our SaaS software.
               </p>
 
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">6. Governing Law and Jurisdiction</h2>

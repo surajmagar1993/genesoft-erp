@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getTenantAdminId, getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { maskSecret, openSecret, sealSecret } from "@/lib/secret-box"
 import { revalidatePath } from "next/cache"
 import crypto from "crypto"
@@ -221,6 +222,7 @@ export async function sendWhatsAppMessage(payload: {
 }) {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { contact: payload.contactId })
         if (!tenantId) return { success: false, error: "Unauthorized" }
 
         const tenant = await prisma.tenant.findUnique({

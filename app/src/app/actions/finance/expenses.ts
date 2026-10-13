@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { fireWorkflowEvent } from "@/lib/workflow-engine"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import {
     ExpenseStatus,
@@ -647,6 +649,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
 }> {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { contact: data.vendorId, employee: data.employeeId })
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.title?.trim()) return { error: "Expense title is required" }
@@ -779,6 +782,14 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
 
             return exp
         })
+
+        fireWorkflowEvent(tenantId, "EXPENSE_SUBMITTED", {
+            amount: Number(result.totalAmount),
+            category: result.category,
+            payee: result.vendorName ?? null,
+            status: result.status,
+            title: result.title,
+        }, result.id)
 
         revalidatePath("/finance/expenses")
         revalidatePath("/finance/accounts")
@@ -934,6 +945,7 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
 }> {
     try {
         const tenantId = await getTenantManagerId()
+        await assertTenantRefs(tenantId, { contact: data.lines.map((l) => l.contactId) })
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.narration?.trim()) return { error: "Narration / description is required" }

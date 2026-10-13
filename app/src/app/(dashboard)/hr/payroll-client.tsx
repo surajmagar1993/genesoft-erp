@@ -425,7 +425,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                         {initialData.payRuns.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-xs">
-                                                    No pay runs generated yet. Click "Run Monthly Payroll" to start your first cycle.
+                                                    No pay runs generated yet. Click &quot;Run Monthly Payroll&quot; to start your first cycle.
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
@@ -715,7 +715,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                         {initialData.salaryStructures.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={10} className="text-center py-8 text-muted-foreground text-xs">
-                                                    No salary structures configured yet. Click "New Structure" to create your first template.
+                                                    No salary structures configured yet. Click &quot;New Structure&quot; to create your first template.
                                                 </TableCell>
                                             </TableRow>
                                         ) : (

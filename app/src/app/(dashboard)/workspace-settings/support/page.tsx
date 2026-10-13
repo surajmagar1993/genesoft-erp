@@ -17,16 +17,16 @@ export default function SupportAdminPage() {
   const [adminReply, setAdminReply] = useState("")
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    loadAllTickets()
-  }, [])
-
   const loadAllTickets = async () => {
     setIsLoading(true)
     const data = await getTickets() // Note: In a real super admin app, this should be a global fetch
     setTickets(data)
     setIsLoading(false)
   }
+
+  useEffect(() => {
+    loadAllTickets()
+  }, [])
 
   const handleAdminReply = async () => {
     if (!adminReply || !selectedTicket) return

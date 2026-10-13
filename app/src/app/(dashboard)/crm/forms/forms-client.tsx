@@ -155,8 +155,6 @@ export function FormsClient({ initialData }: FormsClientProps) {
     const [studioIsNew, setStudioIsNew] = useState(false)
 
     // Security & Anti-Spam Credentials
-    const [recaptchaSiteKey, setRecaptchaSiteKey] = useState("")
-    const [recaptchaSecretKey, setRecaptchaSecretKey] = useState("")
 
     // Modals
     const [showNewFormDialog, setShowNewFormDialog] = useState(false)
@@ -1713,66 +1711,22 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                 </Card>
                             )}
 
-                            {/* Security, reCAPTCHA & Bot Shield Section */}
+                            {/* Spam protection */}
                             <Card className="border bg-white dark:bg-slate-900 shadow-xs mt-6">
-                                <CardContent className="p-5 space-y-4">
-                                    <div className="flex items-center justify-between border-b pb-3">
-                                        <div>
-                                            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                                                <Shield className="h-4 w-4 text-emerald-600" />
-                                                Form Security & Anti-Spam Protection
-                                            </h4>
-                                            <p className="text-xs text-slate-500 mt-0.5">
-                                                Honeypot protection is built-in. Configure optional Google reCAPTCHA v3 or Cloudflare Turnstile keys.
-                                            </p>
-                                        </div>
+                                <CardContent className="p-5 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                            <Shield className="h-4 w-4 text-emerald-600" />
+                                            Spam Protection
+                                        </h4>
                                         <Badge variant="outline" className="text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300">
-                                            Honeypot Active
+                                            Active
                                         </Badge>
                                     </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                                                reCAPTCHA / Turnstile Site Key (Public)
-                                            </label>
-                                            <Input
-                                                value={recaptchaSiteKey}
-                                                onChange={(e) => setRecaptchaSiteKey(e.target.value)}
-                                                placeholder="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
-                                                className="h-9 text-xs font-mono"
-                                            />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center justify-between">
-                                                <span>reCAPTCHA / Turnstile Secret Key</span>
-                                                <span className="text-[10px] text-muted-foreground font-normal">Supports Eye toggle</span>
-                                            </label>
-                                            <PasswordInput
-                                                value={recaptchaSecretKey}
-                                                onChange={(e) => setRecaptchaSecretKey(e.target.value)}
-                                                placeholder="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
-                                                className="h-9 text-xs font-mono"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between pt-2">
-                                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
-                                            <Key className="h-3.5 w-3.5 text-indigo-600" />
-                                            <span>Submissions without keys automatically use smart honeypot filtering (<code className="font-mono">_hp_company</code>).</span>
-                                        </div>
-
-                                        <Button
-                                            size="sm"
-                                            onClick={() => toast.success("Anti-spam security configuration saved!")}
-                                            className="text-xs h-8 gap-1.5"
-                                        >
-                                            <Check className="h-3.5 w-3.5" />
-                                            Save Security Keys
-                                        </Button>
-                                    </div>
+                                    <p className="text-xs text-slate-500">
+                                        Every form has a hidden honeypot field (<code className="font-mono">_hp_company</code>) that silently drops bot submissions,
+                                        and each visitor IP can submit a form at most 5 times in 10 minutes. CAPTCHA (reCAPTCHA / Turnstile) isn&apos;t supported yet.
+                                    </p>
                                 </CardContent>
                             </Card>
                         </div>

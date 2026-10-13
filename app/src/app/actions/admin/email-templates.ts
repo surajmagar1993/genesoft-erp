@@ -15,16 +15,7 @@ import { Resend } from "resend"
  * Ensures current caller has SUPER_ADMIN permissions.
  */
 async function ensureSuperAdmin() {
-    let supabase: Awaited<ReturnType<typeof createClient>>
-    try {
-        supabase = await createClient()
-    } catch {
-        // Only reachable outside a Next.js request (CLI verification scripts), never from a browser request
-        if (process.env.NODE_ENV !== "production") {
-            return { id: "dev-admin-id", email: "admin@genesoft.ai" }
-        }
-        throw new Error("Unauthorized: Please sign in")
-    }
+    const supabase = await createClient()
 
     const { data } = await supabase.auth.getUser()
     const user = data?.user
@@ -93,7 +84,7 @@ export async function getSystemEmailTemplates(): Promise<SystemEmailTemplatesOve
     const resendDomain = process.env.RESEND_DOMAIN || "genesoft.ai"
 
     // 2. Fetch custom overrides from database if any exist
-    let customOverridesMap: Record<string, any> = {}
+    const customOverridesMap: Record<string, any> = {}
     try {
         const auditLogs = await prisma.adminAuditLog.findMany({
             where: {

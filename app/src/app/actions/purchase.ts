@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { PurchaseOrderStatus, StockMovementType } from "@prisma/client"
@@ -323,6 +324,7 @@ export async function createVendor(data: {
  */
 export async function createPurchaseOrder(data: CreatePurchaseOrderInput) {
     const tenantId = await getTenantWriterId()
+    await assertTenantRefs(tenantId, { contact: data.vendorId, warehouse: data.warehouseId, product: data.items.map((i) => i.productId) })
 
     if (!data.vendorId) throw new Error("Vendor selection is required")
     if (!data.items || data.items.length === 0) throw new Error("At least one purchase line item is required")

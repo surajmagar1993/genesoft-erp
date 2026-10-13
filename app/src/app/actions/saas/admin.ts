@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "../../../lib/prisma"
+import { clearPlatformGateCache } from "@/lib/platform-security"
 // import { type Role } from "@prisma/client"
 import { createClient } from "../../../lib/supabase/server"
 import { revalidatePath } from "next/cache"
@@ -725,16 +726,13 @@ export interface SecuritySettings {
 }
 
 const DEFAULT_SECURITY_SETTINGS: SecuritySettings = {
-    enforce2FA: true,
+    enforce2FA: false,
     rateLimitPerMin: 120,
     authLockoutAttempts: 5,
     sessionTimeoutMinutes: 30,
     allowSignups: true,
     maintenanceMode: false,
-    blockedIps: [
-        { ip: "198.51.100.42", reason: "Automated credential stuffing botnet", blockedAt: "2026-09-08T10:15:00.000Z" },
-        { ip: "203.0.113.195", reason: "Repeated SQL injection payload attempt", blockedAt: "2026-09-09T18:40:00.000Z" }
-    ]
+    blockedIps: []
 }
 
 /**
@@ -777,14 +775,16 @@ export async function getSecurityOverview() {
         })
 
         const savedPolicy = (latestPolicyLog?.metadata as any) || {}
+        // Maintenance mode and signups live in global_settings, which is what the proxy enforces
+        const globalSettings = await prisma.globalSettings.findUnique({ where: { id: "system_config" } })
 
         const settings: SecuritySettings = {
             enforce2FA: savedPolicy.enforce2FA ?? DEFAULT_SECURITY_SETTINGS.enforce2FA,
             rateLimitPerMin: savedPolicy.rateLimitPerMin ?? DEFAULT_SECURITY_SETTINGS.rateLimitPerMin,
             authLockoutAttempts: savedPolicy.authLockoutAttempts ?? DEFAULT_SECURITY_SETTINGS.authLockoutAttempts,
             sessionTimeoutMinutes: savedPolicy.sessionTimeoutMinutes ?? DEFAULT_SECURITY_SETTINGS.sessionTimeoutMinutes,
-            allowSignups: savedPolicy.allowSignups ?? DEFAULT_SECURITY_SETTINGS.allowSignups,
-            maintenanceMode: savedPolicy.maintenanceMode ?? DEFAULT_SECURITY_SETTINGS.maintenanceMode,
+            allowSignups: globalSettings?.allowSignups ?? DEFAULT_SECURITY_SETTINGS.allowSignups,
+            maintenanceMode: globalSettings?.maintenanceMode ?? DEFAULT_SECURITY_SETTINGS.maintenanceMode,
             blockedIps: Array.from(blockedIpMap.values())
         }
 
@@ -828,7 +828,7 @@ export async function getSecurityOverview() {
                 suspendedTenantsCount: 0,
                 totalTenantsCount: 0,
                 totalUsersCount: 0,
-                enforce2FA: true,
+                enforce2FA: false,
                 rateLimitPerMin: 120,
                 sessionTimeoutMinutes: 30
             }
@@ -843,6 +843,22 @@ export async function updateSecurityPolicy(policy: Partial<SecuritySettings>) {
     await ensureSuperAdmin()
 
     await logAdminAction("SECURITY_POLICY_UPDATE", "system_security", "SECURITY", policy)
+
+    if (policy.maintenanceMode !== undefined || policy.allowSignups !== undefined) {
+        await prisma.globalSettings.upsert({
+            where: { id: "system_config" },
+            update: {
+                ...(policy.maintenanceMode !== undefined && { maintenanceMode: policy.maintenanceMode }),
+                ...(policy.allowSignups !== undefined && { allowSignups: policy.allowSignups }),
+            },
+            create: {
+                id: "system_config",
+                maintenanceMode: policy.maintenanceMode ?? false,
+                allowSignups: policy.allowSignups ?? true,
+            },
+        })
+    }
+    clearPlatformGateCache()
 
     revalidatePath("/admin/security")
     revalidatePath("/admin/dashboard")
@@ -862,6 +878,7 @@ export async function addBlockedIp(ip: string, reason: string) {
         reason: reason?.trim() || "Manual Super Admin block"
     })
 
+    clearPlatformGateCache()
     revalidatePath("/admin/security")
     return { success: true }
 }
@@ -879,6 +896,7 @@ export async function removeBlockedIp(ip: string) {
         unblockedAt: new Date().toISOString()
     })
 
+    clearPlatformGateCache()
     revalidatePath("/admin/security")
     return { success: true }
 }
@@ -937,6 +955,8 @@ export async function updateGlobalSettings(data: {
             bannerMessage: data.bannerMessage?.trim() || null
         }
     })
+
+    clearPlatformGateCache()
 
     await logAdminAction("GLOBAL_SETTINGS_UPDATE", "system_config", "SYSTEM", data)
 

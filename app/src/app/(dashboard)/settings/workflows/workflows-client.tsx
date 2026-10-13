@@ -487,9 +487,6 @@ export function WorkflowsClient({
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
                                 Workflow Automation
-                                <Badge variant="outline" className="text-[10px] font-mono tracking-widest uppercase bg-primary/5 text-primary border-primary/20">
-                                    Preview
-                                </Badge>
                             </h1>
                             <p className="text-xs text-muted-foreground mt-0.5">
                                 Orchestrate event triggers, conditional business rules, and multi-channel actions across your workspace.
@@ -522,7 +519,7 @@ export function WorkflowsClient({
             <div className="flex items-start gap-3 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
                 <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
                 <p>
-                    Preview: rules are saved but don&apos;t run automatically yet. Use the simulator to test how a rule would behave.
+                    Active rules run automatically when their event happens. Overdue invoices and due bills are checked once a day. &quot;Update status&quot; actions only run in the simulator for now.
                 </p>
             </div>
 
@@ -985,7 +982,7 @@ export function WorkflowsClient({
                                         <div className="p-12 text-center my-auto">
                                             <Terminal className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
                                             <p className="text-xs text-muted-foreground">
-                                                Click <strong>"Run Test Simulation"</strong> to trace rule matching and action execution in real time.
+                                                Click <strong>&quot;Run Test Simulation&quot;</strong> to trace rule matching and action execution in real time.
                                             </p>
                                         </div>
                                     ) : (

@@ -382,7 +382,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center py-1.5">
-                                        <span className="text-muted-foreground">Today's Status:</span>
+                                        <span className="text-muted-foreground">Today&apos;s Status:</span>
                                         <Badge variant={isClockedInToday ? "default" : "outline"} className="text-xs">
                                             {todayAttendance?.status || "PENDING"}
                                         </Badge>
@@ -1020,7 +1020,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                             </div>
 
                             <p className="text-[10px] text-muted-foreground italic text-center">
-                                This is a computer-generated salary payslip authorized by the organization's payroll department.
+                                This is a computer-generated salary payslip authorized by the organization&apos;s payroll department.
                             </p>
                         </div>
                     </DialogContent>

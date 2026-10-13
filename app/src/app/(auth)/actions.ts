@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 import { prisma } from '@/lib/prisma'
+import { getPlatformGate } from '@/lib/platform-security'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -49,6 +50,10 @@ export async function register(formData: FormData) {
   const slug = formData.get('slug') as string
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
+
+  if (!(await getPlatformGate()).allowSignups) {
+    redirect('/register?error=New+signups+are+currently+closed')
+  }
 
   if (password !== confirmPassword) {
     redirect('/register?error=Passwords+do+not+match')

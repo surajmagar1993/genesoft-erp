@@ -80,6 +80,7 @@ import {
   updateTdsProfile,
   exportForm26QSummary,
 } from "@/app/actions/finance/tds"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface TdsClientProps {
   initialData: TdsOverviewData
@@ -387,14 +388,14 @@ export function TdsClient({ initialData }: TdsClientProps) {
             Export 26Q
           </Button>
 
-          <Button
+          <RequireRole min="MANAGER"><Button
             size="sm"
             className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs h-9 shadow-xs"
             onClick={() => openChallanForPending(initialData.deductions.filter((d) => d.status === "PENDING").map((d) => d.id))}
           >
             <Plus className="h-4 w-4" />
             Record Challan 281
-          </Button>
+          </Button></RequireRole>
         </div>
       </div>
 
@@ -685,14 +686,14 @@ export function TdsClient({ initialData }: TdsClientProps) {
               Record government tax payments deposited with authorized banks (BSR Code, Challan No, CIN).
             </p>
           </div>
-          <Button
+          <RequireRole min="MANAGER"><Button
             size="sm"
             className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs shrink-0"
             onClick={() => openChallanForPending([])}
           >
             <Plus className="h-4 w-4" />
             New Challan 281 Deposit
-          </Button>
+          </Button></RequireRole>
         </div>
 
         <Card className="overflow-hidden">
@@ -1048,7 +1049,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                 Deductor TAN & Legal Tax Profile
               </CardTitle>
               <CardDescription className="text-xs">
-                Your company's Tax Deduction Account Number (TAN) and Responsible Person details for statutory Form 26Q quarterly returns.
+                Your company&apos;s Tax Deduction Account Number (TAN) and Responsible Person details for statutory Form 26Q quarterly returns.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1182,12 +1183,14 @@ export function TdsClient({ initialData }: TdsClientProps) {
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-2">
-                  <Button type="submit" size="sm" disabled={isSubmittingProfile} className="gap-2">
-                    {isSubmittingProfile && <RefreshCw className="h-4 w-4 animate-spin" />}
-                    Save Deductor Profile
-                  </Button>
-                </div>
+                <RequireRole min="MANAGER">
+                  <div className="flex justify-end pt-2">
+                    <Button type="submit" size="sm" disabled={isSubmittingProfile} className="gap-2">
+                      {isSubmittingProfile && <RefreshCw className="h-4 w-4 animate-spin" />}
+                      Save Deductor Profile
+                    </Button>
+                  </div>
+                </RequireRole>
               </form>
             </CardContent>
           </Card>
@@ -1342,7 +1345,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
             </div>
 
             <DialogFooter className="pt-2">
-              <Button
+              <RequireRole min="MANAGER"><Button
                 type="button"
                 variant="outline"
                 size="sm"
@@ -1350,7 +1353,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                 disabled={isSubmittingChallan}
               >
                 Cancel
-              </Button>
+              </Button></RequireRole>
               <Button
                 type="submit"
                 size="sm"

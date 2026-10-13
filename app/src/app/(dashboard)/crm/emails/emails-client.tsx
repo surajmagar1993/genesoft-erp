@@ -346,7 +346,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                     toast.error(res.error)
                     return
                 }
-                toast.success(`Mailbox synchronized! ${res.syncedCount || 0} correspondence checked.`)
+                toast.success(res.syncedCount ? `Synced ${res.syncedCount} new message${res.syncedCount === 1 ? "" : "s"}.` : "Inbox is up to date.")
                 router.refresh()
             } catch (err: any) {
                 toast.error(err.message || "Mailbox sync failed")

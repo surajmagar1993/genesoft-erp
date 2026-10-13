@@ -721,7 +721,7 @@ export async function saveTransporter(
   const currentSettings = (tenant?.settings as Record<string, any>) || {}
   const { transporters } = getEwayStore(tenant?.settings)
 
-  let updatedList = [...transporters]
+  const updatedList = [...transporters]
   const id = transporter.id || `trans-${Date.now()}`
   const existingIdx = updatedList.findIndex((t) => t.id === id)
 

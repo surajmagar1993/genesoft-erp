@@ -82,6 +82,7 @@ import {
     getTraceabilityAudit,
 } from "@/app/actions/batch-serial"
 import { BatchStatus, SerialStatus } from "@prisma/client"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface BatchSerialTabProps {
     data: BatchSerialOverviewData
@@ -858,7 +859,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                             </Button>
 
                                                             {b.status !== "RECALLED" && (
-                                                                <Button
+                                                                <RequireRole min="MANAGER"><Button
                                                                     size="sm"
                                                                     variant="ghost"
                                                                     className="h-8 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950"
@@ -869,7 +870,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                                     title="Issue Recall"
                                                                 >
                                                                     <Ban className="h-3.5 w-3.5" />
-                                                                </Button>
+                                                                </Button></RequireRole>
                                                             )}
 
                                                             <Button
@@ -1261,7 +1262,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                 >
                                                     Adjust Stock
                                                 </Button>
-                                                <Button
+                                                <RequireRole min="MANAGER"><Button
                                                     size="sm"
                                                     variant="ghost"
                                                     className="text-xs h-7 text-rose-600 hover:text-rose-700"
@@ -1271,7 +1272,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                     }}
                                                 >
                                                     Quarantine
-                                                </Button>
+                                                </Button></RequireRole>
                                             </div>
                                         </div>
                                     ))
@@ -2093,14 +2094,14 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                             </div>
 
                             <DialogFooter className="pt-2">
-                                <Button
+                                <RequireRole min="MANAGER"><Button
                                     type="button"
                                     variant="outline"
                                     onClick={() => setRecallBatchTarget(null)}
                                     disabled={isPending}
                                 >
                                     Cancel
-                                </Button>
+                                </Button></RequireRole>
                                 <Button type="submit" disabled={isPending} variant="destructive">
                                     {isPending ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
                                     Confirm Recall

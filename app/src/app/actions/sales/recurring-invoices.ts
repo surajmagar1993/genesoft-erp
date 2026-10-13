@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
+import { generateInvoiceFromProfile } from "@/lib/recurring-runner"
 import { revalidatePath } from "next/cache"
 import {
     RecurringFrequency,
@@ -154,30 +156,6 @@ export interface CreateRecurringProfileInput {
 // HELPER: CALCULATE NEXT RUN DATE
 // ============================================
 
-function computeNextRunDate(currentDate: Date, frequency: RecurringFrequency): Date {
-    const next = new Date(currentDate)
-    switch (frequency) {
-        case RecurringFrequency.WEEKLY:
-            next.setDate(next.getDate() + 7)
-            break
-        case RecurringFrequency.BIWEEKLY:
-            next.setDate(next.getDate() + 14)
-            break
-        case RecurringFrequency.MONTHLY:
-            next.setMonth(next.getMonth() + 1)
-            break
-        case RecurringFrequency.QUARTERLY:
-            next.setMonth(next.getMonth() + 3)
-            break
-        case RecurringFrequency.BIANNUALLY:
-            next.setMonth(next.getMonth() + 6)
-            break
-        case RecurringFrequency.ANNUALLY:
-            next.setFullYear(next.getFullYear() + 1)
-            break
-    }
-    return next
-}
 
 // Normalized Monthly Factor
 function getMonthlyMultiplier(freq: RecurringFrequency): number {
@@ -415,6 +393,7 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
 }> {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { contact: data.contactId, product: data.items.map((i) => i.productId) })
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.title?.trim()) return { error: "Profile title is required" }
@@ -627,127 +606,16 @@ export async function triggerGenerateInvoice(profileId: string): Promise<{
         const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
-        const profile = await prisma.recurringProfile.findFirst({
-            where: { id: profileId, tenantId },
-            include: {
-                contact: true,
-                items: true,
-            },
-        })
-
-        if (!profile) return { error: "Recurring profile not found" }
-        if (profile.status === RecurringStatus.CANCELLED || profile.status === RecurringStatus.COMPLETED) {
-            return { error: `Profile is currently ${profile.status}. Reactivate it before running.` }
-        }
-
-        const now = new Date()
-        const year = now.getFullYear()
-
-        // Generate sequential invoice number: INV-YYYY-XXXX
-        const count = await prisma.invoice.count({ where: { tenantId } })
-        const invoiceNumber = `INV-${year}-${String(count + 1).padStart(4, "0")}`
-
-        // Calculate due date based on payment terms
-        const dueDate = new Date(now)
-        let termsDays = 30
-        if (profile.paymentTerms === "NET_15") termsDays = 15
-        if (profile.paymentTerms === "NET_60") termsDays = 60
-        if (profile.paymentTerms === "DUE_ON_RECEIPT") termsDays = 0
-        dueDate.setDate(dueDate.getDate() + termsDays)
-
-        // Contact bill to
-        const billTo = {
-            name: profile.contact.displayName,
-            company: profile.contact.companyName || "",
-            email: profile.contact.email || "",
-            phone: profile.contact.phone || "",
-            address: profile.contact.billingAddress || {},
-        }
-
-        const result = await prisma.$transaction(async (tx: any) => {
-            // 1. Create Invoice
-            const invoice = await tx.invoice.create({
-                data: {
-                    tenantId,
-                    contactId: profile.contactId,
-                    invoiceNumber,
-                    type: InvoiceType.TAX_INVOICE,
-                    status: profile.autoApprove ? InvoiceStatus.SENT : InvoiceStatus.DRAFT,
-                    invoiceDate: now,
-                    dueDate,
-                    billTo,
-                    subtotal: profile.subtotal,
-                    taxAmount: profile.taxAmount,
-                    total: profile.totalAmount,
-                    currencyCode: profile.currencyCode,
-                    paymentTerms: profile.paymentTerms || "NET_30",
-                    notes: profile.notes || `Generated from recurring subscription schedule: ${profile.title}`,
-                    terms: profile.terms,
-                    recurringProfileId: profile.id,
-                    items: {
-                        create: profile.items.map((item: any) => ({
-                            productId: item.productId,
-                            description: item.description,
-                            hsnSacCode: item.hsnSacCode,
-                            quantity: item.quantity,
-                            unitPrice: item.unitPrice,
-                            cgstRate: item.cgstRate,
-                            cgstAmount: item.cgstAmount,
-                            sgstRate: item.sgstRate,
-                            sgstAmount: item.sgstAmount,
-                            igstRate: item.igstRate,
-                            igstAmount: item.igstAmount,
-                            discount: item.discount,
-                            lineTotal: item.lineTotal,
-                        })),
-                    },
-                },
-            })
-
-            // 2. Advance cycles and compute nextRunDate
-            const newCycles = profile.cyclesCompleted + 1
-            const nextRun = computeNextRunDate(profile.nextRunDate, profile.frequency)
-            let updatedStatus: RecurringStatus = profile.status
-
-            if (profile.maxCycles && newCycles >= profile.maxCycles) {
-                updatedStatus = RecurringStatus.COMPLETED
-            }
-            if (profile.endDate && nextRun > profile.endDate) {
-                updatedStatus = RecurringStatus.COMPLETED
-            }
-
-            await tx.recurringProfile.update({
-                where: { id: profile.id },
-                data: {
-                    cyclesCompleted: newCycles,
-                    lastRunDate: now,
-                    nextRunDate: nextRun,
-                    status: updatedStatus,
-                },
-            })
-
-            // 3. Log execution
-            await tx.recurringExecution.create({
-                data: {
-                    tenantId,
-                    recurringProfileId: profile.id,
-                    invoiceId: invoice.id,
-                    executionDate: now,
-                    status: RecurringExecutionStatus.SUCCESS,
-                    amount: profile.totalAmount,
-                },
-            })
-
-            return invoice
-        })
+        const result = await generateInvoiceFromProfile(tenantId, profileId)
+        if ("error" in result) return { error: result.error }
 
         revalidatePath("/sales/invoices")
         revalidatePath("/sales/invoices/recurring")
 
         return {
             success: true,
-            invoiceId: result.id,
-            invoiceNumber: result.invoiceNumber,
+            invoiceId: result.invoice.id,
+            invoiceNumber: result.invoice.invoiceNumber,
         }
     } catch (err: any) {
         console.error("triggerGenerateInvoice error:", err)

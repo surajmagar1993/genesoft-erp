@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs as assertRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import { BatchStatus, SerialStatus, StockMovementType } from "@prisma/client"
 import { addMonths, isBefore, addDays } from "date-fns"
@@ -282,16 +283,14 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
 /** Throws unless the referenced product, warehouse and batch belong to this tenant. */
 async function assertTenantRefs(
     tenantId: string,
-    refs: { productId: string; warehouseId?: string | null; batchId?: string | null }
+    refs: { productId: string; warehouseId?: string | null; batchId?: string | null; purchaseOrderId?: string | null }
 ) {
-    const [product, warehouse, batch] = await Promise.all([
-        prisma.product.count({ where: { id: refs.productId, tenantId } }),
-        refs.warehouseId ? prisma.warehouse.count({ where: { id: refs.warehouseId, tenantId } }) : 1,
-        refs.batchId ? prisma.productBatch.count({ where: { id: refs.batchId, tenantId } }) : 1,
-    ])
-    if (!product) throw new Error("Product not found")
-    if (!warehouse) throw new Error("Warehouse not found")
-    if (!batch) throw new Error("Batch not found")
+    await assertRefs(tenantId, {
+        product: refs.productId,
+        warehouse: refs.warehouseId,
+        productBatch: refs.batchId,
+        purchaseOrder: refs.purchaseOrderId,
+    })
 }
 
 /**

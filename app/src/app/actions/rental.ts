@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import {
     AssetCondition,
@@ -680,6 +681,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
  */
 export async function createRentalAsset(input: CreateRentalAssetInput) {
     const tenantId = await getTenantWriterId()
+    await assertTenantRefs(tenantId, { warehouse: input.warehouseId })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     if (!input.name.trim() || !input.category.trim()) {
@@ -720,6 +722,7 @@ export async function createRentalAsset(input: CreateRentalAssetInput) {
  */
 export async function updateRentalAsset(id: string, input: UpdateRentalAssetInput) {
     const tenantId = await getTenantWriterId()
+    await assertTenantRefs(tenantId, { warehouse: input.warehouseId })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     const updated = await prisma.rentalAsset.update({
@@ -784,6 +787,7 @@ export async function deleteRentalAsset(id: string) {
  */
 export async function createRentalAgreement(input: CreateRentalAgreementInput) {
     const tenantId = await getTenantWriterId()
+    await assertTenantRefs(tenantId, { contact: input.contactId, rentalAsset: input.items.map((i) => i.assetId) })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     if (!input.contactId) throw new Error("Customer contact is required")
@@ -928,6 +932,7 @@ export async function updateRentalAgreementStatus(id: string, status: RentalStat
  */
 export async function processRentalReturn(input: ProcessRentalReturnInput) {
     const tenantId = await getTenantWriterId()
+    await assertTenantRefs(tenantId, { rentalAsset: input.assetId })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     const agreement = await prisma.rentalAgreement.findUnique({

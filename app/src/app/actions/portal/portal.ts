@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { PORTAL_ONLINE_PAYMENTS_ENABLED } from "./portal-types"
 import type {
   PortalProfile,
@@ -352,6 +353,13 @@ export async function createPortalTicket(
     },
   })
 
+  fireWorkflowEvent(contact.tenantId, "TICKET_CREATED", {
+    subject: ticket.subject,
+    category: ticket.category,
+    priority: ticket.priority,
+    customerEmail: contact.email,
+  }, ticket.id)
+
   return { success: true, ticketId: ticket.id }
 }
 
@@ -378,12 +386,17 @@ export async function addPortalTicketMessage(
     },
   })
 
-  // Reopen if resolved
+  // Reopen if resolved: the customer came back after we closed it, so escalate
   if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") {
     await prisma.portalTicket.update({
       where: { id: ticketId },
       data: { status: "OPEN" },
     })
+    fireWorkflowEvent(contact.tenantId, "TICKET_ESCALATED", {
+      subject: ticket.subject,
+      priority: ticket.priority,
+      customerEmail: contact.email,
+    }, ticket.id)
   }
 
   return { success: true }

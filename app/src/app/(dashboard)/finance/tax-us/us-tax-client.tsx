@@ -1184,14 +1184,14 @@ export function UsTaxClient({ initialData }: Props) {
                 {/* Left Column: Payer & Recipient */}
                 <div className="space-y-3 border-r pr-4">
                   <div className="p-2 border rounded bg-muted/20">
-                    <div className="text-[10px] text-muted-foreground font-semibold">PAYER'S name & address</div>
+                    <div className="text-[10px] text-muted-foreground font-semibold">PAYER&apos;S name & address</div>
                     <div className="font-bold text-foreground">Genesoft ERP Inc.</div>
                     <div className="text-[11px] text-muted-foreground">100 Wall Street, New York, NY 10005</div>
-                    <div className="text-[10px] font-mono mt-1 text-muted-foreground">PAYER'S TIN: 12-3456789</div>
+                    <div className="text-[10px] font-mono mt-1 text-muted-foreground">PAYER&apos;S TIN: 12-3456789</div>
                   </div>
 
                   <div className="p-2 border rounded bg-muted/20">
-                    <div className="text-[10px] text-muted-foreground font-semibold">RECIPIENT'S name & TIN</div>
+                    <div className="text-[10px] text-muted-foreground font-semibold">RECIPIENT&apos;S name & TIN</div>
                     <div className="font-bold text-foreground">{selected1099Record.vendorName}</div>
                     <div className="text-[11px] font-mono font-semibold text-foreground mt-0.5">
                       TIN: {selected1099Record.tin || "NOT ON FILE"}

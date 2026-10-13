@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import type { PlatformGate } from '@/lib/platform-security'
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(request: NextRequest, gate?: PlatformGate) {
     let supabaseResponse = NextResponse.next({
         request,
     })
@@ -52,6 +53,7 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname === '/privacy' ||
         request.nextUrl.pathname === '/terms' ||
         request.nextUrl.pathname === '/sitemap' ||
+        request.nextUrl.pathname === '/maintenance' ||
         request.nextUrl.pathname.startsWith('/portal/') || // Customer portal, authorised by portal token
         request.nextUrl.pathname.startsWith('/forms/') || // Public web forms, embeddable on external sites
         request.nextUrl.pathname.startsWith('/api') // Allow API for and from Supabase
@@ -79,6 +81,23 @@ export async function updateSession(request: NextRequest) {
             url.pathname = '/crm/contacts'
         }
         return NextResponse.redirect(url)
+    }
+
+    // Maintenance mode: only platform admins can use the app; webhooks, cron,
+    // the customer portal and public forms keep working.
+    if (gate?.maintenanceMode && user && !isPublicPage && !isAuthPage) {
+        const { data: userData } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+        if (userData?.role !== 'SUPER_ADMIN') {
+            const url = request.nextUrl.clone()
+            url.pathname = '/maintenance'
+            url.search = ''
+            return NextResponse.redirect(url)
+        }
     }
 
     // Admin role check (Platform level)

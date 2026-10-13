@@ -14,12 +14,6 @@ export default function EditQuotePage() {
     const [initialData, setInitialData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        if (id) {
-            fetchQuote()
-        }
-    }, [id])
-
     const fetchQuote = async () => {
         setLoading(true)
         try {
@@ -60,6 +54,12 @@ export default function EditQuotePage() {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        if (id) {
+            fetchQuote()
+        }
+    }, [id])
 
     const handleSave = async (data: any) => {
         const { error } = await updateQuote({

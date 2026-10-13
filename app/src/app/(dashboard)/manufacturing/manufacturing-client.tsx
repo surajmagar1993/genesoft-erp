@@ -462,7 +462,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                         {filteredOrders.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-xs">
-                                                    No work orders found. Click "New Work Order" to schedule your first production batch.
+                                                    No work orders found. Click &quot;New Work Order&quot; to schedule your first production batch.
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
@@ -619,7 +619,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                         {filteredBOMs.length === 0 ? (
                                             <TableRow>
                                                 <TableCell colSpan={9} className="text-center py-8 text-muted-foreground text-xs">
-                                                    No Bill of Materials configured yet. Click "Create BOM" to define a product assembly formula.
+                                                    No Bill of Materials configured yet. Click &quot;Create BOM&quot; to define a product assembly formula.
                                                 </TableCell>
                                             </TableRow>
                                         ) : (

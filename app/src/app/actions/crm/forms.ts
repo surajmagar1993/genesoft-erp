@@ -3,7 +3,9 @@
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { deliverTenantEmail } from "@/lib/email-delivery"
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 import { CommunicationType, LeadStatus } from "@prisma/client"
 import type {
     WebFormType,
@@ -276,6 +278,13 @@ export async function toggleWebFormStatus(
 // PUBLIC FORM SUBMISSION HANDLER
 // ============================================
 
+const SUBMISSION_WINDOW_MS = 10 * 60 * 1000
+const MAX_SUBMISSIONS_PER_WINDOW = 5
+
+function escapeHtml(text: string): string {
+    return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
+}
+
 export async function submitPublicForm(payload: SubmitPublicFormPayload): Promise<{
     success: boolean
     submissionId?: string
@@ -310,6 +319,30 @@ export async function submitPublicForm(payload: SubmitPublicFormPayload): Promis
                 success: false,
                 message: "This form is currently closed to new submissions.",
                 error: "Form inactive",
+            }
+        }
+
+        // Rate limit per visitor IP. The IP comes from the request headers, never
+        // from the payload (anyone can call this action with any payload).
+        const requestHeaders = await headers()
+        const ipAddress =
+            requestHeaders.get("x-real-ip")?.trim() ||
+            requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+            null
+        if (ipAddress) {
+            const recent = await prisma.formSubmission.count({
+                where: {
+                    webFormId: form.id,
+                    ipAddress,
+                    createdAt: { gte: new Date(Date.now() - SUBMISSION_WINDOW_MS) },
+                },
+            })
+            if (recent >= MAX_SUBMISSIONS_PER_WINDOW) {
+                return {
+                    success: false,
+                    message: "Too many submissions. Please try again in a few minutes.",
+                    error: "Rate limited",
+                }
             }
         }
 
@@ -427,8 +460,8 @@ export async function submitPublicForm(payload: SubmitPublicFormPayload): Promis
                 leadId: createdLead.id,
                 contactId: resolvedContactId,
                 data,
-                ipAddress: payload.ipAddress || null,
-                userAgent: payload.userAgent || null,
+                ipAddress,
+                userAgent: requestHeaders.get("user-agent") || payload.userAgent || null,
                 referer: payload.referer || null,
                 status: "CONVERTED",
             },
@@ -466,20 +499,23 @@ export async function submitPublicForm(payload: SubmitPublicFormPayload): Promis
                     where: { tenantId, isDefault: true, isActive: true },
                 })
                 if (defaultEmailAcc) {
-                    const { sendEmail } = await import("./emails")
-                    await sendEmail({
+                    // Visitor input is untrusted: escape everything that goes into the HTML
+                    const rows: [string, string][] = [
+                        ["Form", `${form.title} (${form.code})`],
+                        ["Lead", leadTitle],
+                        ["Contact Email", email || "N/A"],
+                        ["Phone", phone || "N/A"],
+                        ["Company", companyName || "N/A"],
+                    ]
+                    await deliverTenantEmail(tenantId, {
                         emailAccountId: defaultEmailAcc.id,
                         toEmail: form.notifyEmail,
-                        subject: `🔔 New Web Form Lead: ${form.title} - ${fullName || companyName || email || "Inquiry"}`,
+                        subject: `New Web Form Lead: ${form.title} - ${fullName || companyName || email || "Inquiry"}`.replace(/[\r\n]+/g, " "),
                         bodyHtml: `<h3>New Web Form Lead Captured</h3>
-                        <p><strong>Form:</strong> ${form.title} (${form.code})</p>
-                        <p><strong>Lead:</strong> ${leadTitle}</p>
-                        <p><strong>Contact Email:</strong> ${email || "N/A"}</p>
-                        <p><strong>Phone:</strong> ${phone || "N/A"}</p>
-                        <p><strong>Company:</strong> ${companyName || "N/A"}</p>
+                        ${rows.map(([label, value]) => `<p><strong>${label}:</strong> ${escapeHtml(value)}</p>`).join("\n")}
                         <hr/>
                         <p><strong>Submission Details:</strong></p>
-                        <pre style="background:#f4f4f4;padding:10px;border-radius:4px;">${JSON.stringify(data, null, 2)}</pre>`,
+                        <pre style="background:#f4f4f4;padding:10px;border-radius:4px;">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`,
                         leadId: createdLead.id,
                         contactId: resolvedContactId || undefined,
                     })

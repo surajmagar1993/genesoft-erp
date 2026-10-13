@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import { BudgetPeriodType, BudgetStatus, AccountType } from "@prisma/client"
 
@@ -420,6 +421,7 @@ export async function createBudget(data: {
     }[]
 }) {
     const tenantId = await getTenantManagerId()
+    await assertTenantRefs(tenantId, { department: data.departmentId, account: data.items.map((i) => i.accountId) })
 
     if (!data.name?.trim()) throw new Error("Budget plan name is required.")
     if (!data.fiscalYear?.trim()) throw new Error("Fiscal year is required.")
@@ -499,6 +501,7 @@ export async function updateBudget(
     }
 ) {
     const tenantId = await getTenantManagerId()
+    await assertTenantRefs(tenantId, { department: data.departmentId, account: data.items?.map((i) => i.accountId) })
 
     const existing = await prisma.budget.findFirst({
         where: { id, tenantId },

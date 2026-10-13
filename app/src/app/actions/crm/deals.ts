@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 
 export type DealStage =
@@ -97,13 +98,35 @@ export async function updateDeal(
   const supabase = await createClient()
   const tenantId = await getTenantWriterId()
 
-  const { error } = await supabase
+  const { data: before } = await supabase
+    .from("deals")
+    .select("stage")
+    .eq("id", id)
+    .eq("tenant_id", tenantId)
+    .single()
+
+  const { data: deal, error } = await supabase
     .from("deals")
     .update(formData)
     .eq("id", id)
     .eq("tenant_id", tenantId)
+    .select()
+    .single()
 
   if (error) return { error: error.message }
+
+  // Fire DEAL_WON / DEAL_LOST only on the transition into that stage
+  const closedEvent = deal?.stage === "CLOSED_WON" ? "DEAL_WON" : deal?.stage === "CLOSED_LOST" ? "DEAL_LOST" : null
+  if (closedEvent && before?.stage !== deal.stage) {
+    fireWorkflowEvent(tenantId, closedEvent, {
+      amount: Number(deal.value) || 0,
+      dealName: deal.title,
+      stage: deal.stage,
+      company: deal.company,
+      contactName: deal.contact_name,
+    }, id)
+  }
+
   revalidatePath("/crm/deals")
   return { error: null }
 }

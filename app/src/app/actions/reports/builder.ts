@@ -207,7 +207,7 @@ export async function runCustomReportQuery(config: ReportConfig): Promise<Report
     }
 
     // 2. In-memory dynamic filtering
-    let filtered = rawData.filter(row => {
+    const filtered = rawData.filter(row => {
         if (!config.filters || config.filters.length === 0) return true
         return config.filters.every(f => {
             const val = row[f.field]

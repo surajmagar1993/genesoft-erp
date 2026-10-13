@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
+import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 
@@ -88,6 +90,11 @@ export async function getPaymentsByInvoice(invoiceId: string): Promise<PaymentDB
 export async function createPayment(payload: CreatePaymentPayload): Promise<{ id: string | null; error: string | null }> {
   const supabase = await createClient()
   const tenantId = await getTenantWriterId()
+  try {
+    await assertTenantRefs(tenantId, { invoice: payload.invoice_id, bill: payload.bill_id, contact: payload.contact_id })
+  } catch (refError) {
+    return { id: null, error: refError instanceof Error ? refError.message : "Invalid reference" }
+  }
 
   // 1. Insert Payment
   const { data: payment, error: paymentError } = await supabase
@@ -135,9 +142,21 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<{ id
     revalidatePath(`/finance/bills/${payload.bill_id}`)
   }
 
+  const isInboundPayment = payload.type === "INBOUND" || (!payload.type && !!payload.invoice_id)
+  if (isInboundPayment) {
+    const customer = payload.contact_id
+      ? await prisma.contact.findFirst({ where: { id: payload.contact_id, tenantId }, select: { displayName: true } })
+      : null
+    fireWorkflowEvent(tenantId, "PAYMENT_RECEIVED", {
+      amount: payload.amount,
+      paymentMethod: payload.payment_method,
+      customerName: customer?.displayName ?? null,
+    }, payment.id)
+  }
+
   revalidatePath("/finance/payments")
   revalidatePath("/finance/payable")
-  
+
   return { id: payment.id, error: null }
 }
 

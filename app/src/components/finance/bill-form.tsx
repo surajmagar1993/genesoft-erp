@@ -290,7 +290,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
                   {items.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                        No items added. Click "Add Line" to begin.
+                        No items added. Click &quot;Add Line&quot; to begin.
                       </TableCell>
                     </TableRow>
                   ) : (

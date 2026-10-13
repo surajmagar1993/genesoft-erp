@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import {
     ProjectStatus,
@@ -812,6 +813,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
 export async function createProject(input: CreateProjectInput): Promise<{ success: boolean; projectId?: string; error?: string }> {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { contact: input.clientId, employee: input.managerId })
 
         // Auto-generate project code
         const count = await prisma.project.count({ where: { tenantId } })
@@ -861,6 +863,7 @@ export async function createProject(input: CreateProjectInput): Promise<{ succes
 export async function updateProject(id: string, input: UpdateProjectInput): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { contact: input.clientId, employee: input.managerId })
 
         await prisma.project.update({
             where: { id, tenantId },
@@ -970,6 +973,7 @@ export async function updateProjectTaskStatus(id: string, newStatus: ProjectTask
 export async function updateProjectTask(id: string, input: UpdateProjectTaskInput): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { projectMilestone: input.milestoneId, employee: input.assignedEmployeeId })
 
         await prisma.projectTask.update({
             where: { id, tenantId },
@@ -1021,6 +1025,7 @@ export async function deleteProjectTask(id: string): Promise<{ success: boolean;
 export async function createMilestone(input: CreateMilestoneInput): Promise<{ success: boolean; milestoneId?: string; error?: string }> {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { project: input.projectId })
 
         const milestone = await prisma.projectMilestone.create({
             data: {
@@ -1094,6 +1099,7 @@ export async function deleteMilestone(id: string): Promise<{ success: boolean; e
 export async function addProjectMember(projectId: string, employeeId: string, role: string = "Team Member", hourlyRate?: number): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { project: projectId, employee: employeeId })
 
         await prisma.projectMember.create({
             data: {
@@ -1138,6 +1144,7 @@ export async function removeProjectMember(memberId: string): Promise<{ success: 
 export async function logProjectTime(input: LogTimeInput): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { project: input.projectId, projectTask: input.taskId, employee: input.employeeId })
 
         await prisma.$transaction(async (tx: any) => {
             await tx.projectTimeEntry.create({

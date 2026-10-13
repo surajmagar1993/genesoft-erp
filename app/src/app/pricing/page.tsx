@@ -174,7 +174,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                 </Link>
 
                 <div className="space-y-4">
-                  <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">What's Included:</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">What&apos;s Included:</p>
                   {(tierFeatures[plan.tier as Plan] || []).map(feature => (
                     <div key={feature} className="flex items-start gap-3">
                       <div className="mt-1 flex-shrink-0 w-4 h-4 rounded-full bg-green-500/10 flex items-center justify-center">

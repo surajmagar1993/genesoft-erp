@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { fireStockAlert } from "@/lib/workflow-engine"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { StockMovementType } from "@prisma/client"
@@ -441,7 +442,7 @@ export async function adjustStock(data: {
     if (!ownsWarehouse) throw new Error("Warehouse not found")
 
     // Fetch or create warehouse stock record
-    let warehouseStock = await prisma.warehouseStock.findUnique({
+    const warehouseStock = await prisma.warehouseStock.findUnique({
         where: {
             warehouseId_productId: {
                 warehouseId: data.warehouseId,
@@ -530,6 +531,16 @@ export async function adjustStock(data: {
             }
         })
     ])
+
+    fireStockAlert(tenantId, {
+        productId: product.id,
+        sku: product.sku,
+        category: product.category,
+        name: product.name,
+        before: prevWarehouseQty,
+        after: newWarehouseQty,
+        reorderPoint: data.reorderPoint ?? (warehouseStock ? Number(warehouseStock.reorderPoint) : 10),
+    })
 
     revalidatePath("/inventory")
     revalidatePath("/sales/products")
@@ -643,6 +654,20 @@ export async function transferStock(data: {
             }
         })
     ])
+
+    const transferred = await prisma.product.findFirst({
+        where: { id: data.productId, tenantId },
+        select: { sku: true, category: true, name: true },
+    })
+    if (transferred && sourceStock) {
+        fireStockAlert(tenantId, {
+            productId: data.productId,
+            ...transferred,
+            before: sourceQty,
+            after: newSourceQty,
+            reorderPoint: Number(sourceStock.reorderPoint),
+        })
+    }
 
     revalidatePath("/inventory")
     return { success: true, newSourceQty, newDestQty }

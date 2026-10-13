@@ -3,6 +3,9 @@
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantAdminId, getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { syncImapMailbox } from "@/lib/imap-sync"
+import { assertTenantRefs } from "@/lib/tenant-refs"
+import { deliverTenantEmail, findForeignLink } from "@/lib/email-delivery"
 import { openSecret, sealSecret } from "@/lib/secret-box"
 import { revalidatePath } from "next/cache"
 import { checkSmtpTarget } from "@/lib/smtp-guard"
@@ -263,27 +266,6 @@ export async function getEmailsOverview(
 // SEND EMAIL ACTION
 // ============================================
 
-/**
- * Rejects caller-supplied record IDs that belong to another tenant.
- * Returns an error message, or null when every provided ID is the caller's own.
- */
-async function findForeignLink(
-    tenantId: string,
-    links: { emailAccountId?: string | null; contactId?: string | null; leadId?: string | null; dealId?: string | null }
-): Promise<string | null> {
-    const [account, contact, lead, deal] = await Promise.all([
-        links.emailAccountId ? prisma.emailAccount.count({ where: { id: links.emailAccountId, tenantId } }) : 1,
-        links.contactId ? prisma.contact.count({ where: { id: links.contactId, tenantId } }) : 1,
-        links.leadId ? prisma.lead.count({ where: { id: links.leadId, tenantId } }) : 1,
-        links.dealId ? prisma.deal.count({ where: { id: links.dealId, tenantId } }) : 1,
-    ])
-    if (!account) return "Mailbox not found"
-    if (!contact) return "Contact not found"
-    if (!lead) return "Lead not found"
-    if (!deal) return "Deal not found"
-    return null
-}
-
 export async function sendEmail(data: SendEmailInput): Promise<{
     success?: boolean
     messageId?: string
@@ -291,140 +273,14 @@ export async function sendEmail(data: SendEmailInput): Promise<{
 }> {
     try {
         const tenantId = await getTenantWriterId()
-        if (!tenantId) return { error: "Authentication required" }
+        await assertTenantRefs(tenantId, { contact: data.contactId, lead: data.leadId, deal: data.dealId })
 
-        if (!data.toEmail?.trim()) return { error: "Recipient email is required" }
-        if (!data.subject?.trim()) return { error: "Subject is required" }
-        const finalBodyText = data.bodyText || data.bodyHtml?.replace(/<[^>]*>?/gm, "") || ""
-        const finalBodyHtml = data.bodyHtml || `<p>${finalBodyText.replace(/\n/g, "<br/>")}</p>`
-        if (!finalBodyText.trim() && !data.bodyHtml?.trim()) return { error: "Email body content is required" }
-
-        const foreignLink = await findForeignLink(tenantId, data)
-        if (foreignLink) return { error: foreignLink }
-
-        // Find or default account
-        let emailAccountId = data.emailAccountId
-        let senderEmail = "sales@acmeglobal.com"
-        let senderName = "Genesoft Sales"
-        let accountRecord: any = null
-
-        if (emailAccountId) {
-            accountRecord = await prisma.emailAccount.findFirst({ where: { id: emailAccountId, tenantId } })
-            if (accountRecord) {
-                senderEmail = accountRecord.email
-                senderName = accountRecord.name
-            }
-        } else {
-            accountRecord = await prisma.emailAccount.findFirst({
-                where: { tenantId, isDefault: true },
-            })
-            if (accountRecord) {
-                emailAccountId = accountRecord.id
-                senderEmail = accountRecord.email
-                senderName = accountRecord.name
-            }
+        const result = await deliverTenantEmail(tenantId, data)
+        if (result.success) {
+            revalidatePath("/crm/emails")
+            revalidatePath("/crm/contacts")
         }
-
-        // Live SMTP delivery if real SMTP credentials are provided
-        if (
-            accountRecord?.smtpHost &&
-            accountRecord.smtpPassword &&
-            !accountRecord.smtpHost.includes(".local")
-        ) {
-            const blocked = await checkSmtpTarget(accountRecord.smtpHost, Number(accountRecord.smtpPort) || 587)
-            if (blocked) return { error: blocked }
-
-            try {
-                const nodemailer = await import("nodemailer")
-                const transporter = nodemailer.createTransport({
-                    host: accountRecord.smtpHost.trim(),
-                    port: Number(accountRecord.smtpPort) || 587,
-                    secure: accountRecord.smtpSecure ?? (Number(accountRecord.smtpPort) === 465),
-                    auth: {
-                        user: accountRecord.smtpUser?.trim() || accountRecord.email.trim(),
-                        pass: openSecret(accountRecord.smtpPassword).trim(),
-                    },
-                    connectionTimeout: 10000,
-                })
-
-                await transporter.sendMail({
-                    from: `"${senderName}" <${senderEmail}>`,
-                    to: data.toEmail.trim(),
-                    cc: data.cc?.trim() || undefined,
-                    bcc: data.bcc?.trim() || undefined,
-                    subject: data.subject.trim(),
-                    text: finalBodyText,
-                    html: finalBodyHtml,
-                })
-            } catch (smtpErr: any) {
-                console.error("Live SMTP dispatch error:", smtpErr)
-                return { error: `SMTP Dispatch failed: ${smtpErr.message || "Could not connect to SMTP server"}` }
-            }
-        }
-
-        // Automatic Contact Matcher if contactId not provided
-        let resolvedContactId = data.contactId || null
-        if (!resolvedContactId) {
-            const matchedContact = await prisma.contact.findFirst({
-                where: { tenantId, email: data.toEmail.trim().toLowerCase() },
-            })
-            if (matchedContact) {
-                resolvedContactId = matchedContact.id
-            }
-        }
-
-        const now = new Date()
-        const threadId = data.threadId || `thread_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
-
-        const createdMessage = await prisma.$transaction(async (tx: any) => {
-            const msg = await tx.emailMessage.create({
-                data: {
-                    tenantId,
-                    emailAccountId,
-                    direction: EmailDirection.OUTBOUND,
-                    status: EmailStatus.SENT,
-                    fromEmail: senderEmail,
-                    fromName: senderName,
-                    toEmail: data.toEmail.trim().toLowerCase(),
-                    toName: data.toName?.trim() || null,
-                    cc: data.cc?.trim() || null,
-                    bcc: data.bcc?.trim() || null,
-                    subject: data.subject.trim(),
-                    bodyHtml: finalBodyHtml,
-                    bodyText: finalBodyText,
-                    threadId,
-                    inReplyTo: data.inReplyTo || null,
-                    sentAt: now,
-                    deliveredAt: now,
-                    openCount: 0,
-                    contactId: resolvedContactId,
-                    leadId: data.leadId || null,
-                    dealId: data.dealId || null,
-                },
-            })
-
-            // Record to CommunicationLog for unified CRM timeline parity
-            await tx.communicationLog.create({
-                data: {
-                    tenantId,
-                    type: CommunicationType.EMAIL,
-                    subject: data.subject.trim(),
-                    content: finalBodyText,
-                    loggedAt: now,
-                    loggedBy: senderName,
-                    contactId: resolvedContactId,
-                    leadId: data.leadId || null,
-                    dealId: data.dealId || null,
-                },
-            })
-
-            return msg
-        })
-
-        revalidatePath("/crm/emails")
-        revalidatePath("/crm/contacts")
-
-        return { success: true, messageId: createdMessage.id }
+        return result
     } catch (err: any) {
         console.error("sendEmail error:", err)
         return { error: err.message || "Failed to send email" }
@@ -442,6 +298,7 @@ export async function saveEmailDraft(data: Partial<SendEmailInput>): Promise<{
 }> {
     try {
         const tenantId = await getTenantWriterId()
+        await assertTenantRefs(tenantId, { contact: data.contactId, lead: data.leadId, deal: data.dealId, emailAccount: data.emailAccountId })
         if (!tenantId) return { error: "Authentication required" }
 
         const foreignLink = await findForeignLink(tenantId, data)
@@ -529,11 +386,12 @@ export async function syncMailbox(mailboxId: string): Promise<{
 }> {
     try {
         const tenantId = await getTenantWriterId()
-        const exists = await prisma.emailAccount.count({ where: { id: mailboxId, tenantId } })
-        if (!exists) return { error: "Mailbox not found" }
+        const account = await prisma.emailAccount.findFirst({ where: { id: mailboxId, tenantId } })
+        if (!account) return { error: "Mailbox not found" }
 
-        // No IMAP client is wired up yet; say so instead of reporting a fake sync
-        return { error: "Inbox sync isn't available yet. Emails you send from here are still logged." }
+        const { syncedCount } = await syncImapMailbox(account)
+        revalidatePath("/crm/emails")
+        return { success: true, syncedCount }
     } catch (err: any) {
         console.error("syncMailbox error:", err)
         return { error: err.message || "Failed to sync mailbox" }

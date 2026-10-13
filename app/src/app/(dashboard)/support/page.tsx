@@ -27,14 +27,14 @@ export default function SupportPage() {
 
   const { messages: liveMessages } = useChatMessages(selectedTicket?.id || null, selectedTicket?.messages || [])
 
-  useEffect(() => {
-    loadTickets()
-  }, [])
-
   const loadTickets = async () => {
     const data = await getTickets()
     setTickets(data)
   }
+
+  useEffect(() => {
+    loadTickets()
+  }, [])
 
   const handleCreateTicket = async () => {
     if (!subject || !initialMsg) return
@@ -212,7 +212,7 @@ export default function SupportPage() {
              <Card className="w-full max-w-lg border-none shadow-none">
                 <CardHeader>
                    <CardTitle className="text-2xl font-bold">New Support Ticket</CardTitle>
-                   <CardDescription>Tell us what's wrong and we'll get back to you within 24 hours.</CardDescription>
+                   <CardDescription>Tell us what&apos;s wrong and we&apos;ll get back to you within 24 hours.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                    <div className="space-y-2">

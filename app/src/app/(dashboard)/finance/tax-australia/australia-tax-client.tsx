@@ -603,12 +603,12 @@ export function AustraliaTaxClient({ initialData }: Props) {
               <div className="p-3.5 rounded-lg border border-border bg-muted/20 space-y-2">
                 <div className="font-bold text-foreground">ATO Mandatory Requirements:</div>
                 <ul className="space-y-1 list-disc list-inside text-muted-foreground">
-                  <li>Must state that the document is intended to be a <strong>"Tax Invoice"</strong></li>
-                  <li>Seller's identity and <strong>Australian Business Number (ABN)</strong></li>
+                  <li>Must state that the document is intended to be a <strong>&quot;Tax Invoice&quot;</strong></li>
+                  <li>Seller&apos;s identity and <strong>Australian Business Number (ABN)</strong></li>
                   <li>Date of issue of the invoice</li>
                   <li>Brief description of items sold, quantity, and price</li>
-                  <li>The GST amount payable (or statement: <em>"Total price includes GST"</em>)</li>
-                  <li>If total exceeds <strong>$1,000 AUD</strong>, buyer's identity or buyer's ABN must be shown</li>
+                  <li>The GST amount payable (or statement: <em>&quot;Total price includes GST&quot;</em>)</li>
+                  <li>If total exceeds <strong>$1,000 AUD</strong>, buyer&apos;s identity or buyer&apos;s ABN must be shown</li>
                 </ul>
               </div>
 

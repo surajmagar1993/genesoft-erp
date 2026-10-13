@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
             <div className="prose prose-slate dark:prose-invert max-w-none space-y-6 text-slate-600 dark:text-slate-300">
               <p className="leading-relaxed">
-                At Genesoft Infotech Private Limited ("Genesoft", "we", "us", "our"), we prioritize your privacy. This Privacy Policy details how we collect, store, share, and protect your information when you subscribe to our multi-tenant SaaS ERP & CRM application hosted at <a href="https://genesoftinfotech.com" className="text-orange-600 hover:underline">genesoftinfotech.com</a>.
+                At Genesoft Infotech Private Limited (&quot;Genesoft&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;), we prioritize your privacy. This Privacy Policy details how we collect, store, share, and protect your information when you subscribe to our multi-tenant SaaS ERP & CRM application hosted at <a href="https://genesoftinfotech.com" className="text-orange-600 hover:underline">genesoftinfotech.com</a>.
               </p>
 
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">1. Information We Collect and Process</h2>
@@ -28,7 +28,7 @@ export default function PrivacyPage() {
 
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">2. Row-Level Security & Tenant Data Isolation</h2>
               <p className="leading-relaxed">
-                Our database architecture strictly enforces database-level Row-Level Security (RLS) policies. Every client environment is assigned a unique `tenant_id`. All read, write, update, and delete queries run with context-aware tenant filters. This mathematical isolation guarantees that your company's records are completely inaccessible by any other tenant user.
+                Our database architecture strictly enforces database-level Row-Level Security (RLS) policies. Every client environment is assigned a unique `tenant_id`. All read, write, update, and delete queries run with context-aware tenant filters. This mathematical isolation guarantees that your company&apos;s records are completely inaccessible by any other tenant user.
               </p>
 
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">3. Regulatory Compliance (GDPR, CCPA, DPDP Act)</h2>
@@ -36,7 +36,7 @@ export default function PrivacyPage() {
                 We align our data processing with major global standards:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>GDPR (EU)</strong>: You have the right to request deletion ("Right to be Forgotten"), access, or rectification of your personal data. Genesoft acts as the "Data Processor" and you act as the "Data Controller" for uploaded ERP files.</li>
+                <li><strong>GDPR (EU)</strong>: You have the right to request deletion (&quot;Right to be Forgotten&quot;), access, or rectification of your personal data. Genesoft acts as the &quot;Data Processor&quot; and you act as the &quot;Data Controller&quot; for uploaded ERP files.</li>
                 <li><strong>CCPA (USA)</strong>: We do not sell or monetize personal information or business logs. You may opt out of third-party analytical cookies.</li>
                 <li><strong>DPDP Act (India)</strong>: We process business records strictly under valid agreements for authorized corporate activities. Data is purged upon contract expiry.</li>
               </ul>

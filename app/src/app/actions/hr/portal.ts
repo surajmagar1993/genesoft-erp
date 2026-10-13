@@ -1,7 +1,8 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantRole } from "@/lib/get-tenant-id"
+import { PORTAL_MANAGER_ROLES, assertCanActForEmployee, findOwnEmployeeId, fireLeaveRequested } from "@/lib/employee-access"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import {
@@ -149,10 +150,13 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
         const tenantId = await getTenantId()
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
+        const isManager = PORTAL_MANAGER_ROLES.includes(await getTenantRole())
+        const ownEmployeeId = isManager ? null : await findOwnEmployeeId(tenantId)
+        if (!isManager && !ownEmployeeId) return null
 
-        // Fetch roster for manager switcher
+        // Fetch roster for manager switcher (staff only see themselves)
         const allEmpList = await prisma.employee.findMany({
-            where: { tenantId, status: EmployeeStatus.ACTIVE },
+            where: { tenantId, status: EmployeeStatus.ACTIVE, ...(isManager ? {} : { id: ownEmployeeId! }) },
             select: {
                 id: true,
                 displayName: true,
@@ -173,9 +177,9 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
 
         // Resolve active employee
         let targetEmployee = null
-        if (overrideEmployeeId) {
+        if (overrideEmployeeId || ownEmployeeId) {
             targetEmployee = await prisma.employee.findFirst({
-                where: { id: overrideEmployeeId, tenantId },
+                where: { id: isManager ? overrideEmployeeId : ownEmployeeId!, tenantId },
                 include: {
                     department: { select: { name: true } },
                     designation: { select: { title: true } },
@@ -201,7 +205,7 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
             })
         }
 
-        if (!targetEmployee) {
+        if (!targetEmployee && isManager) {
             // Fallback to first active employee
             targetEmployee = await prisma.employee.findFirst({
                 where: { tenantId, status: EmployeeStatus.ACTIVE },
@@ -423,6 +427,7 @@ export async function clockInEmployee(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantId()
+        await assertCanActForEmployee(tenantId, employeeId)
         const todayStart = startOfDay(new Date())
         const todayEnd = endOfDay(new Date())
 
@@ -476,6 +481,7 @@ export async function clockOutEmployee(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantId()
+        await assertCanActForEmployee(tenantId, employeeId)
         const todayStart = startOfDay(new Date())
         const todayEnd = endOfDay(new Date())
 
@@ -540,6 +546,7 @@ export async function applyEmployeeLeave(input: {
 }): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantId()
+        await assertCanActForEmployee(tenantId, input.employeeId)
 
         if (!input.reason.trim()) {
             return { success: false, error: "Please provide a reason for leave" }
@@ -555,7 +562,7 @@ export async function applyEmployeeLeave(input: {
         // Calculate business days inclusive
         const diff = Math.max(differenceInBusinessDays(end, start) + 1, 1)
 
-        await prisma.leave.create({
+        const newLeave = await prisma.leave.create({
             data: {
                 tenantId,
                 employeeId: input.employeeId,
@@ -567,6 +574,8 @@ export async function applyEmployeeLeave(input: {
                 status: LeaveStatus.PENDING
             }
         })
+
+        await fireLeaveRequested(tenantId, newLeave.id, input.employeeId, input.type, diff)
 
         revalidatePath("/hr/portal")
         revalidatePath("/hr")
@@ -586,6 +595,18 @@ export async function updatePortalTaskStatus(
 ): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantId()
+
+        const task = await prisma.projectTask.findFirst({
+            where: { id: taskId, tenantId },
+            select: { assignedEmployeeId: true },
+        })
+        if (!task) return { success: false, error: "Task not found" }
+        if (!PORTAL_MANAGER_ROLES.includes(await getTenantRole())) {
+            const own = await findOwnEmployeeId(tenantId)
+            if (!own || task.assignedEmployeeId !== own) {
+                return { success: false, error: "You can only update tasks assigned to you." }
+            }
+        }
 
         await prisma.projectTask.update({
             where: { id: taskId, tenantId },

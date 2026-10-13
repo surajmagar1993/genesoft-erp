@@ -81,6 +81,7 @@ import {
 } from "@/lib/eway-bill-engine"
 import { COMPANY } from "@/lib/constants/company"
 import { generateQrCodeDataUrl } from "@/lib/barcode/qrcode"
+import { RequireRole } from "@/components/auth/role-context"
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
@@ -625,7 +626,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                                 >
                                   Vehicle
                                 </Button>
-                                <Button
+                                <RequireRole min="MANAGER"><Button
                                   variant="ghost"
                                   size="sm"
                                   className="h-7 text-xs px-2 text-destructive hover:bg-destructive/10"
@@ -635,7 +636,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                                   }}
                                 >
                                   Cancel
-                                </Button>
+                                </Button></RequireRole>
                               </>
                             )}
                           </div>
@@ -1446,9 +1447,9 @@ export function EwayClient({ initialData }: EwayClientProps) {
               />
             </div>
             <DialogFooter className="pt-4">
-              <Button type="button" variant="outline" onClick={() => setCancelModalOpen(false)}>
+              <RequireRole min="MANAGER"><Button type="button" variant="outline" onClick={() => setCancelModalOpen(false)}>
                 Go Back
-              </Button>
+              </Button></RequireRole>
               <Button type="submit" variant="destructive" disabled={isPending}>
                 Confirm Cancellation
               </Button>

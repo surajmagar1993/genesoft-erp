@@ -4,6 +4,7 @@ import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { fromSmallestCurrencyUnit } from "@/lib/payment-gateway-engine"
+import { planForSubscription, subscriptionStanding, type PaidPlan } from "@/lib/stripe-plans"
 
 export const dynamic = "force-dynamic"
 
@@ -101,12 +102,13 @@ export async function POST(req: Request) {
         return new NextResponse("Tenant ID missing in metadata", { status: 400 })
       }
 
+      const plan = planForSubscription(subscription) ?? (session.metadata.plan as PaidPlan | undefined)
       await prisma.tenant.update({
         where: { id: session.metadata.tenantId },
         data: {
           stripeSubscriptionId: subscription.id,
           stripeCustomerId: subscription.customer as string,
-          plan: "PRO",
+          ...(plan ? { plan } : {}),
           isTrial: false,
         },
       })
@@ -121,13 +123,17 @@ export async function POST(req: Request) {
     })
 
     if (tenant) {
-      await prisma.tenant.update({
-        where: { id: tenant.id },
-        data: {
-          plan: subscription.status === "active" ? "PRO" : "FREE",
-          isActive: subscription.status === "active",
-        },
-      })
+      // A failed renewal (past_due) keeps the plan while Stripe retries; only
+      // a cancelled/expired subscription drops to FREE. Suspending a workspace
+      // (isActive) is an admin decision, never a billing side effect.
+      const standing = subscriptionStanding(subscription.status)
+      const plan = standing === "paid" ? planForSubscription(subscription) : standing === "ended" ? "FREE" : null
+      if (plan) {
+        await prisma.tenant.update({
+          where: { id: tenant.id },
+          data: { plan },
+        })
+      }
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import { RfqStatus, RfqVendorStatus, PurchaseOrderStatus } from "@prisma/client"
 
@@ -364,6 +365,7 @@ export async function getRfqOverview(): Promise<RfqOverviewData> {
  */
 export async function createRfq(input: CreateRfqInput) {
     const tenantId = await getTenantWriterId()
+    await assertTenantRefs(tenantId, { contact: input.invitedVendorIds, product: input.items.map((i) => i.productId) })
 
     if (!input.title?.trim()) {
         throw new Error("RFQ title is required")

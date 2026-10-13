@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 
 export type LeadStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST"
@@ -86,6 +87,14 @@ export async function createLead(
     .single()
 
   if (error) return { error: error.message }
+
+  fireWorkflowEvent(tenantId, "LEAD_CREATED", {
+    source: formData.source,
+    leadScore: formData.score,
+    company: formData.title,
+    contactName: formData.contact_name,
+    estimatedValue: formData.estimated_value,
+  }, lead?.id)
 
   // Create notification
   const { data: { user } } = await supabase.auth.getUser()

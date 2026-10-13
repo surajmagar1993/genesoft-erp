@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import {
     ChallanReason,
@@ -341,6 +342,7 @@ export interface CreateDeliveryChallanInput {
  */
 export async function createDeliveryChallan(input: CreateDeliveryChallanInput) {
     const tenantId = await getTenantWriterId()
+    await assertTenantRefs(tenantId, { contact: input.contactId, warehouse: input.sourceWarehouseId, salesOrder: input.salesOrderId, product: input.items.map((i) => i.productId) })
 
     if (!input.items || input.items.length === 0) {
         throw new Error("Delivery challan must contain at least one line item.")

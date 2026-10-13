@@ -159,9 +159,9 @@ export default function AccountsClient({ initialAccounts }: Props) {
               Seed Default CoA
             </Button></RequireRole>
           )}
-          <Button onClick={() => router.push("/finance/accounts/new")}>
+          <RequireRole min="MANAGER"><Button onClick={() => router.push("/finance/accounts/new")}>
             <Plus className="h-4 w-4 mr-2" /> New Account
-          </Button>
+          </Button></RequireRole>
         </div>
       </div>
 
@@ -319,9 +319,9 @@ export default function AccountsClient({ initialAccounts }: Props) {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => router.push(`/finance/accounts/${account.id}/edit`)}>
+                            <RequireRole min="MANAGER"><DropdownMenuItem onClick={() => router.push(`/finance/accounts/${account.id}/edit`)}>
                               <Pencil className="h-4 w-4 mr-2" /> Edit
-                            </DropdownMenuItem>
+                            </DropdownMenuItem></RequireRole>
                             {!account.is_system && (
                               <>
                                 <DropdownMenuSeparator />

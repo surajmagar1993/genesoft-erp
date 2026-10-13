@@ -210,7 +210,7 @@ export default function TaxConfigClient() {
                     </div>
                     <div className="max-w-xs mx-auto">
                         <p className="font-semibold text-muted-foreground">No tax groups configured.</p>
-                        <p className="text-xs text-muted-foreground mt-1">Add your country's GST/VAT rates to start generating quotes with accurate totals.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Add your country&apos;s GST/VAT rates to start generating quotes with accurate totals.</p>
                     </div>
                     <Button onClick={() => setIsAdding(true)} variant="outline">Setup Your First Tax Group</Button>
                 </div>

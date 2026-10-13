@@ -296,7 +296,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
         if (!activeAccount) return
 
         // Parse CSV or build manual lines
-        let parsedLines: any[] = []
+        const parsedLines: any[] = []
         if (importForm.csvText.trim()) {
             const rows = importForm.csvText.trim().split("\n")
             for (let i = 0; i < rows.length; i++) {

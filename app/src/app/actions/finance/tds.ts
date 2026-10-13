@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import {
   TDS_SECTIONS,
@@ -354,6 +355,7 @@ export async function recordTdsDeduction(input: {
 }): Promise<{ success: boolean; deduction?: TdsDeductionRecord; error?: string }> {
   try {
     const tenantId = await getTenantWriterId()
+    await assertTenantRefs(tenantId, { contact: input.contactId, bill: input.billId, payment: input.paymentId })
     const gross = Number(input.grossAmount)
     if (isNaN(gross) || gross <= 0) {
       return { success: false, error: "Gross amount must be greater than zero." }

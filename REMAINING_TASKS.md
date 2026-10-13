@@ -129,15 +129,16 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 ## ⚠️ Known Gaps in "Complete" Modules (review 2026-10-13)
 These are marked done above but are simulated or not enforced. The UI now says so where users would be misled.
 - [ ] **E-Way Bills**: numbers are local draft references; integrate the NIC E-Way Bill API (or rely on the JSON bulk upload) to issue real ones.
-- [ ] **Workflow Automation**: rules are stored and simulated, but no module fires them on real events.
-- [ ] **CRM Email**: IMAP inbox sync and open tracking aren't implemented (`syncMailbox` reports "not available"). Sending via SMTP works.
+- [x] **Workflow Automation**: rules fire on real events and a daily cron (2026-10-13). Left: "update status" actions only run in the simulator.
+- [x] **CRM Email**: IMAP inbox sync works (manual + daily cron); sending without an SMTP mailbox now errors instead of logging a fake send (2026-10-13). Left: open tracking.
 - [ ] **Stripe / PayPal invoice checkout**: live mode isn't wired to the gateway APIs; portal online payment is switched off.
-- [ ] **Stripe SaaS billing**: webhook always sets plan `PRO` and deactivates the tenant on a failed renewal.
-- [ ] **Platform Security (`/admin/security`)**: 2FA, session timeout, rate limits, IP blocklist, maintenance mode and the signup switch are stored but not enforced.
-- [ ] **Web Forms**: no rate limiting; the reCAPTCHA/Turnstile secret is saved but never verified; alert emails embed unescaped visitor input.
-- [ ] **Recurring invoices**: no scheduled job (no `vercel.json` cron); profiles only run when someone clicks "Run due".
-- [ ] **Tests**: there are no automated tests.
-- [ ] **Dependencies**: `npm audit` reports 14 high / 9 moderate; `npm audit fix` rewrites the workspace lockfile, so do it as a coordinated change.
+- [x] **Stripe SaaS billing**: plan comes from the price (`STRIPE_PRICE_*`); a failed renewal keeps the plan (2026-10-13).
+- [ ] **Platform Security (`/admin/security`)**: IP blocklist, maintenance mode and the signup switch are enforced (2026-10-13). 2FA, session timeout, login lockout and API rate limits are still stored only (labelled in the UI).
+- [x] **Web Forms**: 5 submissions / 10 min per IP, alert emails escaped and actually sent (2026-10-13). Left: CAPTCHA (the fake settings card was removed).
+- [x] **Recurring invoices**: due profiles run in the daily cron (2026-10-13).
+- [ ] **Tests**: Vitest unit tests cover the security and workflow libraries (`npm test`); no UI or integration tests yet.
+- [ ] **Lint**: 1021 errors, 983 of them `no-explicit-any`; the rest are React Compiler advisories (`set-state-in-effect`, `purity`).
+- [ ] **Dependencies**: non-breaking `npm audit fix` applied in `app/` (48 → 22). The rest are inside the Prisma 7.4 CLI and dev-only shadcn / eslint-config-next and need major upgrades.
 
 ---
 

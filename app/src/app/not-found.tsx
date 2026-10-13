@@ -31,7 +31,7 @@ export default function NotFound() {
                             </CardTitle>
                         </div>
                         <CardDescription className="text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">
-                            The page you are looking for doesn't exist, has been moved, or you might not have authorization to view it.
+                            The page you are looking for doesn&apos;t exist, has been moved, or you might not have authorization to view it.
                         </CardDescription>
                     </CardHeader>
 

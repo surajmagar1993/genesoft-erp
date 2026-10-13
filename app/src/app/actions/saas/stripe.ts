@@ -5,27 +5,24 @@ import { getTenantAdminId } from "@/lib/get-tenant-id"
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-
-/**
- * Stripe Plans Mapping (Mock IDs for Phase 1 MVP)
- * In production, these would be in .env or fetched from a 'pricing_plans' table
- */
-const STRIPE_PLANS: Record<string, string> = {
-  STARTER: "price_starter_id",
-  PRO: "price_pro_id",
-  ENTERPRISE: "price_enterprise_id",
-}
+import { stripePriceIds, type PaidPlan } from "@/lib/stripe-plans"
 
 /**
  * Generate a Stripe Checkout Session for a new subscription
  */
-export async function createCheckoutSession(plan: "STARTER" | "PRO" | "ENTERPRISE"): Promise<{ url: string | null }> {
+export async function createCheckoutSession(plan: PaidPlan | "STARTER"): Promise<{ url: string | null }> {
   const tenantId = await getTenantAdminId()
+  // "STARTER" is the old name for BASIC (the Plan enum has no STARTER)
+  const paidPlan: PaidPlan = plan === "STARTER" ? "BASIC" : plan
+  const priceId = stripePriceIds()[paidPlan]
   const successUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=billing&success=true`
   const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=billing&canceled=true`
 
   if (!stripe) {
     throw new Error("Stripe is not configured. Please add STRIPE_SECRET_KEY to your environment variables.")
+  }
+  if (!priceId) {
+    throw new Error(`No Stripe price is configured for the ${paidPlan} plan (STRIPE_PRICE_${paidPlan}).`)
   }
 
   const tenant = await prisma.tenant.findUnique({
@@ -52,14 +49,15 @@ export async function createCheckoutSession(plan: "STARTER" | "PRO" | "ENTERPRIS
     customer: customerId,
     line_items: [
       {
-        price: STRIPE_PLANS[plan],
+        price: priceId,
         quantity: 1,
       },
     ],
     mode: "subscription",
     success_url: successUrl,
     cancel_url: cancelUrl,
-    metadata: { tenantId }
+    metadata: { tenantId, plan: paidPlan },
+    subscription_data: { metadata: { tenantId, plan: paidPlan } }
   })
 
   return { url: session.url }

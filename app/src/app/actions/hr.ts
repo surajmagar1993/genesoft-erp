@@ -1,8 +1,11 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { assertCanActForEmployee, fireLeaveRequested } from "@/lib/employee-access"
+import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import {
@@ -406,6 +409,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
  */
 export async function createEmployee(data: CreateEmployeeInput) {
     const tenantId = await getTenantManagerId()
+    await assertTenantRefs(tenantId, { department: data.departmentId, designation: data.designationId, employee: data.managerId })
 
     if (!data.firstName?.trim()) throw new Error("First name is required")
     if (!data.email?.trim()) throw new Error("Work email is required")
@@ -453,6 +457,16 @@ export async function createEmployee(data: CreateEmployeeInput) {
         }
     })
 
+    const [department, designation] = await Promise.all([
+        newEmployee.departmentId ? prisma.department.findFirst({ where: { id: newEmployee.departmentId, tenantId }, select: { name: true } }) : null,
+        newEmployee.designationId ? prisma.designation.findFirst({ where: { id: newEmployee.designationId, tenantId }, select: { title: true } }) : null,
+    ])
+    fireWorkflowEvent(tenantId, "EMPLOYEE_JOINED", {
+        employeeName: newEmployee.displayName,
+        department: department?.name ?? null,
+        designation: designation?.title ?? null,
+    }, newEmployee.id)
+
     revalidatePath("/hr")
     return { success: true, employee: newEmployee }
 }
@@ -462,6 +476,7 @@ export async function createEmployee(data: CreateEmployeeInput) {
  */
 export async function updateEmployee(employeeId: string, data: UpdateEmployeeInput) {
     const tenantId = await getTenantManagerId()
+    await assertTenantRefs(tenantId, { employee: [employeeId, data.managerId], department: data.departmentId, designation: data.designationId })
 
     const existing = await prisma.employee.findFirst({
         where: { id: employeeId, tenantId }
@@ -509,6 +524,7 @@ export async function createDepartment(data: {
     managerId?: string
 }) {
     const tenantId = await getTenantManagerId()
+    await assertTenantRefs(tenantId, { employee: data.managerId })
 
     if (!data.name?.trim()) throw new Error("Department name is required")
 
@@ -536,6 +552,7 @@ export async function createDesignation(data: {
     description?: string
 }) {
     const tenantId = await getTenantManagerId()
+    await assertTenantRefs(tenantId, { department: data.departmentId })
 
     if (!data.title?.trim()) throw new Error("Designation title is required")
 
@@ -564,6 +581,7 @@ export async function recordAttendance(data: {
     notes?: string
 }) {
     const tenantId = await getTenantManagerId()
+    await assertTenantRefs(tenantId, { employee: data.employeeId })
 
     const targetDate = new Date(data.date)
     const normalizedDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
@@ -631,6 +649,7 @@ export async function submitLeaveRequest(data: {
     reason: string
 }) {
     const tenantId = await getTenantWriterId()
+    await assertCanActForEmployee(tenantId, data.employeeId)
 
     if (!data.employeeId) throw new Error("Employee is required")
     if (!data.startDate || !data.endDate) throw new Error("Start and end dates are required")
@@ -655,6 +674,8 @@ export async function submitLeaveRequest(data: {
             status: "PENDING"
         }
     })
+
+    await fireLeaveRequested(tenantId, newLeave.id, data.employeeId, data.type, diffDays)
 
     revalidatePath("/hr")
     return { success: true, leave: newLeave }

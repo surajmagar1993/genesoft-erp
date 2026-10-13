@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantAdminId, getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
@@ -376,6 +377,13 @@ export async function createInvoice(
       }
     }
 
+    fireWorkflowEvent(tenantId, "INVOICE_CREATED", {
+      total: summary.grandTotal,
+      customerName: payload.customer_name,
+      status: invoice.status,
+      invoiceNumber: invoice.invoiceNumber,
+    }, invoice.id)
+
     revalidatePath("/sales/invoices")
     return { id: invoice.id, error: null }
   } catch (error: any) {
@@ -398,9 +406,9 @@ export async function updateInvoice(
     const isProforma = payload.type === "PROFORMA"
     const finalType: InvoiceTypeEnum = isProforma ? "PROFORMA" : "TAX_INVOICE"
 
-    let isTaxExempt = Boolean(payload.is_tax_exempt)
-    let taxExemptionReason = payload.tax_exemption_reason
-    let taxExemptionCertificate = payload.tax_exemption_certificate
+    const isTaxExempt = Boolean(payload.is_tax_exempt)
+    const taxExemptionReason = payload.tax_exemption_reason
+    const taxExemptionCertificate = payload.tax_exemption_certificate
 
     const items = payload.line_items.map((li) => ({
       qty: li.qty,
@@ -649,7 +657,7 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
 export async function sendInvoiceEmail(
   id: string
 ): Promise<{ error: string | null }> {
-  await getTenantWriterId()
+  const tenantId = await getTenantWriterId()
   const invoice = await getInvoiceById(id)
   if (!invoice) return { error: "Invoice not found" }
 
@@ -727,8 +735,8 @@ export async function sendInvoiceEmail(
   }
 
   // Update status in Prisma
-  await prisma.invoice.update({
-    where: { id },
+  await prisma.invoice.updateMany({
+    where: { id, tenantId },
     data: { status: "SENT" as any },
   })
 

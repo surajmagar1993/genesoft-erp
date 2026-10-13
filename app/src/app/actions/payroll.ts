@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { getTenantManagerId } from "@/lib/get-tenant-id"
+import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import {
@@ -321,6 +322,7 @@ export async function createSalaryStructure(data: {
  */
 export async function assignEmployeeSalary(employeeId: string, salaryStructureId: string, basicSalary?: number) {
     const tenantId = await getTenantManagerId()
+    await assertTenantRefs(tenantId, { employee: employeeId, salaryStructure: salaryStructureId })
 
     await prisma.employee.update({
         where: { id: employeeId, tenantId },

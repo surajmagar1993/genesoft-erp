@@ -232,7 +232,7 @@ export default function ExpensesClient({
             reference: string | null
         }[] = []
 
-        let running = Number(selectedAccount.balance) // Current or baseline
+        const running = Number(selectedAccount.balance) // Current or baseline
 
         // Find all lines across journal entries that reference this account
         for (const je of journalEntries) {

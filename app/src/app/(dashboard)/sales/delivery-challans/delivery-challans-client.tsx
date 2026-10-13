@@ -1219,7 +1219,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                             {/* Signatures */}
                             <div className="grid grid-cols-2 gap-8 pt-8 text-[11px]">
                                 <div className="border-t pt-2 text-center">
-                                    <p className="font-bold">Receiver's / Consignee's Signature</p>
+                                    <p className="font-bold">Receiver&apos;s / Consignee&apos;s Signature</p>
                                     <p className="text-[10px] text-gray-500">(Received goods in good condition)</p>
                                 </div>
                                 <div className="border-t pt-2 text-center">

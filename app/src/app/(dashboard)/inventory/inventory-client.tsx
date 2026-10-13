@@ -89,6 +89,7 @@ import { BatchSerialOverviewData } from "@/app/actions/batch-serial"
 import { BatchSerialTab } from "@/components/inventory/batch-serial-tab"
 import { formatCurrency } from "@/lib/utils"
 import { StockMovementType } from "@prisma/client"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface InventoryClientProps {
     initialData: InventoryOverviewData
@@ -616,14 +617,14 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                         <MoveRight className="h-4 w-4" />
                         Transfer Stock
                     </Button>
-                    <Button 
+                    <RequireRole min="MANAGER"><Button 
                         size="sm" 
                         className="gap-2"
                         onClick={openCreateWarehouse}
                     >
                         <Plus className="h-4 w-4" />
                         New Warehouse
-                    </Button>
+                    </Button></RequireRole>
                 </div>
             </div>
 
@@ -1002,14 +1003,14 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                                 {warehouse.code}
                                             </CardDescription>
                                         </div>
-                                        <Button 
+                                        <RequireRole min="MANAGER"><Button 
                                             variant="ghost" 
                                             size="icon" 
                                             className="h-7 w-7"
                                             onClick={() => openEditWarehouse(warehouse)}
                                         >
                                             <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                                        </Button>
+                                        </Button></RequireRole>
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-3 text-xs">

@@ -156,7 +156,7 @@ export default function PayableClient({ summary, creditors }: PayableClientProps
             </div>
 
             <div className="mt-8 p-4 bg-muted/50 rounded-lg text-sm italic text-muted-foreground">
-              Tip: Paying bills early can sometimes earn you "Early Payment Discounts" from vendors.
+              Tip: Paying bills early can sometimes earn you &quot;Early Payment Discounts&quot; from vendors.
             </div>
           </CardContent>
         </Card>
