@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 import { deleteBill } from "@/app/actions/finance/bills"
 import { createPayment, deletePayment, CreatePaymentPayload, PaymentMethod } from "@/app/actions/finance/payments"
+import { RequireRole } from "@/components/auth/role-context"
 
 const formatCurrency = (amount: number, currency: string = "INR") =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(amount)
@@ -154,10 +155,10 @@ export default function BillDetailsClient({ bill }: Props) {
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleDeleteBill} className="text-destructive hover:bg-destructive/10">
+                    <RequireRole min="MANAGER"><Button variant="outline" size="sm" onClick={handleDeleteBill} className="text-destructive hover:bg-destructive/10">
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
-                    </Button>
+                    </Button></RequireRole>
                     <Button 
                         size="sm" 
                         disabled={balanceDue <= 0 || isPending}
@@ -401,14 +402,14 @@ export default function BillDetailsClient({ bill }: Props) {
                                                     <TableCell className="text-muted-foreground">{p.reference || "—"}</TableCell>
                                                     <TableCell className="text-right font-bold text-emerald-600">{formatCurrency(p.amount, bill.currency_code)}</TableCell>
                                                     <TableCell className="text-right">
-                                                        <Button
+                                                        <RequireRole min="MANAGER"><Button
                                                             variant="ghost"
                                                             size="icon"
                                                             disabled={isPending}
                                                             onClick={() => handleDeletePayment(p.id)}
                                                         >
                                                             <Trash2 className="h-4 w-4 text-destructive" />
-                                                        </Button>
+                                                        </Button></RequireRole>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

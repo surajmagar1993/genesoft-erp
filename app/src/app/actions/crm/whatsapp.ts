@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId, getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { maskSecret, openSecret, sealSecret } from "@/lib/secret-box"
 import { revalidatePath } from "next/cache"
 import crypto from "crypto"
@@ -150,7 +150,7 @@ export async function saveWhatsAppConfig(payload: {
  */
 export async function testWhatsAppConnection(testPhone?: string) {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantAdminId()
         if (!tenantId) return { success: false, error: "Unauthorized" }
 
         const tenant = await prisma.tenant.findUnique({
@@ -220,7 +220,7 @@ export async function sendWhatsAppMessage(payload: {
     customText?: string
 }) {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { success: false, error: "Unauthorized" }
 
         const tenant = await prisma.tenant.findUnique({
@@ -330,7 +330,7 @@ export async function sendInvoiceViaWhatsApp(params: {
     customNote?: string
 }) {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { success: false, error: "Unauthorized" }
 
         const invoice = await prisma.invoice.findFirst({

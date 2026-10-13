@@ -1,6 +1,6 @@
 "use server"
 
-import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId, getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { maskSecret, openSecret, sealSecret } from "@/lib/secret-box"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
@@ -198,7 +198,7 @@ export async function initiateInvoicePaymentSession(params: {
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         const invoice = await prisma.invoice.findUnique({
             where: { id: params.invoiceId },
             include: {
@@ -281,7 +281,7 @@ export async function recordOnlineInvoicePayment(params: {
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         const invoice = await prisma.invoice.findUnique({
             where: { id: params.invoiceId },
             include: { contact: true },

@@ -76,6 +76,7 @@ import {
 } from "@/app/actions/finance/budgets"
 import { BudgetPeriodType, BudgetStatus } from "@prisma/client"
 import { formatCurrency } from "@/lib/utils"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface BudgetsClientProps {
     initialData: BudgetsOverviewData
@@ -664,7 +665,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                                             </Button>
 
                                                             {b.status !== "ACTIVE" && (
-                                                                <Button
+                                                                <RequireRole min="MANAGER"><Button
                                                                     size="sm"
                                                                     variant="ghost"
                                                                     className="h-8 px-2 text-xs text-rose-600 hover:text-rose-700"
@@ -672,7 +673,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                                                     title="Delete Budget"
                                                                 >
                                                                     <Trash2 className="h-3.5 w-3.5" />
-                                                                </Button>
+                                                                </Button></RequireRole>
                                                             )}
                                                         </div>
                                                     </TableCell>
@@ -1350,7 +1351,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                 >
                                     Cancel
                                 </Button>
-                                <Button
+                                <RequireRole min="MANAGER"><Button
                                     type="button"
                                     onClick={handleStatusTransition}
                                     disabled={isPending}
@@ -1358,7 +1359,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                 >
                                     {isPending ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
                                     Confirm Status
-                                </Button>
+                                </Button></RequireRole>
                             </DialogFooter>
                         </div>
                     )}

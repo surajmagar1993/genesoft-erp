@@ -30,6 +30,7 @@ const statusConfig: Record<QuoteStatus, { label: string; variant: "default" | "s
 }
 
 import { formatCurrency } from "@/lib/utils"
+import { RequireRole } from "@/components/auth/role-context"
 
 const formatDate = (dateStr: string) => {
     if (!dateStr) return "—"
@@ -200,9 +201,9 @@ export default function QuotesClient({ initialQuotes, total }: Props) {
                                                 <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/quotes/${q.id}/edit`)}>
                                                     <Pencil className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" disabled={pendingId === q.id} onClick={() => handleDelete(q.id)}>
+                                                <RequireRole min="MANAGER"><Button variant="ghost" size="icon" disabled={pendingId === q.id} onClick={() => handleDelete(q.id)}>
                                                     {pendingId === q.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                                </Button>
+                                                </Button></RequireRole>
                                             </TableCell>
                                         </TableRow>
                                     )

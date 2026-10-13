@@ -54,6 +54,7 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface PriceListsClientProps {
     initialStats: PriceListsOverviewStats
@@ -579,14 +580,14 @@ export default function PriceListsClient({
                                                     <Plus className="h-3.5 w-3.5 mr-1" />
                                                     Add Item
                                                 </Button>
-                                                <Button
+                                                <RequireRole min="MANAGER"><Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleDeletePriceList(pl.id, pl.name)}
                                                     className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
-                                                </Button>
+                                                </Button></RequireRole>
                                             </td>
                                         </tr>
                                     ))

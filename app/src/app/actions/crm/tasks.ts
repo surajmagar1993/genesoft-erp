@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
@@ -81,7 +81,7 @@ export async function createTask(
   formData: Omit<Task, "id" | "created_at" | "updated_at" | "tenant_id">
 ): Promise<{ error: string | null, data?: Task }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { data, error } = await supabase
     .from("tasks")
@@ -104,7 +104,7 @@ export async function updateTask(
   formData: Partial<Omit<Task, "id" | "created_at" | "updated_at" | "tenant_id">>
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { error } = await supabase
     .from("tasks")
@@ -121,7 +121,7 @@ export async function updateTask(
 
 export async function deleteTask(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { error } = await supabase
     .from("tasks")

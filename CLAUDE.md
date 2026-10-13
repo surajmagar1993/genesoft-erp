@@ -31,7 +31,7 @@ Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Pri
 
 ## 🔐 Security Rules (2026-10-13)
 - **Tenant isolation is in code, not RLS.** Prisma bypasses Supabase RLS. Every query that takes an id from the client must include the caller's `tenantId` (`findFirst({ where: { id, tenantId } })`, `updateMany`/`deleteMany` with `{ id, tenantId }` and a `count` check). Also verify any *referenced* ids (contact, account, product, warehouse, price list…) belong to the tenant before using them.
-- **Workspace settings need an admin.** Use `getTenantAdminId()` (ADMIN/SUPER_ADMIN) instead of `getTenantId()` for actions that change workspace-wide settings or credentials.
+- **Pick the tenant helper by role** (`src/lib/get-tenant-id.ts`): `getTenantId()` for reads and self-service (any role), `getTenantWriterId()` for creating/editing records (USER+, blocks VIEWER), `getTenantManagerId()` for deletes, voids, approvals, finance controls, pricing, credit notes, HR and payroll (MANAGER+), `getTenantAdminId()` for workspace settings and credentials (ADMIN+). Deactivated users (`profiles.is_active = false`) are signed out.
 - **Stored credentials are encrypted.** Use `sealSecret()` when saving and `openSecret()` when using tenant secrets (`src/lib/secret-box.ts`, key from `ENCRYPTION_KEY`). Show them with `maskSecret()`; never return them to the client.
 - **Webhooks fail closed.** Verify the gateway signature on the raw body before trusting any field.
 - **No demo data in real tenants.** Sample seeders run only when `ENABLE_DEMO_SEED=true`.

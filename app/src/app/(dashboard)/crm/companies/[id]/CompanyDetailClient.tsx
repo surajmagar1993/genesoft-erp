@@ -18,6 +18,7 @@ import { toast } from "sonner"
 import type { Company } from "@/app/actions/crm/companies"
 import { deleteCompany } from "@/app/actions/crm/companies"
 import { formatCurrency } from "@/lib/utils"
+import { RequireRole } from "@/components/auth/role-context"
 
 const countryFlags: Record<string, string> = {
   IN: "🇮🇳", AE: "🇦🇪", SA: "🇸🇦", US: "🇺🇸", GB: "🇬🇧",
@@ -123,7 +124,7 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
           >
             <Pencil className="h-4 w-4 mr-1.5" /> Edit
           </Button>
-          <Button
+          <RequireRole min="MANAGER"><Button
             variant="ghost"
             size="sm"
             className="text-destructive hover:bg-destructive/10"
@@ -132,7 +133,7 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
           >
             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Trash2 className="h-4 w-4 mr-1.5" />}
             Delete
-          </Button>
+          </Button></RequireRole>
         </div>
       </div>
 

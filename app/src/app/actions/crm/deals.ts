@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export type DealStage =
@@ -79,7 +79,7 @@ export async function createDeal(
   formData: Omit<Deal, "id" | "created_at" | "tenant_id">
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { error } = await supabase
     .from("deals")
@@ -95,7 +95,7 @@ export async function updateDeal(
   formData: Partial<Omit<Deal, "id" | "created_at" | "tenant_id">>
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { error } = await supabase
     .from("deals")
@@ -110,7 +110,7 @@ export async function updateDeal(
 
 export async function deleteDeal(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   const { error } = await supabase
     .from("deals")

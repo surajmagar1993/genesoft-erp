@@ -28,7 +28,7 @@ Application source code including components, hooks, actions, and utilities.
   - `australia-tax-engine.ts`: Australia ATO BAS Form & Modulus 89 ABN.
   - `saas-subscription-engine.ts`: Real-time proration mathematics.
   - `email-template-engine.ts`: Transactional email compiler & merge tags.
-  - `get-tenant-id.ts`: Multi-tenant boundary helper (`getTenantId`, plus `getTenantAdminId` for admin-only settings).
+  - `get-tenant-id.ts`: Multi-tenant boundary + role helpers (`getTenantId` any role, `getTenantWriterId` USER+, `getTenantManagerId` MANAGER+, `getTenantAdminId` ADMIN+, `getTenantRole`).
   - `secret-box.ts`: AES-256-GCM `sealSecret`/`openSecret`/`maskSecret` for stored tenant credentials (`ENCRYPTION_KEY`).
   - `demo-seed.ts`: `isDemoSeedEnabled()` gate for sample-data seeders (`ENABLE_DEMO_SEED`).
   - `invoice-mapper.ts`: Prisma invoice → `InvoiceDB` mapper shared by actions and the portal PDF route.

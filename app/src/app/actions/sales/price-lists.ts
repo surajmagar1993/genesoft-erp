@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
     PriceListType,
@@ -643,7 +643,7 @@ export async function createPriceList(data: CreatePriceListInput): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.name?.trim()) return { error: "Price List name is required" }
@@ -704,7 +704,7 @@ export async function updatePriceList(
     data: Partial<CreatePriceListInput> & { isActive?: boolean }
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         const existing = await prisma.priceList.findFirst({
@@ -751,7 +751,7 @@ export async function updatePriceList(
 
 export async function deletePriceList(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         await prisma.priceList.delete({
@@ -786,7 +786,7 @@ export async function upsertPriceListItem(data: UpsertPriceListItemInput): Promi
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.priceListId) return { error: "Price List must be selected" }
@@ -850,7 +850,7 @@ export async function upsertPriceListItem(data: UpsertPriceListItemInput): Promi
 
 export async function deletePriceListItem(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         await prisma.priceListItem.delete({
@@ -874,7 +874,7 @@ export async function assignContactPriceList(
     priceListId: string | null
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (priceListId && !(await prisma.priceList.count({ where: { id: priceListId, tenantId } }))) {

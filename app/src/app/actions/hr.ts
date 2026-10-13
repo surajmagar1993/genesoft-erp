@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import {
@@ -405,7 +405,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
  * Creates a new employee with an auto-generated sequential ID (EMP-0001).
  */
 export async function createEmployee(data: CreateEmployeeInput) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     if (!data.firstName?.trim()) throw new Error("First name is required")
     if (!data.email?.trim()) throw new Error("Work email is required")
@@ -461,7 +461,7 @@ export async function createEmployee(data: CreateEmployeeInput) {
  * Updates an employee's profile and organizational assignments.
  */
 export async function updateEmployee(employeeId: string, data: UpdateEmployeeInput) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     const existing = await prisma.employee.findFirst({
         where: { id: employeeId, tenantId }
@@ -508,7 +508,7 @@ export async function createDepartment(data: {
     description?: string
     managerId?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     if (!data.name?.trim()) throw new Error("Department name is required")
 
@@ -535,7 +535,7 @@ export async function createDesignation(data: {
     departmentId?: string
     description?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     if (!data.title?.trim()) throw new Error("Designation title is required")
 
@@ -563,7 +563,7 @@ export async function recordAttendance(data: {
     checkOut?: string
     notes?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     const targetDate = new Date(data.date)
     const normalizedDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate())
@@ -630,7 +630,7 @@ export async function submitLeaveRequest(data: {
     endDate: string
     reason: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     if (!data.employeeId) throw new Error("Employee is required")
     if (!data.startDate || !data.endDate) throw new Error("Start and end dates are required")
@@ -668,7 +668,7 @@ export async function updateLeaveStatus(data: {
     status: LeaveStatus
     rejectionReason?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 

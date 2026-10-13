@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export type CommunicationType = "NOTE" | "CALL" | "EMAIL" | "MEETING" | "SMS" | "OTHER"
@@ -64,7 +64,7 @@ export async function createCommunicationLog(
   formData: Omit<CommunicationLog, "id" | "created_at" | "updated_at" | "tenant_id">
 ): Promise<{ error: string | null; data?: CommunicationLog }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { data, error } = await supabase
     .from("communication_logs")
@@ -84,7 +84,7 @@ export async function createCommunicationLog(
 
 export async function deleteCommunicationLog(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { error } = await supabase
     .from("communication_logs")

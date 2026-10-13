@@ -83,6 +83,7 @@ import { formatCurrency } from "@/lib/utils"
 import { PurchaseOrderStatus } from "@prisma/client"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface PurchaseClientProps {
     initialData: PurchaseOverviewData
@@ -972,25 +973,25 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                                                         <DropdownMenuSeparator />
 
                                                                         {order.status === "DRAFT" && (
-                                                                            <DropdownMenuItem
+                                                                            <RequireRole min="MANAGER"><DropdownMenuItem
                                                                                 onClick={() =>
                                                                                     handleStatusTransition(order.id, "SENT")
                                                                                 }
                                                                             >
                                                                                 <Send className="mr-2 h-4 w-4 text-blue-500" />
                                                                                 <span>Mark as Sent</span>
-                                                                            </DropdownMenuItem>
+                                                                            </DropdownMenuItem></RequireRole>
                                                                         )}
 
                                                                         {(order.status === "DRAFT" || order.status === "SENT") && (
-                                                                            <DropdownMenuItem
+                                                                            <RequireRole min="MANAGER"><DropdownMenuItem
                                                                                 onClick={() =>
                                                                                     handleStatusTransition(order.id, "APPROVED")
                                                                                 }
                                                                             >
                                                                                 <Check className="mr-2 h-4 w-4 text-emerald-500" />
                                                                                 <span>Approve Order</span>
-                                                                            </DropdownMenuItem>
+                                                                            </DropdownMenuItem></RequireRole>
                                                                         )}
 
                                                                         {(order.status === "APPROVED" ||
@@ -1019,7 +1020,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                                                         {(order.status === "DRAFT" || order.status === "SENT") && (
                                                                             <>
                                                                                 <DropdownMenuSeparator />
-                                                                                <DropdownMenuItem
+                                                                                <RequireRole min="MANAGER"><DropdownMenuItem
                                                                                     onClick={() =>
                                                                                         handleStatusTransition(order.id, "CANCELLED")
                                                                                     }
@@ -1027,7 +1028,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                                                                 >
                                                                                     <Ban className="mr-2 h-4 w-4" />
                                                                                     <span>Cancel Order</span>
-                                                                                </DropdownMenuItem>
+                                                                                </DropdownMenuItem></RequireRole>
                                                                             </>
                                                                         )}
                                                                     </DropdownMenuContent>

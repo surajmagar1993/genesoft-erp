@@ -19,6 +19,7 @@ import EntityTasks from "@/components/crm/EntityTasks"
 import EntityCommunications from "@/components/crm/EntityCommunications"
 import type { Task } from "@/app/actions/crm/tasks"
 import type { CommunicationLog } from "@/app/actions/crm/communications"
+import { RequireRole } from "@/components/auth/role-context"
 
 const stageProbability: Record<DealStage, number> = {
   PROSPECTING: 20,
@@ -147,7 +148,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
           >
             <Pencil className="h-4 w-4 mr-1.5" /> Edit
           </Button>
-          <Button
+          <RequireRole min="MANAGER"><Button
             variant="ghost"
             size="sm"
             className="text-destructive hover:bg-destructive/10"
@@ -156,7 +157,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
           >
             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Trash2 className="h-4 w-4 mr-1.5" />}
             Delete
-          </Button>
+          </Button></RequireRole>
         </div>
       </div>
 

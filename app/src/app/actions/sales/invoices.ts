@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId, getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
@@ -250,7 +250,7 @@ export interface CreateInvoicePayload {
 export async function createInvoice(
   payload: CreateInvoicePayload
 ): Promise<{ id: string | null; error: string | null }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   try {
     if (payload.contact_id && !(await prisma.contact.count({ where: { id: payload.contact_id, tenantId } }))) {
@@ -392,7 +392,7 @@ export interface UpdateInvoicePayload extends CreateInvoicePayload {
 export async function updateInvoice(
   payload: UpdateInvoicePayload
 ): Promise<{ error: string | null }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   try {
     const isProforma = payload.type === "PROFORMA"
@@ -543,7 +543,7 @@ export async function updateInvoice(
 export async function convertProformaToInvoice(
   proformaId: string
 ): Promise<{ success: boolean; newInvoiceNumber?: string; error?: string }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   try {
     const proforma = await prisma.invoice.findFirst({
@@ -610,7 +610,7 @@ export async function convertProformaToInvoice(
 
 /* ── Delete ── */
 export async function deleteInvoice(id: string): Promise<{ error: string | null }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   try {
     // ─── LEDGER INTEGRATION CLEANUP ───
@@ -649,6 +649,7 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
 export async function sendInvoiceEmail(
   id: string
 ): Promise<{ error: string | null }> {
+  await getTenantWriterId()
   const invoice = await getInvoiceById(id)
   if (!invoice) return { error: "Invoice not found" }
 
@@ -744,7 +745,7 @@ export async function updateInvoiceTemplate(
   templateId: InvoiceTemplateId
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     const invoice = await prisma.invoice.findUnique({
       where: { id, tenantId },
       select: { billTo: true }
@@ -778,7 +779,7 @@ export async function updateTenantDefaultTemplate(
   templateId: InvoiceTemplateId
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantAdminId()
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
       select: { settings: true }

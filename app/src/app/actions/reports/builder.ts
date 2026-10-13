@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 import type {
@@ -356,7 +356,7 @@ export async function saveCustomReport(input: {
     config: ReportConfig
 }): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         if (!input.name.trim()) {
             return { success: false, error: "Report name is required" }
@@ -399,7 +399,7 @@ export async function saveCustomReport(input: {
  */
 export async function deleteCustomReport(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         if (id.startsWith("prebuilt-")) {
             return { success: false, error: "Cannot delete pre-built system templates" }

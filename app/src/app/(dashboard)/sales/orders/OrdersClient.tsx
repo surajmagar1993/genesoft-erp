@@ -29,6 +29,7 @@ const statusConfig: Record<SalesOrderStatus, { label: string; variant: "default"
 }
 
 import { formatCurrency } from "@/lib/utils"
+import { RequireRole } from "@/components/auth/role-context"
 
 const formatDate = (dateStr: string) => {
     if (!dateStr) return "—"
@@ -179,9 +180,9 @@ export default function OrdersClient({ initialOrders, total }: Props) {
                                                 <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/orders/${o.id}/edit`)}>
                                                     <Pencil className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" disabled={pendingId === o.id} onClick={() => handleDelete(o.id)}>
+                                                <RequireRole min="MANAGER"><Button variant="ghost" size="icon" disabled={pendingId === o.id} onClick={() => handleDelete(o.id)}>
                                                     {pendingId === o.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
-                                                </Button>
+                                                </Button></RequireRole>
                                             </TableCell>
                                         </TableRow>
                                     )

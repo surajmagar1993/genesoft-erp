@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
     ExpenseStatus,
@@ -646,7 +646,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.title?.trim()) return { error: "Expense title is required" }
@@ -799,7 +799,7 @@ export async function updateExpenseStatus(
     isClaimSettled?: boolean
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         const expense = await prisma.expense.findFirst({
@@ -933,7 +933,7 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.narration?.trim()) return { error: "Narration / description is required" }
@@ -1040,7 +1040,7 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
 
 export async function voidExpense(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         const expense = await prisma.expense.findFirst({

@@ -88,6 +88,7 @@ import {
     LeaveType,
     LeaveStatus,
 } from "@prisma/client"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface HRClientProps {
     initialData: HROverviewData
@@ -1293,7 +1294,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                                     <TableCell className="text-right">
                                                         {leave.status === "PENDING" ? (
                                                             <div className="flex items-center justify-end gap-1">
-                                                                <Button
+                                                                <RequireRole min="MANAGER"><Button
                                                                     variant="outline"
                                                                     size="sm"
                                                                     className="h-8 text-xs text-emerald-600 hover:text-emerald-700"
@@ -1301,8 +1302,8 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                                                 >
                                                                     <Check className="mr-1 h-3.5 w-3.5" />
                                                                     Approve
-                                                                </Button>
-                                                                <Button
+                                                                </Button></RequireRole>
+                                                                <RequireRole min="MANAGER"><Button
                                                                     variant="outline"
                                                                     size="sm"
                                                                     className="h-8 text-xs text-red-600 hover:text-red-700"
@@ -1310,7 +1311,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                                                 >
                                                                     <X className="mr-1 h-3.5 w-3.5" />
                                                                     Reject
-                                                                </Button>
+                                                                </Button></RequireRole>
                                                             </div>
                                                         ) : (
                                                             <span className="text-xs text-muted-foreground italic">
@@ -1447,7 +1448,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                         <PayrollClient initialData={payrollData} />
                     ) : (
                         <div className="p-8 text-center text-muted-foreground text-xs">
-                            No payroll configuration available.
+                            Payroll is only available to managers and admins.
                         </div>
                     )}
                 </TabsContent>

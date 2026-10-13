@@ -86,6 +86,7 @@ import {
     MilestoneStatus,
     ProjectTaskStatus,
 } from "@prisma/client"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface ProjectsClientProps {
     initialData: ProjectsOverviewData
@@ -1063,14 +1064,14 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                 {p.budget ? `₹${p.budget.toLocaleString("en-IN")}` : "—"}
                                             </TableCell>
                                             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                                                <Button
+                                                <RequireRole min="MANAGER"><Button
                                                     variant="ghost"
                                                     size="sm"
                                                     className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                                                     onClick={() => handleDeleteProject(p.id)}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                </Button></RequireRole>
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -1166,14 +1167,14 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                             {m.status === "COMPLETED" ? "Reopen" : "Mark Done"}
                                         </Button>
 
-                                        <Button
+                                        <RequireRole min="MANAGER"><Button
                                             variant="ghost"
                                             size="sm"
                                             className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                                             onClick={() => handleDeleteMilestone(m.id)}
                                         >
                                             <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        </Button></RequireRole>
                                     </div>
                                 </Card>
                             ))
@@ -1247,14 +1248,14 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                 {format(new Date(m.joinedAt), "dd MMM yyyy")}
                                             </TableCell>
                                             <TableCell className="text-right">
-                                                <Button
+                                                <RequireRole min="MANAGER"><Button
                                                     variant="ghost"
                                                     size="sm"
                                                     className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                                                     onClick={() => handleRemoveMember(m.id)}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                </Button></RequireRole>
                                             </TableCell>
                                         </TableRow>
                                     ))

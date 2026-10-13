@@ -4,12 +4,18 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 
 /**
- * Returns the tenant_id for the currently authenticated user.
- * Reads from the profiles table which links auth.users → tenants.
- * Redirects to /login if the user is not authenticated.
- * Throws if the user has no profile row yet (should never happen post-setup).
+ * Role ladder inside a workspace:
+ *   VIEWER  – read only
+ *   USER    – create and edit day-to-day records
+ *   MANAGER – also delete/void/approve, finance controls, HR and payroll
+ *   ADMIN   – also workspace settings and credentials
+ * SUPER_ADMIN (platform) passes every check.
  */
-export async function getTenantId(): Promise<string> {
+const WRITER_ROLES = ["USER", "MANAGER", "ADMIN", "SUPER_ADMIN"]
+const MANAGER_ROLES = ["MANAGER", "ADMIN", "SUPER_ADMIN"]
+const TENANT_ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"]
+
+async function getTenantContext(): Promise<{ tenantId: string; role: string }> {
   const supabase = await createClient()
 
   const {
@@ -18,10 +24,11 @@ export async function getTenantId(): Promise<string> {
 
   if (!user) redirect("/login")
 
-  // Use id to link to our Prisma-managed Profile
+  // profiles links auth.users → tenants (Prisma model User). "*" so a
+  // database without the is_active column still works.
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("tenant_id")
+    .select("*")
     .eq("id", user.id)
     .single()
 
@@ -31,10 +38,52 @@ export async function getTenantId(): Promise<string> {
     redirect("/login?error=Session+configuration+error.+Please+contact+support.")
   }
 
-  return profile.tenant_id
+  if (profile.is_active === false) {
+    await supabase.auth.signOut()
+    redirect("/login?error=Your+account+has+been+deactivated.+Please+contact+your+administrator.")
+  }
+
+  return { tenantId: profile.tenant_id, role: profile.role ?? "USER" }
 }
 
-const TENANT_ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"]
+/**
+ * Returns the tenant_id for the currently authenticated user (any role).
+ * Use it for reads and for self-service actions on the caller's own data.
+ * Redirects to /login if the user is not authenticated or deactivated.
+ */
+export async function getTenantId(): Promise<string> {
+  return (await getTenantContext()).tenantId
+}
+
+/** The caller's workspace role, for showing or hiding UI. */
+export async function getTenantRole(): Promise<string> {
+  return (await getTenantContext()).role
+}
+
+/**
+ * Like getTenantId, but rejects VIEWER. Use it in actions that create or
+ * change business records.
+ */
+export async function getTenantWriterId(): Promise<string> {
+  const { tenantId, role } = await getTenantContext()
+  if (!WRITER_ROLES.includes(role)) {
+    throw new Error("Your role is read-only. Ask a workspace admin for edit access.")
+  }
+  return tenantId
+}
+
+/**
+ * Like getTenantId, but only for MANAGER and above. Use it for deletes,
+ * voids, approvals, finance controls (accounts, bank reconciliation,
+ * budgets, pricing, credit notes) and HR/payroll records.
+ */
+export async function getTenantManagerId(): Promise<string> {
+  const { tenantId, role } = await getTenantContext()
+  if (!MANAGER_ROLES.includes(role)) {
+    throw new Error("Only managers and admins can do this.")
+  }
+  return tenantId
+}
 
 /**
  * Like getTenantId, but only for workspace admins. Use it in actions that
@@ -42,27 +91,9 @@ const TENANT_ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"]
  * company profile, workflows). Throws for MANAGER / USER / VIEWER.
  */
 export async function getTenantAdminId(): Promise<string> {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) redirect("/login")
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("tenant_id, role")
-    .eq("id", user.id)
-    .single()
-
-  if (!profile?.tenant_id) {
-    redirect("/login?error=Session+configuration+error.+Please+contact+support.")
-  }
-
-  if (!TENANT_ADMIN_ROLES.includes(profile.role)) {
+  const { tenantId, role } = await getTenantContext()
+  if (!TENANT_ADMIN_ROLES.includes(role)) {
     throw new Error("Only workspace admins can change these settings.")
   }
-
-  return profile.tenant_id
+  return tenantId
 }

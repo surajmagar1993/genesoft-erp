@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 
@@ -87,7 +87,7 @@ export async function getPaymentsByInvoice(invoiceId: string): Promise<PaymentDB
 /* ── Create Payment ── */
 export async function createPayment(payload: CreatePaymentPayload): Promise<{ id: string | null; error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   // 1. Insert Payment
   const { data: payment, error: paymentError } = await supabase
@@ -144,7 +144,7 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<{ id
 /* ── Delete Payment ── */
 export async function deletePayment(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   // 1. Get the payment first to know what to sync
   const { data: p } = await supabase
@@ -207,7 +207,7 @@ export async function deletePayment(id: string): Promise<{ error: string | null 
 /* ── Helper: Sync Invoice Status ── */
 export async function syncInvoiceStatus(invoiceId: string) {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   // a. Fetch invoice total
   const { data: invoice } = await supabase
@@ -255,7 +255,7 @@ export async function syncInvoiceStatus(invoiceId: string) {
 /* ── Helper: Sync Bill Status ── */
 export async function syncBillStatus(billId: string) {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { data: bill } = await supabase
     .from("bills")

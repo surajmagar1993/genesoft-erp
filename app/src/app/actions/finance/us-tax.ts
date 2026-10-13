@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { COMPANY } from "@/lib/constants/company"
 import {
   compileUsStateSalesTaxSchedule,
@@ -322,7 +322,7 @@ export async function saveExemptionCertificateAction(data: {
   expiryDate: string
   reason?: string
 }): Promise<{ success: boolean; message: string }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   await prisma.contact.update({
     where: {
@@ -346,7 +346,7 @@ export async function updateVendorW9Action(data: {
   vendorId: string
   ein: string
 }): Promise<{ success: boolean; message: string }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
   const check = validateUsEin(data.ein)
 
   if (!check.isValid) {

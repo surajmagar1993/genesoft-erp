@@ -60,6 +60,7 @@ import {
     SlidersHorizontal,
     FileText,
 } from "lucide-react"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface BankReconciliationClientProps {
     initialData: BankReconciliationOverview
@@ -474,7 +475,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                         Import Statement
                     </Button>
 
-                    <Button
+                    <RequireRole min="MANAGER"><Button
                         variant="default"
                         size="sm"
                         onClick={handleAutoMatch}
@@ -483,7 +484,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                     >
                         <Sparkles className="h-4 w-4" />
                         Run Auto-Match
-                    </Button>
+                    </Button></RequireRole>
 
                     <Button
                         variant="outline"
@@ -629,7 +630,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                     : `${data.kpis.unmatchedCount} unmatched line(s)`}
                             </p>
                             {data.kpis.isBalanced && data.activeStatement?.status === "IN_PROGRESS" && (
-                                <Button
+                                <RequireRole min="MANAGER"><Button
                                     size="sm"
                                     variant="outline"
                                     onClick={handleFinalizeStatement}
@@ -637,7 +638,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                 >
                                     <Lock className="h-3 w-3 mr-1" />
                                     Finalize
-                                </Button>
+                                </Button></RequireRole>
                             )}
                         </div>
                     </CardContent>
@@ -880,7 +881,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                                         {txn.payment && `Pmt: ${txn.payment.reference || txn.payment.id.substring(0, 6)}`}
                                                                         {txn.expense && `Exp: ${txn.expense.expenseNumber}`}
                                                                     </span>
-                                                                    <Button
+                                                                    <RequireRole min="MANAGER"><Button
                                                                         size="sm"
                                                                         variant="ghost"
                                                                         onClick={() => handleUnmatch(txn.id)}
@@ -889,7 +890,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                                         title="Unlink match"
                                                                     >
                                                                         <X className="h-3.5 w-3.5" />
-                                                                    </Button>
+                                                                    </Button></RequireRole>
                                                                 </div>
                                                             )}
                                                         </div>
@@ -1081,14 +1082,14 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                 <Edit3 className="h-4 w-4" />
                                             </Button>
                                             {!acc.isPrimary && (
-                                                <Button
+                                                <RequireRole min="MANAGER"><Button
                                                     size="sm"
                                                     variant="ghost"
                                                     className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                     onClick={() => handleDeleteAccount(acc)}
                                                 >
                                                     <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                </Button></RequireRole>
                                             )}
                                         </div>
                                     </div>
@@ -1240,7 +1241,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                 </td>
                                                 <td className="p-3.5 text-right pr-4">
                                                     {stmt.status === "IN_PROGRESS" && (
-                                                        <Button
+                                                        <RequireRole min="MANAGER"><Button
                                                             size="sm"
                                                             variant="outline"
                                                             className="h-7 text-xs px-2.5"
@@ -1248,7 +1249,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                         >
                                                             <Lock className="h-3 w-3 mr-1" />
                                                             Finalize
-                                                        </Button>
+                                                        </Button></RequireRole>
                                                     )}
                                                 </td>
                                             </tr>
@@ -1766,14 +1767,14 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                     <span className="font-bold text-foreground">
                                                         {formatCurrency(cand.amount, activeAccount?.currencyCode)}
                                                     </span>
-                                                    <Button
+                                                    <RequireRole min="MANAGER"><Button
                                                         size="sm"
                                                         onClick={() => handleConfirmManualMatch(cand)}
                                                         disabled={isPending}
                                                         className="h-7 text-xs px-2.5"
                                                     >
                                                         Link
-                                                    </Button>
+                                                    </Button></RequireRole>
                                                 </div>
                                             </div>
                                         )

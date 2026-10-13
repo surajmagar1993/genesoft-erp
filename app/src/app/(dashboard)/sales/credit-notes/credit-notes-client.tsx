@@ -62,6 +62,7 @@ import {
     CreditNoteStatus,
     CreditNoteReason,
 } from "@prisma/client"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface CreditNotesClientProps {
     initialData: CreditNotesOverviewData
@@ -623,14 +624,14 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                         )}
 
                                                         {cn.allocatedAmount === 0 && cn.status === CreditNoteStatus.ISSUED && (
-                                                            <Button
+                                                            <RequireRole min="MANAGER"><Button
                                                                 size="sm"
                                                                 variant="ghost"
                                                                 className="h-7 text-xs text-muted-foreground hover:text-destructive"
                                                                 onClick={() => handleVoidCreditNote(cn)}
                                                             >
                                                                 Void
-                                                            </Button>
+                                                            </Button></RequireRole>
                                                         )}
                                                     </div>
                                                 </TableCell>
@@ -1053,10 +1054,10 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                         <Button variant="outline" onClick={() => setIsNewCreditNoteOpen(false)}>
                             Cancel
                         </Button>
-                        <Button onClick={handleCreateCreditNote} disabled={isPending}>
+                        <RequireRole min="MANAGER"><Button onClick={handleCreateCreditNote} disabled={isPending}>
                             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Issue Credit Note
-                        </Button>
+                        </Button></RequireRole>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -1127,10 +1128,10 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                             <Button variant="outline" onClick={() => setIsApplyModalOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleApplyCredit} disabled={isPending || customerOpenInvoices.length === 0}>
+                            <RequireRole min="MANAGER"><Button onClick={handleApplyCredit} disabled={isPending || customerOpenInvoices.length === 0}>
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Confirm Allocation
-                            </Button>
+                            </Button></RequireRole>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -1221,10 +1222,10 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                             <Button variant="outline" onClick={() => setIsRefundModalOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button onClick={handleProcessRefund} disabled={isPending} className="bg-purple-600 hover:bg-purple-700">
+                            <RequireRole min="MANAGER"><Button onClick={handleProcessRefund} disabled={isPending} className="bg-purple-600 hover:bg-purple-700">
                                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Confirm Disbursement
-                            </Button>
+                            </Button></RequireRole>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

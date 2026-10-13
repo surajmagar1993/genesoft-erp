@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED"
@@ -44,7 +44,7 @@ export async function getTicket(id: string) {
  */
 export async function createTicket(subject: string, message: string, priority: TicketPriority = "MEDIUM") {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) throw new Error("Unauthorized")
@@ -88,7 +88,7 @@ export async function addMessage(ticketId: string, content: string, isFromAdmin:
 
   // Verify ticket belongs to tenant before adding message
   const ticket = await prisma.supportTicket.findUnique({
-    where: { id: ticketId, tenantId: await getTenantId() }
+    where: { id: ticketId, tenantId: await getTenantWriterId() }
   })
 
   if (!ticket) throw new Error("Ticket not found or unauthorized")
@@ -139,7 +139,7 @@ export async function updateTicketStatus(id: string, status: TicketStatus) {
     throw new Error("Insufficient permissions")
   }
 
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
   const ticket = await prisma.supportTicket.update({
     where: { id, tenantId },
     data: { status }

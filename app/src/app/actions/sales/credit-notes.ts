@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
     CreditNoteStatus,
@@ -486,7 +486,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
  * Issue a new Credit Note.
  */
 export async function createCreditNote(input: CreateCreditNoteInput) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     if (!input.contactId) throw new Error("Customer contact is required")
@@ -642,7 +642,7 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
  * Apply available credit note balance to an open or partially-paid invoice.
  */
 export async function applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     const { creditNoteId, invoiceId, amount } = input
@@ -722,7 +722,7 @@ export async function applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
  * Record a direct cash or bank refund disbursement for a credit note.
  */
 export async function recordCreditNoteRefund(input: RecordCreditNoteRefundInput) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     const { creditNoteId, amount, refundDate, paymentMethod = "BANK_TRANSFER", reference, notes } = input
@@ -792,7 +792,7 @@ export async function recordCreditNoteRefund(input: RecordCreditNoteRefundInput)
  * Void an unapplied credit note.
  */
 export async function voidCreditNote(creditNoteId: string) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     const creditNote = await prisma.creditNote.findUnique({

@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export type NotificationType = "lead" | "deal" | "quote" | "bill" | "system"
@@ -129,7 +129,7 @@ export async function createNotification(data: {
     const supabase = await createClient()
 
     // Callable from the client as a server action: only allow notifying users within the caller's own tenant
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     if (data.tenantId !== tenantId) throw new Error("Unauthorized")
 
     const { data: recipient } = await supabase

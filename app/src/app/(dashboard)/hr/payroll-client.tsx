@@ -73,6 +73,7 @@ import {
     createSalaryStructure,
     getPayslipDetails
 } from "@/app/actions/payroll"
+import { RequireRole } from "@/components/auth/role-context"
 
 const MONTH_NAMES = [
     "January", "February", "March", "April", "May", "June",
@@ -474,7 +475,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                         <div className="flex items-center justify-end gap-1.5">
                                                             {run.status === "DRAFT" && (
                                                                 <>
-                                                                    <Button
+                                                                    <RequireRole min="MANAGER"><Button
                                                                         size="sm"
                                                                         variant="outline"
                                                                         onClick={() => handleApprove(run.id)}
@@ -483,8 +484,8 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                                     >
                                                                         <Check className="h-3 w-3 mr-1" />
                                                                         Approve
-                                                                    </Button>
-                                                                    <Button
+                                                                    </Button></RequireRole>
+                                                                    <RequireRole min="MANAGER"><Button
                                                                         size="sm"
                                                                         variant="ghost"
                                                                         onClick={() => handleDeleteRun(run.id)}
@@ -492,7 +493,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                                         className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
                                                                     >
                                                                         <Trash2 className="h-3.5 w-3.5" />
-                                                                    </Button>
+                                                                    </Button></RequireRole>
                                                                 </>
                                                             )}
 
@@ -653,7 +654,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <Button
+                                                        <RequireRole min="MANAGER"><Button
                                                             size="sm"
                                                             variant="outline"
                                                             onClick={() => handleViewSlip(slip.id)}
@@ -662,7 +663,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                         >
                                                             <Eye className="h-3 w-3 mr-1" />
                                                             View Slip
-                                                        </Button>
+                                                        </Button></RequireRole>
                                                     </TableCell>
                                                 </TableRow>
                                             ))

@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Plus, Search, MoreHorizontal, Globe, MapPin, Users, Pencil, Trash2, Eye, Loader2, Building2 } from "lucide-react"
 import { deleteCompany, type Company } from "@/app/actions/crm/companies"
+import { RequireRole } from "@/components/auth/role-context"
 
 const countryFlags: Record<string, string> = { IN: "🇮🇳", AE: "🇦🇪", SA: "🇸🇦", US: "🇺🇸", GB: "🇬🇧" }
 
@@ -171,9 +172,9 @@ export default function CompaniesClient({ initialCompanies, total }: Props) {
                                                 <Pencil className="mr-2 h-4 w-4" />Edit
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem className="text-red-500" onClick={() => handleDelete(company.id)}>
+                                            <RequireRole min="MANAGER"><DropdownMenuItem className="text-red-500" onClick={() => handleDelete(company.id)}>
                                                 <Trash2 className="mr-2 h-4 w-4" />Delete
-                                            </DropdownMenuItem>
+                                            </DropdownMenuItem></RequireRole>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>

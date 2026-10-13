@@ -27,6 +27,7 @@ import {
 import { InvoiceStatus, deleteInvoice, sendInvoiceEmail, type InvoiceDB } from "@/app/actions/sales/invoices"
 
 import { PageHeader } from "@/components/ui/page-header"
+import { RequireRole } from "@/components/auth/role-context"
 
 const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "outline" | "destructive" | "success"; icon: React.ComponentType<{ className?: string }> }> = {
     DRAFT: { label: "Draft", variant: "secondary", icon: Clock },
@@ -292,9 +293,9 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                                                 <Send className="mr-2 h-4 w-4" /> Send Email
                                                             </DropdownMenuItem>
                                                             <DropdownMenuSeparator />
-                                                            <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950" onClick={() => handleDelete(inv.id)}>
+                                                            <RequireRole min="MANAGER"><DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950" onClick={() => handleDelete(inv.id)}>
                                                                 <Trash2 className="mr-2 h-4 w-4" /> Delete Invoice
-                                                            </DropdownMenuItem>
+                                                            </DropdownMenuItem></RequireRole>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>

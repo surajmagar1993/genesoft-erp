@@ -86,6 +86,7 @@ import {
 } from "@/app/actions/rfq"
 import { formatCurrency } from "@/lib/utils"
 import { RfqStatus, RfqVendorStatus } from "@prisma/client"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface RfqClientProps {
     initialData: RfqOverviewData
@@ -871,13 +872,13 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 {activeRfq.status !== RfqStatus.CONVERTED && (
-                                                    <DropdownMenuItem
+                                                    <RequireRole min="MANAGER"><DropdownMenuItem
                                                         onClick={() => handleDeleteRfq(activeRfq.id)}
                                                         className="text-rose-600 dark:text-rose-400 focus:text-rose-600"
                                                     >
                                                         <Trash2 className="w-4 h-4 mr-2" />
                                                         Delete RFQ
-                                                    </DropdownMenuItem>
+                                                    </DropdownMenuItem></RequireRole>
                                                 )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -1189,7 +1190,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                         </Button>
 
                                                                         {activeRfq.status !== RfqStatus.CONVERTED && vendorQuote.totalAmount > 0 && (
-                                                                            <Button
+                                                                            <RequireRole min="MANAGER"><Button
                                                                                 size="sm"
                                                                                 className="h-7 text-xs w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
                                                                                 onClick={() => handleAwardQuote(vendorQuote)}
@@ -1197,7 +1198,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                             >
                                                                                 <Award className="w-3.5 h-3.5 mr-1" />
                                                                                 Award PO
-                                                                            </Button>
+                                                                            </Button></RequireRole>
                                                                         )}
 
                                                                         {vendorQuote.isWinner && (
@@ -1291,13 +1292,13 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                     {vendorQuote.status === RfqVendorStatus.INVITED ? "Record Quote" : "Edit Quote"}
                                                                 </Button>
                                                                 {activeRfq.status !== RfqStatus.CONVERTED && vendorQuote.totalAmount > 0 && (
-                                                                    <Button
+                                                                    <RequireRole min="MANAGER"><Button
                                                                         size="sm"
                                                                         className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
                                                                         onClick={() => handleAwardQuote(vendorQuote)}
                                                                     >
                                                                         Award
-                                                                    </Button>
+                                                                    </Button></RequireRole>
                                                                 )}
                                                             </div>
                                                         </div>

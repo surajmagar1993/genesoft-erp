@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 /* ── Types ── */
@@ -96,7 +96,7 @@ export async function createProduct(
   payload: CreateProductPayload
 ): Promise<{ id: string | null; error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { data, error } = await supabase
     .from("products")
@@ -125,7 +125,7 @@ export async function updateProduct(
   payload: UpdateProductPayload
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { id, ...fields } = payload
 
@@ -151,7 +151,7 @@ export async function updateProduct(
 /* ── Delete ── */
 export async function deleteProduct(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   const { error } = await supabase
     .from("products")
@@ -191,7 +191,7 @@ export async function importProducts(
   products: any[]
 ): Promise<{ error: string | null; count: number }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const insertData = products.map(p => ({
     name: p.name || "Unknown Product",

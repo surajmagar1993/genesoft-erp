@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
   EWAY_BILL_CONSIGNMENT_THRESHOLD,
@@ -314,7 +314,7 @@ export async function generateEwayBill(payload: {
   vehicleType?: EwayVehicleTypeCode
   itemList: EwayItemPayload[]
 }): Promise<{ success: boolean; ewayBill?: EwayBillRecord; error?: string }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   // 1. Validation Checks
   if (!payload.docNo.trim()) {
@@ -506,7 +506,7 @@ export async function updateEwayBillVehicle(
     transDocNo?: string
   }
 ): Promise<{ success: boolean; error?: string }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const vRes = validateVehicleNumber(payload.vehicleNo)
   if (!vRes.isValid) {
@@ -571,7 +571,7 @@ export async function cancelEwayBill(
   cancelReason: string,
   cancelRemark?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -707,7 +707,7 @@ export async function exportEwayBillNicJson(ids: string[]): Promise<{
 export async function saveTransporter(
   transporter: Omit<TransporterRecord, "id"> & { id?: string }
 ): Promise<{ success: boolean; transporter?: TransporterRecord; error?: string }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const tRes = validateTransporterId(transporter.gstin)
   if (!tRes.isValid) {

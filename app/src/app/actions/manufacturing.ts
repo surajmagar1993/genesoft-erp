@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
     BOMStatus,
@@ -324,7 +324,7 @@ export async function createBOM(input: {
         notes?: string
     }[]
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     const count = await prisma.billOfMaterials.count({ where: { tenantId } })
     const currentYear = new Date().getFullYear()
     const bomNumber = `BOM-${currentYear}-${String(count + 1).padStart(3, "0")}`
@@ -381,7 +381,7 @@ export async function createBOM(input: {
  * Update BOM status
  */
 export async function updateBOMStatus(bomId: string, status: BOMStatus) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     await prisma.billOfMaterials.update({
         where: { id: bomId, tenantId },
@@ -406,7 +406,7 @@ export async function createWorkOrder(input: {
     assignedTo?: string
     notes?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     const now = new Date()
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
     const count = await prisma.workOrder.count({ where: { tenantId } })
@@ -480,7 +480,7 @@ export async function updateWorkOrderStatus(
     scrapQuantity?: number,
     notes?: string
 ) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     const order = await prisma.workOrder.findUnique({
         where: { id: workOrderId, tenantId },
@@ -648,7 +648,7 @@ export async function recordQualityInspection(workOrderId: string, input: {
     inspectorName?: string
     notes?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     const now = new Date()
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
     const count = await prisma.qualityInspection.count({ where: { tenantId } })

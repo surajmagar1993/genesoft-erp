@@ -13,7 +13,8 @@ export const metadata = {
 export default async function HRPage() {
     const [overviewData, payrollData, recruitmentData] = await Promise.all([
         getHROverview(),
-        getPayrollOverview(),
+        // Payroll is MANAGER+; other roles get the HR page without it
+        getPayrollOverview().catch(() => undefined),
         getRecruitmentOverview()
     ])
 

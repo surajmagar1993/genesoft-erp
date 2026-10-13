@@ -77,6 +77,7 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { RequireRole } from "@/components/auth/role-context"
 
 // Default blueprint templates
 const DEFAULT_CONTACT_FIELDS: FormFieldConfig[] = [
@@ -894,7 +895,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                             <Eye className="h-3.5 w-3.5 text-emerald-600" />
                                                         )}
                                                     </Button>
-                                                    <Button
+                                                    <RequireRole min="MANAGER"><Button
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => handleDeleteForm(form.id, form.title)}
@@ -902,7 +903,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                         className="h-8 w-8 p-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                                                     >
                                                         <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
+                                                    </Button></RequireRole>
                                                 </div>
                                             </div>
                                         </CardContent>

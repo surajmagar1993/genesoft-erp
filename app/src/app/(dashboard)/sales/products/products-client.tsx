@@ -19,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { ProductDB, deleteProduct, importProducts, exportProducts } from "@/app/actions/sales/products"
 import { formatCurrency } from "@/lib/utils"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface ProductsClientProps {
     initialProducts: ProductDB[]
@@ -292,7 +293,7 @@ export function ProductsClient({ initialProducts, total }: ProductsClientProps) 
                                                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push(`/sales/products/${item.id}/edit`)}>
                                                         <Pencil className="h-4 w-4 text-muted-foreground" />
                                                     </Button>
-                                                    <Button 
+                                                    <RequireRole min="MANAGER"><Button 
                                                         variant="ghost" 
                                                         size="icon" 
                                                         className="h-8 w-8" 
@@ -300,7 +301,7 @@ export function ProductsClient({ initialProducts, total }: ProductsClientProps) 
                                                         disabled={isDeleting === item.id}
                                                     >
                                                         <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
+                                                    </Button></RequireRole>
                                                 </div>
                                             </TableCell>
                                         </TableRow>

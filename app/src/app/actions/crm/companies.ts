@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export interface Company {
@@ -82,7 +82,7 @@ export async function createCompany(
 ): Promise<{ error: string | null; data?: Company }> {
   try {
     const supabase = await createClient()
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     if (!tenantId) {
       return { error: "Authentication required or tenant not identified." }
@@ -135,7 +135,7 @@ export async function updateCompany(
 ): Promise<{ error: string | null }> {
   try {
     const supabase = await createClient()
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     if (!tenantId) {
       return { error: "Authentication required or tenant not identified." }
@@ -172,7 +172,7 @@ export async function updateCompany(
 export async function deleteCompany(id: string): Promise<{ error: string | null }> {
   try {
     const supabase = await createClient()
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     const { error } = await supabase
       .from("companies")

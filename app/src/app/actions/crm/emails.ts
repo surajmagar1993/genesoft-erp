@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
-import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId, getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { openSecret, sealSecret } from "@/lib/secret-box"
 import { revalidatePath } from "next/cache"
 import { checkSmtpTarget } from "@/lib/smtp-guard"
@@ -290,7 +290,7 @@ export async function sendEmail(data: SendEmailInput): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.toEmail?.trim()) return { error: "Recipient email is required" }
@@ -441,7 +441,7 @@ export async function saveEmailDraft(data: Partial<SendEmailInput>): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         const foreignLink = await findForeignLink(tenantId, data)
@@ -475,7 +475,7 @@ export async function saveEmailDraft(data: Partial<SendEmailInput>): Promise<{
 
 export async function toggleStarEmail(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         const msg = await prisma.emailMessage.findFirst({ where: { id, tenantId } })
         if (!msg) return { error: "Message not found" }
 
@@ -494,7 +494,7 @@ export async function toggleStarEmail(id: string): Promise<{ success?: boolean; 
 
 export async function markEmailAsRead(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         const { count } = await prisma.emailMessage.updateMany({
             where: { id, tenantId },
             data: { isRead: true },
@@ -511,7 +511,7 @@ export async function markEmailAsRead(id: string): Promise<{ success?: boolean; 
 
 export async function deleteEmailMessage(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         const { count } = await prisma.emailMessage.deleteMany({ where: { id, tenantId } })
         if (count === 0) return { error: "Message not found" }
         revalidatePath("/crm/emails")
@@ -528,7 +528,7 @@ export async function syncMailbox(mailboxId: string): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         const exists = await prisma.emailAccount.count({ where: { id: mailboxId, tenantId } })
         if (!exists) return { error: "Mailbox not found" }
 
@@ -653,7 +653,7 @@ export async function createEmailTemplate(data: CreateEmailTemplateInput): Promi
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.name?.trim()) return { error: "Template name is required" }
@@ -683,7 +683,7 @@ export async function createEmailTemplate(data: CreateEmailTemplateInput): Promi
 
 export async function deleteEmailTemplate(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         const { count } = await prisma.emailTemplate.deleteMany({ where: { id, tenantId } })
         if (count === 0) return { error: "Template not found" }
         revalidatePath("/crm/emails")

@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { CommunicationType, LeadStatus } from "@prisma/client"
 import type {
@@ -148,7 +148,7 @@ export async function createWebForm(data: CreateWebFormInput): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.title?.trim()) return { error: "Form title is required" }
@@ -205,7 +205,7 @@ export async function updateWebForm(
     data: UpdateWebFormInput
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         const updateData: any = {}
@@ -239,7 +239,7 @@ export async function updateWebForm(
 
 export async function deleteWebForm(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         const { count } = await prisma.webForm.deleteMany({ where: { id, tenantId } })
@@ -257,7 +257,7 @@ export async function toggleWebFormStatus(
     newStatus: WebFormStatus
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         const { count } = await prisma.webForm.updateMany({
             where: { id, tenantId },
             data: { status: newStatus },

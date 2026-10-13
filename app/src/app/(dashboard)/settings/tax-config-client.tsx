@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { getTaxGroups, createTaxGroup, deleteTaxGroup, TaxGroup } from "@/app/actions/sales/tax"
 import { toast } from "sonner"
+import { RequireRole } from "@/components/auth/role-context"
 
 export default function TaxConfigClient() {
     const [taxGroups, setTaxGroups] = useState<TaxGroup[]>([])
@@ -159,7 +160,7 @@ export default function TaxConfigClient() {
                             </label>
                         </div>
 
-                        <Button onClick={handleCreate} className="w-full mt-4">Save Tax Group</Button>
+                        <RequireRole min="MANAGER"><Button onClick={handleCreate} className="w-full mt-4">Save Tax Group</Button></RequireRole>
                     </CardContent>
                 </Card>
             )}
@@ -176,9 +177,9 @@ export default function TaxConfigClient() {
                                     </CardTitle>
                                     <CardDescription className="text-xs">{group.country_code} • {group.is_active ? "Active" : "Inactive"}</CardDescription>
                                 </div>
-                                <Button size="icon" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(group.id)}>
+                                <RequireRole min="MANAGER"><Button size="icon" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(group.id)}>
                                     <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
+                                </Button></RequireRole>
                             </div>
                         </CardHeader>
                         <CardContent>

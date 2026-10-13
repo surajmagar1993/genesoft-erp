@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { PurchaseOrderStatus, StockMovementType } from "@prisma/client"
@@ -290,7 +290,7 @@ export async function createVendor(data: {
     state?: string
     countryCode?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     const cleanDisplayName = data.displayName?.trim() || data.companyName?.trim()
     if (!cleanDisplayName) throw new Error("Supplier name is required")
@@ -322,7 +322,7 @@ export async function createVendor(data: {
  * Creates a new Purchase Order with calculated totals and line items.
  */
 export async function createPurchaseOrder(data: CreatePurchaseOrderInput) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     if (!data.vendorId) throw new Error("Vendor selection is required")
     if (!data.items || data.items.length === 0) throw new Error("At least one purchase line item is required")
@@ -399,7 +399,7 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderInput) {
  * Updates the lifecycle status of a Purchase Order.
  */
 export async function updatePurchaseOrderStatus(id: string, status: PurchaseOrderStatus) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     const existing = await prisma.purchaseOrder.findFirst({
         where: { id, tenantId }
@@ -425,7 +425,7 @@ export async function receiveGoods(data: {
     receivedItems: { itemId: string; quantity: number }[]
     notes?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const performedBy = user?.email || "Procurement Officer"
@@ -565,7 +565,7 @@ export async function convertPOToBill(data: string | {
     dueDate?: string
     billNumber?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     const purchaseOrderId = typeof data === "string" ? data : data.purchaseOrderId
     const customDueDate = typeof data === "object" && data.dueDate ? new Date(data.dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     const customBillNumber = typeof data === "object" && data.billNumber ? data.billNumber.trim() : null

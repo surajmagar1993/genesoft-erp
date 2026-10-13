@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export type LeadStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST"
@@ -77,7 +77,7 @@ export async function createLead(
   formData: Omit<Lead, "id" | "created_at" | "tenant_id" | "updated_at">
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { data: lead, error } = await supabase
     .from("leads")
@@ -113,7 +113,7 @@ export async function updateLead(
   formData: Partial<Omit<Lead, "id" | "created_at" | "tenant_id" | "updated_at">>
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { error } = await supabase
     .from("leads")
@@ -128,7 +128,7 @@ export async function updateLead(
 
 export async function deleteLead(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   const { error } = await supabase
     .from("leads")
@@ -148,7 +148,7 @@ import { prisma } from "@/lib/prisma"
  * This is a critical P1 CRM workflow.
  */
 export async function convertLeadToDeal(leadId: string) {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   return await (prisma as any).$transaction(async (tx: any) => {
     // 1. Fetch lead

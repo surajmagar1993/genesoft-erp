@@ -88,6 +88,7 @@ import {
     recordInterviewFeedback,
     hireApplicant
 } from "@/app/actions/recruitment"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface RecruitmentClientProps {
     initialData: RecruitmentOverviewData
@@ -1788,14 +1789,14 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         <Button variant="outline" onClick={() => setIsHireModalOpen(false)}>
                             Cancel
                         </Button>
-                        <Button
+                        <RequireRole min="MANAGER"><Button
                             onClick={handleHireCandidate}
                             disabled={isPending}
                             className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
                         >
                             {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                             Confirm & Hire Candidate
-                        </Button>
+                        </Button></RequireRole>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

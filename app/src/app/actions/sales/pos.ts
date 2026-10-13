@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import type {
   POSProductItem,
@@ -127,7 +127,7 @@ export async function quickCreateWalkInContact(
   name: string,
   phone?: string
 ): Promise<{ id: string; displayName: string }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const contact = await prisma.contact.create({
     data: {
@@ -153,7 +153,7 @@ export async function createPOSSale(
   data: POSTransactionData
 ): Promise<POSSaleResult> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   try {
     // 1. Resolve or create contact
@@ -316,7 +316,7 @@ export async function openPOSSession(
   openingCash: number,
   staffName: string
 ): Promise<POSSessionRecord> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   // Close any existing open sessions
   await prisma.pOSSession.updateMany({
@@ -354,7 +354,7 @@ export async function closePOSSession(
   success: boolean
   variance?: number
 }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const session = await prisma.pOSSession.findFirst({
     where: { id: sessionId, tenantId },

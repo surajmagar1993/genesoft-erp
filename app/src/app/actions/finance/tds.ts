@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
   TDS_SECTIONS,
@@ -353,7 +353,7 @@ export async function recordTdsDeduction(input: {
   notes?: string
 }): Promise<{ success: boolean; deduction?: TdsDeductionRecord; error?: string }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     const gross = Number(input.grossAmount)
     if (isNaN(gross) || gross <= 0) {
       return { success: false, error: "Gross amount must be greater than zero." }
@@ -454,7 +454,7 @@ export async function recordTdsChallan(input: {
   notes?: string
 }): Promise<{ success: boolean; challan?: TdsChallanRecord; error?: string }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     // Validate BSR code (7 digits)
     const bsrClean = input.bsrCode.trim()
@@ -558,7 +558,7 @@ export async function updateTdsProfile(
   profile: Partial<TdsProfile>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     // Validate TAN if provided
     if (profile.tan) {

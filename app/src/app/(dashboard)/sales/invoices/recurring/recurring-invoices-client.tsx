@@ -56,6 +56,7 @@ import {
     Layers,
     ChevronRight,
 } from "lucide-react"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface RecurringInvoicesClientProps {
     initialData: RecurringInvoicesOverview
@@ -383,7 +384,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2.5">
-                    <Button
+                    <RequireRole min="MANAGER"><Button
                         variant="outline"
                         size="sm"
                         onClick={handleBatchRun}
@@ -392,7 +393,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                     >
                         <Sparkles className="h-4 w-4 text-amber-400" />
                         Run All Due Profiles
-                    </Button>
+                    </Button></RequireRole>
 
                     <Button
                         variant="default"
@@ -709,7 +710,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                             </>
                                                         )}
                                                     </Button>
-                                                    <Button
+                                                    <RequireRole min="MANAGER"><Button
                                                         size="sm"
                                                         variant="ghost"
                                                         className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
@@ -717,7 +718,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                         disabled={isPending}
                                                     >
                                                         <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
+                                                    </Button></RequireRole>
                                                 </div>
 
                                                 {/* RUN NOW TRIGGER */}

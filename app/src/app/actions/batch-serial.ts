@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { BatchStatus, SerialStatus, StockMovementType } from "@prisma/client"
 import { addMonths, isBefore, addDays } from "date-fns"
@@ -308,7 +308,7 @@ export async function createBatch(data: {
     supplierBatchNo?: string | null
     notes?: string | null
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     if (!data.productId || !data.warehouseId || !data.batchNumber.trim()) {
         throw new Error("Product, Warehouse, and Batch Number are required fields.")
@@ -436,7 +436,7 @@ export async function updateBatch(
         expiryDate?: string | null
     }
 ) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     const existing = await prisma.productBatch.findFirst({
         where: { id, tenantId }
@@ -466,7 +466,7 @@ export async function updateBatch(
  * Adjusts batch current quantity with reason and logs stock movement audit.
  */
 export async function adjustBatchQty(id: string, deltaQty: number, reason: string) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     if (!deltaQty || isNaN(deltaQty)) {
         throw new Error("Valid adjustment quantity delta is required.")
@@ -561,7 +561,7 @@ export async function adjustBatchQty(id: string, deltaQty: number, reason: strin
  * Initiates an emergency product recall on a specific lot number.
  */
 export async function recallBatch(id: string, recallReason: string) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     if (!recallReason.trim()) {
         throw new Error("Reason is required when triggering a lot recall.")
@@ -604,7 +604,7 @@ export async function createSerial(data: {
     purchaseOrderId?: string | null
     notes?: string | null
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     if (!data.productId || !data.serialNumber.trim()) {
         throw new Error("Product and Serial Number are required.")
@@ -666,7 +666,7 @@ export async function createSerialsBulk(data: {
     warrantyMonths?: number | null
     notes?: string | null
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     if (!data.productId) {
         throw new Error("Product is required for serial registration.")
@@ -748,7 +748,7 @@ export async function createSerialsBulk(data: {
  * Updates a serial number's lifecycle status (AVAILABLE, ALLOCATED, SOLD, DEFECTIVE, MAINTENANCE, RETURNED).
  */
 export async function updateSerialStatus(id: string, status: SerialStatus, notes?: string | null) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     const serial = await prisma.productSerial.findFirst({
         where: { id, tenantId }

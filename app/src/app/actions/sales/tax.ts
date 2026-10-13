@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export interface TaxRate {
@@ -47,7 +47,7 @@ export async function createTaxGroup(data: {
   rates: { name: string; rate: number }[]
 }) {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   // 1. Create the Group
   const { data: group, error: groupError } = await supabase
@@ -84,7 +84,7 @@ export async function createTaxGroup(data: {
 
 export async function deleteTaxGroup(id: string) {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
   const { error } = await supabase
     .from("tax_groups")
     .delete()

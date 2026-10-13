@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
@@ -115,7 +115,7 @@ import { createNotification } from "@/app/actions/notifications"
  */
 export async function createBill(data: BillData) {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
     throw new Error("Vendor not found")
@@ -212,7 +212,7 @@ export async function createBill(data: BillData) {
  */
 export async function updateBill(id: string, data: Partial<BillData>) {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
     throw new Error("Vendor not found")
@@ -347,7 +347,7 @@ export async function updateBill(id: string, data: Partial<BillData>) {
 export async function deleteBill(id: string): Promise<{ error: string | null }> {
   try {
     const supabase = await createClient()
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     const { error } = await supabase
       .from("bills")
@@ -395,7 +395,7 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
  */
 export async function updateBillStatus(id: string, status: BillStatus) {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   const { error } = await supabase
     .from("bills")

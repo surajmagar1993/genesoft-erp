@@ -72,6 +72,7 @@ import {
     RentalStatus,
     DepositStatus,
 } from "@prisma/client"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface RentalClientProps {
     initialData: RentalOverviewData
@@ -902,7 +903,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                         >
                                                             <Pencil className="h-3.5 w-3.5" />
                                                         </Button>
-                                                        <Button
+                                                        <RequireRole min="MANAGER"><Button
                                                             size="icon"
                                                             variant="ghost"
                                                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
@@ -910,7 +911,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                             onClick={() => handleDeleteAsset(asset.id)}
                                                         >
                                                             <Trash2 className="h-3.5 w-3.5" />
-                                                        </Button>
+                                                        </Button></RequireRole>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

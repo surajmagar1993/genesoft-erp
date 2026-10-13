@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
     RecurringFrequency,
@@ -414,7 +414,7 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.title?.trim()) return { error: "Profile title is required" }
@@ -519,7 +519,7 @@ export async function updateRecurringProfile(
     data: Partial<CreateRecurringProfileInput>
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         const updateData: any = {}
@@ -563,7 +563,7 @@ export async function toggleRecurringProfileStatus(
     newStatus: RecurringStatus
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         const { count } = await prisma.recurringProfile.updateMany({
@@ -586,7 +586,7 @@ export async function toggleRecurringProfileStatus(
 
 export async function deleteRecurringProfile(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         const owned = await prisma.recurringProfile.count({ where: { id, tenantId } })
@@ -624,7 +624,7 @@ export async function triggerGenerateInvoice(profileId: string): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
         if (!tenantId) return { error: "Authentication required" }
 
         const profile = await prisma.recurringProfile.findFirst({
@@ -765,7 +765,7 @@ export async function batchRunDueRecurringProfiles(): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
         if (!tenantId) return { error: "Authentication required" }
 
         const now = new Date()

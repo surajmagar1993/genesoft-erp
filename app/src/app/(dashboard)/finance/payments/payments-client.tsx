@@ -20,6 +20,7 @@ import { PaymentDB, deletePayment } from "@/app/actions/finance/payments"
 
 /* ── Helpers ── */
 import { formatCurrency } from "@/lib/utils"
+import { RequireRole } from "@/components/auth/role-context"
 
 const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—"
@@ -198,7 +199,7 @@ export default function PaymentsClient({ initialPayments, total }: Props) {
                                                     {isOutbound ? "-" : ""}{formatCurrency(p.amount, p.currency_code)}
                                                 </TableCell>
                                                 <TableCell className="text-right">
-                                                    <Button
+                                                    <RequireRole min="MANAGER"><Button
                                                         variant="ghost"
                                                         size="icon"
                                                         disabled={isPending}
@@ -209,7 +210,7 @@ export default function PaymentsClient({ initialPayments, total }: Props) {
                                                         }}
                                                     >
                                                         <Trash2 className="h-4 w-4 text-destructive" />
-                                                    </Button>
+                                                    </Button></RequireRole>
                                                 </TableCell>
                                             </TableRow>
                                         )

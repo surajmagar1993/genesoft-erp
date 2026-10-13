@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { deleteLead, updateLead, type Lead, type LeadStatus } from "@/app/actions/crm/leads"
 import { PageHeader } from "@/components/ui/page-header"
+import { RequireRole } from "@/components/auth/role-context"
 
 const statusConfig: Record<LeadStatus, { label: string; color: string; icon: React.ElementType }> = {
     NEW: { label: "New", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Sparkles },
@@ -227,9 +228,9 @@ export default function LeadsClient({ initialLeads, total }: Props) {
                                                         </DropdownMenuItem>
                                                     )}
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem className="text-red-500" onClick={() => handleDelete(lead.id)}>
+                                                    <RequireRole min="MANAGER"><DropdownMenuItem className="text-red-500" onClick={() => handleDelete(lead.id)}>
                                                         <Trash2 className="mr-2 h-4 w-4" />Delete
-                                                    </DropdownMenuItem>
+                                                    </DropdownMenuItem></RequireRole>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>

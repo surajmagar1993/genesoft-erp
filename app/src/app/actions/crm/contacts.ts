@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export interface Contact {
@@ -192,7 +192,7 @@ export async function createContact(
   formData: Omit<Contact, "id" | "created_at" | "tenant_id">
 ): Promise<{ error: string | null; id?: string }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     // Determine safe displayName
     let displayName = (formData.display_name || "").trim()
@@ -258,7 +258,7 @@ export async function updateContact(
   formData: Partial<Omit<Contact, "id" | "created_at" | "tenant_id">>
 ): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     let displayName = formData.display_name?.trim()
     if (displayName === "") {
@@ -319,7 +319,7 @@ export async function updateContact(
 
 export async function deleteContact(id: string): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     await prisma.contact.delete({
       where: {
@@ -345,7 +345,7 @@ export async function importContacts(
   contacts: any[]
 ): Promise<{ error: string | null; count: number }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     const createdRecords = await prisma.$transaction(
       contacts.map((c) =>

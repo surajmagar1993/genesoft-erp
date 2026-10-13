@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { deleteContact, type Contact, importContacts, exportContacts } from "@/app/actions/crm/contacts"
 import { formatCurrency } from "@/lib/utils"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface Props {
     initialContacts: Contact[]
@@ -310,12 +311,12 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
                                                 <Receipt className="h-4 w-4 mr-2" />View Ledger
                                             </DropdownMenuItem>
                                             <DropdownMenuSeparator />
-                                            <DropdownMenuItem
+                                            <RequireRole min="MANAGER"><DropdownMenuItem
                                                 className="text-destructive focus:text-destructive"
                                                 onClick={() => handleDelete(contact.id)}
                                             >
                                                 <Trash2 className="h-4 w-4 mr-2" />Delete Contact
-                                            </DropdownMenuItem>
+                                            </DropdownMenuItem></RequireRole>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>

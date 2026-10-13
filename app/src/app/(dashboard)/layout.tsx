@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { UserProfileEmail } from "@/components/auth/user-profile-email"
 import { createClient } from "@/lib/supabase/client"
 import { LogoutMenuItem } from '@/components/auth/logout-button'
+import { RoleProvider } from "@/components/auth/role-context"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
@@ -51,6 +52,7 @@ import {
     ShieldCheck,
     MessageSquare,
     Megaphone,
+    Eye,
     UserCheck,
     Award,
     Zap,
@@ -383,6 +385,7 @@ export default function DashboardLayout({
     const [multiJurisdiction, setMultiJurisdiction] = useState<boolean>(false)
     const [tenantName, setTenantName] = useState<string>("")
     const [bannerMessage, setBannerMessage] = useState<string | null>(null)
+    const [role, setRole] = useState<string | null>(null)
 
     useEffect(() => {
         let isMounted = true
@@ -425,7 +428,9 @@ export default function DashboardLayout({
                     .select('role')
                     .eq('id', user.id)
                     .single()
-                
+
+                setRole(userData?.role ?? null)
+
                 if (userData?.role === 'SUPER_ADMIN') {
                     // Only redirect if not already on an admin page (should be safe due to layout structure)
                     if (!pathname.startsWith('/admin') && !pathname.startsWith('/saas')) {
@@ -463,7 +468,15 @@ export default function DashboardLayout({
                             </button>
                         </div>
                     )}
-                    {children}
+                    {role === 'VIEWER' && (
+                        <div className="mb-4 p-3 rounded-lg bg-muted border text-muted-foreground text-xs font-medium flex items-center gap-2">
+                            <Eye className="h-4 w-4 shrink-0" />
+                            <span>You have view-only access to this workspace. Ask a workspace admin if you need to make changes.</span>
+                        </div>
+                    )}
+                    <RoleProvider role={role}>
+                        {children}
+                    </RoleProvider>
                 </div>
             </SidebarInset>
         </SidebarProvider>

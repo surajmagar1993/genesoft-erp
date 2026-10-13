@@ -22,6 +22,7 @@ import {
   type Account, type AccountType,
   deleteAccount, seedDefaultAccounts,
 } from "@/app/actions/finance/accounts"
+import { RequireRole } from "@/components/auth/role-context"
 
 /* ── Helper: Build tree from flat list ── */
 function buildAccountTree(accounts: Account[]): Account[] {
@@ -153,10 +154,10 @@ export default function AccountsClient({ initialAccounts }: Props) {
         </div>
         <div className="flex items-center gap-2">
           {accounts.length === 0 && (
-            <Button variant="outline" onClick={handleSeed} disabled={seeding}>
+            <RequireRole min="MANAGER"><Button variant="outline" onClick={handleSeed} disabled={seeding}>
               {seeding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
               Seed Default CoA
-            </Button>
+            </Button></RequireRole>
           )}
           <Button onClick={() => router.push("/finance/accounts/new")}>
             <Plus className="h-4 w-4 mr-2" /> New Account
@@ -238,10 +239,10 @@ export default function AccountsClient({ initialAccounts }: Props) {
               <p className="text-sm text-muted-foreground/60 mt-1 mb-4">
                 Seed the default Indian Chart of Accounts or create accounts manually.
               </p>
-              <Button onClick={handleSeed} disabled={seeding}>
+              <RequireRole min="MANAGER"><Button onClick={handleSeed} disabled={seeding}>
                 {seeding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
                 Seed Default CoA
-              </Button>
+              </Button></RequireRole>
             </div>
           ) : (
             <Table>
@@ -324,12 +325,12 @@ export default function AccountsClient({ initialAccounts }: Props) {
                             {!account.is_system && (
                               <>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem
+                                <RequireRole min="MANAGER"><DropdownMenuItem
                                   className="text-destructive focus:text-destructive"
                                   onClick={() => handleDelete(account.id)}
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                </DropdownMenuItem>
+                                </DropdownMenuItem></RequireRole>
                               </>
                             )}
                           </DropdownMenuContent>

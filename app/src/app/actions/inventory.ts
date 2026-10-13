@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { StockMovementType } from "@prisma/client"
@@ -313,7 +313,7 @@ export async function createWarehouse(data: {
     contactPhone?: string
     isDefault?: boolean
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     const cleanCode = data.code.trim().toUpperCase()
     const cleanName = data.name.trim()
 
@@ -368,7 +368,7 @@ export async function updateWarehouse(id: string, data: {
     isDefault?: boolean
     isActive?: boolean
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     const cleanCode = data.code.trim().toUpperCase()
     const cleanName = data.name.trim()
 
@@ -424,7 +424,7 @@ export async function adjustStock(data: {
     reason?: string
     referenceNo?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const performedBy = user?.email || "Super Admin"
@@ -547,7 +547,7 @@ export async function transferStock(data: {
     reason?: string
     referenceNo?: string
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const performedBy = user?.email || "Super Admin"

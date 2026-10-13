@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 /* ── Types ── */
@@ -126,7 +126,7 @@ export async function createOrder(
   payload: CreateOrderPayload
 ): Promise<{ id: string | null; error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { line_items, ...headerFields } = payload
 
@@ -198,7 +198,7 @@ export async function updateOrder(
   payload: UpdateOrderPayload
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { id, line_items, ...headerFields } = payload
 
@@ -279,7 +279,7 @@ export async function updateOrder(
 /* ── Delete ── */
 export async function deleteOrder(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   const { error } = await supabase
     .from("sales_orders")
@@ -299,7 +299,7 @@ export async function deleteOrder(id: string): Promise<{ error: string | null }>
 /* ── Convert Quote to Order ── */
 export async function convertQuoteToOrder(quoteId: string): Promise<{ orderId: string | null; error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   // 1. Fetch the quote
   const { data: quote, error: quoteError } = await supabase

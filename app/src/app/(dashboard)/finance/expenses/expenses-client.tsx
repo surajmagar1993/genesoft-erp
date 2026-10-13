@@ -64,6 +64,7 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface ExpensesClientProps {
     initialStats: ExpensesOverviewStats
@@ -721,7 +722,7 @@ export default function ExpensesClient({
                                                     </Button>
                                                     {exp.status === ExpenseStatus.PENDING_APPROVAL && (
                                                         <>
-                                                            <Button
+                                                            <RequireRole min="MANAGER"><Button
                                                                 size="sm"
                                                                 variant="outline"
                                                                 onClick={() => handleStatusUpdate(exp.id, ExpenseStatus.APPROVED)}
@@ -729,8 +730,8 @@ export default function ExpensesClient({
                                                                 className="h-8 px-2 text-xs text-emerald-600 border-emerald-300 hover:bg-emerald-50"
                                                             >
                                                                 Approve
-                                                            </Button>
-                                                            <Button
+                                                            </Button></RequireRole>
+                                                            <RequireRole min="MANAGER"><Button
                                                                 size="sm"
                                                                 variant="outline"
                                                                 onClick={() => handleStatusUpdate(exp.id, ExpenseStatus.REJECTED)}
@@ -738,21 +739,21 @@ export default function ExpensesClient({
                                                                 className="h-8 px-2 text-xs text-destructive border-destructive/30"
                                                             >
                                                                 Reject
-                                                            </Button>
+                                                            </Button></RequireRole>
                                                         </>
                                                     )}
                                                     {exp.status === ExpenseStatus.APPROVED && (
-                                                        <Button
+                                                        <RequireRole min="MANAGER"><Button
                                                             size="sm"
                                                             onClick={() => handleStatusUpdate(exp.id, ExpenseStatus.PAID)}
                                                             disabled={isPending}
                                                             className="h-8 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
                                                         >
                                                             Mark Paid
-                                                        </Button>
+                                                        </Button></RequireRole>
                                                     )}
                                                     {exp.status !== ExpenseStatus.VOID && (
-                                                        <Button
+                                                        <RequireRole min="MANAGER"><Button
                                                             size="sm"
                                                             variant="ghost"
                                                             onClick={() => handleVoidExpense(exp.id)}
@@ -760,7 +761,7 @@ export default function ExpensesClient({
                                                             className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
                                                         >
                                                             <Ban className="h-3.5 w-3.5" />
-                                                        </Button>
+                                                        </Button></RequireRole>
                                                     )}
                                                 </td>
                                             </tr>

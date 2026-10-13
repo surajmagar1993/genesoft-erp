@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { deleteBill } from "@/app/actions/finance/bills"
 import { toast } from "sonner"
+import { RequireRole } from "@/components/auth/role-context"
 
 interface BillsClientProps {
   bills: any[]
@@ -204,12 +205,12 @@ export default function BillsClient({ bills, total }: BillsClientProps) {
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem 
+                          <RequireRole min="MANAGER"><DropdownMenuItem 
                             className="text-red-600 focus:text-red-600"
                             onClick={() => handleDelete(bill.id)}
                           >
                             <Trash2 className="mr-2 h-4 w-4" /> Delete
-                          </DropdownMenuItem>
+                          </DropdownMenuItem></RequireRole>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

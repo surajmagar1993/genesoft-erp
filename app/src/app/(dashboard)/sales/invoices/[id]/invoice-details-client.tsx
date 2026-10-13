@@ -35,6 +35,7 @@ import { generateWhatsAppDirectLink } from "@/lib/whatsapp-engine"
 import { COMPANY } from "@/lib/constants/company"
 import { InvoiceTemplateDialog } from "@/components/invoices/invoice-template-dialog"
 import { INVOICE_TEMPLATES } from "@/components/invoices/templates/invoice-templates"
+import { RequireRole } from "@/components/auth/role-context"
 
 const formatCurrency = (amount: number, currency: string = "INR") =>
     new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(amount)
@@ -312,10 +313,10 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit
                     </Button>
-                    <Button variant="outline" size="sm" onClick={handleDeleteInvoice} className="text-destructive hover:bg-destructive/10">
+                    <RequireRole min="MANAGER"><Button variant="outline" size="sm" onClick={handleDeleteInvoice} className="text-destructive hover:bg-destructive/10">
                         <Trash2 className="mr-2 h-4 w-4" />
                         Delete
-                    </Button>
+                    </Button></RequireRole>
                     <Button 
                         size="sm" 
                         disabled={balanceDue <= 0 || isPending}
@@ -565,7 +566,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                                         {formatCurrency(p.amount, invoice.currency_code)}
                                                     </TableCell>
                                                     <TableCell className="text-right p-2">
-                                                        <Button
+                                                        <RequireRole min="MANAGER"><Button
                                                             variant="ghost"
                                                             size="icon"
                                                             disabled={isPending}
@@ -576,7 +577,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                                             }}
                                                         >
                                                             <Trash2 className="h-4 w-4 text-destructive/80" />
-                                                        </Button>
+                                                        </Button></RequireRole>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}

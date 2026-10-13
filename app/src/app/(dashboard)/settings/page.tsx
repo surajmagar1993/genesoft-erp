@@ -1,17 +1,23 @@
 import Link from "next/link"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards, Zap } from "lucide-react"
+import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards, Zap, Users } from "lucide-react"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
 import { getTenantPaymentGateways } from "@/app/actions/finance/gateways"
 import CompanyProfileTab from "./company-profile-tab"
 import TaxConfigClient from "./tax-config-client"
 import BillingTab from "./billing-tab"
 import PaymentGatewaysTab from "./payment-gateways-tab"
+import TeamTab from "./team-tab"
+import { getTenantRole } from "@/lib/get-tenant-id"
+import { getTeamMembers } from "@/app/actions/settings/team"
 
 export default async function SettingsPage() {
     const settings = await getTenantSettings()
     const gatewayConfig = await getTenantPaymentGateways()
+    const role = await getTenantRole()
+    const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN"
+    const teamMembers = isAdmin ? await getTeamMembers() : []
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || ""
 
     return (
@@ -32,6 +38,12 @@ export default async function SettingsPage() {
                 </Link>
             </div>
 
+            {!isAdmin && (
+                <div className="p-3 rounded-lg bg-muted border text-muted-foreground text-xs font-medium">
+                    Only workspace admins can change these settings. You can view them below.
+                </div>
+            )}
+
             <Tabs defaultValue="organization" className="space-y-4">
                 <TabsList className="bg-muted/50 p-1">
                     <TabsTrigger value="organization" className="flex items-center gap-2">
@@ -49,6 +61,11 @@ export default async function SettingsPage() {
                     <TabsTrigger value="billing" className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4" /> Billing
                     </TabsTrigger>
+                    {isAdmin && (
+                        <TabsTrigger value="team" className="flex items-center gap-2">
+                            <Users className="h-4 w-4" /> Team & Roles
+                        </TabsTrigger>
+                    )}
                 </TabsList>
 
                 {/* Organization Settings */}
@@ -108,6 +125,13 @@ export default async function SettingsPage() {
                 <TabsContent value="billing">
                     <BillingTab settings={settings as any} />
                 </TabsContent>
+
+                {/* Team & Roles (workspace admins only) */}
+                {isAdmin && (
+                    <TabsContent value="team">
+                        <TeamTab initialMembers={teamMembers} />
+                    </TabsContent>
+                )}
             </Tabs>
         </div>
     )

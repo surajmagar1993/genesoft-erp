@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export type AccountType = "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE"
@@ -67,7 +67,7 @@ export async function createAccount(
   formData: Omit<Account, "id" | "created_at" | "updated_at" | "tenant_id" | "children" | "depth">
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   const { error } = await supabase
     .from("accounts")
@@ -84,7 +84,7 @@ export async function updateAccount(
   formData: Partial<Omit<Account, "id" | "created_at" | "updated_at" | "tenant_id" | "children" | "depth">>
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   const { error } = await supabase
     .from("accounts")
@@ -100,7 +100,7 @@ export async function updateAccount(
 /* ── Delete ── */
 export async function deleteAccount(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   // Check if system account
   const { data: account } = await supabase
@@ -139,7 +139,7 @@ export async function deleteAccount(id: string): Promise<{ error: string | null 
 /* ── Seed Default Indian CoA ── */
 export async function seedDefaultAccounts(): Promise<{ error: string | null; count: number }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   // Check if already seeded
   const { data: existing } = await supabase

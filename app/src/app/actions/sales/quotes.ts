@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 /* ── Types ── */
@@ -125,7 +125,7 @@ export async function createQuote(
   payload: CreateQuotePayload
 ): Promise<{ id: string | null; error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { line_items, ...headerFields } = payload
 
@@ -196,7 +196,7 @@ export async function updateQuote(
   payload: UpdateQuotePayload
 ): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
 
   const { id, line_items, ...headerFields } = payload
 
@@ -281,7 +281,7 @@ export async function updateQuote(
 /* ── Delete ── */
 export async function deleteQuote(id: string): Promise<{ error: string | null }> {
   const supabase = await createClient()
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantManagerId()
 
   const { error } = await supabase
     .from("quotes")

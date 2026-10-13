@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
     ProjectStatus,
@@ -811,7 +811,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
  */
 export async function createProject(input: CreateProjectInput): Promise<{ success: boolean; projectId?: string; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         // Auto-generate project code
         const count = await prisma.project.count({ where: { tenantId } })
@@ -860,7 +860,7 @@ export async function createProject(input: CreateProjectInput): Promise<{ succes
  */
 export async function updateProject(id: string, input: UpdateProjectInput): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         await prisma.project.update({
             where: { id, tenantId },
@@ -892,7 +892,7 @@ export async function updateProject(id: string, input: UpdateProjectInput): Prom
  */
 export async function deleteProject(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
 
         await prisma.project.delete({
             where: { id, tenantId }
@@ -911,7 +911,7 @@ export async function deleteProject(id: string): Promise<{ success: boolean; err
  */
 export async function createProjectTask(input: CreateProjectTaskInput): Promise<{ success: boolean; taskId?: string; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         const taskCount = await prisma.projectTask.count({ where: { tenantId } })
         const taskCode = `TSK-${String(taskCount + 1001).padStart(4, "0")}`
@@ -946,7 +946,7 @@ export async function createProjectTask(input: CreateProjectTaskInput): Promise<
  */
 export async function updateProjectTaskStatus(id: string, newStatus: ProjectTaskStatus): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         await prisma.projectTask.update({
             where: { id, tenantId },
@@ -969,7 +969,7 @@ export async function updateProjectTaskStatus(id: string, newStatus: ProjectTask
  */
 export async function updateProjectTask(id: string, input: UpdateProjectTaskInput): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         await prisma.projectTask.update({
             where: { id, tenantId },
@@ -1001,7 +1001,7 @@ export async function updateProjectTask(id: string, input: UpdateProjectTaskInpu
  */
 export async function deleteProjectTask(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         await prisma.projectTask.delete({
             where: { id, tenantId }
@@ -1020,7 +1020,7 @@ export async function deleteProjectTask(id: string): Promise<{ success: boolean;
  */
 export async function createMilestone(input: CreateMilestoneInput): Promise<{ success: boolean; milestoneId?: string; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         const milestone = await prisma.projectMilestone.create({
             data: {
@@ -1047,7 +1047,7 @@ export async function createMilestone(input: CreateMilestoneInput): Promise<{ su
  */
 export async function updateMilestone(id: string, input: Partial<CreateMilestoneInput> & { completedDate?: string }): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         await prisma.projectMilestone.update({
             where: { id, tenantId },
@@ -1074,7 +1074,7 @@ export async function updateMilestone(id: string, input: Partial<CreateMilestone
  */
 export async function deleteMilestone(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
 
         await prisma.projectMilestone.delete({
             where: { id, tenantId }
@@ -1093,7 +1093,7 @@ export async function deleteMilestone(id: string): Promise<{ success: boolean; e
  */
 export async function addProjectMember(projectId: string, employeeId: string, role: string = "Team Member", hourlyRate?: number): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         await prisma.projectMember.create({
             data: {
@@ -1118,7 +1118,7 @@ export async function addProjectMember(projectId: string, employeeId: string, ro
  */
 export async function removeProjectMember(memberId: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantManagerId()
 
         await prisma.projectMember.delete({
             where: { id: memberId, tenantId }
@@ -1137,7 +1137,7 @@ export async function removeProjectMember(memberId: string): Promise<{ success: 
  */
 export async function logProjectTime(input: LogTimeInput): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         await prisma.$transaction(async (tx: any) => {
             await tx.projectTimeEntry.create({
@@ -1181,7 +1181,7 @@ export async function logProjectTime(input: LogTimeInput): Promise<{ success: bo
  */
 export async function deleteProjectTime(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantWriterId()
 
         const entry = await prisma.projectTimeEntry.findUnique({
             where: { id, tenantId }

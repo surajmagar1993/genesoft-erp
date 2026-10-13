@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import { deleteDeal, updateDeal, type Deal, type DealStage } from "@/app/actions/crm/deals"
 import { toast } from "sonner"
+import { RequireRole } from "@/components/auth/role-context"
 
 const stages: { key: DealStage; label: string; color: string; dotColor: string }[] = [
     { key: "PROSPECTING", label: "Prospecting", color: "from-slate-500 to-slate-600", dotColor: "bg-slate-500" },
@@ -136,9 +137,9 @@ export default function DealsClient({ initialDeals, total }: Props) {
                     </DropdownMenuSubContent>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-500" onClick={() => handleDelete(deal.id)}>
+                <RequireRole min="MANAGER"><DropdownMenuItem className="text-red-500" onClick={() => handleDelete(deal.id)}>
                     <Trash2 className="mr-2 h-4 w-4" />Delete
-                </DropdownMenuItem>
+                </DropdownMenuItem></RequireRole>
             </DropdownMenuContent>
         </DropdownMenu>
     )

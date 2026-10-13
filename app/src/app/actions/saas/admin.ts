@@ -1031,16 +1031,7 @@ export async function updateUserRole(userId: string, role: any) {
         data: { role }
     })
 
-    // Synchronize Supabase profiles role if available
-    try {
-        const supabase = await createClient()
-        await supabase
-            .from("profiles")
-            .update({ role })
-            .eq("id", userId)
-    } catch (supaErr) {
-        console.warn("Failed to sync Supabase profile role for user:", userId, supaErr)
-    }
+    // prisma.user is the profiles table, so the middleware sees the new role immediately
 
     await logAdminAction("USER_ROLE_UPDATE", userId, "USER", {
         newRole: role,

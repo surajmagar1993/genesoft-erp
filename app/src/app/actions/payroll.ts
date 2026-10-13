@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantManagerId } from "@/lib/get-tenant-id"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import {
@@ -117,7 +117,7 @@ export interface PayrollOverviewData {
  * Get unified payroll overview telemetry, runs, payslips, and templates
  */
 export async function getPayrollOverview(month?: number, year?: number): Promise<PayrollOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     const now = new Date()
     const targetMonth = month || (now.getMonth() + 1)
     const targetYear = year || now.getFullYear()
@@ -290,7 +290,7 @@ export async function createSalaryStructure(data: {
     professionalTax?: number
     tdsPercentage?: number
 }) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     const structure = await prisma.salaryStructure.create({
         data: {
@@ -320,7 +320,7 @@ export async function createSalaryStructure(data: {
  * Assign employee to a salary structure and set monthly compensation
  */
 export async function assignEmployeeSalary(employeeId: string, salaryStructureId: string, basicSalary?: number) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     await prisma.employee.update({
         where: { id: employeeId, tenantId },
@@ -343,7 +343,7 @@ export async function generatePayRun(
     payDateString: string,
     notes?: string
 ) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     const payDate = new Date(payDateString)
 
     // Check if a run already exists for this period
@@ -582,7 +582,7 @@ export async function generatePayRun(
  * Approve a draft pay run
  */
 export async function approvePayRun(payRunId: string) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -614,7 +614,7 @@ export async function processPayRun(
     paymentMethod: string = "DIRECT_DEPOSIT",
     paymentReference?: string
 ) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     const run = await prisma.payrollRun.findUnique({
         where: { id: payRunId, tenantId },
@@ -655,7 +655,7 @@ export async function processPayRun(
  * Delete a draft pay run
  */
 export async function deletePayRun(payRunId: string) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     const run = await prisma.payrollRun.findUnique({
         where: { id: payRunId, tenantId }
@@ -681,7 +681,7 @@ export async function deletePayRun(payRunId: string) {
  * Fetch detailed payslip document with organization letterhead details
  */
 export async function getPayslipDetails(payslipId: string) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantManagerId()
 
     const [slip, tenant] = await Promise.all([
         prisma.payslip.findUnique({

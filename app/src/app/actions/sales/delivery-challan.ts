@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
     ChallanReason,
@@ -340,7 +340,7 @@ export interface CreateDeliveryChallanInput {
  * Create a new Delivery Challan (Rule 55) with sequential DC-YYYY-XXXX numbering
  */
 export async function createDeliveryChallan(input: CreateDeliveryChallanInput) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     if (!input.items || input.items.length === 0) {
         throw new Error("Delivery challan must contain at least one line item.")
@@ -427,7 +427,7 @@ export async function createDeliveryChallan(input: CreateDeliveryChallanInput) {
  * Update Delivery Challan lifecycle status (ISSUED, IN_TRANSIT, DELIVERED, RETURNED, CANCELLED)
  */
 export async function updateDeliveryChallanStatus(id: string, status: ChallanStatus) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     await prisma.deliveryChallan.update({
         where: { id, tenantId },
@@ -442,7 +442,7 @@ export async function updateDeliveryChallanStatus(id: string, status: ChallanSta
  * 1-Click Convert Delivery Challan into a Tax Invoice (Invoice model)
  */
 export async function convertChallanToInvoice(challanId: string) {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantWriterId()
 
     return await prisma.$transaction(async (tx: any) => {
         const challan = await tx.deliveryChallan.findUnique({

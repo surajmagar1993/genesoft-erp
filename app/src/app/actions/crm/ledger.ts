@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { Prisma } from "@prisma/client"
 import { convertAmount } from "@/lib/exchange-rates"
@@ -48,7 +48,7 @@ interface RecordTransactionPayload {
  * Normalizes the amount to the tenant's base currency for balance tracking.
  */
 export async function recordTransaction(payload: RecordTransactionPayload) {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantWriterId()
   const { contactId, type, amount, currencyCode = "INR", referenceId, description, date } = payload
 
   const transactionAmount = new Prisma.Decimal(amount)
