@@ -116,6 +116,22 @@ export const TAX_JURISDICTIONS: Record<string, TaxJurisdictionConfig> = {
     hasEwayBills: false,
     hasWithholdingTax: false,
   },
+  US: {
+    countryCode: "US",
+    countryName: "United States",
+    flag: "🇺🇸",
+    currencyCode: "USD",
+    currencySymbol: "$",
+    regimeName: "US Sales Tax & IRS Form 1099",
+    taxLabel: "Sales Tax",
+    defaultRate: 7.25,
+    standardRates: [0, 4.0, 6.0, 6.25, 7.25, 8.875],
+    financeTaxItems: [
+      { name: "US Sales Tax & 1099", href: "/finance/tax-us", shortName: "🇺🇸 US Sales Tax" },
+    ],
+    hasEwayBills: false,
+    hasWithholdingTax: true,
+  },
 }
 
 /**
@@ -130,6 +146,7 @@ export function normalizeCountryCode(country?: string | null): string {
   if (upper === "SAUDI ARABIA" || upper === "KSA" || upper === "SA") return "SA"
   if (upper === "AUSTRALIA" || upper === "AUS" || upper === "AU") return "AU"
   if (upper === "UNITED KINGDOM" || upper === "UK" || upper === "GREAT BRITAIN" || upper === "GB") return "GB"
+  if (upper === "UNITED STATES" || upper === "USA" || upper === "US" || upper === "AMERICA") return "US"
   return TAX_JURISDICTIONS[upper] ? upper : "IN"
 }
 

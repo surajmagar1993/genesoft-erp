@@ -98,6 +98,7 @@ const STATUTORY_TAX_ROUTES = [
     "/finance/vat-ksa",
     "/finance/tax-australia",
     "/finance/vat-uk",
+    "/finance/tax-us",
 ]
 
 const navigation = [
@@ -153,6 +154,7 @@ const navigation = [
             { name: "KSA VAT & ZATCA", href: "/finance/vat-ksa", icon: ShieldCheck },
             { name: "Australia BAS (GST)", href: "/finance/tax-australia", icon: Landmark },
             { name: "UK VAT (MTD)", href: "/finance/vat-uk", icon: FileSpreadsheet },
+            { name: "US Sales Tax & 1099", href: "/finance/tax-us", icon: DollarSign },
             { name: "Reports", href: "/finance/reports", icon: BarChart3 },
         ],
     },

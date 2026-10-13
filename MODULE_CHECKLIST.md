@@ -175,10 +175,10 @@
 - [x] **HMRC MTD JSON & CSV Export** 🟢 ✅ (ALL UK TAX P2 COMPLETE 🇬🇧)
 
 ### 🇺🇸 United States (P3)
-- [ ] **Sales Tax (State-wise)** 🟢
-- [ ] **Tax Exemption Certificates** 🟢
-- [ ] **1099 Reporting** 🟢
-- [ ] **Multi-State Tax Rules** 🟢
+- [x] **Sales Tax (State-wise)** 🟢 ✅ **(2026-09-18)**
+- [x] **Tax Exemption Certificates** 🟢 ✅ **(2026-09-18)**
+- [x] **1099 Reporting** 🟢 ✅ **(2026-09-18)**
+- [x] **Multi-State Tax Rules** 🟢 ✅ (ALL USA TAX P3 COMPLETE 🇺🇸)
 
 ### 🌐 General Tax Features
 - [x] **Configurable Tax Engine** 🔴

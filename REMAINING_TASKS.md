@@ -134,7 +134,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] Finance: Budgeting & Variance Analysis (`/finance/budgets`, `/app/actions/finance/budgets.ts`) ✅ **(2026-09-17)** (ALL FINANCE & ACCOUNTING MODULES COMPLETE 📊)
 - [x] Tax (UAE): VAT Return Data, Reverse Charge (`/finance/vat-uae`) ✅ **(2026-09-12)**
 - [x] Tax (KSA): Zakat Calculation (`/finance/vat-ksa`) ✅ **(2026-09-12)**
-- [ ] Tax (USA): Sales Tax Setup, 1099, Multi-State
+- [x] Tax (USA): Sales Tax Setup, 1099, Multi-State (`/finance/tax-us`, `/app/actions/finance/us-tax.ts`, `/lib/us-tax-engine.ts`) — 50-state + DC sales tax rules, destination vs origin sourcing, South Dakota v. Wayfair economic nexus thresholds ($100k/$500k), Form 1099-NEC & 1099-MISC contractor reporting (>= $600 threshold, W-9 tracking, 24% backup withholding), multi-state resale/exemption certificate vault, interactive tax calculator, IRS FIRE Pub 1220 CSV, and printable Form 1099-NEC recipient slip ✅ **(2026-09-18)** (ALL USA TAX MODULES COMPLETE 🇺🇸)
 - [ ] Tax (Global): Withholding Tax
 - [x] Invoice Features: Delivery Challan (`/sales/delivery-challans`, `/app/actions/sales/delivery-challan.ts`) ✅ **(2026-09-14)**
 - [x] Invoice Features: Multi-Template Support (`/sales/invoices/templates`, `/sales/invoices/[id]`) ✅ **(2026-09-17)** (ALL INVOICE FEATURES COMPLETE 📄)

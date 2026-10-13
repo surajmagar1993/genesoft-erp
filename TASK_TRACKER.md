@@ -204,7 +204,7 @@
 - [x] Finance: Budgeting (`/finance/budgets`, `/app/actions/finance/budgets.ts`) ✅ **(2026-09-17)** (ALL FINANCE & ACCOUNTING COMPLETE 📊)
 - [x] Tax (UAE): VAT Return Data, Reverse Charge (`/finance/vat-uae`) ✅ **(2026-09-12)**
 - [x] Tax (KSA): Zakat Calculation (`/finance/vat-ksa`) ✅ **(2026-09-12)**
-- [ ] Tax (USA): Sales Tax Setup, 1099, Multi-State
+- [x] Tax (USA): Sales Tax Setup, 1099, Multi-State (`/finance/tax-us`, `/app/actions/finance/us-tax.ts`, `/lib/us-tax-engine.ts`) ✅ **(2026-09-18)** (ALL USA TAX COMPLETE 🇺🇸)
 - [ ] Tax (Global): Withholding Tax
 - [x] Invoice Features: Delivery Challan (`/sales/delivery-challans`, `/app/actions/sales/delivery-challan.ts`) ✅ **(2026-09-14)**
 - [x] Invoice Features: Multi-Template Support (`/sales/invoices/templates`, `/sales/invoices/[id]`) ✅ **(2026-09-17)** (ALL INVOICE FEATURES COMPLETE 📄)
