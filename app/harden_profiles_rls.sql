@@ -22,6 +22,6 @@ CREATE POLICY "Users can view own profile" ON public.profiles
     USING (id = (SELECT auth.uid()));
 
 -- Even if a write policy is added later, role and tenant_id stay server-only
-REVOKE INSERT, UPDATE, DELETE ON public.profiles FROM anon, authenticated;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON public.profiles FROM anon, authenticated;
 
 COMMIT;
