@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
             <div className="prose prose-slate dark:prose-invert max-w-none space-y-6 text-slate-600 dark:text-slate-300">
               <p className="leading-relaxed">
-                At Genesoft Infotech Private Limited (&quot;Genesoft&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;), we prioritize your privacy. This Privacy Policy details how we collect, store, share, and protect your information when you subscribe to our multi-tenant SaaS ERP & CRM application hosted at <a href="https://genesoftinfotech.com" className="text-orange-600 hover:underline">genesoftinfotech.com</a>.
+                At Genesoft Infotech (&quot;Genesoft&quot;, &quot;we&quot;, &quot;us&quot;, &quot;our&quot;), we prioritize your privacy. This Privacy Policy details how we collect, store, share, and protect your information when you subscribe to our multi-tenant SaaS ERP & CRM application hosted at <a href="https://genesoftinfotech.com" className="text-orange-600 hover:underline">genesoftinfotech.com</a>.
               </p>
 
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8 mb-4">1. Information We Collect and Process</h2>

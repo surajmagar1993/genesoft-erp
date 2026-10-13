@@ -16,13 +16,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl()),
   title: "Genesoft ERP & CRM",
-  description: "Multi-platform SaaS ERP & CRM by Genesoft Infotech Private Limited",
+  description: "Multi-platform SaaS ERP & CRM by Genesoft Infotech",
   applicationName: "Genesoft ERP",
-  authors: [{ name: "Genesoft Infotech Private Limited", url: "https://genesoftinfotech.com" }],
+  authors: [{ name: "Genesoft Infotech", url: "https://genesoftinfotech.com" }],
   openGraph: {
     siteName: "Genesoft ERP",
     title: "Genesoft ERP & CRM",
-    description: "Multi-platform SaaS ERP & CRM by Genesoft Infotech Private Limited",
+    description: "Multi-platform SaaS ERP & CRM by Genesoft Infotech",
     type: "website",
   },
   icons: {

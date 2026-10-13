@@ -52,7 +52,7 @@ export default function AuthLayout({
         </div>
 
         <p className="text-xs text-muted-foreground">
-          &copy; {new Date().getFullYear()} Genesoft Infotech Private Limited
+          &copy; {new Date().getFullYear()} Genesoft Infotech
         </p>
       </div>
 
@@ -75,7 +75,7 @@ export default function AuthLayout({
         <div className="w-full max-w-sm">{children}</div>
 
         <p className="mt-8 text-xs text-center text-muted-foreground lg:hidden">
-          &copy; {new Date().getFullYear()} Genesoft Infotech Private Limited
+          &copy; {new Date().getFullYear()} Genesoft Infotech
         </p>
       </div>
     </div>

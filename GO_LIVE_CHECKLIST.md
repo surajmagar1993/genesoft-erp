@@ -1,6 +1,6 @@
 # Go-live & migration checklist
 
-Owner: **Genesoft Infotech Private Limited** · Domain: **genesoftinfotech.com**
+Owner: **Genesoft Infotech** · Domain: **genesoftinfotech.com**
 Testing today runs on Vercel (`genesoftdev.vercel.app`) + Supabase + Resend. When moving to the final
 domain or a single hosting platform, update every place below. Nothing in the code hardcodes the testing
 domain: links come from `NEXT_PUBLIC_SITE_URL` (`src/lib/app-url.ts`).

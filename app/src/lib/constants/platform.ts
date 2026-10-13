@@ -6,7 +6,7 @@
  */
 export const PLATFORM = {
     productName: "Genesoft ERP",
-    legalName: process.env.PLATFORM_LEGAL_NAME || "Genesoft Infotech Private Limited",
+    legalName: process.env.PLATFORM_LEGAL_NAME || "Genesoft Infotech",
     email: process.env.PLATFORM_EMAIL || "hello@genesoftinfotech.com",
     phone: process.env.PLATFORM_PHONE || "+91 8888885285",
     gstin: process.env.PLATFORM_GSTIN || "",

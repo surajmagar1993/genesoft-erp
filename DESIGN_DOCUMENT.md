@@ -1,7 +1,7 @@
 # 📐 ERP & CRM — System Design Document
 
 **Project:** Multi-Platform SaaS ERP & CRM
-**Company:** Genesoft Infotech Private Limited
+**Company:** Genesoft Infotech
 **Date:** 2026-09-12 | **Status:** P1 Complete + P2 Growth (~98% Complete: Multi-Country Tax Engines, Retail POS, Customer Portal, WhatsApp Business API, SaaS Subscription Lifecycle Live)
 
 ---
