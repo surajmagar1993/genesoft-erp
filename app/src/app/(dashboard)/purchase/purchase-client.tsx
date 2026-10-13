@@ -1934,13 +1934,13 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                     options={searchCities(vendorCity, vendorState, vendorCountry).map((c) => ({
                                         label: c.name,
                                         value: c.name,
-                                        subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                        subLabel: `${c.stateName} • ${c.pincode}`,
                                     }))}
                                     onSelectOption={(opt) => {
                                         setVendorCity(opt.value)
                                         if (opt.subLabel) {
-                                            const parts = opt.subLabel.split(",")
-                                            if (parts.length > 1 && !vendorState) {
+                                            const parts = opt.subLabel.split(" • ")
+                                            if (parts[0] && !vendorState) {
                                                 setVendorState(parts[0].trim())
                                             }
                                         }

@@ -284,9 +284,17 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                             options={searchCities(address.city || "", address.state, address.country).map((c) => ({
                                                 label: c.name,
                                                 value: c.name,
-                                                subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                                subLabel: `${c.stateName} • ${c.pincode}`,
                                             }))}
-                                            onSelectOption={(opt) => setAddress((prev) => ({ ...prev, city: opt.value }))}
+                                            onSelectOption={(opt) => {
+                                                const parts = opt.subLabel ? opt.subLabel.split(" • ") : []
+                                                setAddress((prev) => ({
+                                                    ...prev,
+                                                    city: opt.value,
+                                                    state: parts[0] || prev.state,
+                                                    postalCode: parts[1] || prev.postalCode,
+                                                }))
+                                            }}
                                             placeholder="Type city..."
                                         />
                                     </div>

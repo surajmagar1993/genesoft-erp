@@ -576,12 +576,18 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                         options={searchCities(form.billingCity, form.billingState, form.billingCountry).map((city) => ({
                                             label: city.name,
                                             value: city.name,
-                                            subLabel: city.stateName,
+                                            subLabel: `${city.stateName} • ${city.pincode}`,
                                         }))}
                                         onSelectOption={(opt) => {
                                             update("billingCity", opt.value)
-                                            if (!form.billingState && opt.subLabel) {
-                                                update("billingState", opt.subLabel)
+                                            if (opt.subLabel) {
+                                                const parts = opt.subLabel.split(" • ")
+                                                if (parts[0] && !form.billingState) {
+                                                    update("billingState", parts[0])
+                                                }
+                                                if (parts[1] && !form.billingZip) {
+                                                    update("billingZip", parts[1])
+                                                }
                                             }
                                         }}
                                         placeholder="Start typing city (e.g. Mumbai, New York, Dubai)..."

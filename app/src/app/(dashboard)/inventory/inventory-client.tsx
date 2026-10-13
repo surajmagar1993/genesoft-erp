@@ -2360,13 +2360,13 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                     options={searchCities(whCity, whState, whCountry).map((c) => ({
                                         label: c.name,
                                         value: c.name,
-                                        subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                        subLabel: `${c.stateName} • ${c.pincode}`,
                                     }))}
                                     onSelectOption={(opt) => {
                                         setWhCity(opt.value)
                                         if (opt.subLabel) {
-                                            const parts = opt.subLabel.split(",")
-                                            if (parts.length > 1 && !whState) {
+                                            const parts = opt.subLabel.split(" • ")
+                                            if (parts[0] && !whState) {
                                                 setWhState(parts[0].trim())
                                             }
                                         }

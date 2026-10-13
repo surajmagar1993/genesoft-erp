@@ -782,9 +782,13 @@ export function EwayClient({ initialData }: EwayClientProps) {
                               options={searchCities(genForm.fromPlace).map((c) => ({
                                 label: c.name,
                                 value: c.name,
-                                subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                subLabel: `${c.stateName} • ${c.pincode}`,
                               }))}
-                              onSelectOption={(opt) => setGenForm({ ...genForm, fromPlace: opt.value })}
+                              onSelectOption={(opt) => {
+                                const parts = opt.subLabel ? opt.subLabel.split(" • ") : []
+                                const pin = parts[1] ? Number(parts[1]) : genForm.fromPincode
+                                setGenForm({ ...genForm, fromPlace: opt.value, fromPincode: pin })
+                              }}
                               required
                             />
                           </div>
@@ -836,9 +840,13 @@ export function EwayClient({ initialData }: EwayClientProps) {
                               options={searchCities(genForm.toPlace).map((c) => ({
                                 label: c.name,
                                 value: c.name,
-                                subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                subLabel: `${c.stateName} • ${c.pincode}`,
                               }))}
-                              onSelectOption={(opt) => setGenForm({ ...genForm, toPlace: opt.value })}
+                              onSelectOption={(opt) => {
+                                const parts = opt.subLabel ? opt.subLabel.split(" • ") : []
+                                const pin = parts[1] ? Number(parts[1]) : genForm.toPincode
+                                setGenForm({ ...genForm, toPlace: opt.value, toPincode: pin })
+                              }}
                               required
                             />
                           </div>

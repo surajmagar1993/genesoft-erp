@@ -1653,12 +1653,12 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                     options={searchCities(empCity, empState, empCountry).map((c) => ({
                                         label: c.name,
                                         value: c.name,
-                                        subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                        subLabel: `${c.stateName} • ${c.pincode}`,
                                     }))}
                                     onSelectOption={(opt) => {
                                         setEmpCity(opt.value)
                                         if (opt.subLabel) {
-                                            const parts = opt.subLabel.split(",")
+                                            const parts = opt.subLabel.split(" • ")
                                             if (parts[0] && !empState) setEmpState(parts[0].trim())
                                         }
                                     }}
@@ -1840,12 +1840,12 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                     options={searchCities(empCity, empState, empCountry).map((c) => ({
                                         label: c.name,
                                         value: c.name,
-                                        subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                        subLabel: `${c.stateName} • ${c.pincode}`,
                                     }))}
                                     onSelectOption={(opt) => {
                                         setEmpCity(opt.value)
                                         if (opt.subLabel) {
-                                            const parts = opt.subLabel.split(",")
+                                            const parts = opt.subLabel.split(" • ")
                                             if (parts[0] && !empState) setEmpState(parts[0].trim())
                                         }
                                     }}

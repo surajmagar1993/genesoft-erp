@@ -278,13 +278,13 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                         options={searchCities(form.city, form.state, form.country).map((c) => ({
                                             label: c.name,
                                             value: c.name,
-                                            subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                            subLabel: `${c.stateName} • ${c.pincode}`,
                                         }))}
                                         onSelectOption={(opt) => {
                                             update("city", opt.value)
                                             if (opt.subLabel) {
-                                                const parts = opt.subLabel.split(", ")
-                                                if (parts.length === 2 && !form.state) {
+                                                const parts = opt.subLabel.split(" • ")
+                                                if (parts[0] && !form.state) {
                                                     update("state", parts[0])
                                                 }
                                             }
