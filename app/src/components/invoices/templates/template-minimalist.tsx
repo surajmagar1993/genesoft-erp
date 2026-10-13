@@ -11,7 +11,11 @@ export function TemplateMinimalist({ invoice }: TemplateProps) {
         companyGstin,
         companyAddress,
         companyEmail,
-        isInterState
+        isInterState,
+        isSingle,
+        taxLabel,
+        taxIdLabel,
+        docTitle: summaryDocTitle
     } = getInvoiceSummary(invoice)
 
     const isProforma = invoice.type === "PROFORMA"
@@ -34,7 +38,7 @@ export function TemplateMinimalist({ invoice }: TemplateProps) {
                     <h2 className="text-base font-semibold text-zinc-900 tracking-tight">{companyName}</h2>
                     <p className="text-xs text-zinc-400 mt-0.5">{companyAddress}</p>
                     {companyGstin && (
-                        <p className="text-[11px] font-mono text-zinc-500 mt-1">GSTIN: {companyGstin}</p>
+                        <p className="text-[11px] font-mono text-zinc-500 mt-1">{taxIdLabel}: {companyGstin}</p>
                     )}
                 </div>
             </div>
@@ -43,11 +47,11 @@ export function TemplateMinimalist({ invoice }: TemplateProps) {
             <div className="grid grid-cols-4 py-6 border-b border-zinc-100 text-xs">
                 <div>
                     <span className="text-zinc-400 block uppercase text-[10px] tracking-wider">Date</span>
-                    <span className="font-medium text-zinc-800 mt-1 block">{formatDate(invoice.invoice_date)}</span>
+                    <span className="font-medium text-zinc-800 mt-1 block">{formatDate(invoice.invoice_date, invoice.locale)}</span>
                 </div>
                 <div>
                     <span className="text-zinc-400 block uppercase text-[10px] tracking-wider">Due</span>
-                    <span className="font-medium text-zinc-800 mt-1 block">{formatDate(invoice.valid_until)}</span>
+                    <span className="font-medium text-zinc-800 mt-1 block">{formatDate(invoice.valid_until, invoice.locale)}</span>
                 </div>
                 <div>
                     <span className="text-zinc-400 block uppercase text-[10px] tracking-wider">Billed To</span>
@@ -73,7 +77,7 @@ export function TemplateMinimalist({ invoice }: TemplateProps) {
                             <th className="pb-3 text-center font-medium w-20">HSN</th>
                             <th className="pb-3 text-right font-medium w-16">Qty</th>
                             <th className="pb-3 text-right font-medium w-24">Rate</th>
-                            <th className="pb-3 text-right font-medium w-20">GST</th>
+                            <th className="pb-3 text-right font-medium w-20">{taxLabel}</th>
                             <th className="pb-3 text-right font-medium w-28">Amount</th>
                         </tr>
                     </thead>
@@ -84,7 +88,7 @@ export function TemplateMinimalist({ invoice }: TemplateProps) {
                             </tr>
                         ) : (
                             items.map((li, idx) => {
-                                const rate = (li.cgst_percent || 0) + (li.sgst_percent || 0) + (li.igst_percent || 0) || li.tax_percent || 0
+                                const rate = (li.cgst_percent || 0) + (li.sgst_percent || 0) + (li.igst_percent || 0) + (li.vat_percent || 0) || li.tax_percent || 0
                                 const rowTotal = li.qty * li.unit_price
                                 return (
                                     <tr key={li.id || idx}>
@@ -128,7 +132,12 @@ export function TemplateMinimalist({ invoice }: TemplateProps) {
                         </div>
                     )}
 
-                    {!isInterState ? (
+                    {isSingle ? (
+                        <div className="flex justify-between">
+                            <span>{taxLabel}</span>
+                            <span className="font-mono">{formatCurrency(gstSummary.vatTotal, invoice.currency_code)}</span>
+                        </div>
+                    ) : !isInterState  ? (
                         <>
                             <div className="flex justify-between text-zinc-500">
                                 <span>CGST</span>

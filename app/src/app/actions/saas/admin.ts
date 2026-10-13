@@ -7,6 +7,8 @@ import { ensureStripePrice, type PaidPlan } from "@/lib/stripe-plans"
 import { annualFromMonthly } from "@/lib/plan-pricing"
 import { calculatePlatformMrr } from "@/lib/platform-mrr"
 import { sendSystemEmail } from "@/lib/system-email"
+import { adaptTaxAccounts } from "@/lib/default-accounts"
+import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
 import { toActionResult } from "@/lib/action-result"
 // import { type Role } from "@prisma/client"
 import { createClient } from "../../../lib/supabase/server"
@@ -400,7 +402,7 @@ async function _createTenant(data: {
     })
 
     if (seedAccounts) {
-        const defaultAccounts = [
+        const defaultAccounts = adaptTaxAccounts([
             // ASSETS (1xxx)
             { tenantId: tenant.id, code: "1000", name: "Assets", type: "ASSET" as const, isGroup: true, description: "All asset accounts", currencyCode, isActive: true, isSystem: true },
             { tenantId: tenant.id, code: "1100", name: "Current Assets", type: "ASSET" as const, isGroup: true, currencyCode, isActive: true, isSystem: true },
@@ -449,7 +451,7 @@ async function _createTenant(data: {
             { tenantId: tenant.id, code: "5800", name: "Depreciation", type: "EXPENSE" as const, isGroup: false, currencyCode, isActive: true, isSystem: false },
             { tenantId: tenant.id, code: "5900", name: "Bank Charges", type: "EXPENSE" as const, isGroup: false, currencyCode, isActive: true, isSystem: false },
             { tenantId: tenant.id, code: "5950", name: "Miscellaneous Expenses", type: "EXPENSE" as const, isGroup: false, currencyCode, isActive: true, isSystem: false },
-        ]
+        ], resolveTaxRegime(countryCode, null, currencyCode))
 
         try {
             await prisma.account.createMany({

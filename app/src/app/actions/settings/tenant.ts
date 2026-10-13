@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
@@ -25,6 +26,8 @@ export interface TenantSettings {
   gstin?: string
   trn?: string
   settings: any
+  /** Tax name and rates for countries without built-in rules (and US state rates) */
+  tax_settings?: { label?: string; rates?: number[]; defaultRate?: number } | null
 }
 
 export async function getTenantSettings(): Promise<TenantSettings | null> {
@@ -71,7 +74,30 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
     if (data.country_code !== undefined) payload.country_code = data.country_code
     if (data.gstin !== undefined) payload.gstin = data.gstin?.trim() || null
     if (data.address !== undefined) payload.address = data.address
-    if (data.settings !== undefined) payload.settings = data.settings
+
+    // Settings JSON is merged, never replaced (it also holds subscription, invoices, integrations).
+    // The tax ID, state and tax overrides are mirrored there because invoices, tax reports and
+    // the tax engine read them from settings.
+    const touchesSettings =
+      data.settings !== undefined || data.gstin !== undefined || data.address !== undefined || data.tax_settings !== undefined
+    if (touchesSettings) {
+      const current = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
+      const merged: Record<string, unknown> = { ...((current?.settings as Record<string, unknown>) || {}), ...(data.settings || {}) }
+      if (data.gstin !== undefined) merged.gstin = data.gstin?.trim() || null
+      if (data.address !== undefined && data.address && typeof data.address === "object" && "state" in data.address) {
+        merged.state = (data.address as TenantAddress).state || null
+      }
+      if (data.tax_settings !== undefined) {
+        const t = data.tax_settings || {}
+        const rates = (t.rates || []).map(Number).filter((r) => Number.isFinite(r) && r >= 0 && r <= 100)
+        merged.tax = {
+          label: t.label?.trim() || undefined,
+          rates,
+          defaultRate: typeof t.defaultRate === "number" && rates.includes(t.defaultRate) ? t.defaultRate : rates[0],
+        }
+      }
+      payload.settings = merged
+    }
 
     const { error } = await supabase
       .from("tenants")

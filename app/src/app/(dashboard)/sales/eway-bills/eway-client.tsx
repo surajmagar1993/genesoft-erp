@@ -144,7 +144,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
     docNo: `INV-${Date.now().toString().slice(-6)}`,
     docDate: new Date().toISOString().split("T")[0],
     fromGstin: COMPANY.gstin || "27AAACG1234F1Z5",
-    fromTrdName: COMPANY.name || "Genesoft Technologies Pvt Ltd",
+    fromTrdName: COMPANY.name || "",
     fromAddr1: "Plot 42, Cyber Heights, Baner Road",
     fromAddr2: "MIDC Phase 2",
     fromPlace: "Pune",

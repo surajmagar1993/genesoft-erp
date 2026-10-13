@@ -1,4 +1,5 @@
 "use client"
+import { COMPLIANCE_MODULES_ENABLED } from "@/lib/features"
 
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
@@ -271,7 +272,7 @@ export default function BillDetailsClient({ bill }: Props) {
                                 <span className="text-muted-foreground">Currency</span>
                                 <span className="font-medium">{bill.currency_code}</span>
                             </div>
-                            {tdsInfo && (
+                            {COMPLIANCE_MODULES_ENABLED && tdsInfo && (
                                 <div className="pt-2 border-t">
                                     <Button 
                                         variant="outline" 

@@ -13,7 +13,11 @@ export function TemplateCreative({ invoice }: TemplateProps) {
         companyGstin,
         companyAddress,
         companyEmail,
-        isInterState
+        isInterState,
+        isSingle,
+        taxLabel,
+        taxIdLabel,
+        docTitle: summaryDocTitle
     } = getInvoiceSummary(invoice)
 
     const isProforma = invoice.type === "PROFORMA"
@@ -31,7 +35,7 @@ export function TemplateCreative({ invoice }: TemplateProps) {
                         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">{companyName}</h1>
                         <p className="text-xs text-purple-100/90 mt-1 max-w-sm">{companyAddress}</p>
                         {companyGstin && (
-                            <p className="text-xs font-mono text-purple-200 mt-1">GSTIN: {companyGstin}</p>
+                            <p className="text-xs font-mono text-purple-200 mt-1">{taxIdLabel}: {companyGstin}</p>
                         )}
                     </div>
 
@@ -39,9 +43,9 @@ export function TemplateCreative({ invoice }: TemplateProps) {
                         <p className="text-[10px] uppercase tracking-wider text-purple-200 font-semibold">Invoice Reference</p>
                         <p className="text-xl font-black font-mono text-white mt-0.5">#{invoice.invoice_number}</p>
                         <div className="mt-2 text-xs space-y-0.5 text-purple-100">
-                            <p>Date: <span className="font-semibold text-white">{formatDate(invoice.invoice_date)}</span></p>
+                            <p>Date: <span className="font-semibold text-white">{formatDate(invoice.invoice_date, invoice.locale)}</span></p>
                             {invoice.valid_until && (
-                                <p>Due: <span className="font-semibold text-white">{formatDate(invoice.valid_until)}</span></p>
+                                <p>Due: <span className="font-semibold text-white">{formatDate(invoice.valid_until, invoice.locale)}</span></p>
                             )}
                         </div>
                     </div>
@@ -60,7 +64,7 @@ export function TemplateCreative({ invoice }: TemplateProps) {
                             <p className="text-xs text-slate-600 mt-0.5">{invoice.customer_email}</p>
                         )}
                         {invoice.customer_gstin && (
-                            <p className="text-xs font-mono text-slate-600 mt-1">GSTIN: {invoice.customer_gstin}</p>
+                            <p className="text-xs font-mono text-slate-600 mt-1">{taxIdLabel}: {invoice.customer_gstin}</p>
                         )}
                     </div>
 
@@ -68,12 +72,12 @@ export function TemplateCreative({ invoice }: TemplateProps) {
                         <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wider block mb-1">
                             Supply Particulars
                         </span>
-                        <p className="text-sm font-semibold text-slate-800">Place of Supply: {invoice.place_of_supply || "Standard Destination"}</p>
+                        <p className="text-sm font-semibold text-slate-800">{isSingle ? invoice.customer_name : `Place of Supply: ${invoice.place_of_supply || "—"}`}</p>
                         <p className="text-xs text-slate-600 mt-0.5">
                             Status: <span className="font-bold text-purple-700">{invoice.status}</span>
                         </p>
                         <p className="text-xs text-slate-500 mt-1">
-                            Jurisdiction: {isInterState ? "Inter-State IGST" : "Intra-State CGST + SGST"}
+                            {isSingle ? `Tax: ${taxLabel}` : `Jurisdiction: ${isInterState ? "Inter-State IGST" : "Intra-State CGST + SGST"}`}
                         </p>
                     </div>
                 </div>
@@ -99,7 +103,7 @@ export function TemplateCreative({ invoice }: TemplateProps) {
                                 </tr>
                             ) : (
                                 items.map((li, idx) => {
-                                    const rate = (li.cgst_percent || 0) + (li.sgst_percent || 0) + (li.igst_percent || 0) || li.tax_percent || 0
+                                    const rate = (li.cgst_percent || 0) + (li.sgst_percent || 0) + (li.igst_percent || 0) + (li.vat_percent || 0) || li.tax_percent || 0
                                     const rowTotal = li.qty * li.unit_price
                                     return (
                                         <tr key={li.id || idx} className={idx % 2 === 1 ? "bg-purple-50/20" : "bg-white"}>
@@ -155,7 +159,12 @@ export function TemplateCreative({ invoice }: TemplateProps) {
                                 </div>
                             )}
 
-                            {!isInterState ? (
+                            {isSingle ? (
+                        <div className="flex justify-between">
+                            <span>{taxLabel}</span>
+                            <span className="font-mono">{formatCurrency(gstSummary.vatTotal, invoice.currency_code)}</span>
+                        </div>
+                    ) : !isInterState  ? (
                                 <>
                                     <div className="flex justify-between text-slate-600">
                                         <span>CGST</span>

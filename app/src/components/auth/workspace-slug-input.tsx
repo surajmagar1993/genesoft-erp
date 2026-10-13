@@ -40,13 +40,10 @@ export function WorkspaceSlugInput() {
           required
           className="h-10 pr-32 font-medium"
         />
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs text-muted-foreground bg-gradient-to-l from-background via-background to-transparent pl-4">
-          .genesoft.com
-        </div>
       </div>
       <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-1">
         <Globe className="h-3 w-3" />
-        Your workspace will be at <span className="font-semibold text-foreground">{suggestion || '...'}</span>.genesoft.com
+        Your workspace ID: <span className="font-semibold text-foreground">{suggestion || '...'}</span>
       </p>
     </div>
   )

@@ -59,7 +59,7 @@ export function KsaVatClient({ initialData }: Props) {
   const [copiedText, setCopiedText] = useState<string | null>(null)
 
   // Interactive QR Studio State
-  const [qrSellerName, setQrSellerName] = useState("Genesoft Middle East KSA LLC")
+  const [qrSellerName, setQrSellerName] = useState("")
   const [qrVatNumber, setQrVatNumber] = useState("310123456789003")
   const [qrTimestamp, setQrTimestamp] = useState(new Date().toISOString().slice(0, 19) + "Z")
   const [qrTotal, setQrTotal] = useState("1150.00")

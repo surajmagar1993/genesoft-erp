@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
+import { getTenantTaxContext, invoiceItemTaxColumns, productTaxRate } from "@/lib/tenant-tax"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import type {
@@ -26,6 +27,7 @@ function dec(v: unknown): number {
 
 export async function getPOSProducts(): Promise<POSProductItem[]> {
   const tenantId = await getTenantId()
+  const defaultRate = (await getTenantTaxContext(tenantId)).regime.defaultRate
 
   const products = await prisma.product.findMany({
     where: { tenantId, isActive: true },
@@ -42,6 +44,7 @@ export async function getPOSProducts(): Promise<POSProductItem[]> {
       imageUrl: true,
       type: true,
       customAttributes: true,
+      taxGroup: { select: { taxRates: { select: { name: true, rate: true, isActive: true } } } },
     },
     orderBy: { name: "asc" },
   })
@@ -60,6 +63,7 @@ export async function getPOSProducts(): Promise<POSProductItem[]> {
       unit: p.unit,
       hsnSacCode: p.hsnSacCode,
       stockQty: dec(p.stockQty),
+      taxRate: productTaxRate(p.taxGroup, defaultRate),
       imageUrl: p.imageUrl,
       type: p.type,
     }
@@ -70,6 +74,7 @@ export async function searchPOSProducts(
   query: string
 ): Promise<POSProductItem[]> {
   const tenantId = await getTenantId()
+  const defaultRate = (await getTenantTaxContext(tenantId)).regime.defaultRate
 
   const products = await prisma.product.findMany({
     where: {
@@ -94,6 +99,7 @@ export async function searchPOSProducts(
       imageUrl: true,
       type: true,
       customAttributes: true,
+      taxGroup: { select: { taxRates: { select: { name: true, rate: true, isActive: true } } } },
     },
     orderBy: { name: "asc" },
     take: 20,
@@ -113,6 +119,7 @@ export async function searchPOSProducts(
       unit: p.unit,
       hsnSacCode: p.hsnSacCode,
       stockQty: dec(p.stockQty),
+      taxRate: productTaxRate(p.taxGroup, defaultRate),
       imageUrl: p.imageUrl,
       type: p.type,
     }
@@ -202,7 +209,29 @@ export async function createPOSSale(
 
     const invoiceNumber = `POS-${fyPrefix}-${nextSeq.toString().padStart(4, "0")}`
 
-    // 3. Create Invoice via Prisma ORM
+    // 3. Price and tax on the server from the products' tax rates (never the browser's totals)
+    const taxCtx = await getTenantTaxContext(tenantId)
+    const productIds = [...new Set(data.items.map((i) => i.productId).filter(Boolean))]
+    const products = await prisma.product.findMany({
+      where: { tenantId, id: { in: productIds } },
+      select: { id: true, unitPrice: true, taxGroup: { select: { taxRates: { select: { name: true, rate: true, isActive: true } } } } },
+    })
+    if (products.length !== productIds.length) return { success: false, error: "Product not found" }
+    const productById = new Map(products.map((p: { id: string }) => [p.id, p]))
+    const supplyType = taxCtx.regime.mode === "SINGLE" ? "single" : "intra" // walk-in counter sale
+    const lines = data.items.map((item) => {
+      const product = productById.get(item.productId) as { unitPrice: unknown; taxGroup: never } | undefined
+      const qty = Number(item.qty)
+      if (!(qty > 0)) throw new Error("Quantity must be greater than zero")
+      const unitPrice = product ? Number(product.unitPrice) : Number(item.unitPrice)
+      const rate = productTaxRate(product?.taxGroup, taxCtx.regime.defaultRate)
+      return { item, qty, unitPrice, columns: invoiceItemTaxColumns(qty, unitPrice, rate, supplyType) }
+    })
+    const subtotal = Math.round(lines.reduce((s, l) => s + l.qty * l.unitPrice, 0) * 100) / 100
+    const taxAmount = Math.round(lines.reduce((s, l) => s + l.columns.lineTotal - l.qty * l.unitPrice, 0) * 100) / 100
+    const discount = Math.max(0, Number((data as { discount?: number }).discount || 0))
+    const total = Math.round((subtotal + taxAmount - discount) * 100) / 100
+
     const invoice = await prisma.invoice.create({
       data: {
         tenantId,
@@ -217,20 +246,21 @@ export async function createPOSSale(
           posTerminal: true,
           paymentMethod: data.paymentMethod,
         },
-        subtotal: data.subtotal,
-        taxAmount: data.taxAmount,
-        discount: (data as any).discount || 0,
-        total: data.total,
-        currencyCode: "INR",
+        subtotal,
+        taxAmount,
+        discount,
+        total,
+        currencyCode: taxCtx.currency,
         notes: data.notes || `POS Sale • ${data.paymentMethod}`,
         terms: "Immediate walk-in sale. Thank you for your business!",
         items: {
-          create: data.items.map((item) => ({
+          create: lines.map(({ item, qty, unitPrice, columns }) => ({
+            productId: item.productId || null,
             description: item.name,
             hsnSacCode: item.hsnSacCode || null,
-            quantity: item.qty,
-            unitPrice: item.unitPrice,
-            lineTotal: item.lineTotal,
+            quantity: qty,
+            unitPrice,
+            ...columns,
           })),
         },
       },
@@ -249,12 +279,12 @@ export async function createPOSSale(
         tenantId,
         invoiceId: invoice.id,
         contactId,
-        amount: data.total,
+        amount: total,
         paymentDate: now,
         paymentMethod: paymentMethodMap[data.paymentMethod] || "CASH",
         type: "INBOUND",
         reference: `POS-${invoiceNumber}`,
-        currencyCode: "INR",
+        currencyCode: taxCtx.currency,
       },
     })
 
@@ -263,7 +293,7 @@ export async function createPOSSale(
       await prisma.pOSSession.updateMany({
         where: { id: data.sessionId, tenantId },
         data: {
-          totalSales: { increment: data.total },
+          totalSales: { increment: total },
           totalTx: { increment: 1 },
         },
       })

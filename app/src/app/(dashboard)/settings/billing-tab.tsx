@@ -1,4 +1,5 @@
 "use client"
+import { PLATFORM } from "@/lib/constants/platform"
 
 import React, { useState, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -735,9 +736,10 @@ export default function BillingTab({ settings, pricing, checkoutResult }: Billin
                             <div className="border rounded-xl p-5 bg-card space-y-4">
                                 <div className="flex justify-between items-start border-b pb-3">
                                     <div>
-                                        <h3 className="font-bold text-base">Genesoft Cloud ERP</h3>
-                                        <p className="text-muted-foreground">Genesoft Technologies Private Limited</p>
-                                        <p className="text-muted-foreground">Tax ID / GSTIN: 29AABCU9603R1ZM</p>
+                                        <h3 className="font-bold text-base">{PLATFORM.productName}</h3>
+                                        <p className="text-muted-foreground">{PLATFORM.legalName}</p>
+                                        {PLATFORM.gstin && <p className="text-muted-foreground">GSTIN: {PLATFORM.gstin}</p>}
+                                        <p className="text-muted-foreground">{PLATFORM.email}</p>
                                     </div>
                                     <div className="text-right">
                                         <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">

@@ -13,11 +13,15 @@ export function TemplateClassic({ invoice }: TemplateProps) {
         companyAddress,
         companyPhone,
         companyEmail,
-        isInterState
+        isInterState,
+        isSingle,
+        taxLabel,
+        taxIdLabel,
+        docTitle: summaryDocTitle
     } = getInvoiceSummary(invoice)
 
     const isProforma = invoice.type === "PROFORMA"
-    const docTitle = isProforma ? "PROFORMA INVOICE" : "TAX INVOICE"
+    const docTitle = summaryDocTitle
 
     return (
         <div className="bg-white text-slate-900 font-serif p-8 max-w-4xl mx-auto rounded shadow-xs border-2 border-slate-800 print:border-2 print:shadow-none print:p-0 print:max-w-none">
@@ -26,7 +30,7 @@ export function TemplateClassic({ invoice }: TemplateProps) {
                 <h1 className="text-2xl font-bold tracking-wide uppercase text-slate-900">{companyName}</h1>
                 <p className="text-xs text-slate-600 mt-1 font-sans">{companyAddress}</p>
                 <div className="flex justify-center gap-4 text-xs font-sans text-slate-700 mt-1">
-                    {companyGstin && <span><strong>GSTIN:</strong> {companyGstin}</span>}
+                    {companyGstin && <span><strong>{taxIdLabel}:</strong> {companyGstin}</span>}
                     {companyEmail && <span><strong>Email:</strong> {companyEmail}</span>}
                     {companyPhone && <span><strong>Tel:</strong> {companyPhone}</span>}
                 </div>
@@ -37,9 +41,11 @@ export function TemplateClassic({ invoice }: TemplateProps) {
                 <h2 className="text-base font-bold uppercase tracking-widest text-slate-900 font-sans">
                     {docTitle}
                 </h2>
-                <p className="text-[10px] text-slate-500 font-sans uppercase">
-                    (Issued under Section 31 of CGST Act / Commercial Invoicing Rules)
-                </p>
+                {!isSingle && (
+                    <p className="text-[10px] text-slate-500 font-sans uppercase">
+                        (Issued under Section 31 of CGST Act)
+                    </p>
+                )}
             </div>
 
             {/* Invoice & Parties Grid */}
@@ -52,9 +58,9 @@ export function TemplateClassic({ invoice }: TemplateProps) {
                     <p className="font-bold text-slate-900 text-sm">{invoice.customer_name}</p>
                     {invoice.customer_email && <p className="text-slate-600">{invoice.customer_email}</p>}
                     {invoice.customer_gstin && (
-                        <p className="text-slate-700 font-mono"><strong>GSTIN / PAN:</strong> {invoice.customer_gstin}</p>
+                        <p className="text-slate-700 font-mono"><strong>{taxIdLabel}:</strong> {invoice.customer_gstin}</p>
                     )}
-                    <p className="text-slate-600"><strong>Place of Supply:</strong> {invoice.place_of_supply || "Standard"}</p>
+                    {!isSingle && <p className="text-slate-600"><strong>Place of Supply:</strong> {invoice.place_of_supply || "—"}</p>}
                 </div>
 
                 {/* Right: Invoice Reference Details */}
@@ -66,17 +72,17 @@ export function TemplateClassic({ invoice }: TemplateProps) {
                         <span className="font-semibold">Invoice No:</span>
                         <span className="font-mono font-bold text-slate-900">{invoice.invoice_number}</span>
                         <span className="font-semibold">Invoice Date:</span>
-                        <span>{formatDate(invoice.invoice_date)}</span>
+                        <span>{formatDate(invoice.invoice_date, invoice.locale)}</span>
                         {invoice.valid_until && (
                             <>
                                 <span className="font-semibold">Payment Due:</span>
-                                <span>{formatDate(invoice.valid_until)}</span>
+                                <span>{formatDate(invoice.valid_until, invoice.locale)}</span>
                             </>
                         )}
                         <span className="font-semibold">Status:</span>
                         <span className="font-bold">{invoice.status}</span>
-                        <span className="font-semibold">Supply Nature:</span>
-                        <span>{isInterState ? "Inter-State (IGST)" : "Intra-State (CGST+SGST)"}</span>
+                        <span className="font-semibold">{isSingle ? "Tax:" : "Supply Nature:"}</span>
+                        <span>{isSingle ? taxLabel : isInterState ? "Inter-State (IGST)" : "Intra-State (CGST+SGST)"}</span>
                     </div>
                 </div>
             </div>
@@ -102,7 +108,7 @@ export function TemplateClassic({ invoice }: TemplateProps) {
                             </tr>
                         ) : (
                             items.map((li, idx) => {
-                                const rate = (li.cgst_percent || 0) + (li.sgst_percent || 0) + (li.igst_percent || 0) || li.tax_percent || 0
+                                const rate = (li.cgst_percent || 0) + (li.sgst_percent || 0) + (li.igst_percent || 0) + (li.vat_percent || 0) || li.tax_percent || 0
                                 const rowTotal = li.qty * li.unit_price
                                 return (
                                     <tr key={li.id || idx}>
@@ -136,7 +142,7 @@ export function TemplateClassic({ invoice }: TemplateProps) {
             <div className="grid grid-cols-2 border-b-2 border-slate-800 font-sans text-xs">
                 {/* Left Column: HSN Breakdown & Declarations */}
                 <div className="p-3 border-r-2 border-slate-800 space-y-3">
-                    {hsnSummary.length > 0 && (
+                    {!isSingle && hsnSummary.length > 0 && (
                         <div>
                             <p className="font-bold text-[10px] uppercase text-slate-700 mb-1">HSN/SAC Statutory Breakdown</p>
                             <table className="w-full text-[10px] border border-slate-400 text-left">
@@ -182,7 +188,12 @@ export function TemplateClassic({ invoice }: TemplateProps) {
                         </div>
                     )}
 
-                    {!isInterState ? (
+                    {isSingle ? (
+                        <div className="flex justify-between">
+                            <span>{taxLabel}</span>
+                            <span className="font-mono">{formatCurrency(gstSummary.vatTotal, invoice.currency_code)}</span>
+                        </div>
+                    ) : !isInterState  ? (
                         <>
                             <div className="flex justify-between text-slate-700">
                                 <span>Add: CGST:</span>

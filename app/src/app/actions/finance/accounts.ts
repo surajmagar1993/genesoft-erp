@@ -1,6 +1,8 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { getTenantTaxContext } from "@/lib/tenant-tax"
+import { adaptTaxAccounts } from "@/lib/default-accounts"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
@@ -152,56 +154,57 @@ export async function seedDefaultAccounts(): Promise<{ error: string | null; cou
     return { error: "Accounts already exist. Seed skipped.", count: 0 }
   }
 
-  const defaultAccounts: Omit<Account, "id" | "created_at" | "updated_at" | "children" | "depth">[] = [
+  const taxCtx = await getTenantTaxContext(tenantId)
+  const defaultAccounts: Omit<Account, "id" | "created_at" | "updated_at" | "children" | "depth">[] = adaptTaxAccounts([
     // ASSETS (1xxx)
-    { tenant_id: tenantId, code: "1000", name: "Assets", type: "ASSET", parent_id: null, is_group: true, description: "All asset accounts", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "1100", name: "Current Assets", type: "ASSET", parent_id: null, is_group: true, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "1110", name: "Cash", type: "ASSET", parent_id: null, is_group: false, description: "Cash in hand", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "1120", name: "Bank", type: "ASSET", parent_id: null, is_group: false, description: "Bank accounts", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "1200", name: "Accounts Receivable", type: "ASSET", parent_id: null, is_group: false, description: "Money owed by customers", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "1300", name: "Inventory", type: "ASSET", parent_id: null, is_group: false, description: "Stock on hand", balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "1400", name: "Prepaid Expenses", type: "ASSET", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "1500", name: "Fixed Assets", type: "ASSET", parent_id: null, is_group: true, description: "Property, plant & equipment", balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "1510", name: "Furniture & Fixtures", type: "ASSET", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "1520", name: "Office Equipment", type: "ASSET", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "1000", name: "Assets", type: "ASSET", parent_id: null, is_group: true, description: "All asset accounts", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "1100", name: "Current Assets", type: "ASSET", parent_id: null, is_group: true, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "1110", name: "Cash", type: "ASSET", parent_id: null, is_group: false, description: "Cash in hand", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "1120", name: "Bank", type: "ASSET", parent_id: null, is_group: false, description: "Bank accounts", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "1200", name: "Accounts Receivable", type: "ASSET", parent_id: null, is_group: false, description: "Money owed by customers", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "1300", name: "Inventory", type: "ASSET", parent_id: null, is_group: false, description: "Stock on hand", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "1400", name: "Prepaid Expenses", type: "ASSET", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "1500", name: "Fixed Assets", type: "ASSET", parent_id: null, is_group: true, description: "Property, plant & equipment", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "1510", name: "Furniture & Fixtures", type: "ASSET", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "1520", name: "Office Equipment", type: "ASSET", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
 
     // LIABILITIES (2xxx)
-    { tenant_id: tenantId, code: "2000", name: "Liabilities", type: "LIABILITY", parent_id: null, is_group: true, description: "All liability accounts", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "2100", name: "Accounts Payable", type: "LIABILITY", parent_id: null, is_group: false, description: "Money owed to suppliers", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "2200", name: "GST Payable", type: "LIABILITY", parent_id: null, is_group: true, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "2210", name: "CGST Payable", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "2220", name: "SGST Payable", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "2230", name: "IGST Payable", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "2300", name: "TDS Payable", type: "LIABILITY", parent_id: null, is_group: false, description: "Tax Deducted at Source", balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "2400", name: "Salary Payable", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "2500", name: "Loans & Borrowings", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "2000", name: "Liabilities", type: "LIABILITY", parent_id: null, is_group: true, description: "All liability accounts", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "2100", name: "Accounts Payable", type: "LIABILITY", parent_id: null, is_group: false, description: "Money owed to suppliers", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "2200", name: "GST Payable", type: "LIABILITY", parent_id: null, is_group: true, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "2210", name: "CGST Payable", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "2220", name: "SGST Payable", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "2230", name: "IGST Payable", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "2300", name: "TDS Payable", type: "LIABILITY", parent_id: null, is_group: false, description: "Tax Deducted at Source", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "2400", name: "Salary Payable", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "2500", name: "Loans & Borrowings", type: "LIABILITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
 
     // EQUITY (3xxx)
-    { tenant_id: tenantId, code: "3000", name: "Equity", type: "EQUITY", parent_id: null, is_group: true, description: "Owner's equity", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "3100", name: "Owner's Capital", type: "EQUITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "3200", name: "Retained Earnings", type: "EQUITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "3300", name: "Owner's Drawings", type: "EQUITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "3000", name: "Equity", type: "EQUITY", parent_id: null, is_group: true, description: "Owner's equity", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "3100", name: "Owner's Capital", type: "EQUITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "3200", name: "Retained Earnings", type: "EQUITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "3300", name: "Owner's Drawings", type: "EQUITY", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
 
     // REVENUE (4xxx)
-    { tenant_id: tenantId, code: "4000", name: "Revenue", type: "REVENUE", parent_id: null, is_group: true, description: "All income accounts", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "4100", name: "Sales Revenue", type: "REVENUE", parent_id: null, is_group: false, description: "Income from sales", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "4200", name: "Service Revenue", type: "REVENUE", parent_id: null, is_group: false, description: "Income from services", balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "4300", name: "Interest Income", type: "REVENUE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "4400", name: "Other Income", type: "REVENUE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "4000", name: "Revenue", type: "REVENUE", parent_id: null, is_group: true, description: "All income accounts", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "4100", name: "Sales Revenue", type: "REVENUE", parent_id: null, is_group: false, description: "Income from sales", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "4200", name: "Service Revenue", type: "REVENUE", parent_id: null, is_group: false, description: "Income from services", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "4300", name: "Interest Income", type: "REVENUE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "4400", name: "Other Income", type: "REVENUE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
 
     // EXPENSES (5xxx)
-    { tenant_id: tenantId, code: "5000", name: "Expenses", type: "EXPENSE", parent_id: null, is_group: true, description: "All expense accounts", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "5100", name: "Cost of Goods Sold", type: "EXPENSE", parent_id: null, is_group: false, description: "Direct costs", balance: 0, currency_code: "INR", is_active: true, is_system: true },
-    { tenant_id: tenantId, code: "5200", name: "Salaries & Wages", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "5300", name: "Rent", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "5400", name: "Utilities", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "5500", name: "Office Supplies", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "5600", name: "Marketing & Advertising", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "5700", name: "Insurance", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "5800", name: "Depreciation", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "5900", name: "Bank Charges", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-    { tenant_id: tenantId, code: "5950", name: "Miscellaneous Expenses", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: "INR", is_active: true, is_system: false },
-  ]
+    { tenant_id: tenantId, code: "5000", name: "Expenses", type: "EXPENSE", parent_id: null, is_group: true, description: "All expense accounts", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "5100", name: "Cost of Goods Sold", type: "EXPENSE", parent_id: null, is_group: false, description: "Direct costs", balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: true },
+    { tenant_id: tenantId, code: "5200", name: "Salaries & Wages", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "5300", name: "Rent", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "5400", name: "Utilities", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "5500", name: "Office Supplies", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "5600", name: "Marketing & Advertising", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "5700", name: "Insurance", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "5800", name: "Depreciation", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "5900", name: "Bank Charges", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+    { tenant_id: tenantId, code: "5950", name: "Miscellaneous Expenses", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
+  ], taxCtx.regime)
 
   const { error } = await supabase
     .from("accounts")

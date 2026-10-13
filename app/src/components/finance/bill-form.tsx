@@ -1,4 +1,5 @@
 "use client"
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
@@ -38,6 +39,8 @@ interface BillFormProps {
 }
 
 export function BillForm({ initialData, vendors, products }: BillFormProps) {
+  const { regime, formatMoney, taxLabel, rates, defaultRate } = useTaxRegime()
+  const isIndia = (regime?.mode ?? "IN_GST") === "IN_GST"
   const router = useRouter()
   const mode = initialData ? "edit" : "create"
   
@@ -92,21 +95,21 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
   }, [items, supplyType, discount])
 
   const tdsCalc = useMemo(() => {
-    if (!tdsEnabled || totals.subtotal <= 0) return null
+    if (!isIndia || !tdsEnabled || totals.subtotal <= 0) return null
     return calculateTds({
       grossAmount: totals.subtotal,
       sectionCode: tdsSection,
       deducteePan: selectedVendor?.pan,
       isIndividualOrHuf: selectedVendor?.type === "INDIVIDUAL",
     })
-  }, [tdsEnabled, totals.subtotal, tdsSection, selectedVendor])
+  }, [isIndia, tdsEnabled, totals.subtotal, tdsSection, selectedVendor])
 
   const addLineItem = () => {
     setItems([...items, {
       description: "",
       quantity: 1,
       unitPrice: 0,
-      taxPercent: 18,
+      taxPercent: defaultRate,
       taxAmount: 0,
       lineTotal: 0
     }])
@@ -167,7 +170,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
       taxAmount: totals.totalTax,
       discount,
       total: totals.grandTotal,
-      currencyCode: "INR",
+      currencyCode: regime?.currency || "INR",
       notes: updatedNotes,
       items
     }
@@ -326,14 +329,14 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {GST_RATES.map(rate => (
+                              {[...new Set([...rates, item.taxPercent])].sort((a, b) => a - b).map(rate => (
                                 <SelectItem key={rate} value={rate.toString()}>{rate}%</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
                         <TableCell className="text-right font-medium pr-6">
-                          {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(item.lineTotal)}
+                          {formatMoney(item.lineTotal)}
                         </TableCell>
                         <TableCell>
                           <Button variant="ghost" size="icon" onClick={() => removeLineItem(index)}>
@@ -369,11 +372,11 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
             <CardContent className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(totals.subtotal)}</span>
+                <span>{formatMoney(totals.subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">GST Total</span>
-                <span>{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(totals.totalTax)}</span>
+                <span className="text-muted-foreground">{taxLabel} Total</span>
+                <span>{formatMoney(totals.totalTax)}</span>
               </div>
               <div className="flex justify-between text-sm items-center">
                 <span className="text-muted-foreground">Discount</span>
@@ -390,11 +393,12 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
               <div className="pt-4 border-t flex justify-between items-center">
                 <span className="font-bold">Total Bill Amount</span>
                 <span className="text-xl font-bold text-indigo-600">
-                  {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(totals.grandTotal)}
+                  {formatMoney(totals.grandTotal)}
                 </span>
               </div>
 
-              {/* TDS Withholding Section */}
+              {/* TDS Withholding Section (India only) */}
+              {isIndia && (
               <div className="pt-3 border-t space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
@@ -458,13 +462,13 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
                         <div className="flex justify-between font-medium">
                           <span className="text-muted-foreground">TDS Deducted:</span>
                           <span className="text-amber-700 dark:text-amber-400">
-                            - {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(tdsCalc.tdsAmount)}
+                            - {formatMoney(tdsCalc.tdsAmount)}
                           </span>
                         </div>
                         <div className="flex justify-between font-semibold pt-1 border-t border-amber-500/20 text-foreground">
                           <span>Net Payable to Vendor:</span>
                           <span className="text-emerald-600 dark:text-emerald-400 font-bold">
-                            {new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(
+                            {formatMoney(
                               Math.max(0, totals.grandTotal - tdsCalc.tdsAmount)
                             )}
                           </span>
@@ -474,6 +478,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
                   </div>
                 )}
               </div>
+              )}
               
               <Button className="w-full mt-4" size="lg" onClick={handleSave}>
                 {mode === "create" ? "Create Bill" : "Update Bill"}
@@ -490,7 +495,9 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
                 <Badge variant="outline" className="bg-indigo-100 text-indigo-600 border-indigo-200">Pro Tip</Badge>
               </h4>
               <p className="text-xs text-indigo-800 leading-relaxed">
-                Recording bills accurately helps in claiming Input Tax Credit (ITC) during GST filing. Ensure vendor GSTIN is captured in the contact profile.
+                {isIndia
+                  ? "Recording bills accurately helps in claiming Input Tax Credit (ITC) during GST filing. Ensure vendor GSTIN is captured in the contact profile."
+                  : `Record the ${taxLabel} on each bill so the ${taxLabel} Summary shows what you can reclaim.`}
               </p>
             </CardContent>
           </Card>

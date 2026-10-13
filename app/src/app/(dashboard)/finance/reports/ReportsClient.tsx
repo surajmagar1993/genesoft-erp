@@ -1,4 +1,5 @@
 "use client"
+import { COMPLIANCE_MODULES_ENABLED } from "@/lib/features"
 
 import { useState, useMemo, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -209,7 +210,7 @@ export default function ReportsClient({
         </Card>
       </div>
 
-      {/* ── Statutory Indian Tax Banner ── */}
+      {/* ── Tax banner (country-aware) ── */}
       <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200/80 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-emerald-600 text-white rounded-lg shadow-sm">
@@ -217,28 +218,25 @@ export default function ReportsClient({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-emerald-950">Indian Statutory GST Returns (GSTR-1 & GSTR-3B)</span>
+              <span className="font-semibold text-sm text-emerald-950">{jurisdiction.taxLabel} Summary</span>
               <Badge variant="outline" className="bg-white/80 text-emerald-800 border-emerald-300 text-[10px]">
-                CGST & IGST Acts 2017
+                {jurisdiction.flag} {jurisdiction.countryName}
               </Badge>
             </div>
             <p className="text-xs text-emerald-800/80 mt-0.5">
-              Statutory tax returns & withholding filings for {jurisdiction.countryName} ({jurisdiction.regimeName}).
+              {jurisdiction.taxLabel} charged on sales, less {jurisdiction.taxLabel} paid on purchases, for any period. Use it to file with your tax authority.
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
-          {jurisdiction.financeTaxItems.map((item, idx) => (
-            <Button
-              key={item.href}
-              asChild
-              size="sm"
-              className={idx === 0
-                ? "gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs"
-                : "gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs"
-              }
-              variant={idx === 0 ? "default" : "outline"}
-            >
+          <Button asChild size="sm" className="gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs">
+            <Link href="/finance/tax-summary">
+              Open {jurisdiction.taxLabel} Summary
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
+          {COMPLIANCE_MODULES_ENABLED && jurisdiction.financeTaxItems.map((item) => (
+            <Button key={item.href} asChild size="sm" variant="outline" className="gap-1.5 bg-white/80 hover:bg-white text-emerald-900 border-emerald-300 shadow-xs">
               <Link href={item.href}>
                 {item.shortName}
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -252,7 +250,6 @@ export default function ReportsClient({
           )}
         </div>
       </div>
-
 
       {/* ── Tabbed Reports ── */}
       <Tabs defaultValue="pnl">

@@ -1,5 +1,7 @@
 import { COMPANY } from "@/lib/constants/company"
 import { getStateNameFromCode } from "@/lib/gst-returns-engine"
+import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
+import { encodeZatcaTlv } from "@/lib/ksa-zatca-engine"
 import type {
   InvoiceDB,
   InvoiceStatus,
@@ -13,11 +15,28 @@ export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB
   const billTo = (inv.billTo as Record<string, any>) || {}
   const tenantSettings = (inv.tenant?.settings as Record<string, any>) || {}
   // A GSTIN starts with the 2-digit state code, so it gives the state when Settings has none
-  const supplierGstin: string = tenantSettings.gstin || COMPANY.gstin || ""
-  const gstinStateCode = /^\d{2}/.test(supplierGstin) ? supplierGstin.slice(0, 2) : ""
+  const supplierGstin: string =
+    tenantSettings.gstin || tenantSettings.vat_number || tenantSettings.ksa_vat_number || tenantSettings.trn ||
+    tenantSettings.uk_vrn || tenantSettings.vrn || tenantSettings.abn || tenantSettings.ein || tenantSettings.tax_id ||
+    COMPANY.gstin || ""
+  const regime = resolveTaxRegime(inv.tenant?.countryCode, tenantSettings as { tax?: never }, inv.currencyCode)
+  const gstinStateCode = regime.mode === "IN_GST" && /^\d{2}/.test(supplierGstin) ? supplierGstin.slice(0, 2) : ""
   const supplierState = tenantSettings.state || COMPANY.state || (gstinStateCode ? getStateNameFromCode(gstinStateCode) : "")
   const placeOfSupply = inv.placeOfSupply || ""
   const isInter = placeOfSupply ? placeOfSupply !== supplierState : false
+  const supplyType = regime.mode === "SINGLE" ? "single" : isInter ? "inter" : "intra"
+
+  // KSA ZATCA phase 1: seller name, VAT number, timestamp, total with VAT, VAT total
+  let zatcaTlv: string | null = null
+  if (regime.requiresZatcaQr && inv.type !== "PROFORMA" && supplierGstin) {
+    zatcaTlv = encodeZatcaTlv({
+      sellerName: inv.tenant?.name || "",
+      vatNumber: supplierGstin,
+      invoiceTimestamp: new Date(inv.invoiceDate || inv.createdAt || Date.now()).toISOString().replace(/\.\d{3}Z$/, "Z"),
+      invoiceTotal: Number(inv.total || 0).toFixed(2),
+      vatTotal: Number(inv.taxAmount || 0).toFixed(2),
+    })
+  }
 
   return {
     id: inv.id,
@@ -41,11 +60,17 @@ export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB
     supplier_gstin: supplierGstin,
     supplier_state: supplierState,
     place_of_supply: placeOfSupply,
-    supply_type: isInter ? "inter" : "intra",
+    supply_type: supplyType,
+    tax_mode: regime.mode,
+    tax_label: regime.taxLabel,
+    tax_id_label: regime.taxIdLabel,
+    invoice_title: regime.invoiceTitle,
+    locale: regime.locale,
+    zatca_tlv: zatcaTlv,
     pdf_url: inv.pdfUrl,
     tenant_id: inv.tenantId,
     contact_id: inv.contactId,
-    currency_code: inv.currencyCode || "INR",
+    currency_code: inv.currencyCode || regime.currencyCode,
     template_id: (billTo.templateId as InvoiceTemplateId) || (tenantSettings.invoice_template as InvoiceTemplateId) || "MODERN",
     is_tax_exempt: (inv as any).isTaxExempt || false,
     tax_exemption_reason: (inv as any).taxExemptionReason || null,
@@ -71,6 +96,8 @@ export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB
       cgst_amount: Number(li.cgstAmount || 0),
       sgst_amount: Number(li.sgstAmount || 0),
       igst_amount: Number(li.igstAmount || 0),
+      vat_percent: Number(li.vatRate || 0),
+      vat_amount: Number(li.vatAmount || 0),
       tenant_id: inv.tenantId,
     })),
     tenants: inv.tenant

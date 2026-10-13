@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
+import { getTenantTaxContext, invoiceItemTaxColumns } from "@/lib/tenant-tax"
 import {
     RecurringFrequency,
     RecurringStatus,
@@ -79,6 +80,7 @@ if (!profile) return { error: "Recurring profile not found" }
         address: profile.contact.billingAddress || {},
     }
 
+    const taxCtx = await getTenantTaxContext(tenantId)
     const result = await prisma.$transaction(async (tx: any) => {
         // 1. Create Invoice
         const invoice = await tx.invoice.create({
@@ -100,21 +102,20 @@ if (!profile) return { error: "Recurring profile not found" }
                 terms: profile.terms,
                 recurringProfileId: profile.id,
                 items: {
-                    create: profile.items.map((item: any) => ({
-                        productId: item.productId,
-                        description: item.description,
-                        hsnSacCode: item.hsnSacCode,
-                        quantity: item.quantity,
-                        unitPrice: item.unitPrice,
-                        cgstRate: item.cgstRate,
-                        cgstAmount: item.cgstAmount,
-                        sgstRate: item.sgstRate,
-                        sgstAmount: item.sgstAmount,
-                        igstRate: item.igstRate,
-                        igstAmount: item.igstAmount,
-                        discount: item.discount,
-                        lineTotal: item.lineTotal,
-                    })),
+                    create: profile.items.map((item: any) => {
+                        // Keep the profile's total rate; split it for the business's country now
+                        const rate = Number(item.cgstRate || 0) + Number(item.sgstRate || 0) + Number(item.igstRate || 0)
+                        const supplyType = taxCtx.regime.mode === "SINGLE" ? "single" : Number(item.igstRate || 0) > 0 ? "inter" : "intra"
+                        return {
+                            productId: item.productId,
+                            description: item.description,
+                            hsnSacCode: item.hsnSacCode,
+                            quantity: item.quantity,
+                            unitPrice: item.unitPrice,
+                            ...invoiceItemTaxColumns(Number(item.quantity), Number(item.unitPrice), rate, supplyType),
+                            discount: item.discount,
+                        }
+                    }),
                 },
             },
         })

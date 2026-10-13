@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 
 import { prisma } from '@/lib/prisma'
 import { getPlatformGate } from '@/lib/platform-security'
+import { SIGNUP_COUNTRIES, getTaxJurisdiction } from '@/lib/tax-jurisdiction'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -52,6 +53,22 @@ export async function register(formData: FormData) {
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
   const requestedPlan = String(formData.get('plan') || '').toUpperCase()
+
+  // Business country decides currency, number format and document tax
+  const countryChoice = String(formData.get('country') || 'IN').toUpperCase()
+  let countryCode = countryChoice
+  let currencyCode = ''
+  if (countryChoice === 'OTHER') {
+    countryCode = String(formData.get('otherCountry') || '').trim().toUpperCase()
+    currencyCode = String(formData.get('otherCurrency') || '').trim().toUpperCase()
+    if (!/^[A-Z]{2}$/.test(countryCode) || !/^[A-Z]{3}$/.test(currencyCode)) {
+      redirect('/register?error=Enter+a+2-letter+country+code+and+a+3-letter+currency')
+    }
+  } else if (!(SIGNUP_COUNTRIES as readonly string[]).includes(countryChoice)) {
+    redirect('/register?error=Choose+your+business+country')
+  } else {
+    currencyCode = getTaxJurisdiction(countryChoice).currencyCode
+  }
   const intendedPlan = ['BASIC', 'PRO', 'ENTERPRISE'].includes(requestedPlan) ? requestedPlan : null
 
   if (!(await getPlatformGate()).allowSignups) {
@@ -107,6 +124,10 @@ export async function register(formData: FormData) {
           name: company,
           domain: slug.toLowerCase(),
           plan: 'FREE',
+          countryCode,
+          currencyCode,
+          billingRegion: countryCode,
+          fiscalYearStart: getTaxJurisdiction(countryCode).fiscalYearStartMonth ?? 1,
           isTrial: true,
           trialEndsAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days trial
           // Remember the plan picked on the pricing page so Billing can offer it

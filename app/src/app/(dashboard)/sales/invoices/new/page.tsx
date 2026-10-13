@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { InvoiceForm, InvoiceFormData } from "@/components/sales/invoice-form"
+import { InvoiceForm, InvoiceFormData, type InvoiceTaxRegime } from "@/components/sales/invoice-form"
+import { getInvoiceTaxRegime } from "@/app/actions/sales/tax"
 import { createInvoice, getNextInvoiceNumber } from "@/app/actions/sales/invoices"
 import { getContacts } from "@/app/actions/crm/contacts"
-import { computeLineItemGst, getSupplyType } from "@/lib/gst-engine"
+import { computeLineItemGst, getSupplyTypeForRegime } from "@/lib/gst-engine"
 
 export default function NewInvoicePage() {
     return <NewInvoiceFormWrapper />
@@ -13,6 +14,8 @@ export default function NewInvoicePage() {
 
 function NewInvoiceFormWrapper() {
     const router = useRouter()
+    const [regime, setRegime] = useState<InvoiceTaxRegime | null>(null)
+    useEffect(() => { getInvoiceTaxRegime().then(setRegime) }, [])
     const [nextInvoiceNum, setNextInvoiceNum] = useState<string>("")
     const [contacts, setContacts] = useState<any[]>([])
 
@@ -26,7 +29,7 @@ function NewInvoiceFormWrapper() {
             alert("Please select a registered CRM Contact to create an invoice.")
             return
         }
-        const supplyType = getSupplyType(data.supplierState, data.placeOfSupply)
+        const supplyType = getSupplyTypeForRegime(regime?.mode ?? "IN_GST", data.supplierState, data.placeOfSupply)
 
         const { error } = await createInvoice({
             invoice_number: data.invoiceNumber,
@@ -80,5 +83,5 @@ function NewInvoiceFormWrapper() {
         }
     }
 
-    return <InvoiceForm onSave={handleSave} nextInvoiceNumber={nextInvoiceNum} contacts={contacts} />
+    return regime ? <InvoiceForm onSave={handleSave} nextInvoiceNumber={nextInvoiceNum} contacts={contacts} regime={regime} /> : <div className="p-8 text-sm text-muted-foreground">Loading…</div>
 }

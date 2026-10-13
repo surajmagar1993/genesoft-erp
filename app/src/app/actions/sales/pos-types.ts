@@ -15,6 +15,8 @@ export interface POSProductItem {
   stockQty: number
   imageUrl: string | null
   type: "PRODUCT" | "SERVICE"
+  /** Tax % on this product (its tax group, else the business default) */
+  taxRate: number
 }
 
 export interface POSCartItem {
@@ -26,6 +28,7 @@ export interface POSCartItem {
   qty: number
   unit: string
   lineTotal: number
+  taxRate: number
 }
 
 export interface POSTransactionData {

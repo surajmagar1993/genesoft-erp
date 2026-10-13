@@ -1083,7 +1083,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Deductor Legal Name *</Label>
                     <Input
-                      placeholder="Genesoft Technologies Pvt Ltd"
+                      placeholder="Legal name as per PAN"
                       value={profileDeductorName}
                       onChange={(e) => setProfileDeductorName(e.target.value)}
                       className="text-xs"

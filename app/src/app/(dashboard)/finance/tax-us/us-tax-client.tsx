@@ -1185,9 +1185,8 @@ export function UsTaxClient({ initialData }: Props) {
                 <div className="space-y-3 border-r pr-4">
                   <div className="p-2 border rounded bg-muted/20">
                     <div className="text-[10px] text-muted-foreground font-semibold">PAYER&apos;S name & address</div>
-                    <div className="font-bold text-foreground">Genesoft ERP Inc.</div>
-                    <div className="text-[11px] text-muted-foreground">100 Wall Street, New York, NY 10005</div>
-                    <div className="text-[10px] font-mono mt-1 text-muted-foreground">PAYER&apos;S TIN: 12-3456789</div>
+                    <div className="font-bold text-foreground">Your business (from Settings → Organization)</div>
+                    <div className="text-[10px] font-mono mt-1 text-muted-foreground">PAYER&apos;S TIN: your EIN</div>
                   </div>
 
                   <div className="p-2 border rounded bg-muted/20">

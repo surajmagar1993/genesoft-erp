@@ -23,7 +23,7 @@ import {
   GST_RATES,
   GstRate,
   SupplyType,
-  getSupplyType,
+  getSupplyTypeForRegime,
   computeLineItemGst,
   computeInvoiceGstSummary,
   isValidGstin,
@@ -137,8 +137,30 @@ const emptyLineItem: InvoiceLineItem = {
 }
 
 /* ── Helpers ────────────────────────────────────────────────────────────────── */
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
+/** The business's tax setup, from its country and Settings (see resolveTaxRegime). */
+export interface InvoiceTaxRegime {
+  mode: "IN_GST" | "SINGLE"
+  taxLabel: string
+  taxIdLabel: string
+  standardRates: number[]
+  defaultRate: number
+  currency: string
+  locale: string
+  /** Defaults for new invoices, from Settings */
+  supplierState?: string
+  supplierTaxId?: string
+}
+
+/** India's GST, used until the page passes the business's own setup */
+const INDIA_REGIME: InvoiceTaxRegime = {
+  mode: "IN_GST",
+  taxLabel: "GST",
+  taxIdLabel: "GSTIN",
+  standardRates: [...GST_RATES],
+  defaultRate: 18,
+  currency: "INR",
+  locale: "en-IN",
+}
 
 /* ── Props ──────────────────────────────────────────────────────────────────── */
 interface InvoiceFormProps {
@@ -146,14 +168,21 @@ interface InvoiceFormProps {
   nextInvoiceNumber?: string
   contacts?: any[]
   onSave: (data: InvoiceFormData) => void
+  regime?: InvoiceTaxRegime
 }
 
-export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }: InvoiceFormProps) {
+export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave, regime = INDIA_REGIME }: InvoiceFormProps) {
   const router = useRouter()
+  const isIndia = regime.mode === "IN_GST"
+  const taxLabel = regime.taxLabel
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat(regime.locale, { style: "currency", currency: regime.currency }).format(amount)
   const mode = initialData ? "edit" : "create"
   const [form, setForm] = useState<InvoiceFormData>(
     initialData || {
       ...defaultInvoiceForm,
+      supplierGstin: regime.supplierTaxId || "",
+      supplierState: regime.supplierState || "",
       invoiceNumber: nextInvoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
     }
   )
@@ -172,17 +201,18 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
 
   /* ── Derived: supply type ────────────────────────────────────────────────── */
   const supplyType: SupplyType = useMemo(
-    () => getSupplyType(form.supplierState, form.placeOfSupply),
-    [form.supplierState, form.placeOfSupply]
+    () => getSupplyTypeForRegime(regime.mode, form.supplierState, form.placeOfSupply),
+    [regime.mode, form.supplierState, form.placeOfSupply]
   )
 
   /* ── GSTIN validation ────────────────────────────────────────────────────── */
-  const supplierGstinValid = isValidGstin(form.supplierGstin)
-  const customerGstinValid = isValidGstin(form.customerGstin)
+  // Only Indian GSTINs have a fixed format to check
+  const supplierGstinValid = !isIndia || isValidGstin(form.supplierGstin)
+  const customerGstinValid = !isIndia || isValidGstin(form.customerGstin)
 
   /* ── Line Item CRUD ──────────────────────────────────────────────────────── */
   const addLineItem = () => {
-    const newItem: InvoiceLineItem = { ...emptyLineItem, id: Date.now().toString() }
+    const newItem: InvoiceLineItem = { ...emptyLineItem, gstRate: regime.defaultRate as GstRate, id: Date.now().toString() }
     update("lineItems", [...form.lineItems, newItem])
   }
 
@@ -251,7 +281,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
           </p>
         </div>
         {/* Supply type badge */}
-        {(form.supplierState || form.placeOfSupply) && (
+        {isIndia && (form.supplierState || form.placeOfSupply) && (
           <Badge
             variant="outline"
             className={
@@ -370,7 +400,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                           customerName: selected.display_name,
                           customerEmail: selected.email || "",
                           customerGstin: selected.gstin || "",
-                          placeOfSupply: selected.billing_address?.state || (selected.country_code === "IN" ? "Maharashtra" : ""),
+                          placeOfSupply: selected.billing_address?.state || "",
                           isTaxExempt: isExempt,
                           taxExemptionReason: exemptReason,
                           taxExemptionCertificate: exemptCert,
@@ -469,13 +499,13 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
             {/* ── GST Section ────────────────────────────────────────────── */}
             <div className="rounded-lg border border-dashed p-4 space-y-4">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                GST Details
+                {taxLabel} Details
               </p>
 
               {/* GSTIN */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="supplierGstin">Your GSTIN</Label>
+                  <Label htmlFor="supplierGstin">Your {regime.taxIdLabel}</Label>
                   <div className="relative">
                     <Input
                       id="supplierGstin"
@@ -483,7 +513,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                       onChange={(e) =>
                         update("supplierGstin", e.target.value.toUpperCase())
                       }
-                      placeholder="Enter your GSTIN"
+                      placeholder={`Enter your ${regime.taxIdLabel}`}
                       className={
                         form.supplierGstin && !supplierGstinValid
                           ? "border-red-500 pr-9"
@@ -495,11 +525,11 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                     )}
                   </div>
                   {form.supplierGstin && !supplierGstinValid && (
-                    <p className="text-xs text-red-500">Invalid GSTIN format</p>
+                    <p className="text-xs text-red-500">Invalid {regime.taxIdLabel} format</p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="customerGstin">Customer GSTIN</Label>
+                  <Label htmlFor="customerGstin">Customer {regime.taxIdLabel}</Label>
                   <div className="relative">
                     <Input
                       id="customerGstin"
@@ -507,7 +537,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                       onChange={(e) =>
                         update("customerGstin", e.target.value.toUpperCase())
                       }
-                      placeholder="Enter customer GSTIN"
+                      placeholder={`Enter customer ${regime.taxIdLabel}`}
                       className={
                         form.customerGstin && !customerGstinValid
                           ? "border-red-500 pr-9"
@@ -519,11 +549,13 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                     )}
                   </div>
                   {form.customerGstin && !customerGstinValid && (
-                    <p className="text-xs text-red-500">Invalid GSTIN format</p>
+                    <p className="text-xs text-red-500">Invalid {regime.taxIdLabel} format</p>
                   )}
                 </div>
               </div>
 
+              {/* State / Place of Supply: Indian GST only */}
+              {isIndia && (<>
               {/* State / Place of Supply */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -578,6 +610,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                     : `✓ Inter-state supply — IGST will be applied on line items`}
                 </div>
               )}
+              </>)}
             </div>
 
             <div className="space-y-2">
@@ -616,10 +649,10 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                 <div className="grid grid-cols-[1.8fr_1.2fr_0.7fr_0.7fr_1fr_0.6fr_1.2fr_auto] gap-2 text-xs font-medium text-muted-foreground px-1">
                   <span>Product / Service</span>
                   <span>Description</span>
-                  <span className="text-center">HSN/SAC</span>
+                  <span className="text-center">{isIndia ? "HSN/SAC" : "Item code"}</span>
                   <span className="text-center">Qty</span>
                   <span className="text-right">Unit Price</span>
-                  <span className="text-center">GST %</span>
+                  <span className="text-center">{taxLabel} %</span>
                   <span className="text-right">Amount</span>
                   <span className="w-9" />
                 </div>
@@ -691,7 +724,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {GST_RATES.map((r) => (
+                            {[...new Set([...regime.standardRates, item.gstRate])].sort((a, b) => a - b).map((r) => (
                               <SelectItem key={r} value={String(r)}>
                                 {r}%
                               </SelectItem>
@@ -718,7 +751,9 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                           <span>
                             Taxable: <span className="font-medium text-foreground">{formatCurrency(gst.taxableAmount)}</span>
                           </span>
-                          {supplyType === "intra" ? (
+                          {supplyType === "single" ? (
+                            <span>{taxLabel} {gst.vatPercent}%: <span className="font-medium text-foreground">{formatCurrency(gst.vatAmount)}</span></span>
+                          ) : supplyType === "intra" ? (
                             <>
                               <span>CGST {gst.cgstPercent}%: <span className="font-medium text-foreground">{formatCurrency(gst.cgstAmount)}</span></span>
                               <span>SGST {gst.sgstPercent}%: <span className="font-medium text-foreground">{formatCurrency(gst.sgstAmount)}</span></span>
@@ -740,7 +775,12 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                       <span>{formatCurrency(gstSummary.subtotal)}</span>
                     </div>
 
-                    {supplyType === "intra" ? (
+                    {supplyType === "single" ? (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">{taxLabel}</span>
+                        <span>{formatCurrency(gstSummary.vatTotal)}</span>
+                      </div>
+                    ) : supplyType === "intra" ? (
                       <>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">CGST</span>
@@ -917,23 +957,23 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
 
                 {form.supplierGstin && (
                   <>
-                    <span className="text-muted-foreground">Your GSTIN</span>
+                    <span className="text-muted-foreground">Your {regime.taxIdLabel}</span>
                     <span className="text-right font-mono text-xs">{form.supplierGstin}</span>
                   </>
                 )}
                 {form.customerGstin && (
                   <>
-                    <span className="text-muted-foreground">Customer GSTIN</span>
+                    <span className="text-muted-foreground">Customer {regime.taxIdLabel}</span>
                     <span className="text-right font-mono text-xs">{form.customerGstin}</span>
                   </>
                 )}
-                {form.placeOfSupply && (
+                {isIndia && form.placeOfSupply && (
                   <>
                     <span className="text-muted-foreground">Place of Supply</span>
                     <span className="text-right">{form.placeOfSupply}</span>
                   </>
                 )}
-                {form.supplierState && form.placeOfSupply && (
+                {isIndia && form.supplierState && form.placeOfSupply && (
                   <>
                     <span className="text-muted-foreground">Supply Type</span>
                     <span className="text-right capitalize">{supplyType}-state</span>
@@ -946,7 +986,12 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave }
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="text-right">{formatCurrency(gstSummary.subtotal)}</span>
 
-                {supplyType === "intra" ? (
+                {supplyType === "single" ? (
+                  <>
+                    <span className="text-muted-foreground">{taxLabel}</span>
+                    <span className="text-right">{formatCurrency(gstSummary.vatTotal)}</span>
+                  </>
+                ) : supplyType === "intra" ? (
                   <>
                     <span className="text-muted-foreground">CGST</span>
                     <span className="text-right">{formatCurrency(gstSummary.cgstTotal)}</span>

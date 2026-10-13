@@ -1,4 +1,5 @@
 "use client"
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -54,6 +55,11 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
     const [address, setAddress] = useState<TenantAddress>(parseAddress(initialSettings?.address))
     const [countryCode, setCountryCode] = useState(initialSettings?.country_code || "IN")
 
+    const { regime } = useTaxRegime()
+    const savedTax = ((initialSettings?.settings as { tax?: { label?: string; rates?: number[]; defaultRate?: number } } | null)?.tax) || {}
+    const [taxName, setTaxName] = useState(savedTax.label || "")
+    const [taxRates, setTaxRates] = useState((savedTax.rates || []).filter((r) => r > 0).join(", "))
+    const [taxDefault, setTaxDefault] = useState(savedTax.defaultRate != null ? String(savedTax.defaultRate) : "")
     const [isSaving, setIsSaving] = useState(false)
     const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
@@ -101,6 +107,15 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                 logo_url: logoUrl || null,
                 country_code: countryCode,
                 gstin: gstin.trim() || null,
+                ...(regime?.mode === "SINGLE" && (taxName.trim() || taxRates.trim())
+                    ? {
+                          tax_settings: {
+                              label: taxName.trim() || undefined,
+                              rates: taxRates.split(",").map((r) => Number(r.trim())).filter((r) => Number.isFinite(r) && r >= 0),
+                              defaultRate: taxDefault.trim() ? Number(taxDefault) : undefined,
+                          },
+                      }
+                    : {}),
                 address: {
                     street: address.street || "",
                     city: address.city || "",
@@ -167,16 +182,38 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="gstin">Tax ID / GSTIN / TRN</Label>
+                                <Label htmlFor="gstin">{regime?.taxIdLabel || "Tax ID"}</Label>
                                 <Input
                                     id="gstin"
                                     value={gstin}
                                     onChange={(e) => setGstin(e.target.value.toUpperCase())}
-                                    placeholder="e.g. 27AABCT3518Q1ZV"
+                                    placeholder={`Your ${regime?.taxIdLabel || "tax registration number"}`}
                                     className="uppercase font-mono"
                                 />
+                                <p className="text-[11px] text-muted-foreground">Printed on invoices and required for tax exports.</p>
                             </div>
                         </div>
+
+                        {regime && regime.mode === "SINGLE" && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 rounded-lg border border-dashed p-4">
+                                <div className="md:col-span-3 text-xs text-muted-foreground">
+                                    Tax on your documents. Leave blank to use the standard {regime.taxLabel} rates for your country
+                                    ({regime.standardRates.join("%, ")}%).
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="taxName">Tax name</Label>
+                                    <Input id="taxName" value={taxName} onChange={(e) => setTaxName(e.target.value)} placeholder="VAT, GST or Sales Tax" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="taxRates">Rates (%)</Label>
+                                    <Input id="taxRates" value={taxRates} onChange={(e) => setTaxRates(e.target.value)} placeholder="Comma-separated, e.g. 5, 9" />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="taxDefault">Default rate (%)</Label>
+                                    <Input id="taxDefault" value={taxDefault} onChange={(e) => setTaxDefault(e.target.value)} placeholder="One of your rates" />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">

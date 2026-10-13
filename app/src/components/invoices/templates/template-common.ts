@@ -1,6 +1,7 @@
 import { InvoiceDB } from "@/app/actions/sales/invoices"
 import { computeInvoiceGstSummary, computeHsnSummary, SupplyType } from "@/lib/gst-engine"
 import { COMPANY } from "@/lib/constants/company"
+import { localeForCurrency } from "@/lib/utils"
 
 export interface TemplateProps {
     invoice: InvoiceDB
@@ -8,7 +9,7 @@ export interface TemplateProps {
 }
 
 export function formatCurrency(amount: number, currency: string = "INR") {
-    return new Intl.NumberFormat("en-IN", {
+    return new Intl.NumberFormat(localeForCurrency(currency), {
         style: "currency",
         currency,
         maximumFractionDigits: 2,
@@ -16,10 +17,10 @@ export function formatCurrency(amount: number, currency: string = "INR") {
     }).format(amount)
 }
 
-export function formatDate(dateStr: string | null | undefined) {
+export function formatDate(dateStr: string | null | undefined, locale = "en-IN") {
     if (!dateStr) return "—"
     try {
-        return new Date(dateStr).toLocaleDateString("en-IN", {
+        return new Date(dateStr).toLocaleDateString(locale, {
             day: "2-digit",
             month: "short",
             year: "numeric"
@@ -34,12 +35,12 @@ export function getInvoiceSummary(invoice: InvoiceDB) {
     const lineItemsForGst = items.map((li) => ({
         qty: li.qty,
         unitPrice: li.unit_price,
-        gstRate: li.cgst_percent + li.sgst_percent + li.igst_percent || li.tax_percent || 0,
+        gstRate: li.cgst_percent + li.sgst_percent + li.igst_percent + (li.vat_percent || 0) || li.tax_percent || 0,
         isExempt: li.is_exempt || false,
         hsnSac: li.hsn_sac || "—"
     }))
 
-    const supplyType: SupplyType = invoice.supply_type === "inter" ? "inter" : "intra"
+    const supplyType: SupplyType = invoice.supply_type === "single" ? "single" : invoice.supply_type === "inter" ? "inter" : "intra"
 
     const gstSummary = computeInvoiceGstSummary(
         lineItemsForGst,
@@ -75,6 +76,11 @@ export function getInvoiceSummary(invoice: InvoiceDB) {
         companyAddress,
         companyPhone,
         companyEmail,
-        isInterState: supplyType === "inter"
+        isInterState: supplyType === "inter",
+        // Country tax setup: outside India there's one VAT / GST / sales tax line
+        isSingle: supplyType === "single",
+        taxLabel: invoice.tax_label || "GST",
+        taxIdLabel: invoice.tax_id_label || "GSTIN",
+        docTitle: invoice.type === "PROFORMA" ? "PROFORMA INVOICE" : (invoice.invoice_title || "Tax Invoice").toUpperCase(),
     }
 }

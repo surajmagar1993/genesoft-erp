@@ -1,6 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
+import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
@@ -93,4 +94,37 @@ export async function deleteTaxGroup(id: string) {
 
   if (error) throw new Error(error.message)
   revalidatePath("/settings")
+}
+
+
+/**
+ * The signed-in business's tax setup for documents: country rules plus its
+ * own tax name/rates, currency and number format.
+ */
+export async function getInvoiceTaxRegime(): Promise<{
+    mode: "IN_GST" | "SINGLE"
+    taxLabel: string
+    taxIdLabel: string
+    standardRates: number[]
+    defaultRate: number
+    currency: string
+    locale: string
+    supplierState: string
+    supplierTaxId: string
+    countryCode: string
+}> {
+    const tenantId = await getTenantId()
+    const ctx = await getTenantTaxContext(tenantId)
+    return {
+        mode: ctx.regime.mode,
+        taxLabel: ctx.regime.taxLabel,
+        taxIdLabel: ctx.regime.taxIdLabel,
+        standardRates: ctx.regime.standardRates,
+        defaultRate: ctx.regime.defaultRate,
+        currency: ctx.currency,
+        locale: ctx.regime.locale,
+        supplierState: ctx.supplierState,
+        supplierTaxId: ctx.supplierTaxId,
+        countryCode: ctx.regime.countryCode,
+    }
 }

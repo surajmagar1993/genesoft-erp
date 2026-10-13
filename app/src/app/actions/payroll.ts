@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { getTenantManagerId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
@@ -117,6 +118,26 @@ export interface PayrollOverviewData {
 /**
  * Get unified payroll overview telemetry, runs, payslips, and templates
  */
+/**
+ * Salary structure defaults by country. India gets the usual statutory
+ * components (PF 12%, ESI 0.75% / 3.25%, Professional Tax, HRA, conveyance,
+ * medical). Elsewhere they start at zero: basic + allowance only, and the
+ * business adds its own deductions.
+ */
+async function salaryDefaults(tenantId: string) {
+    const ctx = await getTenantTaxContext(tenantId)
+    if (ctx.regime.mode === "IN_GST") {
+        return {
+            basicPercentage: 50, hraPercentage: 20, conveyanceMonthly: 1600, medicalMonthly: 1250, specialAllowancePct: 15,
+            pfEmployeeRate: 12, pfEmployerRate: 12, esiEmployeeRate: 0.75, esiEmployerRate: 3.25, professionalTax: 200, tdsPercentage: 0,
+        }
+    }
+    return {
+        basicPercentage: 100, hraPercentage: 0, conveyanceMonthly: 0, medicalMonthly: 0, specialAllowancePct: 0,
+        pfEmployeeRate: 0, pfEmployerRate: 0, esiEmployeeRate: 0, esiEmployerRate: 0, professionalTax: 0, tdsPercentage: 0,
+    }
+}
+
 export async function getPayrollOverview(month?: number, year?: number): Promise<PayrollOverviewData> {
     const tenantId = await getTenantManagerId()
     const now = new Date()
@@ -292,6 +313,7 @@ export async function createSalaryStructure(data: {
     tdsPercentage?: number
 }) {
     const tenantId = await getTenantManagerId()
+    const defaults = await salaryDefaults(tenantId)
 
     const structure = await prisma.salaryStructure.create({
         data: {
@@ -299,17 +321,17 @@ export async function createSalaryStructure(data: {
             name: data.name,
             code: data.code.toUpperCase(),
             description: data.description,
-            basicPercentage: data.basicPercentage ?? 50,
-            hraPercentage: data.hraPercentage ?? 20,
-            conveyanceMonthly: data.conveyanceMonthly ?? 1600,
-            medicalMonthly: data.medicalMonthly ?? 1250,
-            specialAllowancePct: data.specialAllowancePct ?? 15,
-            pfEmployeeRate: data.pfEmployeeRate ?? 12,
-            pfEmployerRate: data.pfEmployerRate ?? 12,
-            esiEmployeeRate: data.esiEmployeeRate ?? 0.75,
-            esiEmployerRate: data.esiEmployerRate ?? 3.25,
-            professionalTax: data.professionalTax ?? 200,
-            tdsPercentage: data.tdsPercentage ?? 0
+            basicPercentage: data.basicPercentage ?? defaults.basicPercentage,
+            hraPercentage: data.hraPercentage ?? defaults.hraPercentage,
+            conveyanceMonthly: data.conveyanceMonthly ?? defaults.conveyanceMonthly,
+            medicalMonthly: data.medicalMonthly ?? defaults.medicalMonthly,
+            specialAllowancePct: data.specialAllowancePct ?? defaults.specialAllowancePct,
+            pfEmployeeRate: data.pfEmployeeRate ?? defaults.pfEmployeeRate,
+            pfEmployerRate: data.pfEmployerRate ?? defaults.pfEmployerRate,
+            esiEmployeeRate: data.esiEmployeeRate ?? defaults.esiEmployeeRate,
+            esiEmployerRate: data.esiEmployerRate ?? defaults.esiEmployerRate,
+            professionalTax: data.professionalTax ?? defaults.professionalTax,
+            tdsPercentage: data.tdsPercentage ?? defaults.tdsPercentage
         }
     })
 
@@ -409,18 +431,8 @@ export async function generatePayRun(
                 tenantId,
                 name: "Standard Corporate Structure",
                 code: "SAL-STD",
-                description: "Standard statutory compensation template",
-                basicPercentage: 50,
-                hraPercentage: 20,
-                conveyanceMonthly: 1600,
-                medicalMonthly: 1250,
-                specialAllowancePct: 15,
-                pfEmployeeRate: 12,
-                pfEmployerRate: 12,
-                esiEmployeeRate: 0.75,
-                esiEmployerRate: 3.25,
-                professionalTax: 200,
-                tdsPercentage: 0
+                description: "Standard compensation template",
+                ...(await salaryDefaults(tenantId))
             }
         })
     }
@@ -728,8 +740,8 @@ export async function getPayslipDetails(payslipId: string) {
             netSalary: Number(slip.netSalary)
         },
         company: {
-            name: tenant?.name || "Genesoft Enterprise",
-            email: tenant?.billingEmail || "payroll@genesoft.erp",
+            name: tenant?.name || "",
+            email: tenant?.billingEmail || "",
             currency: tenant?.currency || "INR"
         }
     }

@@ -353,9 +353,9 @@ function fmt(n: number | null | undefined): string {
   return n.toFixed(2)
 }
 
-function fmtDate(d: string | null | undefined): string {
+function fmtDate(d: string | null | undefined, locale = "en-IN"): string {
   if (!d) return "—"
-  return new Date(d).toLocaleDateString("en-IN", {
+  return new Date(d).toLocaleDateString(locale, {
     day: "2-digit", month: "short", year: "numeric",
   })
 }
@@ -411,15 +411,22 @@ export const TEMPLATE_PALETTES: Record<string, { primary: string; light: string;
 interface TaxInvoiceProps {
   invoice: InvoiceDB
   templateId?: "MODERN" | "CLASSIC" | "MINIMALIST" | "COMPACT" | "CREATIVE"
+  /** KSA ZATCA phase 1 QR code as a PNG data URL */
+  zatcaQrDataUrl?: string | null
 }
 
-export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
+export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoiceProps) {
   const chosenTemplate = (templateId || invoice.template_id || "MODERN").toUpperCase()
   const palette = TEMPLATE_PALETTES[chosenTemplate] || TEMPLATE_PALETTES.MODERN
 
   const items: InvoiceLineItemDB[] = invoice.invoice_line_items ?? []
   const supplyType = invoice.supply_type ?? "intra"
   const isIntra = supplyType === "intra"
+  // Outside India there is one tax line (VAT / GST / sales tax) instead of CGST/SGST/IGST
+  const isSingle = supplyType === "single"
+  const isIndia = !isSingle
+  const taxLabel = invoice.tax_label || "GST"
+  const taxIdLabel = invoice.tax_id_label || "GSTIN"
 
   // Tenant/Supplier info with fallback to COMPANY
   const tenant = invoice.tenants
@@ -487,29 +494,33 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
           <View>
             <Text style={[s.companyName, { color: palette.primary }]}>{supplierName}</Text>
             {supplierAddress ? <Text style={s.companyAddress}>{supplierAddress}</Text> : null}
-            {supplierGstin ? <Text style={s.companyGstin}>GSTIN: {supplierGstin}</Text> : null}
+            {supplierGstin ? <Text style={s.companyGstin}>{taxIdLabel}: {supplierGstin}</Text> : null}
           </View>
           <View>
             <Text style={[s.invoiceLabel, isProforma ? { color: "#b45309" } : { color: palette.primary }]}>
-              {isProforma ? "PROFORMA INVOICE" : "TAX INVOICE"}
+              {isProforma ? "PROFORMA INVOICE" : (invoice.invoice_title || "Tax Invoice").toUpperCase()}
             </Text>
             {isProforma && (
               <View style={s.proformaTag}>
                 <Text style={s.proformaTagText}>Quotation / Non-Tax Document</Text>
               </View>
             )}
+            {zatcaQrDataUrl ? (
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image src={zatcaQrDataUrl} style={{ width: 72, height: 72, marginTop: 6, alignSelf: "flex-end" }} />
+            ) : null}
             <Text style={s.invoiceMeta}>
               <Text>No: </Text>
               <Text style={s.invoiceMetaValue}>{invoice.invoice_number}</Text>
             </Text>
             <Text style={s.invoiceMeta}>
               <Text>Date: </Text>
-              <Text style={s.invoiceMetaValue}>{fmtDate(invoice.invoice_date)}</Text>
+              <Text style={s.invoiceMetaValue}>{fmtDate(invoice.invoice_date, invoice.locale)}</Text>
             </Text>
             {invoice.valid_until && (
               <Text style={s.invoiceMeta}>
                 <Text>Valid Until: </Text>
-                <Text style={s.invoiceMetaValue}>{fmtDate(invoice.valid_until)}</Text>
+                <Text style={s.invoiceMetaValue}>{fmtDate(invoice.valid_until, invoice.locale)}</Text>
               </Text>
             )}
             {invoice.reference && (
@@ -528,8 +539,8 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
             <Text style={s.partyLabel}>From (Supplier)</Text>
             <Text style={s.partyName}>{supplierName}</Text>
             {supplierAddress ? <Text style={s.partyDetail}>{supplierAddress}</Text> : null}
-            {supplierGstin ? <Text style={s.partyDetail}>GSTIN: {supplierGstin}</Text> : null}
-            <Text style={s.partyDetail}>State: {supplierState}</Text>
+            {supplierGstin ? <Text style={s.partyDetail}>{taxIdLabel}: {supplierGstin}</Text> : null}
+            {isIndia && supplierState ? <Text style={s.partyDetail}>State: {supplierState}</Text> : null}
           </View>
           {/* Customer */}
           <View style={s.partyBox}>
@@ -539,14 +550,18 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
               <Text style={s.partyDetail}>{invoice.customer_email}</Text>
             )}
             {invoice.customer_gstin && (
-              <Text style={s.partyDetail}>GSTIN: {invoice.customer_gstin}</Text>
+              <Text style={s.partyDetail}>{taxIdLabel}: {invoice.customer_gstin}</Text>
             )}
-            <Text style={s.partyDetail}>
-              Place of Supply: {invoice.place_of_supply || "—"}
-            </Text>
-            <Text style={s.partyDetail}>
-              Supply Type: {isIntra ? "Intra-State (CGST + SGST)" : "Inter-State (IGST)"}
-            </Text>
+            {isIndia && (
+              <>
+                <Text style={s.partyDetail}>
+                  Place of Supply: {invoice.place_of_supply || "—"}
+                </Text>
+                <Text style={s.partyDetail}>
+                  Supply Type: {isIntra ? "Intra-State (CGST + SGST)" : "Inter-State (IGST)"}
+                </Text>
+              </>
+            )}
           </View>
         </View>
 
@@ -556,11 +571,16 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
           <View style={[s.tableHeaderRow, { backgroundColor: palette.primary }]}>
             <Text style={[s.thText, s.colSr]}>#</Text>
             <Text style={[s.thText, s.colName]}>Item / Description</Text>
-            <Text style={[s.thText, s.colHsn]}>HSN/SAC</Text>
+            <Text style={[s.thText, s.colHsn]}>{isIndia ? "HSN/SAC" : "Code"}</Text>
             <Text style={[s.thText, s.colQty]}>Qty</Text>
             <Text style={[s.thText, s.colPrice]}>Rate</Text>
             <Text style={[s.thText, s.colTaxable]}>Taxable</Text>
-            {isIntra ? (
+            {isSingle ? (
+              <>
+                <Text style={[s.thText, s.colGstPct]}>{taxLabel}%</Text>
+                <Text style={[s.thText, s.colGstAmt]}>{taxLabel}{currencySymbol}</Text>
+              </>
+            ) : isIntra ? (
               <>
                 <Text style={[s.thText, s.colGstPct]}>CGST%</Text>
                 <Text style={[s.thText, s.colGstAmt]}>CGST{currencySymbol}</Text>
@@ -579,7 +599,7 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
           {/* Rows */}
           {items.map((item, idx) => {
             const taxable = item.qty * item.unit_price
-            const rowTotal = taxable + item.cgst_amount + item.sgst_amount + item.igst_amount
+            const rowTotal = taxable + item.cgst_amount + item.sgst_amount + item.igst_amount + (item.vat_amount || 0)
             return (
               <View
                 key={item.id}
@@ -594,7 +614,12 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
                 <Text style={[s.tdText, s.colQty]}>{item.qty}</Text>
                 <Text style={[s.tdText, s.colPrice]}>{fmt(item.unit_price)}</Text>
                 <Text style={[s.tdText, s.colTaxable]}>{fmt(taxable)}</Text>
-                {isIntra ? (
+                {isSingle ? (
+                  <>
+                    <Text style={[s.tdText, s.colGstPct]}>{fmt(item.vat_percent || item.tax_percent)}</Text>
+                    <Text style={[s.tdText, s.colGstAmt]}>{fmt(item.vat_amount)}</Text>
+                  </>
+                ) : isIntra ? (
                   <>
                     <Text style={[s.tdText, s.colGstPct]}>{fmt(item.cgst_percent)}</Text>
                     <Text style={[s.tdText, s.colGstAmt]}>{fmt(item.cgst_amount)}</Text>
@@ -617,8 +642,13 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
         <View style={s.summarySection}>
           {/* GST breakdown box */}
           <View style={s.gstBox}>
-            <Text style={s.gstBoxTitle}>GST Summary</Text>
-            {isIntra ? (
+            <Text style={s.gstBoxTitle}>{taxLabel} Summary</Text>
+            {isSingle ? (
+              <View style={s.gstRow}>
+                <Text style={s.gstLabel}>{taxLabel}</Text>
+                <Text style={s.gstValue}>{currencySymbol}{fmt(summary.vatTotal)}</Text>
+              </View>
+            ) : isIntra ? (
               <>
                 <View style={s.gstRow}>
                   <Text style={s.gstLabel}>CGST</Text>
@@ -662,7 +692,7 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
             </View>
             <View style={s.grandTotalRow}>
               <Text style={s.grandTotalLabel}>Grand Total</Text>
-              <Text style={[s.grandTotalValue, { color: palette.primary }]}>₹{fmt(summary.grandTotal)}</Text>
+              <Text style={[s.grandTotalValue, { color: palette.primary }]}>{currencySymbol}{fmt(summary.grandTotal)}</Text>
             </View>
           </View>
         </View>
@@ -684,7 +714,8 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
           </View>
         )}
 
-        {/* ── HSN Summary Table ── */}
+        {/* ── HSN Summary Table (Indian GST only) ── */}
+        {isIndia && (
         <View style={s.hsnTable}>
           <Text style={[s.gstBoxTitle, { marginBottom: 4 }]}>HSN/SAC Summary</Text>
           <View style={s.hsnHeader}>
@@ -716,6 +747,7 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
             </View>
           ))}
         </View>
+        )}
 
         {/* ── Bottom Section: Left (Bank, Notes, Declaration, T&C) + Right (Authorized Signatory) ── */}
         <View style={s.bottomLayout}>
@@ -795,7 +827,7 @@ export function TaxInvoice({ invoice, templateId }: TaxInvoiceProps) {
                     <Text style={s.digitalSealMeta}>
                       {invoice.signatory_designation || "Authorized Signatory"}
                     </Text>
-                    <Text style={s.digitalSealDate}>{fmtDate(invoice.invoice_date)}</Text>
+                    <Text style={s.digitalSealDate}>{fmtDate(invoice.invoice_date, invoice.locale)}</Text>
                   </View>
                 )}
               </View>

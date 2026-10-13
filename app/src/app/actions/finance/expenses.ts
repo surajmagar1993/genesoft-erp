@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
+import { getTenantTaxContext } from "@/lib/tenant-tax"
+import { adaptTaxAccounts, inputTaxLabel } from "@/lib/default-accounts"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import {
@@ -141,40 +143,42 @@ async function ensureDefaultAccounts(tenantId: string) {
 
     if (existing) return
 
-    const defaultAccounts = [
+    // New books start at zero: never seed balances or bank names into a real business
+    const taxCtx = await getTenantTaxContext(tenantId)
+    const defaultAccounts = adaptTaxAccounts([
         // Assets (1xxx)
         { tenantId, code: "1000", name: "Assets", type: AccountType.ASSET, isGroup: true, description: "All asset accounts", balance: 0, isSystem: true },
-        { tenantId, code: "1110", name: "Cash", type: AccountType.ASSET, isGroup: false, description: "Cash in hand", balance: 150000, isSystem: true },
-        { tenantId, code: "1120", name: "Bank Account (HDFC)", type: AccountType.ASSET, isGroup: false, description: "Operating Bank Account", balance: 1850000, isSystem: true },
-        { tenantId, code: "1200", name: "Accounts Receivable", type: AccountType.ASSET, isGroup: false, description: "Customer receivables", balance: 450000, isSystem: true },
-        { tenantId, code: "1400", name: "Input GST (ITC)", type: AccountType.ASSET, isGroup: false, description: "Input Tax Credit Receivable", balance: 42000, isSystem: true },
+        { tenantId, code: "1110", name: "Cash", type: AccountType.ASSET, isGroup: false, description: "Cash in hand", balance: 0, isSystem: true },
+        { tenantId, code: "1120", name: "Bank Account", type: AccountType.ASSET, isGroup: false, description: "Operating Bank Account", balance: 0, isSystem: true },
+        { tenantId, code: "1200", name: "Accounts Receivable", type: AccountType.ASSET, isGroup: false, description: "Customer receivables", balance: 0, isSystem: true },
+        { tenantId, code: "1400", name: "Input GST (ITC)", type: AccountType.ASSET, isGroup: false, description: "Input Tax Credit Receivable", balance: 0, isSystem: true },
 
         // Liabilities (2xxx)
         { tenantId, code: "2000", name: "Liabilities", type: AccountType.LIABILITY, isGroup: true, description: "All liability accounts", balance: 0, isSystem: true },
-        { tenantId, code: "2100", name: "Accounts Payable", type: AccountType.LIABILITY, isGroup: false, description: "Vendor payables", balance: 320000, isSystem: true },
-        { tenantId, code: "2200", name: "GST Output Payable", type: AccountType.LIABILITY, isGroup: false, description: "Output tax collected", balance: 75000, isSystem: true },
+        { tenantId, code: "2100", name: "Accounts Payable", type: AccountType.LIABILITY, isGroup: false, description: "Vendor payables", balance: 0, isSystem: true },
+        { tenantId, code: "2200", name: "GST Output Payable", type: AccountType.LIABILITY, isGroup: false, description: "Output tax collected", balance: 0, isSystem: true },
 
         // Equity (3xxx)
         { tenantId, code: "3000", name: "Equity", type: AccountType.EQUITY, isGroup: true, description: "Capital accounts", balance: 0, isSystem: true },
-        { tenantId, code: "3100", name: "Owner's Capital", type: AccountType.EQUITY, isGroup: false, description: "Founder equity", balance: 2000000, isSystem: true },
+        { tenantId, code: "3100", name: "Owner's Capital", type: AccountType.EQUITY, isGroup: false, description: "Founder equity", balance: 0, isSystem: true },
 
         // Revenue (4xxx)
         { tenantId, code: "4000", name: "Revenue", type: AccountType.REVENUE, isGroup: true, description: "Operating income", balance: 0, isSystem: true },
-        { tenantId, code: "4100", name: "Sales Revenue", type: AccountType.REVENUE, isGroup: false, description: "Income from sales & services", balance: 850000, isSystem: true },
+        { tenantId, code: "4100", name: "Sales Revenue", type: AccountType.REVENUE, isGroup: false, description: "Income from sales & services", balance: 0, isSystem: true },
 
         // Expenses (5xxx)
         { tenantId, code: "5000", name: "Expenses", type: AccountType.EXPENSE, isGroup: true, description: "Operating expenses", balance: 0, isSystem: true },
-        { tenantId, code: "5100", name: "Cost of Goods Sold (COGS)", type: AccountType.EXPENSE, isGroup: false, description: "Direct product costs", balance: 180000, isSystem: true },
-        { tenantId, code: "5200", name: "Salaries & Wages", type: AccountType.EXPENSE, isGroup: false, description: "Staff payroll & bonuses", balance: 320000, isSystem: false },
-        { tenantId, code: "5300", name: "Rent & Facilities", type: AccountType.EXPENSE, isGroup: false, description: "Office & depot lease", balance: 95000, isSystem: false },
-        { tenantId, code: "5400", name: "Utilities & Electricity", type: AccountType.EXPENSE, isGroup: false, description: "Power, water, internet", balance: 24000, isSystem: false },
-        { tenantId, code: "5500", name: "Office Supplies & Consumables", type: AccountType.EXPENSE, isGroup: false, description: "Stationery, pantry", balance: 14500, isSystem: false },
-        { tenantId, code: "5600", name: "Marketing & Advertising", type: AccountType.EXPENSE, isGroup: false, description: "Digital ads, campaigns", balance: 68000, isSystem: false },
-        { tenantId, code: "5650", name: "Software & Cloud Infrastructure", type: AccountType.EXPENSE, isGroup: false, description: "AWS, GCP, SaaS tools", balance: 125000, isSystem: false },
-        { tenantId, code: "5700", name: "Travel & Business Meals", type: AccountType.EXPENSE, isGroup: false, description: "Client travel, lodging", balance: 41000, isSystem: false },
-        { tenantId, code: "5800", name: "Professional & Legal Fees", type: AccountType.EXPENSE, isGroup: false, description: "Auditing, compliance", balance: 35000, isSystem: false },
-        { tenantId, code: "5950", name: "Miscellaneous Expenses", type: AccountType.EXPENSE, isGroup: false, description: "Uncategorized small expenses", balance: 8500, isSystem: false },
-    ]
+        { tenantId, code: "5100", name: "Cost of Goods Sold (COGS)", type: AccountType.EXPENSE, isGroup: false, description: "Direct product costs", balance: 0, isSystem: true },
+        { tenantId, code: "5200", name: "Salaries & Wages", type: AccountType.EXPENSE, isGroup: false, description: "Staff payroll & bonuses", balance: 0, isSystem: false },
+        { tenantId, code: "5300", name: "Rent & Facilities", type: AccountType.EXPENSE, isGroup: false, description: "Office & depot lease", balance: 0, isSystem: false },
+        { tenantId, code: "5400", name: "Utilities & Electricity", type: AccountType.EXPENSE, isGroup: false, description: "Power, water, internet", balance: 0, isSystem: false },
+        { tenantId, code: "5500", name: "Office Supplies & Consumables", type: AccountType.EXPENSE, isGroup: false, description: "Stationery, pantry", balance: 0, isSystem: false },
+        { tenantId, code: "5600", name: "Marketing & Advertising", type: AccountType.EXPENSE, isGroup: false, description: "Digital ads, campaigns", balance: 0, isSystem: false },
+        { tenantId, code: "5650", name: "Software & Cloud Infrastructure", type: AccountType.EXPENSE, isGroup: false, description: "AWS, GCP, SaaS tools", balance: 0, isSystem: false },
+        { tenantId, code: "5700", name: "Travel & Business Meals", type: AccountType.EXPENSE, isGroup: false, description: "Client travel, lodging", balance: 0, isSystem: false },
+        { tenantId, code: "5800", name: "Professional & Legal Fees", type: AccountType.EXPENSE, isGroup: false, description: "Auditing, compliance", balance: 0, isSystem: false },
+        { tenantId, code: "5950", name: "Miscellaneous Expenses", type: AccountType.EXPENSE, isGroup: false, description: "Uncategorized small expenses", balance: 0, isSystem: false },
+    ], taxCtx.regime)
 
     for (const acc of defaultAccounts) {
         await prisma.account.create({
@@ -706,7 +710,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
                         accountId: taxAccId,
                         debit: taxAmount,
                         credit: 0,
-                        description: `Input GST (${data.title})`,
+                        description: `${inputTaxLabel((await getTenantTaxContext(tenantId)).regime)} (${data.title})`,
                         contactId: data.vendorId || null,
                     })
                 }
@@ -855,7 +859,7 @@ export async function updateExpenseStatus(
                         accountId: taxAccId,
                         debit: expense.taxAmount,
                         credit: 0,
-                        description: `Input GST (${expense.title})`,
+                        description: `${inputTaxLabel((await getTenantTaxContext(tenantId)).regime)} (${expense.title})`,
                         contactId: expense.vendorId,
                     })
                 }

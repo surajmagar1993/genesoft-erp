@@ -9,6 +9,7 @@ import { Resend } from "resend"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
 import { COMPANY } from "@/lib/constants/company"
 import { computeInvoiceGstSummary } from "@/lib/gst-engine"
+import { cleanTaxRate, getTenantTaxContext, invoiceItemTaxColumns, supplyTypeFor } from "@/lib/tenant-tax"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
 
@@ -32,6 +33,8 @@ export interface InvoiceLineItemDB {
   cgst_amount: number
   sgst_amount: number
   igst_amount: number
+  vat_percent?: number
+  vat_amount?: number
   is_exempt?: boolean
   tenant_id: string
 }
@@ -72,7 +75,7 @@ export interface InvoiceDB {
   supplier_gstin: string
   supplier_state: string
   place_of_supply: string
-  supply_type: "intra" | "inter"
+  supply_type: "intra" | "inter" | "single"
   pdf_url?: string | null
   tenant_id: string
   contact_id: string
@@ -86,6 +89,14 @@ export interface InvoiceDB {
   updated_at: string
   invoice_line_items?: InvoiceLineItemDB[]
   tenants?: TenantDB
+  // Country tax setup (from the business's country and Settings)
+  tax_mode?: "IN_GST" | "SINGLE"
+  tax_label?: string
+  tax_id_label?: string
+  invoice_title?: string
+  locale?: string
+  /** KSA ZATCA phase 1 QR payload (TLV, base64) */
+  zatca_tlv?: string | null
 }
 
 /* ── Read All ── */
@@ -166,11 +177,11 @@ export async function getNextInvoiceNumber(type: "TAX_INVOICE" | "PROFORMA" = "T
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
-    select: { settings: true },
+    select: { settings: true, fiscalYearStart: true },
   })
 
   const tenantSettings = (tenant?.settings as Record<string, any>) || {}
-  const fiscalMonthStart = tenantSettings.fiscal_year_start || 4 // defaults to April
+  const fiscalMonthStart = tenantSettings.fiscal_year_start || tenant?.fiscalYearStart || 1
 
   const now = new Date()
   let startYear = now.getFullYear()
@@ -227,7 +238,7 @@ export interface CreateInvoicePayload {
   customer_gstin: string
   supplier_state: string
   place_of_supply: string
-  supply_type: "intra" | "inter"
+  supply_type: "intra" | "inter" | "single"
   contact_id: string
   is_tax_exempt?: boolean
   tax_exemption_reason?: string
@@ -283,15 +294,18 @@ export async function createInvoice(
     }
 
     // Compute GST summaries
+    // Tax is decided on the server from the business's country and Settings
+    const taxCtx = await getTenantTaxContext(tenantId)
+    const supplyType = supplyTypeFor(taxCtx, payload.supplier_state, payload.place_of_supply)
     const items = payload.line_items.map((li) => ({
       qty: li.qty,
       unitPrice: li.unit_price,
-      gstRate: isTaxExempt ? 0 : li.tax_percent,
+      gstRate: isTaxExempt ? 0 : cleanTaxRate(li.tax_percent),
       isExempt: isTaxExempt,
     }))
     const summary = computeInvoiceGstSummary(
       items,
-      payload.supply_type || "intra",
+      supplyType,
       payload.discount || 0,
       payload.discount_type || "PERCENT",
       {
@@ -329,7 +343,7 @@ export async function createInvoice(
         taxAmount: summary.totalTax,
         discount: summary.discountAmount,
         total: summary.grandTotal,
-        currencyCode: "INR",
+        currencyCode: taxCtx.currency,
         taxSummary: summary as any,
         isTaxExempt,
         taxExemptionReason: taxExemptionReason || null,
@@ -340,20 +354,12 @@ export async function createInvoice(
         signatureUrl: payload.signature_url || null,
         items: {
           create: payload.line_items.map((li) => {
-            const lineTax = (li.cgst_amount || 0) + (li.sgst_amount || 0) + (li.igst_amount || 0)
-            const lineTotal = li.qty * li.unit_price + lineTax
             return {
               description: li.description || li.product_name || "Item",
               hsnSacCode: li.hsn_sac || null,
               quantity: li.qty,
               unitPrice: li.unit_price,
-              cgstRate: li.cgst_percent || 0,
-              cgstAmount: li.cgst_amount || 0,
-              sgstRate: li.sgst_percent || 0,
-              sgstAmount: li.sgst_amount || 0,
-              igstRate: li.igst_percent || 0,
-              igstAmount: li.igst_amount || 0,
-              lineTotal: lineTotal,
+              ...invoiceItemTaxColumns(li.qty, li.unit_price, isTaxExempt ? 0 : cleanTaxRate(li.tax_percent), supplyType),
             }
           }),
         },
@@ -410,15 +416,18 @@ export async function updateInvoice(
     const taxExemptionReason = payload.tax_exemption_reason
     const taxExemptionCertificate = payload.tax_exemption_certificate
 
+    // Tax is decided on the server from the business's country and Settings
+    const taxCtx = await getTenantTaxContext(tenantId)
+    const supplyType = supplyTypeFor(taxCtx, payload.supplier_state, payload.place_of_supply)
     const items = payload.line_items.map((li) => ({
       qty: li.qty,
       unitPrice: li.unit_price,
-      gstRate: isTaxExempt ? 0 : li.tax_percent,
+      gstRate: isTaxExempt ? 0 : cleanTaxRate(li.tax_percent),
       isExempt: isTaxExempt,
     }))
     const summary = computeInvoiceGstSummary(
       items,
-      payload.supply_type || "intra",
+      supplyType,
       payload.discount || 0,
       payload.discount_type || "PERCENT",
       {
@@ -471,20 +480,12 @@ export async function updateInvoice(
           signatureUrl: payload.signature_url || null,
           items: {
             create: payload.line_items.map((li) => {
-              const lineTax = (li.cgst_amount || 0) + (li.sgst_amount || 0) + (li.igst_amount || 0)
-              const lineTotal = li.qty * li.unit_price + lineTax
               return {
                 description: li.description || li.product_name || "Item",
                 hsnSacCode: li.hsn_sac || null,
                 quantity: li.qty,
                 unitPrice: li.unit_price,
-                cgstRate: li.cgst_percent || 0,
-                cgstAmount: li.cgst_amount || 0,
-                sgstRate: li.sgst_percent || 0,
-                sgstAmount: li.sgst_amount || 0,
-                igstRate: li.igst_percent || 0,
-                igstAmount: li.igst_amount || 0,
-                lineTotal: lineTotal,
+                ...invoiceItemTaxColumns(li.qty, li.unit_price, isTaxExempt ? 0 : cleanTaxRate(li.tax_percent), supplyType),
               }
             }),
           },

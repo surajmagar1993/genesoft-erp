@@ -51,7 +51,11 @@ export const GST_RATES = [0, 5, 12, 18, 28] as const
 export type GstRate = (typeof GST_RATES)[number]
 
 // ── Supply Type ──────────────────────────────────────────────────────────────
-export type SupplyType = "intra" | "inter"
+/**
+ * intra / inter: Indian GST (CGST+SGST within a state, IGST between states).
+ * single: every other country's one-line VAT / GST / sales tax.
+ */
+export type SupplyType = "intra" | "inter" | "single"
 
 /**
  * Determine supply type from supplier state and place of supply.
@@ -67,11 +71,21 @@ export function getSupplyType(
     : "inter"
 }
 
+/** Supply type for a business: "single" outside India, otherwise by state. */
+export function getSupplyTypeForRegime(
+  mode: "IN_GST" | "SINGLE",
+  supplierState: string,
+  placeOfSupply: string
+): SupplyType {
+  return mode === "SINGLE" ? "single" : getSupplyType(supplierState, placeOfSupply)
+}
+
 // ── GST Split ────────────────────────────────────────────────────────────────
 export interface GstSplit {
   cgstPercent: number // intra only
   sgstPercent: number // intra only
   igstPercent: number // inter only
+  vatPercent: number // single only
 }
 
 /**
@@ -83,11 +97,14 @@ export function computeGstSplit(
   gstRate: number,
   supplyType: SupplyType
 ): GstSplit {
+  if (supplyType === "single") {
+    return { cgstPercent: 0, sgstPercent: 0, igstPercent: 0, vatPercent: gstRate }
+  }
   if (supplyType === "intra") {
     const half = gstRate / 2
-    return { cgstPercent: half, sgstPercent: half, igstPercent: 0 }
+    return { cgstPercent: half, sgstPercent: half, igstPercent: 0, vatPercent: 0 }
   }
-  return { cgstPercent: 0, sgstPercent: 0, igstPercent: gstRate }
+  return { cgstPercent: 0, sgstPercent: 0, igstPercent: gstRate, vatPercent: 0 }
 }
 
 // ── Line Item Tax Amounts ────────────────────────────────────────────────────
@@ -96,6 +113,7 @@ export interface LineItemGst extends GstSplit {
   cgstAmount: number
   sgstAmount: number
   igstAmount: number
+  vatAmount: number
   totalTaxAmount: number
   lineTotal: number // taxable + total tax
 }
@@ -121,7 +139,10 @@ export function computeLineItemGst(
   const igstAmount = parseFloat(
     ((taxableAmount * split.igstPercent) / 100).toFixed(2)
   )
-  const totalTaxAmount = cgstAmount + sgstAmount + igstAmount
+  const vatAmount = parseFloat(
+    ((taxableAmount * split.vatPercent) / 100).toFixed(2)
+  )
+  const totalTaxAmount = cgstAmount + sgstAmount + igstAmount + vatAmount
 
   return {
     ...split,
@@ -129,6 +150,7 @@ export function computeLineItemGst(
     cgstAmount,
     sgstAmount,
     igstAmount,
+    vatAmount,
     totalTaxAmount: parseFloat(totalTaxAmount.toFixed(2)),
     lineTotal: parseFloat((taxableAmount + totalTaxAmount).toFixed(2)),
   }
@@ -154,6 +176,7 @@ export interface InvoiceGstSummary {
   cgstTotal: number
   sgstTotal: number
   igstTotal: number
+  vatTotal: number
   totalTax: number
   discountAmount: number
   grandTotal: number
@@ -190,6 +213,7 @@ export function computeInvoiceGstSummary(
   let cgstTotal = 0
   let sgstTotal = 0
   let igstTotal = 0
+  let vatTotal = 0
   let exemptSubtotal = 0
 
   const invoiceIsExempt = Boolean(options?.isTaxExempt)
@@ -205,6 +229,7 @@ export function computeInvoiceGstSummary(
       cgstTotal += gst.cgstAmount
       sgstTotal += gst.sgstAmount
       igstTotal += gst.igstAmount
+      vatTotal += gst.vatAmount
     }
   }
 
@@ -213,7 +238,7 @@ export function computeInvoiceGstSummary(
       ? parseFloat(((subtotal * discount) / 100).toFixed(2))
       : parseFloat(discount.toFixed(2))
 
-  const totalTax = parseFloat((cgstTotal + sgstTotal + igstTotal).toFixed(2))
+  const totalTax = parseFloat((cgstTotal + sgstTotal + igstTotal + vatTotal).toFixed(2))
   const grandTotal = parseFloat(
     (subtotal + totalTax - discountAmount).toFixed(2)
   )
@@ -231,6 +256,7 @@ export function computeInvoiceGstSummary(
     cgstTotal: parseFloat(cgstTotal.toFixed(2)),
     sgstTotal: parseFloat(sgstTotal.toFixed(2)),
     igstTotal: parseFloat(igstTotal.toFixed(2)),
+    vatTotal: parseFloat(vatTotal.toFixed(2)),
     totalTax,
     discountAmount,
     grandTotal,

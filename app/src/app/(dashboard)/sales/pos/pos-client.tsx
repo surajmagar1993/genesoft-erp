@@ -50,13 +50,18 @@ import {
 } from "lucide-react"
 import { BarcodeScannerModal } from "@/components/inventory/barcode-scanner-modal"
 import { toast } from "sonner"
+import { localeForCurrency } from "@/lib/utils"
+import { getInvoiceTaxRegime } from "@/app/actions/sales/tax"
 
 // ────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────
 
-function formatCurrency(amount: number, code = "INR") {
-  return new Intl.NumberFormat("en-IN", {
+// The business currency, set once the tax setup loads (module-level so helpers can use it)
+let posCurrency = "INR"
+
+function formatCurrency(amount: number, code = posCurrency) {
+  return new Intl.NumberFormat(localeForCurrency(code), {
     style: "currency",
     currency: code,
     minimumFractionDigits: 2,
@@ -68,6 +73,13 @@ function formatCurrency(amount: number, code = "INR") {
 // ────────────────────────────────────────────
 
 export function POSClient() {
+  const [taxSetup, setTaxSetup] = useState<{ taxLabel: string; currency: string } | null>(null)
+  useEffect(() => {
+    getInvoiceTaxRegime().then((r) => {
+      posCurrency = r.currency
+      setTaxSetup({ taxLabel: r.taxLabel, currency: r.currency })
+    })
+  }, [])
   // Products
   const [products, setProducts] = useState<POSProductItem[]>([])
   const [filteredProducts, setFilteredProducts] = useState<POSProductItem[]>([])
@@ -169,6 +181,7 @@ export function POSClient() {
           qty: 1,
           unit: product.unit,
           lineTotal: product.unitPrice,
+          taxRate: product.taxRate,
         },
       ]
     })
@@ -201,7 +214,8 @@ export function POSClient() {
 
   // ── Totals ──
   const subtotal = cart.reduce((s, item) => s + item.lineTotal, 0)
-  const taxAmount = 0 // GST computed in full invoice flow; POS uses simple totals
+  // Each product's tax rate (its tax group, else the country's standard rate); the server recalculates on sale
+  const taxAmount = Math.round(cart.reduce((s, item) => s + (item.lineTotal * (item.taxRate || 0)) / 100, 0) * 100) / 100
   const total = subtotal + taxAmount
 
   // ── Customer Search ──
@@ -570,6 +584,10 @@ export function POSClient() {
             <div className="flex items-center justify-between text-xs text-slate-500">
               <span>Subtotal</span>
               <span>{formatCurrency(subtotal)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-500">
+              <span>{taxSetup?.taxLabel || "Tax"}</span>
+              <span>{formatCurrency(taxAmount)}</span>
             </div>
             <div className="flex items-center justify-between text-sm font-bold text-slate-900 dark:text-white">
               <span>Total</span>

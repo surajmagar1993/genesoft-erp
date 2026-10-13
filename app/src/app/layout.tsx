@@ -1,3 +1,4 @@
+import { appUrl } from "@/lib/app-url"
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -13,8 +14,17 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl()),
   title: "Genesoft ERP & CRM",
-  description: "Multi-platform SaaS ERP & CRM by Genesoft Infotech",
+  description: "Multi-platform SaaS ERP & CRM by Genesoft Infotech Private Limited",
+  applicationName: "Genesoft ERP",
+  authors: [{ name: "Genesoft Infotech Private Limited", url: "https://genesoftinfotech.com" }],
+  openGraph: {
+    siteName: "Genesoft ERP",
+    title: "Genesoft ERP & CRM",
+    description: "Multi-platform SaaS ERP & CRM by Genesoft Infotech Private Limited",
+    type: "website",
+  },
   icons: {
     icon: "/favicon.png",
   },

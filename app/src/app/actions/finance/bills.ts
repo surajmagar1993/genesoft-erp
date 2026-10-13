@@ -435,17 +435,25 @@ export async function getVendors(limit: number = 100) {
  * Fetch products for the bill form
  */
 export async function getProducts(limit: number = 100) {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
 
-  const { data, count, error } = await supabase
-    .from("products")
-    .select("id, name, sku, unit_price, hsn_sac_code", { count: "exact" })
-    .eq("tenant_id", tenantId)
-    .eq("is_active", true)
-    .order("name")
-    .limit(limit)
-
-  if (error) throw new Error("Failed to fetch products")
-  return { data: data ?? [], total: count || 0 }
+  // Prisma knows the live column mapping (the raw "unit_price" select failed on the live table)
+  const where = { tenantId, isActive: true }
+  const [rows, total] = await Promise.all([
+    prisma.product.findMany({
+      where,
+      select: { id: true, name: true, sku: true, unitPrice: true, hsnSacCode: true },
+      orderBy: { name: "asc" },
+      take: limit,
+    }),
+    prisma.product.count({ where }),
+  ])
+  const data = rows.map((p: { id: string; name: string; sku: string | null; unitPrice: unknown; hsnSacCode: string | null }) => ({
+    id: p.id,
+    name: p.name,
+    sku: p.sku,
+    unit_price: Number(p.unitPrice || 0),
+    hsn_sac_code: p.hsnSacCode,
+  }))
+  return { data, total }
 }

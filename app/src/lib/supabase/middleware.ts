@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { PlatformGate } from '@/lib/platform-security'
+import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute } from '@/lib/features'
 
 export async function updateSession(request: NextRequest, gate?: PlatformGate) {
     let supabaseResponse = NextResponse.next({
@@ -82,6 +83,14 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
         } else {
             url.pathname = '/crm/contacts'
         }
+        return NextResponse.redirect(url)
+    }
+
+    // Government-filing modules are hidden until they're connected to the official APIs
+    if (!COMPLIANCE_MODULES_ENABLED && isComplianceRoute(request.nextUrl.pathname)) {
+        const url = request.nextUrl.clone()
+        url.pathname = '/finance/tax-summary'
+        url.search = ''
         return NextResponse.redirect(url)
     }
 

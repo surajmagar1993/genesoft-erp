@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { InvoiceForm, InvoiceFormData } from "@/components/sales/invoice-form"
+import { InvoiceForm, InvoiceFormData, type InvoiceTaxRegime } from "@/components/sales/invoice-form"
+import { getInvoiceTaxRegime } from "@/app/actions/sales/tax"
 import { updateInvoice, InvoiceDB } from "@/app/actions/sales/invoices"
 import { getContacts } from "@/app/actions/crm/contacts"
-import { computeLineItemGst, getSupplyType, GstRate } from "@/lib/gst-engine"
+import { computeLineItemGst, getSupplyTypeForRegime, GstRate } from "@/lib/gst-engine"
 
 interface Props {
     invoice: InvoiceDB
@@ -13,6 +14,8 @@ interface Props {
 
 export default function EditInvoiceClient({ invoice }: Props) {
     const router = useRouter()
+    const [regime, setRegime] = useState<InvoiceTaxRegime | null>(null)
+    useEffect(() => { getInvoiceTaxRegime().then(setRegime) }, [])
     const [contacts, setContacts] = useState<any[]>([])
 
     useEffect(() => {
@@ -59,7 +62,7 @@ export default function EditInvoiceClient({ invoice }: Props) {
     }
 
     const handleSave = async (data: InvoiceFormData) => {
-        const supplyType = getSupplyType(data.supplierState, data.placeOfSupply)
+        const supplyType = getSupplyTypeForRegime(regime?.mode ?? "IN_GST", data.supplierState, data.placeOfSupply)
 
         const { error } = await updateInvoice({
             id: invoice.id,
@@ -114,5 +117,5 @@ export default function EditInvoiceClient({ invoice }: Props) {
         }
     }
 
-    return <InvoiceForm initialData={initialData} onSave={handleSave} contacts={contacts} />
+    return regime ? <InvoiceForm initialData={initialData} onSave={handleSave} contacts={contacts} regime={regime} /> : <div className="p-8 text-sm text-muted-foreground">Loading…</div>
 }

@@ -90,6 +90,7 @@ import { useTheme } from "next-themes"
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import Script from "next/script"
 import { getTaxJurisdiction, isTaxRouteApplicable } from "@/lib/tax-jurisdiction"
+import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute } from "@/lib/features"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
 import { getGlobalSettings } from "@/app/actions/saas/admin"
 
@@ -153,6 +154,7 @@ const navigation = [
             { name: "Australia BAS (GST)", href: "/finance/tax-australia", icon: Landmark },
             { name: "UK VAT (MTD)", href: "/finance/vat-uk", icon: FileSpreadsheet },
             { name: "US Sales Tax & 1099", href: "/finance/tax-us", icon: DollarSign },
+            { name: "Tax Summary", href: "/finance/tax-summary", icon: Percent },
             { name: "Reports", href: "/finance/reports", icon: BarChart3 },
         ],
     },
@@ -195,6 +197,10 @@ function AppSidebar({ countryCode, multiJurisdiction, tenantName }: AppSidebarPr
     const jurisdiction = getTaxJurisdiction(countryCode)
 
     const filteredNavigation = navigation.map((group) => {
+        // Government-filing modules stay hidden until connected to the official APIs
+        if (!COMPLIANCE_MODULES_ENABLED) {
+            group = { ...group, items: group.items.filter((item) => !isComplianceRoute(item.href)) }
+        }
         if (group.label === "Finance") {
             const items = group.items.filter((item) => {
                 if (STATUTORY_TAX_ROUTES.includes(item.href)) {

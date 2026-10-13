@@ -15,11 +15,15 @@ export function TemplateModern({ invoice }: TemplateProps) {
         companyAddress,
         companyPhone,
         companyEmail,
-        isInterState
+        isInterState,
+        isSingle,
+        taxLabel,
+        taxIdLabel,
+        docTitle: summaryDocTitle
     } = getInvoiceSummary(invoice)
 
     const isProforma = invoice.type === "PROFORMA"
-    const docTitle = isProforma ? "PROFORMA INVOICE" : "TAX INVOICE"
+    const docTitle = summaryDocTitle
 
     return (
         <div className="bg-white text-slate-900 font-sans p-8 max-w-4xl mx-auto rounded-xl shadow-xs border border-slate-200 print:border-0 print:shadow-none print:p-0 print:max-w-none">
@@ -42,7 +46,7 @@ export function TemplateModern({ invoice }: TemplateProps) {
                     </div>
                     {companyGstin && (
                         <p className="text-xs font-mono text-slate-600 mt-2 bg-slate-100 px-2 py-0.5 rounded w-fit">
-                            GSTIN: <span className="font-semibold text-slate-900">{companyGstin}</span>
+                            {taxIdLabel}: <span className="font-semibold text-slate-900">{companyGstin}</span>
                         </p>
                     )}
                 </div>
@@ -61,14 +65,14 @@ export function TemplateModern({ invoice }: TemplateProps) {
                             #{invoice.invoice_number}
                         </p>
                         <p className="text-xs text-slate-500">
-                            Issued: <span className="font-medium text-slate-700">{formatDate(invoice.invoice_date)}</span>
+                            Issued: <span className="font-medium text-slate-700">{formatDate(invoice.invoice_date, invoice.locale)}</span>
                         </p>
                         {invoice.valid_until && (
                             <p className="text-xs text-slate-500">
-                                Due: <span className="font-medium text-slate-700">{formatDate(invoice.valid_until)}</span>
+                                Due: <span className="font-medium text-slate-700">{formatDate(invoice.valid_until, invoice.locale)}</span>
                             </p>
                         )}
-                        {invoice.place_of_supply && (
+                        {!isSingle && invoice.place_of_supply && (
                             <p className="text-xs text-slate-500">
                                 Place of Supply: <span className="font-medium text-slate-700">{invoice.place_of_supply}</span>
                             </p>
@@ -90,7 +94,7 @@ export function TemplateModern({ invoice }: TemplateProps) {
                     )}
                     {invoice.customer_gstin && (
                         <p className="text-xs font-mono text-slate-600 mt-1">
-                            GSTIN: <span className="font-semibold text-slate-900">{invoice.customer_gstin}</span>
+                            {taxIdLabel}: <span className="font-semibold text-slate-900">{invoice.customer_gstin}</span>
                         </p>
                     )}
                 </div>
@@ -101,12 +105,20 @@ export function TemplateModern({ invoice }: TemplateProps) {
                         <Building2 className="h-3.5 w-3.5" /> Shipped To / Supply Destination
                     </p>
                     <p className="font-medium text-slate-800 text-sm">{invoice.customer_name}</p>
-                    <p className="text-xs text-slate-600 mt-0.5">
-                        Place of Supply: {invoice.place_of_supply || "State Destination"}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-1">
-                        Supply Nature: <span className="font-medium text-slate-700">{isInterState ? "Inter-State Supply (IGST)" : "Intra-State Supply (CGST + SGST)"}</span>
-                    </p>
+                    {isSingle ? (
+                        <p className="text-xs text-slate-500 mt-1">
+                            Tax: <span className="font-medium text-slate-700">{taxLabel}</span>
+                        </p>
+                    ) : (
+                        <>
+                            <p className="text-xs text-slate-600 mt-0.5">
+                                Place of Supply: {invoice.place_of_supply || "—"}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Supply Nature: <span className="font-medium text-slate-700">{isInterState ? "Inter-State Supply (IGST)" : "Intra-State Supply (CGST + SGST)"}</span>
+                            </p>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -120,7 +132,7 @@ export function TemplateModern({ invoice }: TemplateProps) {
                             <th className="py-2.5 px-3 w-20 text-center">HSN/SAC</th>
                             <th className="py-2.5 px-3 w-16 text-right">Qty</th>
                             <th className="py-2.5 px-3 w-24 text-right">Rate</th>
-                            <th className="py-2.5 px-3 w-20 text-right">GST %</th>
+                            <th className="py-2.5 px-3 w-20 text-right">{taxLabel} %</th>
                             <th className="py-2.5 px-3 w-28 text-right">Amount</th>
                         </tr>
                     </thead>
@@ -131,7 +143,7 @@ export function TemplateModern({ invoice }: TemplateProps) {
                             </tr>
                         ) : (
                             items.map((li, idx) => {
-                                const rate = (li.cgst_percent || 0) + (li.sgst_percent || 0) + (li.igst_percent || 0) || li.tax_percent || 0
+                                const rate = (li.cgst_percent || 0) + (li.sgst_percent || 0) + (li.igst_percent || 0) + (li.vat_percent || 0) || li.tax_percent || 0
                                 const rowTotal = li.qty * li.unit_price
                                 return (
                                     <tr key={li.id || idx} className="hover:bg-slate-50/80 transition-colors">
@@ -169,7 +181,7 @@ export function TemplateModern({ invoice }: TemplateProps) {
             <div className="flex flex-col sm:flex-row justify-between items-start gap-6 my-6 pt-2">
                 {/* Left side: HSN Summary table & Payment details */}
                 <div className="w-full sm:w-7/12 space-y-4">
-                    {hsnSummary.length > 0 && (
+                    {!isSingle && hsnSummary.length > 0 && (
                         <div className="rounded border border-slate-200 overflow-hidden">
                             <div className="bg-slate-100 px-3 py-1.5 text-[10px] font-semibold text-slate-700 uppercase tracking-wider">
                                 Tax Breakup Summary (HSN/SAC)
@@ -238,7 +250,12 @@ export function TemplateModern({ invoice }: TemplateProps) {
                         </div>
                     )}
 
-                    {!isInterState ? (
+                    {isSingle ? (
+                        <div className="flex justify-between">
+                            <span>{taxLabel}</span>
+                            <span className="font-mono">{formatCurrency(gstSummary.vatTotal, invoice.currency_code)}</span>
+                        </div>
+                    ) : !isInterState  ? (
                         <>
                             <div className="flex justify-between text-slate-600">
                                 <span>Central GST (CGST)</span>

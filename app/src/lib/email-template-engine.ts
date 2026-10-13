@@ -209,7 +209,7 @@ Regards,
 {{company_name}} Finance Team`,
         mergeTags: [
             { tag: "customer_name", label: "Customer Name", description: "Full name or company name of the recipient", sampleValue: "Acme Enterprises" },
-            { tag: "company_name", label: "Issuer Company", description: "Name of the billing tenant or company", sampleValue: "Genesoft Technologies" },
+            { tag: "company_name", label: "Issuer Company", description: "Name of the billing tenant or company", sampleValue: "Your Company Pvt Ltd" },
             { tag: "document_label", label: "Document Type", description: "Tax Invoice or Proforma Invoice", sampleValue: "Tax Invoice" },
             { tag: "invoice_number", label: "Invoice Number", description: "Official sequential invoice code", sampleValue: "INV-2026-0842" },
             { tag: "invoice_date", label: "Issue Date", description: "Date invoice was generated", sampleValue: "12 Sep 2026" },
@@ -222,7 +222,7 @@ Regards,
         ],
         mockVariables: {
             customer_name: "Acme Global Solutions",
-            company_name: "Genesoft Cloud ERP",
+            company_name: "Your Company Pvt Ltd",
             document_label: "Tax Invoice",
             invoice_number: "INV-2026-0842",
             invoice_date: "12 Sep 2026",
@@ -298,7 +298,7 @@ Regards,
 {{company_name}} Accounts Team`,
         mergeTags: [
             { tag: "customer_name", label: "Customer Name", description: "Name of the customer", sampleValue: "Acme Enterprises" },
-            { tag: "company_name", label: "Issuer Company", description: "Billing company name", sampleValue: "Genesoft Technologies" },
+            { tag: "company_name", label: "Issuer Company", description: "Billing company name", sampleValue: "Your Company Pvt Ltd" },
             { tag: "receipt_number", label: "Receipt Number", description: "Sequential receipt code", sampleValue: "RCPT-2026-0319" },
             { tag: "invoice_number", label: "Invoice Number", description: "Target invoice reference", sampleValue: "INV-2026-0842" },
             { tag: "payment_date", label: "Payment Date", description: "Date of transaction settlement", sampleValue: "12 Sep 2026" },
@@ -311,7 +311,7 @@ Regards,
         ],
         mockVariables: {
             customer_name: "Acme Global Solutions",
-            company_name: "Genesoft Cloud ERP",
+            company_name: "Your Company Pvt Ltd",
             receipt_number: "RCPT-2026-0319",
             invoice_number: "INV-2026-0842",
             payment_date: "12 Sep 2026",
@@ -341,7 +341,7 @@ Regards,
     <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 700; color: #1e293b;">Your Account Details</p>
     <p style="margin: 0; font-size: 13px; color: #475569;">
         <strong>Login Email:</strong> {{user_email}}<br>
-        <strong>Workspace Subdomain:</strong> {{tenant_slug}}.genesoft.ai<br>
+        <strong>Workspace Subdomain:</strong> {{tenant_slug}}<br>
         <strong>Initial Role:</strong> {{user_role}}
     </p>
 </div>
@@ -362,7 +362,7 @@ Welcome to {{company_name}}! Your workspace for {{tenant_name}} is ready.
 
 Account Details:
 - Login Email: {{user_email}}
-- Workspace: {{tenant_slug}}.genesoft.ai
+- Workspace: {{tenant_slug}}
 - Role: {{user_role}}
 
 Get started by logging in: {{login_url}}
@@ -374,7 +374,7 @@ The {{company_name}} Team`,
         mergeTags: [
             { tag: "user_name", label: "User Name", description: "First name or full name of recipient", sampleValue: "Sarah Connor" },
             { tag: "user_email", label: "User Email", description: "Email address used for sign in", sampleValue: "sarah@acmecorp.com" },
-            { tag: "company_name", label: "Platform Name", description: "Name of the ERP SaaS platform", sampleValue: "Genesoft ERP" },
+            { tag: "company_name", label: "Platform Name", description: "Name of the ERP SaaS platform", sampleValue: "Your Company Pvt Ltd" },
             { tag: "tenant_name", label: "Tenant Organization", description: "Company or tenant account name", sampleValue: "Acme Manufacturing Ltd" },
             { tag: "tenant_slug", label: "Subdomain / Slug", description: "Tenant unique domain identifier", sampleValue: "acme" },
             { tag: "user_role", label: "Assigned Role", description: "User permission role (SUPER_ADMIN, TENANT_ADMIN)", sampleValue: "TENANT_ADMIN" },
@@ -455,7 +455,7 @@ Regards,
 {{company_name}} Credit Control`,
         mergeTags: [
             { tag: "customer_name", label: "Customer Name", description: "Recipient contact or business name", sampleValue: "Zenith Retail Corp" },
-            { tag: "company_name", label: "Creditor Company", description: "Billing company name", sampleValue: "Genesoft Technologies" },
+            { tag: "company_name", label: "Creditor Company", description: "Billing company name", sampleValue: "Your Company Pvt Ltd" },
             { tag: "invoice_number", label: "Invoice Number", description: "Overdue invoice number", sampleValue: "INV-2026-0710" },
             { tag: "due_date", label: "Due Date", description: "Original due date", sampleValue: "28 Aug 2026" },
             { tag: "days_overdue", label: "Days Overdue", description: "Number of elapsed calendar days overdue", sampleValue: "15" },
@@ -466,7 +466,7 @@ Regards,
         ],
         mockVariables: {
             customer_name: "Zenith Retail Corp",
-            company_name: "Genesoft Cloud ERP",
+            company_name: "Your Company Pvt Ltd",
             invoice_number: "INV-2026-0710",
             due_date: "28 Aug 2026",
             days_overdue: "15",
@@ -531,7 +531,7 @@ Regards,
 {{company_name}} Support Team`,
         mergeTags: [
             { tag: "customer_name", label: "Customer Name", description: "Name of the ticket requester", sampleValue: "Alex Morgan" },
-            { tag: "company_name", label: "Support Desk", description: "Platform or company name", sampleValue: "Genesoft Support" },
+            { tag: "company_name", label: "Support Desk", description: "Platform or company name", sampleValue: "Your Company Pvt Ltd" },
             { tag: "ticket_id", label: "Ticket ID", description: "Sequential or alphanumeric ticket code", sampleValue: "TKT-8902" },
             { tag: "ticket_title", label: "Ticket Title", description: "Summary subject of the issue", sampleValue: "API Webhook payload signature failure" },
             { tag: "ticket_status", label: "Status", description: "OPEN, IN_PROGRESS, RESOLVED, CLOSED", sampleValue: "IN_PROGRESS" },
@@ -610,7 +610,7 @@ Regards,
 {{company_name}} Finance Team`,
         mergeTags: [
             { tag: "customer_name", label: "Customer Name", description: "Customer or company recipient", sampleValue: "Pacific Retailers Ltd" },
-            { tag: "company_name", label: "Issuer Company", description: "Issuing company name", sampleValue: "Genesoft Technologies" },
+            { tag: "company_name", label: "Issuer Company", description: "Issuing company name", sampleValue: "Your Company Pvt Ltd" },
             { tag: "credit_note_number", label: "Credit Note #", description: "Unique credit note reference", sampleValue: "CN-2026-0045" },
             { tag: "invoice_number", label: "Invoice #", description: "Original invoice reference", sampleValue: "INV-2026-0599" },
             { tag: "issue_date", label: "Issue Date", description: "Date of credit note generation", sampleValue: "12 Sep 2026" },
@@ -623,7 +623,7 @@ Regards,
         ],
         mockVariables: {
             customer_name: "Pacific Retailers Ltd",
-            company_name: "Genesoft Cloud ERP",
+            company_name: "Your Company Pvt Ltd",
             credit_note_number: "CN-2026-0045",
             invoice_number: "INV-2026-0599",
             issue_date: "12 Sep 2026",

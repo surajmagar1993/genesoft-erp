@@ -1,4 +1,5 @@
 "use client"
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -107,7 +108,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
 
     /* ── Line Item CRUD ── */
     const addLineItem = () => {
-        const newItem: QuoteLineItem = { ...emptyLineItem, id: Date.now().toString() }
+        const newItem: QuoteLineItem = { ...emptyLineItem, taxPercent: defaultRate, id: Date.now().toString() }
         update("lineItems", [...form.lineItems, newItem])
     }
 
@@ -129,8 +130,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
         form.discountType === "PERCENT" ? subtotal * (form.discount / 100) : form.discount
     const grandTotal = subtotal + totalTax - discountAmount
 
-    const formatCurrency = (amount: number) =>
-        new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
+    const { formatMoney: formatCurrency, taxLabel, defaultRate } = useTaxRegime()
 
     const handleSave = () => {
         if (!form.customerName.trim()) {
@@ -298,7 +298,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
                                     <span>Description</span>
                                     <span className="text-center">Qty</span>
                                     <span className="text-right">Unit Price</span>
-                                    <span className="text-center">Tax %</span>
+                                    <span className="text-center">{taxLabel} %</span>
                                     <span className="text-right">Amount</span>
                                     <span className="w-9" />
                                 </div>
@@ -364,7 +364,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
                                             <span>{formatCurrency(subtotal)}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Tax</span>
+                                            <span className="text-muted-foreground">{taxLabel}</span>
                                             <span>{formatCurrency(totalTax)}</span>
                                         </div>
                                         {discountAmount > 0 && (
@@ -435,7 +435,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
                                 <span className="text-right">{form.lineItems.length}</span>
                                 <span className="text-muted-foreground">Subtotal</span>
                                 <span className="text-right">{formatCurrency(subtotal)}</span>
-                                <span className="text-muted-foreground">Tax</span>
+                                <span className="text-muted-foreground">{taxLabel}</span>
                                 <span className="text-right">{formatCurrency(totalTax)}</span>
                                 {discountAmount > 0 && (
                                     <>

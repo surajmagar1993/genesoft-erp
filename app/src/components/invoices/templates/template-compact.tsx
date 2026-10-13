@@ -11,7 +11,11 @@ export function TemplateCompact({ invoice }: TemplateProps) {
         companyGstin,
         companyAddress,
         companyPhone,
-        isInterState
+        isInterState,
+        isSingle,
+        taxLabel,
+        taxIdLabel,
+        docTitle: summaryDocTitle
     } = getInvoiceSummary(invoice)
 
     return (
@@ -21,10 +25,10 @@ export function TemplateCompact({ invoice }: TemplateProps) {
                 <h1 className="text-base font-bold uppercase tracking-wider text-slate-900">{companyName}</h1>
                 <p className="text-[10px] text-slate-600">{companyAddress}</p>
                 {companyPhone && <p className="text-[10px] text-slate-600">TEL: {companyPhone}</p>}
-                {companyGstin && <p className="text-[10px] text-slate-800 font-bold">GSTIN: {companyGstin}</p>}
+                {companyGstin && <p className="text-[10px] text-slate-800 font-bold">{taxIdLabel}: {companyGstin}</p>}
                 <div className="pt-1">
                     <span className="inline-block border border-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase">
-                        {invoice.type === "PROFORMA" ? "PROFORMA SLIP" : "TAX INVOICE / CASH MEMO"}
+                        {invoice.type === "PROFORMA" ? "PROFORMA SLIP" : summaryDocTitle}
                     </span>
                 </div>
             </div>
@@ -37,7 +41,7 @@ export function TemplateCompact({ invoice }: TemplateProps) {
                 </div>
                 <div className="flex justify-between">
                     <span>DATE:</span>
-                    <span>{formatDate(invoice.invoice_date)}</span>
+                    <span>{formatDate(invoice.invoice_date, invoice.locale)}</span>
                 </div>
                 <div className="flex justify-between">
                     <span>CUSTOMER:</span>
@@ -45,7 +49,7 @@ export function TemplateCompact({ invoice }: TemplateProps) {
                 </div>
                 {invoice.customer_gstin && (
                     <div className="flex justify-between">
-                        <span>CUST GSTIN:</span>
+                        <span>CUST {taxIdLabel}:</span>
                         <span>{invoice.customer_gstin}</span>
                     </div>
                 )}
@@ -78,7 +82,7 @@ export function TemplateCompact({ invoice }: TemplateProps) {
                                         {li.qty} x {formatCurrency(li.unit_price, invoice.currency_code)}
                                         {li.hsn_sac && ` [HSN:${li.hsn_sac}]`}
                                     </span>
-                                    <span>GST {li.is_exempt ? "0%" : `${li.cgst_percent + li.sgst_percent + li.igst_percent || li.tax_percent}%`}</span>
+                                    <span>{taxLabel} {li.is_exempt ? "0%" : `${li.cgst_percent + li.sgst_percent + li.igst_percent + (li.vat_percent || 0) || li.tax_percent}%`}</span>
                                 </div>
                             </div>
                         )
@@ -100,7 +104,12 @@ export function TemplateCompact({ invoice }: TemplateProps) {
                     </div>
                 )}
 
-                {!isInterState ? (
+                {isSingle ? (
+                        <div className="flex justify-between">
+                            <span>{taxLabel}</span>
+                            <span className="font-mono">{formatCurrency(gstSummary.vatTotal, invoice.currency_code)}</span>
+                        </div>
+                    ) : !isInterState  ? (
                     <>
                         <div className="flex justify-between text-slate-600">
                             <span>CGST:</span>
