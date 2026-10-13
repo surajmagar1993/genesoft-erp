@@ -30,6 +30,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
+import { searchCities } from "@/lib/constants/geo-locations"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -772,10 +774,17 @@ export function EwayClient({ initialData }: EwayClientProps) {
                         <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1.5">
                             <Label className="text-[11px] text-muted-foreground">Dispatch City</Label>
-                            <Input
+                            <AutoSuggestInput
                               className="h-7 text-xs"
+                              placeholder="e.g. Pune"
                               value={genForm.fromPlace}
                               onChange={(e) => setGenForm({ ...genForm, fromPlace: e.target.value })}
+                              options={searchCities(genForm.fromPlace).map((c) => ({
+                                label: c.name,
+                                value: c.name,
+                                subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                              }))}
+                              onSelectOption={(opt) => setGenForm({ ...genForm, fromPlace: opt.value })}
                               required
                             />
                           </div>
@@ -819,10 +828,17 @@ export function EwayClient({ initialData }: EwayClientProps) {
                         <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1.5">
                             <Label className="text-[11px] text-muted-foreground">Destination City</Label>
-                            <Input
+                            <AutoSuggestInput
                               className="h-7 text-xs"
+                              placeholder="e.g. Mumbai"
                               value={genForm.toPlace}
                               onChange={(e) => setGenForm({ ...genForm, toPlace: e.target.value })}
+                              options={searchCities(genForm.toPlace).map((c) => ({
+                                label: c.name,
+                                value: c.name,
+                                subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                              }))}
+                              onSelectOption={(opt) => setGenForm({ ...genForm, toPlace: opt.value })}
                               required
                             />
                           </div>
@@ -1337,11 +1353,17 @@ export function EwayClient({ initialData }: EwayClientProps) {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs">Current Place / City *</Label>
-              <Input
-                className="text-xs"
+              <AutoSuggestInput
+                className="text-xs h-8"
                 placeholder="e.g. Nashik"
                 value={updateFromPlace}
                 onChange={(e) => setUpdateFromPlace(e.target.value)}
+                options={searchCities(updateFromPlace).map((c) => ({
+                  label: c.name,
+                  value: c.name,
+                  subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                }))}
+                onSelectOption={(opt) => setUpdateFromPlace(opt.value)}
                 required
               />
             </div>

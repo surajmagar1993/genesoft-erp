@@ -41,6 +41,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
+import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -139,8 +141,9 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
     const [empDesigId, setEmpDesigId] = useState("")
     const [empManagerId, setEmpManagerId] = useState("")
     const [empSalary, setEmpSalary] = useState("")
-    const [empCity, setEmpCity] = useState("")
+    const [empCountry, setEmpCountry] = useState("India")
     const [empState, setEmpState] = useState("")
+    const [empCity, setEmpCity] = useState("")
     const [empEmergencyName, setEmpEmergencyName] = useState("")
     const [empEmergencyPhone, setEmpEmergencyPhone] = useState("")
     const [isSubmittingEmployee, setIsSubmittingEmployee] = useState(false)
@@ -245,8 +248,9 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
         setEmpDesigId("")
         setEmpManagerId("")
         setEmpSalary("")
-        setEmpCity("")
+        setEmpCountry("India")
         setEmpState("")
+        setEmpCity("")
         setEmpEmergencyName("")
         setEmpEmergencyPhone("")
     }
@@ -277,8 +281,9 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                 designationId: empDesigId || undefined,
                 managerId: empManagerId || undefined,
                 basicSalary: empSalary ? parseFloat(empSalary) : undefined,
-                city: empCity.trim() || undefined,
+                country: empCountry.trim() || undefined,
                 state: empState.trim() || undefined,
+                city: empCity.trim() || undefined,
                 emergencyContactName: empEmergencyName.trim() || undefined,
                 emergencyContactPhone: empEmergencyPhone.trim() || undefined,
             })
@@ -311,8 +316,9 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
         setEmpDesigId(emp.designationId || "")
         setEmpManagerId(emp.managerId || "")
         setEmpSalary(emp.basicSalary ? String(emp.basicSalary) : "")
-        setEmpCity((emp.address as any)?.city || "")
+        setEmpCountry((emp.address as any)?.country || "India")
         setEmpState((emp.address as any)?.state || "")
+        setEmpCity((emp.address as any)?.city || "")
         setIsEditEmployeeOpen(true)
     }
 
@@ -334,8 +340,9 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                 designationId: empDesigId || undefined,
                 managerId: empManagerId || undefined,
                 basicSalary: empSalary ? parseFloat(empSalary) : undefined,
-                city: empCity.trim() || undefined,
+                country: empCountry.trim() || undefined,
                 state: empState.trim() || undefined,
+                city: empCity.trim() || undefined,
             })
 
             if (res.success) {
@@ -1604,22 +1611,57 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                             </div>
 
                             <div className="space-y-1">
-                                <Label htmlFor="emp-city">City</Label>
-                                <Input
-                                    id="emp-city"
-                                    placeholder="City"
-                                    value={empCity}
-                                    onChange={(e) => setEmpCity(e.target.value)}
+                                <Label htmlFor="emp-country">Country</Label>
+                                <AutoSuggestInput
+                                    id="emp-country"
+                                    placeholder="e.g. India"
+                                    value={empCountry}
+                                    onChange={(e) => setEmpCountry(e.target.value)}
+                                    options={searchCountries(empCountry).map((c) => ({
+                                        label: c.name,
+                                        value: c.name,
+                                        subLabel: c.code,
+                                        icon: c.flag,
+                                    }))}
+                                    onSelectOption={(opt) => setEmpCountry(opt.value)}
                                 />
                             </div>
 
                             <div className="space-y-1">
                                 <Label htmlFor="emp-state">State / Province</Label>
-                                <Input
+                                <AutoSuggestInput
                                     id="emp-state"
-                                    placeholder="State"
+                                    placeholder="e.g. Maharashtra"
                                     value={empState}
                                     onChange={(e) => setEmpState(e.target.value)}
+                                    options={searchStates(empState, empCountry).map((s) => ({
+                                        label: s.name,
+                                        value: s.name,
+                                        subLabel: s.code,
+                                    }))}
+                                    onSelectOption={(opt) => setEmpState(opt.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label htmlFor="emp-city">City</Label>
+                                <AutoSuggestInput
+                                    id="emp-city"
+                                    placeholder="e.g. Mumbai"
+                                    value={empCity}
+                                    onChange={(e) => setEmpCity(e.target.value)}
+                                    options={searchCities(empCity, empState, empCountry).map((c) => ({
+                                        label: c.name,
+                                        value: c.name,
+                                        subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                    }))}
+                                    onSelectOption={(opt) => {
+                                        setEmpCity(opt.value)
+                                        if (opt.subLabel) {
+                                            const parts = opt.subLabel.split(",")
+                                            if (parts[0] && !empState) setEmpState(parts[0].trim())
+                                        }
+                                    }}
                                 />
                             </div>
                         </div>
@@ -1755,6 +1797,58 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                     type="number"
                                     value={empSalary}
                                     onChange={(e) => setEmpSalary(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>Country</Label>
+                                <AutoSuggestInput
+                                    placeholder="e.g. India"
+                                    value={empCountry}
+                                    onChange={(e) => setEmpCountry(e.target.value)}
+                                    options={searchCountries(empCountry).map((c) => ({
+                                        label: c.name,
+                                        value: c.name,
+                                        subLabel: c.code,
+                                        icon: c.flag,
+                                    }))}
+                                    onSelectOption={(opt) => setEmpCountry(opt.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>State / Province</Label>
+                                <AutoSuggestInput
+                                    placeholder="e.g. Maharashtra"
+                                    value={empState}
+                                    onChange={(e) => setEmpState(e.target.value)}
+                                    options={searchStates(empState, empCountry).map((s) => ({
+                                        label: s.name,
+                                        value: s.name,
+                                        subLabel: s.code,
+                                    }))}
+                                    onSelectOption={(opt) => setEmpState(opt.value)}
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label>City</Label>
+                                <AutoSuggestInput
+                                    placeholder="e.g. Mumbai"
+                                    value={empCity}
+                                    onChange={(e) => setEmpCity(e.target.value)}
+                                    options={searchCities(empCity, empState, empCountry).map((c) => ({
+                                        label: c.name,
+                                        value: c.name,
+                                        subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                    }))}
+                                    onSelectOption={(opt) => {
+                                        setEmpCity(opt.value)
+                                        if (opt.subLabel) {
+                                            const parts = opt.subLabel.split(",")
+                                            if (parts[0] && !empState) setEmpState(parts[0].trim())
+                                        }
+                                    }}
                                 />
                             </div>
                         </div>

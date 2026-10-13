@@ -164,4 +164,16 @@ All requested fixes and verification workflows have been executed, tested live i
      - **Performance & Training (`/hr/performance`):** Verified 360 appraisal cycles, OKRs, and corporate training catalogs.
      - **Projects (`/projects`):** Verified Agile Kanban board, sprint milestones, time tracking logs, and portfolio budget telemetry (₹7,30,000).
 
-
+11. **Project-Wide Standardization & Full System Hardening (All Modules):**
+    - **Complete Elimination of Plain Password Inputs:** Audited entire ERP repository and replaced all remaining `<Input type="password">` with `PasswordInput` featuring interactive Eye / EyeOff unmask toggles:
+      - Stripe Secret Key in `/settings` (Payment Gateways tab).
+      - Stripe Webhook Signing Secret in `/settings` (Payment Gateways tab).
+      - PayPal Client Secret in `/settings` (Payment Gateways tab).
+      - Verified zero plain password inputs remain across the entire repository.
+    - **Global Address Auto-Suggestion Integration:**
+      - **HR & Workforce Management (`/hr`):** Integrated `AutoSuggestInput` powered by `geo-locations.ts` into both the "Register New Employee" modal and the "Edit Employee" dialog for Country, State, and City. Updated server actions `createEmployee` and `updateEmployee` in `actions/hr.ts` to support country. Tested live in browser: registered employee "Aarav Sharma" (`aarav.sharma@genesoft.internal`) in Mumbai, Maharashtra, India and verified record in roster.
+      - **Statutory E-Way Bills (`/sales/eway-bills`):** Upgraded Dispatch City, Destination City, and Transit Vehicle Update City to `AutoSuggestInput`. Tested live in browser: generated official statutory E-Way Bill (FORM GST EWB-01) slip with dynamic QR code and delivery destination "New Delhi - 411014".
+      - **TDS & Tax Withholding (`/finance/tds`):** Upgraded State / Region and City / Town in the TAN & Deductor Legal Profile tab to `AutoSuggestInput`. Tested live in browser with real-time suggestion dropdowns.
+    - **Full System Compilation & Knowledge Graph Sync:**
+      - `npx tsc --noEmit` executed with 0 errors across the entire codebase.
+      - `graphify update .` rebuilt 2,441 nodes, 8,433 edges, and 134 communities in `graphify-out/`.

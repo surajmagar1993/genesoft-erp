@@ -121,8 +121,9 @@ export interface CreateEmployeeInput {
     managerId?: string
     basicSalary?: number
     currencyCode?: string
-    city?: string
+    country?: string
     state?: string
+    city?: string
     emergencyContactName?: string
     emergencyContactPhone?: string
 }
@@ -138,8 +139,9 @@ export interface UpdateEmployeeInput {
     designationId?: string
     managerId?: string
     basicSalary?: number
-    city?: string
+    country?: string
     state?: string
+    city?: string
 }
 
 /**
@@ -439,8 +441,9 @@ export async function createEmployee(data: CreateEmployeeInput) {
             basicSalary: data.basicSalary ? Number(data.basicSalary) : null,
             currencyCode: data.currencyCode || "INR",
             address: {
-                city: data.city?.trim() || "",
-                state: data.state?.trim() || ""
+                country: data.country?.trim() || "India",
+                state: data.state?.trim() || "",
+                city: data.city?.trim() || ""
             },
             emergencyContact: {
                 name: data.emergencyContactName?.trim() || "",
@@ -484,8 +487,9 @@ export async function updateEmployee(employeeId: string, data: UpdateEmployeeInp
             basicSalary: data.basicSalary !== undefined ? (data.basicSalary ? Number(data.basicSalary) : null) : undefined,
             address: {
                 ...(existing.address as any || {}),
-                city: data.city !== undefined ? data.city.trim() : (existing.address as any)?.city,
-                state: data.state !== undefined ? data.state.trim() : (existing.address as any)?.state
+                country: data.country !== undefined ? data.country.trim() : ((existing.address as any)?.country || "India"),
+                state: data.state !== undefined ? data.state.trim() : (existing.address as any)?.state,
+                city: data.city !== undefined ? data.city.trim() : (existing.address as any)?.city
             }
         }
     })

@@ -4,6 +4,7 @@ import React, { useState, useTransition } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
@@ -208,8 +209,7 @@ export default function PaymentGatewaysTab({
 
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold">Secret Key</Label>
-                            <Input
-                                type="password"
+                            <PasswordInput
                                 value={config.stripeSecretKey || ""}
                                 onChange={(e) => setConfig({ ...config, stripeSecretKey: e.target.value })}
                                 placeholder="sk_test_51P..."
@@ -219,8 +219,7 @@ export default function PaymentGatewaysTab({
 
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold">Webhook Signing Secret</Label>
-                            <Input
-                                type="password"
+                            <PasswordInput
                                 value={config.stripeWebhookSecret || ""}
                                 onChange={(e) => setConfig({ ...config, stripeWebhookSecret: e.target.value })}
                                 placeholder="whsec_..."
@@ -315,8 +314,7 @@ export default function PaymentGatewaysTab({
 
                         <div className="space-y-2">
                             <Label className="text-xs font-semibold">PayPal Client Secret</Label>
-                            <Input
-                                type="password"
+                            <PasswordInput
                                 value={config.paypalClientSecret || ""}
                                 onChange={(e) => setConfig({ ...config, paypalClientSecret: e.target.value })}
                                 placeholder="••••••••"

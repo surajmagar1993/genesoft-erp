@@ -35,6 +35,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
+import { searchCities, searchStates } from "@/lib/constants/geo-locations"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -1142,21 +1144,39 @@ export function TdsClient({ initialData }: TdsClientProps) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium">City / Town</Label>
-                    <Input
-                      placeholder="Mumbai"
-                      value={profileCity}
-                      onChange={(e) => setProfileCity(e.target.value)}
+                    <Label className="text-xs font-medium">State / Region</Label>
+                    <AutoSuggestInput
+                      placeholder="Maharashtra"
+                      value={profileState}
+                      onChange={(e) => setProfileState(e.target.value)}
+                      options={searchStates(profileState, "India").map((s) => ({
+                        label: s.name,
+                        value: s.name,
+                        subLabel: s.code,
+                      }))}
+                      onSelectOption={(opt) => setProfileState(opt.value)}
                       className="text-xs"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium">State</Label>
-                    <Input
-                      placeholder="Maharashtra"
-                      value={profileState}
-                      onChange={(e) => setProfileState(e.target.value)}
+                    <Label className="text-xs font-medium">City / Town</Label>
+                    <AutoSuggestInput
+                      placeholder="Mumbai"
+                      value={profileCity}
+                      onChange={(e) => setProfileCity(e.target.value)}
+                      options={searchCities(profileCity, profileState, "India").map((c) => ({
+                        label: c.name,
+                        value: c.name,
+                        subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                      }))}
+                      onSelectOption={(opt) => {
+                        setProfileCity(opt.value)
+                        if (opt.subLabel) {
+                          const parts = opt.subLabel.split(",")
+                          if (parts[0] && !profileState) setProfileState(parts[0].trim())
+                        }
+                      }}
                       className="text-xs"
                     />
                   </div>
