@@ -462,8 +462,8 @@ export async function generateEwayBill(payload: {
   // If linked to invoice, tag the invoice with EWB Number
   if (payload.invoiceId) {
     try {
-      const inv = await prisma.invoice.findUnique({
-        where: { id: payload.invoiceId },
+      const inv = await prisma.invoice.findFirst({
+        where: { id: payload.invoiceId, tenantId },
         select: { billTo: true, notes: true },
       })
       if (inv) {

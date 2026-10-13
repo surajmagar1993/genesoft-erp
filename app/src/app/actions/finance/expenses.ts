@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
@@ -180,13 +181,18 @@ async function ensureDefaultAccounts(tenantId: string) {
     }
 }
 
+/** True when every given Chart of Accounts id belongs to this tenant. */
+async function areTenantAccounts(tenantId: string, accountIds: (string | null | undefined)[]): Promise<boolean> {
+    const ids = [...new Set(accountIds.filter((id): id is string => !!id))]
+    if (ids.length === 0) return true
+    return (await prisma.account.count({ where: { tenantId, id: { in: ids } } })) === ids.length
+}
+
 /* ─────────────────────────────────────────
    Auto-Seeder: Starter Expenses & Journal Entries
 ───────────────────────────────────────── */
 
-export async function autoSeedExpensesIfEmpty(tenantId: string) {
-    await ensureDefaultAccounts(tenantId)
-
+async function autoSeedExpensesIfEmpty(tenantId: string) {
     const existingExpense = await prisma.expense.findFirst({
         where: { tenantId },
     })
@@ -406,7 +412,8 @@ export async function getExpensesOverview(): Promise<{
         if (!tenantId) return { error: "Authentication required" }
 
         // Auto-seed if empty
-        await autoSeedExpensesIfEmpty(tenantId)
+        await ensureDefaultAccounts(tenantId)
+        if (isDemoSeedEnabled()) await autoSeedExpensesIfEmpty(tenantId)
 
         // 1. Fetch Expenses
         const rawExpenses = await prisma.expense.findMany({
@@ -646,6 +653,9 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
         if (!data.category?.trim()) return { error: "Category is required" }
         if (!data.accountId) return { error: "Expense account must be selected" }
         if (data.amount <= 0) return { error: "Amount must be greater than zero" }
+        if (!(await areTenantAccounts(tenantId, [data.accountId, data.paymentAccountId]))) {
+            return { error: "Account not found" }
+        }
 
         const taxAmount = Number(data.taxAmount || 0)
         const totalAmount = Number(data.amount) + taxAmount
@@ -950,6 +960,10 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
             return {
                 error: `Unbalanced entry! Total Debits (₹${totalDebit.toFixed(2)}) must exactly equal Total Credits (₹${totalCredit.toFixed(2)}). Difference: ₹${Math.abs(totalDebit - totalCredit).toFixed(2)}`,
             }
+        }
+
+        if (!(await areTenantAccounts(tenantId, data.lines.map((l) => l.accountId)))) {
+            return { error: "Account not found" }
         }
 
         const count = await prisma.journalEntry.count({ where: { tenantId } })

@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
@@ -298,7 +299,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
     }
 
     // Auto-seed if empty
-    await autoSeedCreditNotesIfEmpty(tenantId)
+    if (isDemoSeedEnabled()) await autoSeedCreditNotesIfEmpty(tenantId)
 
     // Fetch credit notes
     const rawCreditNotes = await prisma.creditNote.findMany({

@@ -2,22 +2,31 @@
 
 import { prisma } from "../../../lib/prisma"
 import { razorpay } from "../../../lib/razorpay"
-import { createClient } from "../../../lib/supabase/server"
+import { getTenantAdminId, getTenantId } from "../../../lib/get-tenant-id"
+import { getPlanPrice, type BillingCycle, type PlanTier } from "../../../lib/saas-subscription-engine"
 import crypto from "crypto"
 
-export async function createRazorpayOrder(amount: number, tenantId: string, planName: string, currency: string = "INR") {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+const PAID_PLANS: PlanTier[] = ["BASIC", "PRO", "ENTERPRISE"]
 
-  if (!user) throw new Error("Unauthorized")
+/**
+ * Creates a Razorpay order for the caller's own tenant.
+ * Amount is priced server-side from the plan catalog; tenant and plan are pinned in the order notes.
+ */
+export async function createRazorpayOrder(plan: PlanTier, cycle: BillingCycle = "MONTHLY", currency: string = "INR") {
+  const tenantId = await getTenantAdminId()
+
+  if (!PAID_PLANS.includes(plan)) throw new Error("Invalid plan")
+  const amount = getPlanPrice(plan, cycle, currency)
+  if (!amount || amount <= 0) throw new Error("Plan is not available in this currency")
 
   const options = {
     amount: Math.round(amount * 100), // Razorpay expects amount in paisa
     currency,
-    receipt: `receipt_tenant_${tenantId}_${Date.now()}`,
+    receipt: `rcpt_${tenantId.slice(0, 8)}_${Date.now()}`,
     notes: {
       tenantId,
-      plan: planName,
+      plan,
+      cycle,
     }
   }
 
@@ -34,28 +43,37 @@ export async function createRazorpayOrder(amount: number, tenantId: string, plan
   }
 }
 
-export async function verifyRazorpayPayment(
-  orderId: string,
-  paymentId: string,
-  signature: string,
-  tenantId: string,
-  plan: any
-) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+/**
+ * Verifies a checkout signature and applies the plan recorded on the order itself.
+ * Never trusts a client-supplied tenant or plan.
+ */
+export async function verifyRazorpayPayment(orderId: string, paymentId: string, signature: string) {
+  const tenantId = await getTenantId()
 
-  if (!user) throw new Error("Unauthorized")
+  const secret = process.env.RAZORPAY_KEY_SECRET
+  if (!secret) throw new Error("Razorpay is not configured")
 
-  const generated_signature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET!)
+  const expected = crypto
+    .createHmac("sha256", secret)
     .update(orderId + "|" + paymentId)
     .digest("hex")
 
-  if (generated_signature !== signature) {
+  const a = Buffer.from(expected)
+  const b = Buffer.from(String(signature || ""))
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
     throw new Error("Invalid payment signature")
   }
 
-  // Update tenant plan and mark trial as false
+  const order = await razorpay.orders.fetch(orderId)
+  const notes = (order.notes || {}) as Record<string, string>
+  const plan = notes.plan as PlanTier
+
+  if (notes.tenantId !== tenantId) throw new Error("Order does not belong to this account")
+  if (!PAID_PLANS.includes(plan)) throw new Error("Order has no valid plan")
+  if (order.status !== "paid" && Number(order.amount_paid) < Number(order.amount)) {
+    throw new Error("Order is not paid")
+  }
+
   return await prisma.tenant.update({
     where: { id: tenantId },
     data: {

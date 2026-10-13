@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId } from "@/lib/get-tenant-id"
+import { prisma } from "@/lib/prisma"
+import type { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 
 export type BillStatus = "DRAFT" | "OPEN" | "PARTIALLY_PAID" | "PAID" | "VOID"
@@ -115,6 +117,10 @@ export async function createBill(data: BillData) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
+  if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
+    throw new Error("Vendor not found")
+  }
+
   const { data: bill, error: billError } = await supabase
     .from("bills")
     .insert({
@@ -208,6 +214,10 @@ export async function updateBill(id: string, data: Partial<BillData>) {
   const supabase = await createClient()
   const tenantId = await getTenantId()
 
+  if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
+    throw new Error("Vendor not found")
+  }
+
   // Update header
   const { error: updateError } = await supabase
     .from("bills")
@@ -285,14 +295,30 @@ export async function updateBill(id: string, data: Partial<BillData>) {
         })
 
         if (entry) {
-            const delta = newTotal - entry.amount
-            if (delta !== 0) {
-                await (prisma as any).$transaction(async (tx: any) => {
+            const oldAmount = Number(entry.amount)
+            if (entry.contactId !== data.contactId) {
+                // Vendor changed: take the old amount off the previous vendor and post the new total to the new one
+                await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
                     await tx.contact.update({
-                        where: { id: data.contactId },
-                        data: { balance: { increment: delta } }
+                        where: { id: entry.contactId, tenantId },
+                        data: { balance: { decrement: oldAmount } }
                     })
-                    await (tx as any).ledgerEntry.update({
+                    await tx.contact.update({
+                        where: { id: data.contactId, tenantId },
+                        data: { balance: { increment: newTotal } }
+                    })
+                    await tx.ledgerEntry.update({
+                        where: { id: entry.id },
+                        data: { amount: newTotal, contactId: data.contactId }
+                    })
+                })
+            } else if (newTotal !== oldAmount) {
+                await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+                    await tx.contact.update({
+                        where: { id: entry.contactId, tenantId },
+                        data: { balance: { increment: newTotal - oldAmount } }
+                    })
+                    await tx.ledgerEntry.update({
                         where: { id: entry.id },
                         data: { amount: newTotal }
                     })

@@ -14,41 +14,30 @@ import {
 } from "@/lib/saas-subscription-engine"
 
 /**
- * Checks if user has Super Admin or Tenant Admin permissions.
+ * Resolves the signed-in caller. Super Admins may act on targetTenantId;
+ * everyone else is confined to their own tenant.
  */
 async function getCallerContext(targetTenantId?: string) {
-    try {
-        const supabase = await createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("Authentication required")
 
-        if (!user) {
-            // For testing or CLI environments
-            if (process.env.NODE_ENV !== "production") {
-                return { userId: "dev-admin", email: "admin@genesoft.ai", isSuperAdmin: true, tenantId: targetTenantId || "e55d1d95-a9b1-4201-a0ba-8c7a31f63af0" }
-            }
-            throw new Error("Unauthorized")
-        }
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, tenant_id")
+        .eq("id", user.id)
+        .single()
 
-        const { data: profile } = await supabase
-            .from("profiles")
-            .select("role, tenant_id")
-            .eq("id", user.id)
-            .single()
+    const role: string | undefined = profile?.role
+    const isSuperAdmin = role === "SUPER_ADMIN"
+    const effectiveTenantId = targetTenantId && isSuperAdmin ? targetTenantId : profile?.tenant_id
 
-        const isSuperAdmin = profile?.role === "SUPER_ADMIN"
-        const effectiveTenantId = targetTenantId && isSuperAdmin ? targetTenantId : profile?.tenant_id
-
-        return {
-            userId: user.id,
-            email: user.email || "user@genesoft.ai",
-            isSuperAdmin,
-            tenantId: effectiveTenantId,
-        }
-    } catch {
-        if (process.env.NODE_ENV !== "production") {
-            return { userId: "dev-admin", email: "admin@genesoft.ai", isSuperAdmin: true, tenantId: targetTenantId || "e55d1d95-a9b1-4201-a0ba-8c7a31f63af0" }
-        }
-        throw new Error("Authentication required")
+    return {
+        userId: user.id,
+        email: user.email || "user@genesoft.ai",
+        isSuperAdmin,
+        isTenantAdmin: isSuperAdmin || role === "ADMIN",
+        tenantId: effectiveTenantId as string | undefined,
     }
 }
 
@@ -92,7 +81,7 @@ export interface TenantSubscriptionDetails {
  */
 export async function getTenantSubscriptionDetails(targetTenantId?: string): Promise<TenantSubscriptionDetails> {
     const caller = await getCallerContext(targetTenantId)
-    const tenantId = targetTenantId || caller.tenantId
+    const tenantId = caller.tenantId
 
     if (!tenantId) throw new Error("Tenant ID required")
 
@@ -193,10 +182,13 @@ export async function executePlanChange(params: {
     } = params
 
     const caller = await getCallerContext(targetTenantId)
-    const tenantId = targetTenantId || caller.tenantId
+    const tenantId = caller.tenantId
 
     if (!tenantId) {
         return { success: false, message: "", error: "Tenant authorization missing" }
+    }
+    if (!caller.isTenantAdmin) {
+        return { success: false, message: "", error: "Only workspace admins can change the subscription plan" }
     }
 
     try {
@@ -334,9 +326,17 @@ export async function generateSaaSInvoice(params: {
     paymentMethod?: string
     transactionRef?: string
 }): Promise<{ success: boolean; invoice?: SaaSPlatformInvoice; error?: string }> {
-    const { tenantId, plan, billingCycle, paymentMethod, transactionRef } = params
+    const { plan, billingCycle, paymentMethod, transactionRef } = params
 
     try {
+        // Non-admins are confined to their own tenant; Super Admins may target any tenant
+        // Platform invoices are issued by the SaaS operator only
+        const caller = await getCallerContext(params.tenantId)
+        const tenantId = caller.tenantId
+        if (!caller.isSuperAdmin || !tenantId || tenantId !== params.tenantId) {
+            return { success: false, error: "Unauthorized" }
+        }
+
         const tenant = await prisma.tenant.findUnique({
             where: { id: tenantId },
             select: { id: true, name: true, currencyCode: true, settings: true },

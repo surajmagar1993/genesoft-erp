@@ -437,6 +437,9 @@ export async function adjustStock(data: {
     })
     if (!product) throw new Error("Product not found")
 
+    const ownsWarehouse = await prisma.warehouse.count({ where: { id: data.warehouseId, tenantId } })
+    if (!ownsWarehouse) throw new Error("Warehouse not found")
+
     // Fetch or create warehouse stock record
     let warehouseStock = await prisma.warehouseStock.findUnique({
         where: {
@@ -555,6 +558,13 @@ export async function transferStock(data: {
     if (data.quantity <= 0) {
         throw new Error("Transfer quantity must be greater than 0")
     }
+
+    const [ownsProduct, ownedWarehouses] = await Promise.all([
+        prisma.product.count({ where: { id: data.productId, tenantId } }),
+        prisma.warehouse.count({ where: { tenantId, id: { in: [data.fromWarehouseId, data.toWarehouseId] } } }),
+    ])
+    if (!ownsProduct) throw new Error("Product not found")
+    if (ownedWarehouses !== 2) throw new Error("Warehouse not found")
 
     // Check source warehouse stock
     const sourceStock = await prisma.warehouseStock.findUnique({

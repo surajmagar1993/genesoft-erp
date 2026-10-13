@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
@@ -209,7 +210,7 @@ export async function getRecurringInvoicesOverview(
     if (!tenantId) throw new Error("Authentication required")
 
     // Auto-seed realistic subscriptions if empty
-    await autoSeedRecurringProfilesIfEmpty(tenantId)
+    if (isDemoSeedEnabled()) await autoSeedRecurringProfilesIfEmpty(tenantId)
 
     // 1. Fetch profiles
     const rawProfiles = await prisma.recurringProfile.findMany({
@@ -418,6 +419,8 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
 
         if (!data.title?.trim()) return { error: "Profile title is required" }
         if (!data.contactId) return { error: "Customer contact must be selected" }
+        const ownsContact = await prisma.contact.count({ where: { id: data.contactId, tenantId } })
+        if (!ownsContact) return { error: "Customer contact not found" }
         if (!data.startDate) return { error: "Start date is required" }
         if (!data.items || data.items.length === 0) return { error: "At least one line item is required" }
 
@@ -532,10 +535,16 @@ export async function updateRecurringProfile(
         if (data.notes !== undefined) updateData.notes = data.notes?.trim() || null
         if (data.terms !== undefined) updateData.terms = data.terms?.trim() || null
 
-        await prisma.recurringProfile.update({
-            where: { id },
+        if (updateData.contactId) {
+            const ownsContact = await prisma.contact.count({ where: { id: updateData.contactId, tenantId } })
+            if (!ownsContact) return { error: "Customer contact not found" }
+        }
+
+        const { count } = await prisma.recurringProfile.updateMany({
+            where: { id, tenantId },
             data: updateData,
         })
+        if (count === 0) return { error: "Recurring profile not found" }
 
         revalidatePath("/sales/invoices/recurring")
         return { success: true }
@@ -557,10 +566,11 @@ export async function toggleRecurringProfileStatus(
         const tenantId = await getTenantId()
         if (!tenantId) return { error: "Authentication required" }
 
-        await prisma.recurringProfile.update({
-            where: { id },
+        const { count } = await prisma.recurringProfile.updateMany({
+            where: { id, tenantId },
             data: { status: newStatus },
         })
+        if (count === 0) return { error: "Recurring profile not found" }
 
         revalidatePath("/sales/invoices/recurring")
         return { success: true }
@@ -579,10 +589,13 @@ export async function deleteRecurringProfile(id: string): Promise<{ success?: bo
         const tenantId = await getTenantId()
         if (!tenantId) return { error: "Authentication required" }
 
+        const owned = await prisma.recurringProfile.count({ where: { id, tenantId } })
+        if (!owned) return { error: "Recurring profile not found" }
+
         await prisma.$transaction(async (tx: any) => {
             // Unlink created invoices
             await tx.invoice.updateMany({
-                where: { recurringProfileId: id },
+                where: { recurringProfileId: id, tenantId },
                 data: { recurringProfileId: null },
             })
 
@@ -614,8 +627,8 @@ export async function triggerGenerateInvoice(profileId: string): Promise<{
         const tenantId = await getTenantId()
         if (!tenantId) return { error: "Authentication required" }
 
-        const profile = await prisma.recurringProfile.findUnique({
-            where: { id: profileId },
+        const profile = await prisma.recurringProfile.findFirst({
+            where: { id: profileId, tenantId },
             include: {
                 contact: true,
                 items: true,
@@ -785,7 +798,7 @@ export async function batchRunDueRecurringProfiles(): Promise<{
 // AUTO SEEDER (IF EMPTY)
 // ============================================
 
-export async function autoSeedRecurringProfilesIfEmpty(tenantId: string): Promise<void> {
+async function autoSeedRecurringProfilesIfEmpty(tenantId: string): Promise<void> {
     const count = await prisma.recurringProfile.count({ where: { tenantId } })
     if (count > 0) return
 

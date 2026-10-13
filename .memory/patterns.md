@@ -34,7 +34,7 @@
 - **Inter-Depot Transfers**: Source depot is validated for sufficient balance before executing decrement/increment operations.
 
 ## Data Patterns
-- **Multi-tenancy**: Use `tenantId` in all queries (RLS enforced via Supabase policies).
+- **Multi-tenancy**: Use `tenantId` in all queries, including updates/deletes by id. Prisma bypasses Supabase RLS, so this filter is the only isolation.
 - **Server Actions**: All CRUD operations use Next.js Server Actions.
   - Pattern: `getAll()`, `getById(id)`, `create(data)`, `update(id, data)`, `deleteById(id)`
 - **Supabase Client**: Use `createClient()` from `src/lib/supabase/server.ts` in server actions.
@@ -59,8 +59,8 @@
 ## Git & Deployment Patterns
 - **Branch**: Single `main` branch (MVP stage).
 - **Remote**: `https://github.com/surajmagar1993/genesoft-erp.git`
-- **Secrets**: Never committed — `.env` and `.env.*` excluded via `.gitignore`.
-- **DATABASE_URL**: Must point to Supabase cloud endpoint (port 5432), NOT localhost. Use `.env.local`.
+- **Secrets**: Never commit them — `.env` and `.env.*` are gitignored (`app/temp.env*` slipped in once and must be rotated). Tenant credentials stored in the DB go through `sealSecret()`/`openSecret()`.
+- **DATABASE_URL**: Supabase cloud endpoint (pooler 6543 on Vercel); `DIRECT_URL` (5432) for Prisma tooling. Never `db push`/`migrate dev` against the shared DB.
 - **Vercel Env**: Use `env_vercel.txt` (Desktop) to import vars into Vercel dashboard.
 - **Commit Style**: `feat:`, `fix:`, `chore:` prefixes with descriptive body.
 

@@ -33,7 +33,7 @@ All critical build blockers, dynamic route database leaks during static analysis
 - **Build Command**: `npm run build` (executed via root workspace delegation)
 - **Compile Engine**: Turbopack
 - **Prisma Client**: v7.4.2 generated to `app/node_modules/@prisma/client`
-- **Result**: Exit code `0` (Passing with zero TypeScript or Lint errors)
+- **Result**: Exit code `0`, zero TypeScript errors. ESLint is not part of the build and still reports ~1,090 errors (mostly `no-explicit-any`) as of 2026-10-13.
 
 ### 3.2 Dynamic Route Packaging
 All API endpoints and server-rendered pages accessing the database or request cookies enforce `export const dynamic = "force-dynamic"` to guarantee zero compile-time database dependency:
@@ -50,22 +50,27 @@ Ensure the following environment variables are securely configured in your deplo
 
 | Variable Name | Environment | Required | Purpose / Notes |
 |---|---|---|---|
-| `DATABASE_URL` | Server | **Yes** | Direct Supabase connection (Port 5432). **Do NOT** use PgBouncer pooler port 6543 for migrations or schema operations. |
+| `DATABASE_URL` | Server | **Yes** | Runtime connection. On Vercel this is the Supabase pooler (port 6543, pgbouncer). |
+| `DIRECT_URL` | Server | For tooling | Direct connection (port 5432) for Prisma introspection. Never run `db push` / `migrate dev` against the shared DB. |
 | `NEXT_PUBLIC_SUPABASE_URL` | Client/Server | **Yes** | Supabase project URL (`https://<project-ref>.supabase.co`). |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Client/Server | **Yes** | Supabase public anonymous API key for client-side Auth and RLS. |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server | **Yes** | Super Admin privileged operations (bypasses RLS for platform administration). |
-| `RESEND_API_KEY` | Server | Optional | Transactional email delivery for invoices and notifications. |
-| `RAZORPAY_KEY_ID` | Client/Server | Optional | Subscription & payment processing public key. |
-| `RAZORPAY_KEY_SECRET` | Server | Optional | Subscription & payment processing webhook secret. |
+| `NEXT_PUBLIC_APP_URL` / `NEXT_PUBLIC_SITE_URL` | Client/Server | **Yes** | Public base URL for signup, checkout return and password-reset links. |
+| `RESEND_API_KEY` / `RESEND_DOMAIN` | Server | For email | Transactional email; the domain must be verified in Resend. |
+| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | Server | For billing | Razorpay order creation and payment signature checks. |
+| `RAZORPAY_WEBHOOK_SECRET` | Server | For billing | Verifies `/api/webhooks/razorpay`; the webhook fails closed without it. |
+| `ENCRYPTION_KEY` | Server | Recommended | Encrypts tenant-stored credentials at rest. Keep it stable; rotating it makes stored secrets unreadable. |
+
+`SUPABASE_SERVICE_ROLE_KEY` is not used by the code and does not need to be set.
 
 ---
 
 ## 5. Security & Governance Audit
 
-- **Row-Level Security (RLS)**: Enforced across all multi-tenant tables (`tenants`, `profiles`, `contacts`, `leads`, `deals`, `invoices`, `accounts`).
+- **Row-Level Security (RLS)**: Enabled on all 100 public tables (checked 2026-10-13). It only protects direct Supabase-client access; the app's Prisma queries bypass RLS, so every server action must scope queries by `tenantId`. `profiles` is read-only from the browser (see `app/harden_profiles_rls.sql`).
 - **Super Admin Protection**: `ensureSuperAdmin()` server-side guard blocks unauthorized access to `/admin/*` routes.
 - **Audit Logging**: `AdminAuditLog` model tracks platform actions (`TENANT_CREATED`, `TENANT_SUSPENDED`, `SECURITY_POLICY_UPDATE`, `SECURITY_IP_BLOCK`).
-- **Secret Isolation**: All local `.env` files are ignored by git and excluded from production builds.
+- **Secret Isolation**: `.env*` files are gitignored. `app/temp.env` and `app/temp.env.local` were committed earlier with real credentials and are being removed; the credentials in them should be rotated because they remain in git history.
+- **Security headers**: `next.config.ts` sets HSTS, `nosniff`, a referrer policy, a permissions policy and `X-Frame-Options: SAMEORIGIN` (except `/forms/*`, which is embeddable).
 
 ---
 
@@ -74,7 +79,7 @@ Ensure the following environment variables are securely configured in your deplo
 ### Option A: Vercel Deployment
 1. Import repository on Vercel.
 2. Set **Root Directory** to `app` (or leave default with root workspace delegation).
-3. Under **Environment Variables**, provide `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY`.
+3. Under **Environment Variables**, provide the variables in section 4.
 4. Deploy.
 
 ### Option B: Docker / Node.js Server Deployment

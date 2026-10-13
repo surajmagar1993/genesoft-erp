@@ -187,7 +187,8 @@ export function calculateEwayBillValidity(
 // ── E-Way Bill Number Generator ───────────────────────────────────────────────
 
 /**
- * Generates an authentic 12-digit Indian E-Way Bill number.
+ * Generates a 12-digit internal draft reference in the E-Way Bill number format.
+ * It is NOT registered with NIC; real numbers come from ewaybillgst.gov.in.
  * Format: 2-digit state code + 2-digit FY indicator + 8-digit unique serial number.
  * e.g. 121000458921
  */

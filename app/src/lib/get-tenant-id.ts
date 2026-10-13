@@ -33,3 +33,36 @@ export async function getTenantId(): Promise<string> {
 
   return profile.tenant_id
 }
+
+const TENANT_ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"]
+
+/**
+ * Like getTenantId, but only for workspace admins. Use it in actions that
+ * change workspace-wide settings or credentials (gateways, SMTP, WhatsApp,
+ * company profile, workflows). Throws for MANAGER / USER / VIEWER.
+ */
+export async function getTenantAdminId(): Promise<string> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) redirect("/login")
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("tenant_id, role")
+    .eq("id", user.id)
+    .single()
+
+  if (!profile?.tenant_id) {
+    redirect("/login?error=Session+configuration+error.+Please+contact+support.")
+  }
+
+  if (!TENANT_ADMIN_ROLES.includes(profile.role)) {
+    throw new Error("Only workspace admins can change these settings.")
+  }
+
+  return profile.tenant_id
+}

@@ -158,6 +158,9 @@ export async function createPOSSale(
   try {
     // 1. Resolve or create contact
     let contactId = data.contactId
+    if (contactId && !(await prisma.contact.count({ where: { id: contactId, tenantId } }))) {
+      return { success: false, error: "Customer not found" }
+    }
     if (!contactId) {
       const walkIn = await quickCreateWalkInContact(
         data.customerName || "Walk-In Customer",
@@ -257,8 +260,8 @@ export async function createPOSSale(
 
     // 6. Update POS session totals if active
     if (data.sessionId) {
-      await prisma.pOSSession.update({
-        where: { id: data.sessionId },
+      await prisma.pOSSession.updateMany({
+        where: { id: data.sessionId, tenantId },
         data: {
           totalSales: { increment: data.total },
           totalTx: { increment: 1 },

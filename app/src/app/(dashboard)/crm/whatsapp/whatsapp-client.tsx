@@ -215,6 +215,8 @@ export default function WhatsAppClient({
         startTransition(async () => {
             const res = await saveWhatsAppConfig(config)
             if (res.success) {
+                // The server may have generated or replaced the webhook verify token
+                if (res.verifyToken) setConfig((prev) => ({ ...prev, verifyToken: res.verifyToken }))
                 toast.success("WhatsApp configuration updated successfully!")
             } else {
                 toast.error(res.error || "Failed to save configuration")
@@ -933,9 +935,9 @@ export default function WhatsAppClient({
                                 <div className="space-y-1.5">
                                     <Label className="text-xs font-semibold">Webhook Verify Token</Label>
                                     <Input
-                                        value={config.verifyToken || "genesoft_wa_verify_token"}
+                                        value={config.verifyToken || ""}
                                         onChange={(e) => setConfig({ ...config, verifyToken: e.target.value })}
-                                        placeholder="genesoft_wa_verify_token"
+                                        placeholder="Generated automatically when you save"
                                         className="text-xs bg-background font-mono"
                                     />
                                 </div>
@@ -1025,14 +1027,14 @@ export default function WhatsAppClient({
                                     <div className="flex items-center gap-2">
                                         <Input
                                             readOnly
-                                            value={config.verifyToken || "genesoft_wa_verify_token"}
+                                            value={config.verifyToken || ""}
                                             className="text-xs bg-muted font-mono"
                                         />
                                         <Button
                                             size="sm"
                                             variant="outline"
                                             onClick={() => {
-                                                navigator.clipboard.writeText(config.verifyToken || "genesoft_wa_verify_token")
+                                                navigator.clipboard.writeText(config.verifyToken || "")
                                                 toast.success("Verify token copied!")
                                             }}
                                             className="h-9 px-3"

@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
@@ -456,7 +457,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
     }
 
     // Auto-seed if empty
-    await autoSeedRentalIfEmpty(tenantId)
+    if (isDemoSeedEnabled()) await autoSeedRentalIfEmpty(tenantId)
 
     // Check and update overdue agreements automatically
     const now = new Date()

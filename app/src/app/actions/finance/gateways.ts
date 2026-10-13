@@ -1,6 +1,7 @@
 "use server"
 
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
+import { maskSecret, openSecret, sealSecret } from "@/lib/secret-box"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import {
@@ -9,8 +10,6 @@ import {
     validateStripeKeys,
     validatePayPalCredentials,
     simulateOnlinePayment,
-    compileStripeCheckoutParams,
-    compilePayPalOrderPayload,
     GatewayProvider,
     OnlinePaymentResult,
 } from "@/lib/payment-gateway-engine"
@@ -32,19 +31,14 @@ export async function getTenantPaymentGateways(): Promise<PaymentGatewayConfig> 
             ...DEFAULT_PAYMENT_GATEWAY_CONFIG,
             ...rawSettings,
             // Mask secrets if present
-            stripeSecretKey: rawSettings.stripeSecretKey ? maskSecret(rawSettings.stripeSecretKey) : "",
-            stripeWebhookSecret: rawSettings.stripeWebhookSecret ? maskSecret(rawSettings.stripeWebhookSecret) : "",
-            paypalClientSecret: rawSettings.paypalClientSecret ? maskSecret(rawSettings.paypalClientSecret) : "",
+            stripeSecretKey: rawSettings.stripeSecretKey ? maskSecret(openSecret(rawSettings.stripeSecretKey)) : "",
+            stripeWebhookSecret: rawSettings.stripeWebhookSecret ? maskSecret(openSecret(rawSettings.stripeWebhookSecret)) : "",
+            paypalClientSecret: rawSettings.paypalClientSecret ? maskSecret(openSecret(rawSettings.paypalClientSecret)) : "",
         }
     } catch (error) {
         console.error("Error fetching payment gateways config:", error)
         return DEFAULT_PAYMENT_GATEWAY_CONFIG
     }
-}
-
-function maskSecret(val: string): string {
-    if (!val || val.length < 8) return "••••••••"
-    return `${val.substring(0, 4)}••••••••${val.substring(val.length - 4)}`
 }
 
 /**
@@ -54,7 +48,7 @@ export async function saveTenantPaymentGateways(
     newConfig: Partial<PaymentGatewayConfig>
 ): Promise<{ success: boolean; message: string; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantAdminId()
         const tenant = await prisma.tenant.findUnique({
             where: { id: tenantId },
             select: { settings: true },
@@ -92,7 +86,7 @@ export async function saveTenantPaymentGateways(
         if (mergedGateways.stripeEnabled && mergedGateways.stripeMode === "live") {
             const stripeValidation = validateStripeKeys(
                 mergedGateways.stripePublishableKey,
-                mergedGateways.stripeSecretKey
+                openSecret(mergedGateways.stripeSecretKey)
             )
             if (!stripeValidation.valid) {
                 return { success: false, message: "Invalid Stripe keys", error: stripeValidation.error }
@@ -102,7 +96,7 @@ export async function saveTenantPaymentGateways(
         if (mergedGateways.paypalEnabled && mergedGateways.paypalMode === "live") {
             const paypalValidation = validatePayPalCredentials(
                 mergedGateways.paypalClientId,
-                mergedGateways.paypalClientSecret
+                openSecret(mergedGateways.paypalClientSecret)
             )
             if (!paypalValidation.valid) {
                 return { success: false, message: "Invalid PayPal credentials", error: paypalValidation.error }
@@ -114,7 +108,12 @@ export async function saveTenantPaymentGateways(
             data: {
                 settings: {
                     ...existingSettings,
-                    paymentGateways: mergedGateways,
+                    paymentGateways: {
+                        ...mergedGateways,
+                        stripeSecretKey: sealSecret(mergedGateways.stripeSecretKey),
+                        stripeWebhookSecret: sealSecret(mergedGateways.stripeWebhookSecret),
+                        paypalClientSecret: sealSecret(mergedGateways.paypalClientSecret),
+                    },
                 },
             },
         })
@@ -137,6 +136,7 @@ export async function testPaymentGatewayConnection(gateway: "STRIPE" | "PAYPAL")
     mode?: string
 }> {
     try {
+        await getTenantAdminId()
         const config = await getTenantPaymentGateways()
 
         if (gateway === "STRIPE") {
@@ -247,44 +247,13 @@ export async function initiateInvoicePaymentSession(params: {
             }
         }
 
-        // Live / Sandbox Stripe Session
-        if (params.gateway === "STRIPE") {
-            const checkoutParams = compileStripeCheckoutParams({
-                invoiceNumber: invoice.invoiceNumber,
-                amount: payAmount,
-                currency,
-                customerEmail: params.customerEmail || invoice.contact?.email || undefined,
-                successUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/sales/invoices/${invoice.id}?paid=true`,
-                cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL || ""}/sales/invoices/${invoice.id}?canceled=true`,
-                metadata: {
-                    invoiceId: invoice.id,
-                    tenantId,
-                    type: "INVOICE_PAYMENT",
-                },
-            })
-
+        // Live checkout isn't wired to the Stripe/PayPal APIs yet. Say so rather than
+        // returning a made-up session id that can never be paid.
+        if (params.gateway === "STRIPE" || params.gateway === "PAYPAL") {
             return {
-                success: true,
+                success: false,
                 simulated: false,
-                clientSecret: `mock_live_stripe_${invoice.id}`,
-                message: "Stripe checkout session compiled",
-            }
-        }
-
-        // Live / Sandbox PayPal Order
-        if (params.gateway === "PAYPAL") {
-            const orderPayload = compilePayPalOrderPayload({
-                invoiceNumber: invoice.invoiceNumber,
-                amount: payAmount,
-                currency,
-                customerName: invoice.contact?.displayName || undefined,
-            })
-
-            return {
-                success: true,
-                simulated: false,
-                orderId: `ORDER_PAYPAL_${Date.now()}`,
-                message: "PayPal Order created",
+                error: "Live online payments aren't available yet. Use simulation mode or record the payment manually.",
             }
         }
 

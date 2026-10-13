@@ -153,7 +153,7 @@ export async function getBudgetsOverview(filters?: {
     const allExpenses = await prisma.expense.findMany({
         where: {
             tenantId,
-            status: { notIn: ["VOID" as any, "CANCELLED" as any] }
+            status: { notIn: ["DRAFT", "REJECTED", "VOID"] }
         },
         select: {
             id: true,
@@ -292,7 +292,7 @@ export async function getBudgetDetail(id: string): Promise<BudgetDetailData | nu
                 gte: budgetStart,
                 lte: budgetEnd
             },
-            status: { notIn: ["VOID" as any, "CANCELLED" as any] }
+            status: { notIn: ["DRAFT", "REJECTED", "VOID"] }
         },
         include: {
             expenseAccount: {

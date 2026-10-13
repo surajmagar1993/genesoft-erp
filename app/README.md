@@ -8,7 +8,7 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 
 ### 🏢 SaaS Super Admin Command Center
 - **Tenant Management Lifecycle**: Complete CRUD for platform tenants (`/admin/tenants`), 360° tenant profile dashboards (`/admin/tenants/[id]`), manual business onboarding (`/admin/tenants/new`), trial extension (+7d), plan switching, and automatic Chart of Accounts (39 accounts) provisioning.
-- **Platform Security & Governance (`/admin/security`)**: Super Admin security hub with 2FA enforcement policy toggles, configurable session inactivity timeout, global rate limiting, real-time IP firewall blocklist management, and security audit log feed.
+- **Platform Security & Governance (`/admin/security`)**: Super Admin screen for 2FA, session timeout, rate-limit and IP blocklist policies, plus the security audit log. *These policies are stored but not yet enforced anywhere in the request path.*
 - **Platform Intelligence Hub**: Real-time KPI cards (tenants, users, MRR, tickets) with trend indicators and glassmorphism styling.
 - **Interactive Charts**: Tenant Growth (line chart) and Global Presence (pie chart) powered by `recharts`.
 - **Database Health Monitor**: Real-time latency and total platform record counts.
@@ -46,7 +46,7 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 
 ### 🛒 Retail POS & Customer Portal
 - **Walk-in / POS Terminal (`/sales/pos`)**: Fast-checkout register with product search, category filters, barcode wedge scanning, customer creation, split tender (Cash/Card/UPI), and instant thermal receipt printing.
-- **Customer Self-Service Portal (`/portal/[token]`)**: Client portal for viewing invoices, checking transaction history, making payments, and submitting support tickets without consuming user seats.
+- **Customer Self-Service Portal (`/portal/[token]`)**: Client portal for viewing and downloading invoices, checking transaction history, and submitting support tickets without consuming user seats. Online payment from the portal is switched off until it is wired to a real gateway checkout.
 
 ### 🌍 Multi-Country Statutory Tax Engines
 - **India**: GST Returns GSTR-1 & GSTR-3B with Table 4 ITC balancing, E-Way Bill Rule 138 with distance calculators and NIC JSON, TDS & TCS with 206AA penalty and Form 26Q.
@@ -89,16 +89,25 @@ npm install
 ```
 
 ### 2. Environment Setup
-Create `.env.local` in `app/` with your Supabase credentials:
-```env
-DATABASE_URL="postgresql://postgres:[password]@db.[project].supabase.co:5432/postgres"
-NEXT_PUBLIC_SUPABASE_URL="https://[project].supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="[anon-key]"
-SUPABASE_SERVICE_ROLE_KEY="[service-role-key]"
-```
+Create `.env.local` in `app/` (never commit it). Variables the code reads:
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `DATABASE_URL` | Yes | App connection. On Vercel this is the Supabase **pooler** (port 6543, pgbouncer). |
+| `DIRECT_URL` | For Prisma CLI | Direct connection (port 5432) for introspection and schema tooling. |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase Auth and storage. |
+| `NEXT_PUBLIC_APP_URL` | Yes | Base URL for signup confirmation and checkout return links. |
+| `NEXT_PUBLIC_SITE_URL` | Yes | Base URL for password-reset links. |
+| `RESEND_API_KEY`, `RESEND_DOMAIN` | For email | Transactional email; sender domain must be verified in Resend. |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | For SaaS billing | Plan checkout and the `/api/webhooks/razorpay` signature check. |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Optional | Platform Stripe billing (not configured yet). |
+| `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Optional | Platform-wide Meta webhook verify token (tenants also get their own). |
+| `ENCRYPTION_KEY` | Recommended | Encrypts stored tenant credentials (gateway keys, WhatsApp tokens, SMTP passwords). Any long random string, e.g. `openssl rand -base64 32`. Changing it makes stored secrets unreadable. |
+| `ENABLE_DEMO_SEED` | No | `true` fills empty modules with sample data. Leave unset in production. |
+| `COMPANY_NAME`, `COMPANY_GSTIN`, `COMPANY_STATE`, `COMPANY_ADDRESS` | Optional | Fallback supplier details on invoices. |
 
 > [!IMPORTANT]
-> Always use the **direct connection string** (port 5432) for `DATABASE_URL`, not the connection pooler, to avoid Prisma schema and migration compatibility issues.
+> Never run `prisma db push` or `prisma migrate dev` against the shared database: the live schema has drifted from `schema.prisma` and Prisma would drop data. Schema changes are applied with reviewed SQL files in `app/*.sql`.
 
 ### 3. Generate Prisma Client
 ```bash
@@ -146,9 +155,10 @@ CRM/
 
 ## 🔒 Multi-Tenant Architecture
 
-- All data is isolated by `tenant_id` at the database level using Supabase Row Level Security (RLS).
-- The Supabase middleware injects `tenant_id` into every authenticated session.
-- Super Admin routes (`/admin/*`) are protected and require the `SUPER_ADMIN` role via server-side guard `ensureSuperAdmin()`.
+- Every tenant table has a `tenant_id`. Supabase RLS is enabled on all tables, but **the app talks to the database through Prisma, which bypasses RLS**. Tenant isolation therefore lives in the server actions: every query, including updates and deletes by id, must filter by the caller's `tenantId` from `getTenantId()`.
+- Workspace-wide settings and credentials (company profile, payment gateways, SMTP, WhatsApp, workflows, plan checkout) require a workspace admin via `getTenantAdminId()`.
+- `src/proxy.ts` (Next.js 16's replacement for `middleware.ts`) refreshes the Supabase session and guards routes.
+- Super Admin routes (`/admin/*`) require the `SUPER_ADMIN` role via the server-side guard `ensureSuperAdmin()`.
 
 ---
 
@@ -162,4 +172,4 @@ npm run build
 # Start production server on specified port
 PORT=3000 npm start
 ```
-See [DEPLOYMENT_AUDIT.md](file:///home/genesoft/Downloads/ERP/Archive/CRM/DEPLOYMENT_AUDIT.md) for the full compliance checklist.
+See [DEPLOYMENT_AUDIT.md](../DEPLOYMENT_AUDIT.md) for the deployment checklist.

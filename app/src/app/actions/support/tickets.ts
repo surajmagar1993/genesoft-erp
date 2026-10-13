@@ -93,6 +93,12 @@ export async function addMessage(ticketId: string, content: string, isFromAdmin:
 
   if (!ticket) throw new Error("Ticket not found or unauthorized")
 
+  // Only platform staff may post as support; the flag from the client is not trusted on its own
+  if (isFromAdmin) {
+    const profile = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } })
+    isFromAdmin = profile?.role === "SUPER_ADMIN"
+  }
+
   const msg = await prisma.supportMessage.create({
     data: {
       ticketId,

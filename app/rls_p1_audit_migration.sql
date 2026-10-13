@@ -29,8 +29,10 @@ $$;
 
 -- 3. Profiles: Enhanced RLS (Tenant Admins can see/manage their team)
 DROP POLICY IF EXISTS "Profiles: own row" ON public.profiles;
+-- Read-only: a FOR ALL policy here let users rewrite their own role/tenant_id from
+-- the browser. Profile writes go through the server (Prisma). See harden_profiles_rls.sql.
 CREATE POLICY "Profiles: tenant-scoped access" ON public.profiles
-    FOR ALL TO authenticated
+    FOR SELECT TO authenticated
     USING (
       id = auth.uid() OR 
       (tenant_id = public.my_tenant_id() AND public.is_tenant_admin())

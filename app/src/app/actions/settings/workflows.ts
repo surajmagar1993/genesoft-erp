@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import type {
     TriggerEventType,
@@ -105,7 +105,7 @@ export async function createWorkflowRule(input: {
     isActive?: boolean
 }): Promise<{ success: boolean; rule?: WorkflowRuleItem; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantAdminId()
 
         const count = await prisma.workflowRule.count({
             where: { tenantId }
@@ -165,7 +165,7 @@ export async function updateWorkflowRule(
     }
 ): Promise<{ success: boolean; rule?: WorkflowRuleItem; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantAdminId()
 
         const updated = await prisma.workflowRule.update({
             where: { id, tenantId },
@@ -210,7 +210,7 @@ export async function toggleWorkflowRuleActive(
     isActive: boolean
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantAdminId()
 
         await prisma.workflowRule.update({
             where: { id, tenantId },
@@ -227,7 +227,7 @@ export async function toggleWorkflowRuleActive(
 
 export async function deleteWorkflowRule(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantAdminId()
 
         await prisma.workflowRule.delete({
             where: { id, tenantId }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
+import { fromSmallestCurrencyUnit } from "@/lib/payment-gateway-engine"
 
 export const dynamic = "force-dynamic"
 
@@ -42,15 +43,21 @@ export async function POST(req: Request) {
     // A. Check if this is a Customer Invoice Payment
     if (session.metadata?.type === "INVOICE_PAYMENT" || session.metadata?.invoiceId) {
       const invoiceId = session.metadata.invoiceId
-      const amount = session.amount_total ? session.amount_total / 100 : 0
       const currency = (session.currency || "USD").toUpperCase()
+      const amount = session.amount_total ? fromSmallestCurrencyUnit(session.amount_total, currency) : 0
+      const reference = `STRIPE:${session.payment_intent || session.id}`
 
       const invoice = await prisma.invoice.findUnique({
         where: { id: invoiceId },
         include: { contact: true },
       })
 
-      if (invoice) {
+      // A retry after a partial failure must not record the payment twice
+      const alreadyRecorded = invoice
+        ? await prisma.payment.findFirst({ where: { tenantId: invoice.tenantId, reference } })
+        : null
+
+      if (invoice && !alreadyRecorded) {
         await prisma.payment.create({
           data: {
             tenantId: invoice.tenantId,
@@ -60,7 +67,7 @@ export async function POST(req: Request) {
             paymentDate: new Date(),
             paymentMethod: "CREDIT_CARD",
             type: "INBOUND",
-            reference: `STRIPE:${session.payment_intent || session.id}`,
+            reference,
             notes: `Stripe online checkout completed (${session.id})`,
             currencyCode: currency,
           },
@@ -74,7 +81,7 @@ export async function POST(req: Request) {
 
         await prisma.invoice.update({
           where: { id: invoice.id },
-          data: { status: isPaid ? "PAID" : "PARTIAL" },
+          data: { status: isPaid ? "PAID" : "PARTIALLY_PAID" },
         })
       }
 

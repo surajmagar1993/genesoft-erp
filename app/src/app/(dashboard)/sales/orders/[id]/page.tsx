@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { ArrowLeft, Loader2 } from "lucide-react"
@@ -8,14 +8,15 @@ import { Button } from "@/components/ui/button"
 import { OrderForm, OrderFormData } from "@/components/sales/order-form"
 import { getOrderById, updateOrder } from "@/app/actions/sales/orders"
 
-export default function EditOrderPage({ params }: { params: { id: string } }) {
+export default function EditOrderPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id: orderId } = use(params)
     const router = useRouter()
     const [initialData, setInitialData] = useState<OrderFormData | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const fetchOrder = async () => {
-            const data = await getOrderById(params.id)
+            const data = await getOrderById(orderId)
             if (!data) {
                 toast.error("Sales order not found")
                 router.push("/sales/orders")
@@ -49,12 +50,12 @@ export default function EditOrderPage({ params }: { params: { id: string } }) {
         }
 
         fetchOrder()
-    }, [params.id, router])
+    }, [orderId, router])
 
     const handleSave = async (data: OrderFormData) => {
         const { id, ...rest } = data
         const { error } = await updateOrder({
-            id: params.id,
+            id: orderId,
             order_number: rest.orderNumber,
             customer_name: rest.customerName,
             customer_email: rest.customerEmail,

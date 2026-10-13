@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
@@ -128,7 +129,7 @@ export interface CalculatePriceResult {
    Auto-Seeder: Starter Products & Price Lists
 ───────────────────────────────────────── */
 
-export async function autoSeedPriceListsIfEmpty(tenantId: string) {
+async function autoSeedPriceListsIfEmpty(tenantId: string) {
     const existing = await prisma.priceList.findFirst({
         where: { tenantId },
     })
@@ -402,7 +403,7 @@ export async function getPriceListsOverview(): Promise<{
         if (!tenantId) return { error: "Authentication required" }
 
         // Auto-seed if empty
-        await autoSeedPriceListsIfEmpty(tenantId)
+        if (isDemoSeedEnabled()) await autoSeedPriceListsIfEmpty(tenantId)
 
         // 1. Fetch Price Lists with Items
         const rawPriceLists = await prisma.priceList.findMany({
@@ -791,6 +792,13 @@ export async function upsertPriceListItem(data: UpsertPriceListItemInput): Promi
         if (!data.priceListId) return { error: "Price List must be selected" }
         if (!data.productId) return { error: "Product must be selected" }
 
+        const [ownsList, ownsProduct] = await Promise.all([
+            prisma.priceList.count({ where: { id: data.priceListId, tenantId } }),
+            prisma.product.count({ where: { id: data.productId, tenantId } }),
+        ])
+        if (!ownsList) return { error: "Price list not found" }
+        if (!ownsProduct) return { error: "Product not found" }
+
         const minQuantity = Math.max(1, Number(data.minQuantity || 1))
         const customPrice = data.customPrice !== undefined && !isNaN(Number(data.customPrice)) ? Number(data.customPrice) : null
         const discountPercent = data.discountPercent !== undefined && !isNaN(Number(data.discountPercent)) ? Number(data.discountPercent) : null
@@ -868,6 +876,10 @@ export async function assignContactPriceList(
     try {
         const tenantId = await getTenantId()
         if (!tenantId) return { error: "Authentication required" }
+
+        if (priceListId && !(await prisma.priceList.count({ where: { id: priceListId, tenantId } }))) {
+            return { error: "Price list not found" }
+        }
 
         await prisma.contact.update({
             where: { id: contactId, tenantId },

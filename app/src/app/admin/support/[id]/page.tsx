@@ -7,8 +7,9 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { AdminChatView } from "@/components/admin/support/admin-chat-view"
 
-export default async function TicketDetailPage({ params }: { params: { id: string } }) {
-    const ticketId = params.id
+export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+    const ticketId = id
     
     const ticket = await prisma.supportTicket.findUnique({
         where: { id: ticketId },

@@ -294,7 +294,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                 onClick={() => router.push("/sales/eway-bills")}
                             >
                                 <Truck className="mr-2 h-4 w-4 text-emerald-600" />
-                                EWB #{ewayBillNo}
+                                EWB draft #{ewayBillNo}
                             </Button>
                         ) : (
                             <Button 

@@ -1,7 +1,7 @@
 > **Last Updated:** 2026-09-12 | **Active Block:** P2 Integrations: WhatsApp Business API Live ✅ | Next: Stripe / PayPal 🔜
 
 ## 🎯 Project Overview
-Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Prisma, and Supabase.
+Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Prisma, and Supabase.
 
 ## 🗄 Core Documentation (Memory)
 - **`AI_CONTRIBUTOR_CONTEXT.md`**: Main architecture and design rules.
@@ -12,7 +12,7 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
 - **`.memory/`**: Architectural decisions and patterns history.
 
 ## 🛠 Tech Stack
-- **Next.js 15** (App Router)
+- **Next.js 16** (App Router)
 - **TypeScript** (strict)
 - **Tailwind CSS + shadcn/ui**
 - **Prisma 7** (with `@prisma/adapter-pg`)
@@ -28,6 +28,15 @@ Multi-tenant SaaS ERP & CRM built with Next.js 15, TypeScript, Tailwind CSS, Pri
 - `app/prisma/`: Database schema and migrations.
 - `app/src/app/admin/`: SaaS Super Admin Command Center.
 - `app/src/app/actions/saas/`: Platform-level server actions (stats, charts, health).
+
+## 🔐 Security Rules (2026-10-13)
+- **Tenant isolation is in code, not RLS.** Prisma bypasses Supabase RLS. Every query that takes an id from the client must include the caller's `tenantId` (`findFirst({ where: { id, tenantId } })`, `updateMany`/`deleteMany` with `{ id, tenantId }` and a `count` check). Also verify any *referenced* ids (contact, account, product, warehouse, price list…) belong to the tenant before using them.
+- **Workspace settings need an admin.** Use `getTenantAdminId()` (ADMIN/SUPER_ADMIN) instead of `getTenantId()` for actions that change workspace-wide settings or credentials.
+- **Stored credentials are encrypted.** Use `sealSecret()` when saving and `openSecret()` when using tenant secrets (`src/lib/secret-box.ts`, key from `ENCRYPTION_KEY`). Show them with `maskSecret()`; never return them to the client.
+- **Webhooks fail closed.** Verify the gateway signature on the raw body before trusting any field.
+- **No demo data in real tenants.** Sample seeders run only when `ENABLE_DEMO_SEED=true`.
+- **Next.js 16:** request interception lives in `src/proxy.ts` (export `proxy`); `params`/`searchParams` are Promises and must be awaited.
+- **Simulated features** (label them as such in the UI until real): e-way bill numbers are drafts (real ones come from the NIC portal), workflow rules don't fire automatically, mailbox IMAP sync and live Stripe/PayPal checkout aren't wired, portal online payment is off (`PORTAL_ONLINE_PAYMENTS_ENABLED`).
 
 ## 📝 Design Patterns
 - **Forms**: Dedicated full pages, not modals.

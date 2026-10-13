@@ -28,7 +28,7 @@ This project uses several Markdown files to track state and requirements:
 *   **CSV**: papaparse (client-side import/export)
 
 ## 🗄 Database Design Schema (Prisma)
-The database uses a strict multi-tenant architecture with Row-Level Security handled via Supabase RLS policies.
+The database uses a multi-tenant architecture. Supabase RLS is enabled on every table, but the app queries through Prisma, which bypasses RLS, so tenant isolation must be enforced in each server action (see Rule 7).
 *   **Tenant Mapping**: Every major table (`User`, `Contact`, `Product`, `Invoice`, etc.) **MUST** contain a `tenantId` mapping to the `Tenant` schema.
 *   **Users**: Linked to Supabase Auth via `authId` mapped against the `Tenant`.
 *   **Models built**: Accounts (CoA), Contacts, Companies, Leads, Deals, Products, TaxGroups, TaxRates, Invoices, InvoiceItems (`invoice_line_items`), Payments, Tasks, CommunicationLog, LedgerEntry, Bill, BillItem, SupportTicket, SupportMessage, AdminAuditLog, SystemLog, PricingPlan, Warehouse, WarehouseStock, StockMovement, PurchaseOrder, PurchaseOrderItem, Form, FormSubmission, RentalAsset, RentalAgreement, PortalTicket, PortalTicketMessage.
@@ -62,6 +62,9 @@ Always import `getTenantId` from `@/lib/get-tenant-id` (NOT from `@/lib/auth`).
 
 ### Rule 6: Knowledge Graph Synchronization
 Per user-defined rules, after completing code changes in a session, always execute `graphify update .` to keep the knowledge graph synchronized.
+
+### Rule 7: Tenant Scoping & Admin-Only Settings
+Every query using a client-supplied id must include `tenantId`, and referenced ids (contacts, accounts, products, warehouses…) must be checked against the tenant. Actions that change workspace-wide settings or credentials use `getTenantAdminId()`. Stored credentials go through `sealSecret()`/`openSecret()` in `@/lib/secret-box`. See the Security Rules section in `CLAUDE.md`.
 
 ---
 
@@ -155,7 +158,7 @@ Full multi-depot stock management under `/inventory`:
 ## 💬 WhatsApp Business API Hub (Completed — 2026-09-12)
 - **`app/src/lib/whatsapp-engine.ts`**: Meta Graph API v20.0 client, E.164 phone normalizer (IN, US, UK, AE, SA, AU), 7 statutory templates, 1-click `wa.me` links, and webhook parser.
 - **`app/src/app/actions/crm/whatsapp.ts`**: Config management, message/invoice dispatch, and communication timeline sync.
-- **`app/src/app/api/webhooks/whatsapp/route.ts`**: Public challenge verification and delivery event webhook receiver.
+- **`app/src/app/api/webhooks/whatsapp/route.ts`**: Challenge verification (per-tenant verify token) and event receiver; each phone number's events are verified with that tenant's Meta App Secret (`X-Hub-Signature-256`).
 - **`app/src/app/(dashboard)/crm/whatsapp/`**: 4-KPI studio with conversational WhatsApp bubbles, invoice dispatcher, and Meta gateway configuration desk.
 - **`app/src/app/(dashboard)/sales/invoices/[id]/`**: In-place WhatsApp modal dispatch from invoice action toolbar.
 
@@ -169,7 +172,7 @@ Pure TypeScript statutory tax calculation engines located in `app/src/lib/`:
 
 ## 🛒 Retail POS & Customer Portal (Completed — 2026-09-12)
 - **`app/src/app/(dashboard)/sales/pos/`**: Full-screen retail POS terminal with product search, cart, barcode scanner, walk-in creation, multi-tender payment, and receipt printing.
-- **`app/src/app/portal/[token]/`**: Token-authenticated customer self-service center for viewing invoices, settling balances, and submitting support tickets without requiring a SaaS user seat.
+- **`app/src/app/portal/[token]/`**: Token-authenticated customer self-service center for viewing and downloading invoices and submitting support tickets without requiring a SaaS user seat. Online payment is disabled (`PORTAL_ONLINE_PAYMENTS_ENABLED = false`) until it uses a real gateway checkout.
 
 ## 🚦 Contribution Workflow (For AI Agents)
 1. **Never** deviate from `lucide-react` or `shadcn/ui` components for base UI.

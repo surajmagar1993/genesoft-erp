@@ -27,6 +27,7 @@ export interface PaymentGatewayConfig {
     paypalEnabled: boolean
     paypalClientId?: string
     paypalClientSecret?: string
+    paypalWebhookId?: string
     paypalMode: "sandbox" | "live" | "simulation"
 }
 
@@ -42,6 +43,7 @@ export const DEFAULT_PAYMENT_GATEWAY_CONFIG: PaymentGatewayConfig = {
     paypalMode: "simulation",
     paypalClientId: "",
     paypalClientSecret: "",
+    paypalWebhookId: "",
 }
 
 // Zero-decimal currencies per ISO 4217 & Stripe specs

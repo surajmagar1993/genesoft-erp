@@ -4,6 +4,13 @@ import { prisma } from "@/lib/prisma"
 import { PublicFormClient } from "./public-form-client"
 import { FormFieldConfig, WebFormType, WebFormStatus } from "@/app/actions/crm/form-types"
 
+// Form links use the short code; the UUID id is also accepted, but only when the value is a valid UUID (Postgres rejects anything else)
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function formLookup(code: string) {
+    return UUID_PATTERN.test(code) ? { OR: [{ code }, { id: code }] } : { code }
+}
+
 interface PublicFormPageProps {
     params: Promise<{ code: string }>
 }
@@ -11,9 +18,7 @@ interface PublicFormPageProps {
 export async function generateMetadata({ params }: PublicFormPageProps): Promise<Metadata> {
     const { code } = await params
     const form = await prisma.webForm.findFirst({
-        where: {
-            OR: [{ code }, { id: code }],
-        },
+        where: formLookup(code),
         select: { title: true, description: true },
     })
 
@@ -33,9 +38,7 @@ export default async function PublicFormPage({ params }: PublicFormPageProps) {
     const { code } = await params
 
     const rawForm = await prisma.webForm.findFirst({
-        where: {
-            OR: [{ code }, { id: code }],
-        },
+        where: formLookup(code),
     })
 
     if (!rawForm) {

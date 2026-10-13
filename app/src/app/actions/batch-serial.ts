@@ -279,6 +279,21 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
     }
 }
 
+/** Throws unless the referenced product, warehouse and batch belong to this tenant. */
+async function assertTenantRefs(
+    tenantId: string,
+    refs: { productId: string; warehouseId?: string | null; batchId?: string | null }
+) {
+    const [product, warehouse, batch] = await Promise.all([
+        prisma.product.count({ where: { id: refs.productId, tenantId } }),
+        refs.warehouseId ? prisma.warehouse.count({ where: { id: refs.warehouseId, tenantId } }) : 1,
+        refs.batchId ? prisma.productBatch.count({ where: { id: refs.batchId, tenantId } }) : 1,
+    ])
+    if (!product) throw new Error("Product not found")
+    if (!warehouse) throw new Error("Warehouse not found")
+    if (!batch) throw new Error("Batch not found")
+}
+
 /**
  * Creates a new Product Lot / Batch entry with quantity and optional manufacturing / expiry dates.
  */
@@ -298,6 +313,8 @@ export async function createBatch(data: {
     if (!data.productId || !data.warehouseId || !data.batchNumber.trim()) {
         throw new Error("Product, Warehouse, and Batch Number are required fields.")
     }
+
+    await assertTenantRefs(tenantId, data)
 
     if (data.initialQty < 0) {
         throw new Error("Initial lot quantity cannot be negative.")
@@ -593,6 +610,8 @@ export async function createSerial(data: {
         throw new Error("Product and Serial Number are required.")
     }
 
+    await assertTenantRefs(tenantId, data)
+
     const cleanSN = data.serialNumber.trim().toUpperCase()
 
     // Check for duplicate
@@ -652,6 +671,8 @@ export async function createSerialsBulk(data: {
     if (!data.productId) {
         throw new Error("Product is required for serial registration.")
     }
+
+    await assertTenantRefs(tenantId, data)
 
     let serialsToCreate: string[] = []
 

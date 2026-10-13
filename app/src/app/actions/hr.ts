@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
@@ -222,7 +223,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
     const tenantId = await getTenantId()
 
     // 1. Ensure tenant has starter departments
-    await autoSeedHRIfEmpty(tenantId)
+    if (isDemoSeedEnabled()) await autoSeedHRIfEmpty(tenantId)
 
     // Normalize target date (defaults to today's start of day UTC)
     const targetDate = selectedDateStr ? new Date(selectedDateStr) : new Date()

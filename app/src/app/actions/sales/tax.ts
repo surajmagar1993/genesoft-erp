@@ -84,10 +84,12 @@ export async function createTaxGroup(data: {
 
 export async function deleteTaxGroup(id: string) {
   const supabase = await createClient()
+  const tenantId = await getTenantId()
   const { error } = await supabase
     .from("tax_groups")
     .delete()
     .eq("id", id)
+    .eq("tenant_id", tenantId)
 
   if (error) throw new Error(error.message)
   revalidatePath("/settings")

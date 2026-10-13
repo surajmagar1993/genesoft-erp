@@ -267,7 +267,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
       })
 
       if (res.success && res.ewayBill) {
-        toast.success(`E-Way Bill #${res.ewayBill.ewayBillNo} generated successfully!`)
+        toast.success(`E-Way Bill draft ${res.ewayBill.ewayBillNo} saved. Upload it to the NIC portal to issue it.`)
         setActiveTab("registry")
         router.refresh()
         handleOpenSlip(res.ewayBill)
@@ -371,7 +371,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
             </Badge>
           </div>
           <p className="text-muted-foreground mt-1">
-            Generate statutory E-Way Bills, update vehicle in transit, calculate road validity, and export NIC bulk upload JSON.
+            Prepare E-Way Bill drafts, update vehicle in transit, calculate road validity, and export NIC bulk upload JSON.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -388,6 +388,14 @@ export function EwayClient({ initialData }: EwayClientProps) {
             Generate E-Way Bill
           </Button>
         </div>
+      </div>
+
+      <div className="flex items-start gap-3 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-300">
+        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+        <p>
+          Bills here are drafts. The numbers shown are internal references, not E-Way Bills issued by NIC.
+          To get a valid E-Way Bill, export the NIC JSON and upload it on ewaybillgst.gov.in.
+        </p>
       </div>
 
       {/* 4 Telemetry KPI Cards */}
@@ -1193,12 +1201,12 @@ export function EwayClient({ initialData }: EwayClientProps) {
             <div className="border-2 border-foreground p-6 rounded-md bg-background text-foreground space-y-4 print:p-4 print:border-black">
               {/* Government Header */}
               <div className="border-b-2 border-foreground pb-3 text-center space-y-1">
-                <h2 className="text-lg font-black tracking-wider uppercase">Government of India</h2>
+                <h2 className="text-lg font-black tracking-wider uppercase">E-Way Bill Draft</h2>
                 <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                  Electronic Way Bill System (Form GST EWB-01)
+                  Not generated on the NIC portal · Not valid for movement of goods
                 </h3>
                 <p className="text-[11px] text-muted-foreground">
-                  [See Rule 138 of the Central Goods and Services Tax Rules, 2017]
+                  [Prepared in the Form GST EWB-01 layout, Rule 138 of the CGST Rules, 2017]
                 </p>
               </div>
 
@@ -1206,7 +1214,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-muted/20 border border-foreground/30 rounded">
                 <div className="space-y-1 text-xs">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold">E-Way Bill No:</span>
+                    <span className="font-bold">Draft Ref No:</span>
                     <span className="text-base font-black font-mono tracking-widest text-primary">
                       {selectedBillForSlip.ewayBillNo.replace(/(\d{4})(\d{4})(\d{4})/, "$1 $2 $3")}
                     </span>
@@ -1227,7 +1235,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                 {qrDataUrl && (
                   <div className="text-center">
                     <img src={qrDataUrl} alt="E-Way Bill QR Code" className="w-28 h-28 mx-auto border bg-white p-1" />
-                    <span className="text-[9px] text-muted-foreground font-mono">Verify via NIC App</span>
+                    <span className="text-[9px] text-muted-foreground font-mono">Draft reference</span>
                   </div>
                 )}
               </div>
@@ -1331,8 +1339,8 @@ export function EwayClient({ initialData }: EwayClientProps) {
               </div>
 
               <div className="pt-3 border-t text-[10px] text-muted-foreground flex justify-between items-center">
-                <span>Computer generated statutory document under Goods and Services Tax Act. No physical signature required.</span>
-                <span className="font-mono">Genesoft ERP • NIC Compliant</span>
+                <span>Draft for preparation only. Generate the E-Way Bill on ewaybillgst.gov.in before goods move.</span>
+                <span className="font-mono">Genesoft ERP • Draft</span>
               </div>
             </div>
           )}

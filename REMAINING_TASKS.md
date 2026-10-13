@@ -126,6 +126,21 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 
 ---
 
+## ⚠️ Known Gaps in "Complete" Modules (review 2026-10-13)
+These are marked done above but are simulated or not enforced. The UI now says so where users would be misled.
+- [ ] **E-Way Bills**: numbers are local draft references; integrate the NIC E-Way Bill API (or rely on the JSON bulk upload) to issue real ones.
+- [ ] **Workflow Automation**: rules are stored and simulated, but no module fires them on real events.
+- [ ] **CRM Email**: IMAP inbox sync and open tracking aren't implemented (`syncMailbox` reports "not available"). Sending via SMTP works.
+- [ ] **Stripe / PayPal invoice checkout**: live mode isn't wired to the gateway APIs; portal online payment is switched off.
+- [ ] **Stripe SaaS billing**: webhook always sets plan `PRO` and deactivates the tenant on a failed renewal.
+- [ ] **Platform Security (`/admin/security`)**: 2FA, session timeout, rate limits, IP blocklist, maintenance mode and the signup switch are stored but not enforced.
+- [ ] **Web Forms**: no rate limiting; the reCAPTCHA/Turnstile secret is saved but never verified; alert emails embed unescaped visitor input.
+- [ ] **Recurring invoices**: no scheduled job (no `vercel.json` cron); profiles only run when someone clicks "Run due".
+- [ ] **Tests**: there are no automated tests.
+- [ ] **Dependencies**: `npm audit` reports 14 high / 9 moderate; `npm audit fix` rewrites the workspace lockfile, so do it as a coordinated change.
+
+---
+
 ## 🟢 P3 — Scale (Pending)
 - [x] Purchase: Request for Quotation (RFQ) (`/purchase/rfq`, `/app/actions/rfq.ts`) ✅ **(2026-09-17)**
 - [x] Inventory: Warehouse Management (`/inventory?tab=warehouses`) ✅ **(2026-09-10)**

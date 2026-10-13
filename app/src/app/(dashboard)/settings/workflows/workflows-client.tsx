@@ -488,7 +488,7 @@ export function WorkflowsClient({
                             <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
                                 Workflow Automation
                                 <Badge variant="outline" className="text-[10px] font-mono tracking-widest uppercase bg-primary/5 text-primary border-primary/20">
-                                    Enterprise Engine
+                                    Preview
                                 </Badge>
                             </h1>
                             <p className="text-xs text-muted-foreground mt-0.5">
@@ -517,6 +517,13 @@ export function WorkflowsClient({
                         New Workflow
                     </Button>
                 </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
+                <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
+                <p>
+                    Preview: rules are saved but don&apos;t run automatically yet. Use the simulator to test how a rule would behave.
+                </p>
             </div>
 
             {/* KPI Ribbon */}

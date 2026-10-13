@@ -74,13 +74,13 @@ export async function runCustomReportQuery(config: ReportConfig): Promise<Report
         case "INVOICES": {
             const invoices = await prisma.invoice.findMany({
                 where: { tenantId },
-                include: { contact: { select: { name: true } } },
+                include: { contact: { select: { displayName: true } } },
                 orderBy: { createdAt: "desc" },
                 take: 500
             })
             rawData = invoices.map((inv: any) => ({
                 invoiceNumber: inv.invoiceNumber,
-                customerName: inv.contact?.name || "Direct Customer",
+                customerName: inv.contact?.displayName || "Direct Customer",
                 status: inv.status,
                 issueDate: inv.issueDate ? inv.issueDate.toISOString().slice(0, 10) : "",
                 dueDate: inv.dueDate ? inv.dueDate.toISOString().slice(0, 10) : "",
@@ -122,13 +122,13 @@ export async function runCustomReportQuery(config: ReportConfig): Promise<Report
         case "BILLS": {
             const bills = await prisma.bill.findMany({
                 where: { tenantId },
-                include: { contact: { select: { name: true } } },
+                include: { contact: { select: { displayName: true } } },
                 orderBy: { issueDate: "desc" },
                 take: 500
             })
             rawData = bills.map((b: any) => ({
                 billNumber: b.billNumber,
-                vendorName: b.contact?.name || "Standard Vendor",
+                vendorName: b.contact?.displayName || "Standard Vendor",
                 status: b.status,
                 issueDate: b.issueDate ? b.issueDate.toISOString().slice(0, 10) : "",
                 dueDate: b.dueDate ? b.dueDate.toISOString().slice(0, 10) : "",

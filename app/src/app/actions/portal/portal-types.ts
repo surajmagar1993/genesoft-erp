@@ -2,6 +2,14 @@
 // Customer Portal — Type Definitions
 // ============================================
 
+/**
+ * Online invoice payment from the customer portal.
+ * Keep disabled until payPortalInvoice is wired to a real Stripe/PayPal checkout
+ * and settles only from a verified gateway webhook; today it would mark invoices
+ * PAID without collecting any money.
+ */
+export const PORTAL_ONLINE_PAYMENTS_ENABLED = false
+
 export interface PortalProfile {
   id: string
   displayName: string

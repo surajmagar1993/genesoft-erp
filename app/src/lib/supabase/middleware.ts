@@ -52,6 +52,8 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname === '/privacy' ||
         request.nextUrl.pathname === '/terms' ||
         request.nextUrl.pathname === '/sitemap' ||
+        request.nextUrl.pathname.startsWith('/portal/') || // Customer portal, authorised by portal token
+        request.nextUrl.pathname.startsWith('/forms/') || // Public web forms, embeddable on external sites
         request.nextUrl.pathname.startsWith('/api') // Allow API for and from Supabase
 
     const isAdminPage = request.nextUrl.pathname.startsWith('/admin')

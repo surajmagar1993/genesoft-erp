@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { PORTAL_ONLINE_PAYMENTS_ENABLED } from "./portal-types"
 import type {
   PortalProfile,
   PortalInvoiceRecord,
@@ -503,6 +504,13 @@ export async function payPortalInvoice(
   message: string
   error?: string
 }> {
+  if (!PORTAL_ONLINE_PAYMENTS_ENABLED) {
+    return {
+      success: false,
+      message: "Online payment is not available yet. Please pay using the details on your invoice or contact the seller.",
+    }
+  }
+
   try {
     const contact = await resolveContact(token)
     if (!contact) {

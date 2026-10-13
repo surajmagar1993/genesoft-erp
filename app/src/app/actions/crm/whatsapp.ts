@@ -1,8 +1,10 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
+import { maskSecret, openSecret, sealSecret } from "@/lib/secret-box"
 import { revalidatePath } from "next/cache"
+import crypto from "crypto"
 import {
     WhatsAppConfig,
     WhatsAppMessage,
@@ -13,6 +15,9 @@ import {
     generateWhatsAppDirectLink,
     normalizeE164Phone,
 } from "@/lib/whatsapp-engine"
+
+// The old hardcoded default token was public; anyone still holding it gets a fresh one on save
+const LEGACY_VERIFY_TOKEN = "genesoft_wa_verify_token"
 
 /**
  * Returns tenant's WhatsApp Business Account configuration.
@@ -36,9 +41,10 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
             phoneNumberId: wa.phoneNumberId || "",
             wabaId: wa.wabaId || "",
             appId: wa.appId || "",
-            appSecret: wa.appSecret || "",
-            accessToken: wa.accessToken || "",
-            verifyToken: wa.verifyToken || "genesoft_wa_verify_token",
+            // Secrets never leave the server unmasked
+            appSecret: maskSecret(openSecret(wa.appSecret)),
+            accessToken: maskSecret(openSecret(wa.accessToken)),
+            verifyToken: wa.verifyToken || "",
             defaultCountryCode: wa.defaultCountryCode || (tenant?.countryCode === "US" ? "1" : "91"),
             mode: wa.mode || "SIMULATION",
             senderDisplayName: wa.senderDisplayName || tenant?.name || "Business WhatsApp",
@@ -64,7 +70,7 @@ export async function saveWhatsAppConfig(payload: {
     senderDisplayName?: string
 }) {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantAdminId()
         if (!tenantId) {
             return { success: false, error: "Unauthorized tenant session" }
         }
@@ -77,24 +83,42 @@ export async function saveWhatsAppConfig(payload: {
         const currentSettings = (tenant?.settings as any) || {}
         const currentWa = currentSettings.whatsapp || {}
 
-        // Only update token/secret if provided (avoid overwriting with empty)
-        let tokenToSave = currentWa.accessToken
-        if (payload.accessToken !== undefined) {
-            tokenToSave = payload.accessToken
+        // Blank or masked values echoed back from the form keep the stored secret
+        const isNewSecret = (v?: string): v is string => !!v?.trim() && !v.includes("•")
+        const tokenToSave = isNewSecret(payload.accessToken) ? payload.accessToken.trim() : currentWa.accessToken
+        const appSecretToSave = isNewSecret(payload.appSecret) ? payload.appSecret.trim() : currentWa.appSecret
+
+        const phoneNumberId = (payload.phoneNumberId ?? currentWa.phoneNumberId)?.trim() || undefined
+
+        if (payload.mode === "CLOUD_API" && !appSecretToSave) {
+            return {
+                success: false,
+                error: "Meta App Secret is required for Cloud API mode. Without it, incoming messages and delivery receipts are rejected.",
+            }
         }
 
-        let appSecretToSave = currentWa.appSecret
-        if (payload.appSecret !== undefined) {
-            appSecretToSave = payload.appSecret
+        // Inbound webhooks are routed by phone number id, so it must belong to one workspace only
+        if (phoneNumberId) {
+            const claimedElsewhere = await prisma.tenant.count({
+                where: {
+                    id: { not: tenantId },
+                    settings: { path: ["whatsapp", "phoneNumberId"], equals: phoneNumberId },
+                },
+            })
+            if (claimedElsewhere) {
+                return { success: false, error: "This WhatsApp Phone Number ID is already connected to another workspace." }
+            }
         }
+
+        const keepToken = (t?: string) => (t && t !== LEGACY_VERIFY_TOKEN ? t : undefined)
 
         const updatedWa: WhatsAppConfig = {
-            phoneNumberId: payload.phoneNumberId ?? currentWa.phoneNumberId,
+            phoneNumberId,
             wabaId: payload.wabaId ?? currentWa.wabaId,
             appId: payload.appId ?? currentWa.appId,
-            appSecret: appSecretToSave,
-            accessToken: tokenToSave,
-            verifyToken: payload.verifyToken || currentWa.verifyToken || "genesoft_wa_verify_token",
+            appSecret: sealSecret(appSecretToSave),
+            accessToken: sealSecret(tokenToSave),
+            verifyToken: keepToken(payload.verifyToken) || keepToken(currentWa.verifyToken) || crypto.randomBytes(24).toString("hex"),
             defaultCountryCode: payload.defaultCountryCode || currentWa.defaultCountryCode || "91",
             mode: payload.mode,
             senderDisplayName: payload.senderDisplayName || currentWa.senderDisplayName,
@@ -114,7 +138,7 @@ export async function saveWhatsAppConfig(payload: {
         })
 
         revalidatePath("/crm/whatsapp")
-        return { success: true }
+        return { success: true, verifyToken: updatedWa.verifyToken }
     } catch (err: any) {
         console.error("Failed to save WhatsApp config:", err)
         return { success: false, error: err.message || "Failed to update configuration" }
@@ -135,7 +159,8 @@ export async function testWhatsAppConnection(testPhone?: string) {
         })
 
         const settings = (tenant?.settings as any) || {}
-        const wa: WhatsAppConfig = settings.whatsapp || { mode: "SIMULATION", defaultCountryCode: "91" }
+        const storedWa: WhatsAppConfig = settings.whatsapp || { mode: "SIMULATION", defaultCountryCode: "91" }
+        const wa: WhatsAppConfig = { ...storedWa, accessToken: openSecret(storedWa.accessToken) }
 
         if (wa.mode === "SIMULATION") {
             return {
@@ -149,6 +174,13 @@ export async function testWhatsAppConnection(testPhone?: string) {
             return {
                 success: false,
                 error: "Phone Number ID and Permanent Access Token are required for Meta Cloud API.",
+            }
+        }
+
+        if (!openSecret(storedWa.appSecret)) {
+            return {
+                success: false,
+                error: "Meta App Secret is missing. Incoming messages and delivery receipts are rejected until you add it in Gateway Settings.",
             }
         }
 
@@ -197,7 +229,8 @@ export async function sendWhatsAppMessage(payload: {
         })
 
         const settings = (tenant?.settings as any) || {}
-        const waConfig: WhatsAppConfig = settings.whatsapp || { mode: "SIMULATION", defaultCountryCode: "91" }
+        const storedWa: WhatsAppConfig = settings.whatsapp || { mode: "SIMULATION", defaultCountryCode: "91" }
+        const waConfig: WhatsAppConfig = { ...storedWa, accessToken: openSecret(storedWa.accessToken) }
 
         // Determine message text
         let messageText = payload.customText || ""

@@ -6,8 +6,8 @@ import crypto from "crypto"
 export const dynamic = "force-dynamic"
 
 export async function POST(req: Request) {
-  const body = await req.json()
-  const payload = JSON.stringify(body)
+  // Razorpay signs the exact raw bytes it sent, so verify before parsing
+  const payload = await req.text()
   const headerList = await headers()
   const signature = headerList.get("x-razorpay-signature")
 
@@ -15,15 +15,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing signature" }, { status: 400 })
   }
 
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET
+  if (!secret || secret === "your_razorpay_webhook_secret_here") {
+    console.error("Razorpay webhook received but RAZORPAY_WEBHOOK_SECRET is not configured")
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 })
+  }
+
   const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_WEBHOOK_SECRET!)
+    .createHmac("sha256", secret)
     .update(payload)
     .digest("hex")
 
-  if (signature !== expectedSignature) {
+  const a = Buffer.from(expectedSignature)
+  const b = Buffer.from(signature)
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
 
+  const body = JSON.parse(payload)
   const event = body.event
 
   // Handle successful payments

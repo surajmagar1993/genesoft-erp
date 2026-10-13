@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { CommunicationType, LeadStatus } from "@prisma/client"
@@ -30,7 +31,7 @@ export async function getWebFormsOverview(
     if (!tenantId) throw new Error("Authentication required")
 
     // Auto-seed starter forms and sample submissions if empty
-    await autoSeedWebFormsIfEmpty(tenantId)
+    if (isDemoSeedEnabled()) await autoSeedWebFormsIfEmpty(tenantId)
 
     // 1. Fetch Forms
     const whereForm: any = { tenantId }
@@ -222,10 +223,11 @@ export async function updateWebForm(
         if (data.notifyEmail !== undefined) updateData.notifyEmail = data.notifyEmail?.trim() || null
         if (data.primaryColor !== undefined) updateData.primaryColor = data.primaryColor
 
-        await prisma.webForm.update({
-            where: { id },
+        const { count } = await prisma.webForm.updateMany({
+            where: { id, tenantId },
             data: updateData,
         })
+        if (count === 0) return { error: "Form not found" }
 
         revalidatePath("/crm/forms")
         return { success: true }
@@ -240,7 +242,8 @@ export async function deleteWebForm(id: string): Promise<{ success?: boolean; er
         const tenantId = await getTenantId()
         if (!tenantId) return { error: "Authentication required" }
 
-        await prisma.webForm.delete({ where: { id } })
+        const { count } = await prisma.webForm.deleteMany({ where: { id, tenantId } })
+        if (count === 0) return { error: "Form not found" }
         revalidatePath("/crm/forms")
         return { success: true }
     } catch (err: any) {
@@ -254,10 +257,12 @@ export async function toggleWebFormStatus(
     newStatus: WebFormStatus
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        await prisma.webForm.update({
-            where: { id },
+        const tenantId = await getTenantId()
+        const { count } = await prisma.webForm.updateMany({
+            where: { id, tenantId },
             data: { status: newStatus },
         })
+        if (count === 0) return { error: "Form not found" }
 
         revalidatePath("/crm/forms")
         return { success: true }
@@ -291,9 +296,9 @@ export async function submitPublicForm(payload: SubmitPublicFormPayload): Promis
 
         // Find Form by ID or Code
         const form = await prisma.webForm.findFirst({
-            where: {
-                OR: [{ id: payload.formIdOrCode }, { code: payload.formIdOrCode }],
-            },
+            where: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(payload.formIdOrCode)
+                ? { OR: [{ id: payload.formIdOrCode }, { code: payload.formIdOrCode }] }
+                : { code: payload.formIdOrCode },
         })
 
         if (!form) {
@@ -508,7 +513,7 @@ export async function submitPublicForm(payload: SubmitPublicFormPayload): Promis
 // STARTER AUTO SEEDER (IF EMPTY)
 // ============================================
 
-export async function autoSeedWebFormsIfEmpty(tenantId: string): Promise<void> {
+async function autoSeedWebFormsIfEmpty(tenantId: string): Promise<void> {
     const count = await prisma.webForm.count({ where: { tenantId } })
     if (count > 0) return
 

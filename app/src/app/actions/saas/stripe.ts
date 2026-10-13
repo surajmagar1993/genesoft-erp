@@ -1,7 +1,7 @@
 "use server"
 
 import { stripe } from "@/lib/stripe"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId } from "@/lib/get-tenant-id"
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
@@ -20,7 +20,7 @@ const STRIPE_PLANS: Record<string, string> = {
  * Generate a Stripe Checkout Session for a new subscription
  */
 export async function createCheckoutSession(plan: "STARTER" | "PRO" | "ENTERPRISE"): Promise<{ url: string | null }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantAdminId()
   const successUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=billing&success=true`
   const cancelUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=billing&canceled=true`
 
@@ -69,7 +69,7 @@ export async function createCheckoutSession(plan: "STARTER" | "PRO" | "ENTERPRIS
  * Generate a Stripe Billing Portal link for an existing customer
  */
 export async function createPortalSession(): Promise<{ url: string | null }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantAdminId()
   const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=billing`
 
   if (!stripe) {

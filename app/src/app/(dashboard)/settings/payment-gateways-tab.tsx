@@ -322,6 +322,19 @@ export default function PaymentGatewaysTab({
                             />
                         </div>
 
+                        <div className="space-y-2">
+                            <Label className="text-xs font-semibold">PayPal Webhook ID</Label>
+                            <Input
+                                value={config.paypalWebhookId || ""}
+                                onChange={(e) => setConfig({ ...config, paypalWebhookId: e.target.value })}
+                                placeholder="Enter the Webhook ID shown in your PayPal app"
+                                className="font-mono text-xs"
+                            />
+                            <p className="text-[11px] text-muted-foreground">
+                                Required to verify PayPal payment notifications. Payments are not recorded without it.
+                            </p>
+                        </div>
+
                         {/* Webhook Endpoint Display */}
                         <div className="p-3 rounded-lg border border-border/60 bg-muted/20 space-y-1.5 mt-6">
                             <div className="flex items-center justify-between">

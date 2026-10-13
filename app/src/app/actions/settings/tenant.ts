@@ -1,7 +1,7 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
 export interface TenantAddress {
@@ -55,7 +55,7 @@ export async function getTenantSettings(): Promise<TenantSettings | null> {
 export async function updateTenantSettings(data: Partial<TenantSettings>): Promise<{ success: boolean; error?: string }> {
   try {
     const supabase = await createClient()
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantAdminId()
 
     if (!tenantId) {
       return { success: false, error: "Authentication required or tenant not identified." }

@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
@@ -208,7 +209,7 @@ export async function getBankReconciliationOverview(
     }
 
     // Check if initial bank accounts exist; if not, seed realistic data
-    await autoSeedBankingIfEmpty(tenantId)
+    if (isDemoSeedEnabled()) await autoSeedBankingIfEmpty(tenantId)
 
     // 1. Fetch all bank accounts
     const rawBankAccounts = await prisma.bankAccount.findMany({
@@ -561,6 +562,7 @@ export async function createBankAccount(data: CreateBankAccountInput): Promise<{
         if (!data.accountName?.trim()) return { error: "Account name is required" }
         if (!data.accountNumber?.trim()) return { error: "Account number is required" }
         if (!data.bankName?.trim()) return { error: "Bank name is required" }
+        if (!(await isTenantAccount(tenantId, data.chartOfAccountId))) return { error: "Linked ledger account not found" }
 
         // Check duplicates
         const existing = await prisma.bankAccount.findFirst({
@@ -659,10 +661,15 @@ export async function updateBankAccount(
         if (data.isPrimary !== undefined) updateData.isPrimary = data.isPrimary
         if (data.notes !== undefined) updateData.notes = data.notes?.trim() || null
 
-        await prisma.bankAccount.update({
-            where: { id },
+        if (!(await isTenantAccount(tenantId, updateData.chartOfAccountId))) {
+            return { error: "Linked ledger account not found" }
+        }
+
+        const { count } = await prisma.bankAccount.updateMany({
+            where: { id, tenantId },
             data: updateData,
         })
+        if (count === 0) return { error: "Bank account not found" }
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true }
@@ -685,9 +692,10 @@ export async function deleteBankAccount(id: string): Promise<{ success?: boolean
             return { error: "Cannot delete bank account with finalized reconciled statements." }
         }
 
-        await prisma.bankAccount.delete({
-            where: { id },
+        const { count } = await prisma.bankAccount.deleteMany({
+            where: { id, tenantId },
         })
+        if (count === 0) return { error: "Bank account not found" }
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true }
@@ -714,6 +722,9 @@ export async function importBankStatement(data: ImportBankStatementInput): Promi
         if (!data.statementNumber?.trim()) return { error: "Statement number is required" }
         if (!data.startDate || !data.endDate) return { error: "Statement period dates are required" }
         if (!data.lines || data.lines.length === 0) return { error: "At least one transaction line is required" }
+
+        const ownsAccount = await prisma.bankAccount.count({ where: { id: data.bankAccountId, tenantId } })
+        if (!ownsAccount) return { error: "Bank account not found" }
 
         const result = await prisma.$transaction(async (tx: any) => {
             const statement = await tx.bankStatement.create({
@@ -964,10 +975,20 @@ export async function matchTransactionManual(
             dataToUpdate.expenseId = null
         }
 
-        await prisma.bankTransaction.update({
-            where: { id: transactionId },
+        // The linked record must belong to the same tenant as the bank line
+        const linked =
+            matchType === "PAYMENT"
+                ? await prisma.payment.findFirst({ where: { id: recordId, tenantId }, select: { id: true } })
+                : matchType === "EXPENSE"
+                  ? await prisma.expense.findFirst({ where: { id: recordId, tenantId }, select: { id: true } })
+                  : await prisma.journalEntry.findFirst({ where: { id: recordId, tenantId }, select: { id: true } })
+        if (!linked) return { error: "Record not found" }
+
+        const { count } = await prisma.bankTransaction.updateMany({
+            where: { id: transactionId, tenantId },
             data: dataToUpdate,
         })
+        if (count === 0) return { error: "Transaction not found" }
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true }
@@ -985,8 +1006,8 @@ export async function unmatchTransaction(transactionId: string): Promise<{
         const tenantId = await getTenantId()
         if (!tenantId) return { error: "Authentication required" }
 
-        await prisma.bankTransaction.update({
-            where: { id: transactionId },
+        const { count } = await prisma.bankTransaction.updateMany({
+            where: { id: transactionId, tenantId },
             data: {
                 status: BankReconcileStatus.UNMATCHED,
                 matchedType: null,
@@ -998,6 +1019,7 @@ export async function unmatchTransaction(transactionId: string): Promise<{
                 matchConfidence: null,
             },
         })
+        if (count === 0) return { error: "Transaction not found" }
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true }
@@ -1005,6 +1027,12 @@ export async function unmatchTransaction(transactionId: string): Promise<{
         console.error("unmatchTransaction error:", err)
         return { error: err.message || "Failed to unmatch transaction" }
     }
+}
+
+/** True when the Chart of Accounts entry exists and belongs to this tenant. */
+async function isTenantAccount(tenantId: string, accountId: string | null | undefined): Promise<boolean> {
+    if (!accountId) return true
+    return (await prisma.account.count({ where: { id: accountId, tenantId } })) > 0
 }
 
 // ============================================
@@ -1019,8 +1047,8 @@ export async function createQuickExpenseAndReconcile(
         const tenantId = await getTenantId()
         if (!tenantId) return { error: "Authentication required" }
 
-        const bTxn = await prisma.bankTransaction.findUnique({
-            where: { id: transactionId },
+        const bTxn = await prisma.bankTransaction.findFirst({
+            where: { id: transactionId, tenantId },
             include: { bankAccount: true },
         })
 
@@ -1028,6 +1056,7 @@ export async function createQuickExpenseAndReconcile(
         if (!payload.title?.trim()) return { error: "Expense title is required" }
         if (!payload.category?.trim()) return { error: "Category is required" }
         if (!payload.accountId) return { error: "Expense account is required" }
+        if (!(await isTenantAccount(tenantId, payload.accountId))) return { error: "Expense account not found" }
 
         const year = new Date().getFullYear()
         const count = await prisma.expense.count({ where: { tenantId } })
@@ -1146,8 +1175,8 @@ export async function finalizeReconciliation(statementId: string): Promise<{
         const tenantId = await getTenantId()
         if (!tenantId) return { error: "Authentication required" }
 
-        const statement = await prisma.bankStatement.findUnique({
-            where: { id: statementId },
+        const statement = await prisma.bankStatement.findFirst({
+            where: { id: statementId, tenantId },
             include: { transactions: true },
         })
 
@@ -1198,7 +1227,7 @@ export async function finalizeReconciliation(statementId: string): Promise<{
 // AUTO SEEDER (IF EMPTY)
 // ============================================
 
-export async function autoSeedBankingIfEmpty(tenantId: string): Promise<void> {
+async function autoSeedBankingIfEmpty(tenantId: string): Promise<void> {
     const existingCount = await prisma.bankAccount.count({ where: { tenantId } })
     if (existingCount > 0) return
 

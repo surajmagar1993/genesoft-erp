@@ -35,7 +35,7 @@ This task list adapts the Genesoft ERP project for standard Node.js hosting plat
 
 ### 3. Environment Variables
 - [x] Confirm all required env vars are set on Vercel:
-    - `DATABASE_URL` — Supabase direct connection (port 5432, NOT PgBouncer)
+    - `DATABASE_URL` — Supabase pooler on Vercel (port 6543); `DIRECT_URL` (port 5432) for Prisma tooling
     - `NEXT_PUBLIC_SUPABASE_URL`
     - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
     - `RESEND_API_KEY`

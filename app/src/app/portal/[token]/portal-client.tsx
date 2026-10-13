@@ -12,6 +12,7 @@ import {
   addPortalTicketMessage,
   payPortalInvoice,
 } from "@/app/actions/portal/portal"
+import { PORTAL_ONLINE_PAYMENTS_ENABLED } from "@/app/actions/portal/portal-types"
 import type {
   PortalDashboardData,
   PortalInvoiceRecord,
@@ -583,7 +584,7 @@ function InvoicesTab({
                   <span>Tax: {formatCurrency(inv.taxAmount, inv.currencyCode)}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {inv.balanceDue > 0 && inv.status !== "PAID" && (
+                  {PORTAL_ONLINE_PAYMENTS_ENABLED && inv.balanceDue > 0 && inv.status !== "PAID" && (
                     <button
                       type="button"
                       onClick={() => {

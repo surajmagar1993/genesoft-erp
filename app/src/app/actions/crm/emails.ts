@@ -1,8 +1,11 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId } from "@/lib/get-tenant-id"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
+import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
+import { openSecret, sealSecret } from "@/lib/secret-box"
 import { revalidatePath } from "next/cache"
+import { checkSmtpTarget } from "@/lib/smtp-guard"
 import { CommunicationType } from "@prisma/client"
 import {
     EmailDirection,
@@ -36,7 +39,7 @@ export async function getEmailsOverview(
     if (!tenantId) throw new Error("Authentication required")
 
     // Auto-seed starter mailboxes and threads if empty
-    await autoSeedEmailsIfEmpty(tenantId)
+    if (isDemoSeedEnabled()) await autoSeedEmailsIfEmpty(tenantId)
 
     // 1. Fetch email accounts
     const rawAccounts = await prisma.emailAccount.findMany({
@@ -260,6 +263,27 @@ export async function getEmailsOverview(
 // SEND EMAIL ACTION
 // ============================================
 
+/**
+ * Rejects caller-supplied record IDs that belong to another tenant.
+ * Returns an error message, or null when every provided ID is the caller's own.
+ */
+async function findForeignLink(
+    tenantId: string,
+    links: { emailAccountId?: string | null; contactId?: string | null; leadId?: string | null; dealId?: string | null }
+): Promise<string | null> {
+    const [account, contact, lead, deal] = await Promise.all([
+        links.emailAccountId ? prisma.emailAccount.count({ where: { id: links.emailAccountId, tenantId } }) : 1,
+        links.contactId ? prisma.contact.count({ where: { id: links.contactId, tenantId } }) : 1,
+        links.leadId ? prisma.lead.count({ where: { id: links.leadId, tenantId } }) : 1,
+        links.dealId ? prisma.deal.count({ where: { id: links.dealId, tenantId } }) : 1,
+    ])
+    if (!account) return "Mailbox not found"
+    if (!contact) return "Contact not found"
+    if (!lead) return "Lead not found"
+    if (!deal) return "Deal not found"
+    return null
+}
+
 export async function sendEmail(data: SendEmailInput): Promise<{
     success?: boolean
     messageId?: string
@@ -275,6 +299,9 @@ export async function sendEmail(data: SendEmailInput): Promise<{
         const finalBodyHtml = data.bodyHtml || `<p>${finalBodyText.replace(/\n/g, "<br/>")}</p>`
         if (!finalBodyText.trim() && !data.bodyHtml?.trim()) return { error: "Email body content is required" }
 
+        const foreignLink = await findForeignLink(tenantId, data)
+        if (foreignLink) return { error: foreignLink }
+
         // Find or default account
         let emailAccountId = data.emailAccountId
         let senderEmail = "sales@acmeglobal.com"
@@ -282,7 +309,7 @@ export async function sendEmail(data: SendEmailInput): Promise<{
         let accountRecord: any = null
 
         if (emailAccountId) {
-            accountRecord = await prisma.emailAccount.findUnique({ where: { id: emailAccountId } })
+            accountRecord = await prisma.emailAccount.findFirst({ where: { id: emailAccountId, tenantId } })
             if (accountRecord) {
                 senderEmail = accountRecord.email
                 senderName = accountRecord.name
@@ -304,6 +331,9 @@ export async function sendEmail(data: SendEmailInput): Promise<{
             accountRecord.smtpPassword &&
             !accountRecord.smtpHost.includes(".local")
         ) {
+            const blocked = await checkSmtpTarget(accountRecord.smtpHost, Number(accountRecord.smtpPort) || 587)
+            if (blocked) return { error: blocked }
+
             try {
                 const nodemailer = await import("nodemailer")
                 const transporter = nodemailer.createTransport({
@@ -312,7 +342,7 @@ export async function sendEmail(data: SendEmailInput): Promise<{
                     secure: accountRecord.smtpSecure ?? (Number(accountRecord.smtpPort) === 465),
                     auth: {
                         user: accountRecord.smtpUser?.trim() || accountRecord.email.trim(),
-                        pass: accountRecord.smtpPassword.trim(),
+                        pass: openSecret(accountRecord.smtpPassword).trim(),
                     },
                     connectionTimeout: 10000,
                 })
@@ -414,6 +444,9 @@ export async function saveEmailDraft(data: Partial<SendEmailInput>): Promise<{
         const tenantId = await getTenantId()
         if (!tenantId) return { error: "Authentication required" }
 
+        const foreignLink = await findForeignLink(tenantId, data)
+        if (foreignLink) return { error: foreignLink }
+
         const draft = await prisma.emailMessage.create({
             data: {
                 tenantId,
@@ -442,11 +475,12 @@ export async function saveEmailDraft(data: Partial<SendEmailInput>): Promise<{
 
 export async function toggleStarEmail(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const msg = await prisma.emailMessage.findUnique({ where: { id } })
+        const tenantId = await getTenantId()
+        const msg = await prisma.emailMessage.findFirst({ where: { id, tenantId } })
         if (!msg) return { error: "Message not found" }
 
         await prisma.emailMessage.update({
-            where: { id },
+            where: { id: msg.id },
             data: { isStarred: !msg.isStarred },
         })
 
@@ -460,10 +494,12 @@ export async function toggleStarEmail(id: string): Promise<{ success?: boolean; 
 
 export async function markEmailAsRead(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        await prisma.emailMessage.update({
-            where: { id },
+        const tenantId = await getTenantId()
+        const { count } = await prisma.emailMessage.updateMany({
+            where: { id, tenantId },
             data: { isRead: true },
         })
+        if (count === 0) return { error: "Message not found" }
 
         revalidatePath("/crm/emails")
         return { success: true }
@@ -475,7 +511,9 @@ export async function markEmailAsRead(id: string): Promise<{ success?: boolean; 
 
 export async function deleteEmailMessage(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        await prisma.emailMessage.delete({ where: { id } })
+        const tenantId = await getTenantId()
+        const { count } = await prisma.emailMessage.deleteMany({ where: { id, tenantId } })
+        if (count === 0) return { error: "Message not found" }
         revalidatePath("/crm/emails")
         return { success: true }
     } catch (err: any) {
@@ -490,13 +528,12 @@ export async function syncMailbox(mailboxId: string): Promise<{
     error?: string
 }> {
     try {
-        await prisma.emailAccount.update({
-            where: { id: mailboxId },
-            data: { lastSyncedAt: new Date() },
-        })
+        const tenantId = await getTenantId()
+        const exists = await prisma.emailAccount.count({ where: { id: mailboxId, tenantId } })
+        if (!exists) return { error: "Mailbox not found" }
 
-        revalidatePath("/crm/emails")
-        return { success: true, syncedCount: 3 }
+        // No IMAP client is wired up yet; say so instead of reporting a fake sync
+        return { error: "Inbox sync isn't available yet. Emails you send from here are still logged." }
     } catch (err: any) {
         console.error("syncMailbox error:", err)
         return { error: err.message || "Failed to sync mailbox" }
@@ -513,7 +550,7 @@ export async function createEmailAccount(data: CreateEmailAccountInput): Promise
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantAdminId()
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.name?.trim()) return { error: "Account name is required" }
@@ -535,12 +572,12 @@ export async function createEmailAccount(data: CreateEmailAccountInput): Promise
                 smtpHost: data.smtpHost?.trim() || null,
                 smtpPort: data.smtpPort ? Number(data.smtpPort) : 587,
                 smtpUser: data.smtpUser?.trim() || null,
-                smtpPassword: data.smtpPassword?.trim() || null,
+                smtpPassword: sealSecret(data.smtpPassword?.trim() || null),
                 smtpSecure: data.smtpSecure !== false,
                 imapHost: data.imapHost?.trim() || null,
                 imapPort: data.imapPort ? Number(data.imapPort) : 993,
                 imapUser: data.imapUser?.trim() || null,
-                imapPassword: data.imapPassword?.trim() || null,
+                imapPassword: sealSecret(data.imapPassword?.trim() || null),
                 imapSecure: data.imapSecure !== false,
                 isDefault: !!data.isDefault,
                 isActive: true,
@@ -563,9 +600,14 @@ export async function testSmtpConnection(params: {
     secure?: boolean
 }): Promise<{ success: boolean; message: string }> {
     try {
+        await getTenantAdminId()
+
         if (!params.host?.trim()) {
             return { success: false, message: "SMTP host server is required." }
         }
+
+        const blocked = await checkSmtpTarget(params.host, Number(params.port) || 587)
+        if (blocked) return { success: false, message: blocked }
 
         const nodemailer = await import("nodemailer")
         const transporter = nodemailer.createTransport({
@@ -590,7 +632,9 @@ export async function testSmtpConnection(params: {
 
 export async function deleteEmailAccount(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        await prisma.emailAccount.delete({ where: { id } })
+        const tenantId = await getTenantAdminId()
+        const { count } = await prisma.emailAccount.deleteMany({ where: { id, tenantId } })
+        if (count === 0) return { error: "Mailbox not found" }
         revalidatePath("/crm/emails")
         return { success: true }
     } catch (err: any) {
@@ -639,7 +683,9 @@ export async function createEmailTemplate(data: CreateEmailTemplateInput): Promi
 
 export async function deleteEmailTemplate(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        await prisma.emailTemplate.delete({ where: { id } })
+        const tenantId = await getTenantId()
+        const { count } = await prisma.emailTemplate.deleteMany({ where: { id, tenantId } })
+        if (count === 0) return { error: "Template not found" }
         revalidatePath("/crm/emails")
         return { success: true }
     } catch (err: any) {
@@ -652,7 +698,7 @@ export async function deleteEmailTemplate(id: string): Promise<{ success?: boole
 // AUTO SEEDER (IF EMPTY)
 // ============================================
 
-export async function autoSeedEmailsIfEmpty(tenantId: string): Promise<void> {
+async function autoSeedEmailsIfEmpty(tenantId: string): Promise<void> {
     const accountCount = await prisma.emailAccount.count({ where: { tenantId } })
     if (accountCount > 0) return
 

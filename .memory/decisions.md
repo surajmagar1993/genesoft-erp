@@ -106,3 +106,11 @@
 - **Rationale**: Guarantees zero build-time friction regardless of whether the hosting platform detects the root directory or the `app` subdirectory.
 - **Status**: ✅ Complete — verified with passing root `npm run build` and `PORT=3001 npm start`.
 
+
+---
+
+## [2026-10-13] Security Hardening & Honest Feature Labels
+- **Context**: A full code review found cross-tenant writes (Prisma bypasses RLS), unsigned/forgeable webhooks, plaintext stored credentials, and modules that looked finished but were simulated.
+- **Decision**: Scope every by-id query to `tenantId` and verify referenced ids; admin-only settings via `getTenantAdminId()`; verify Razorpay/PayPal/WhatsApp webhook signatures and fail closed; encrypt tenant credentials with `ENCRYPTION_KEY` (`secret-box.ts`); gate demo seeders behind `ENABLE_DEMO_SEED`; rename `middleware.ts` → `proxy.ts` for Next.js 16; label e-way bills as drafts and mark workflows, mailbox sync and live checkout as not yet available.
+- **Rationale**: The application layer is the only tenant boundary, and statutory documents must not look government-issued when they are not.
+- **Status**: ✅ Implemented and build-verified; `app/harden_profiles_rls.sql` written but not yet applied.

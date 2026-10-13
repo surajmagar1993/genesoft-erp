@@ -6,11 +6,12 @@ import { notFound } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
-export default async function LeadDetailPage({ params }: { params: { id: string } }) {
+export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
     const [lead, tasks, logs] = await Promise.all([
-        getLeadById(params.id),
-        getTasks(1, 50, { lead_id: params.id }),
-        getCommunicationLogs(1, 50, { lead_id: params.id })
+        getLeadById(id),
+        getTasks(1, 50, { lead_id: id }),
+        getCommunicationLogs(1, 50, { lead_id: id })
     ])
 
     if (!lead) {

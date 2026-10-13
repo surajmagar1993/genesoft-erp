@@ -15,45 +15,32 @@ import { Resend } from "resend"
  * Ensures current caller has SUPER_ADMIN permissions.
  */
 async function ensureSuperAdmin() {
+    let supabase: Awaited<ReturnType<typeof createClient>>
     try {
-        let user: any = null
-        try {
-            const supabase = await createClient()
-            const { data } = await supabase.auth.getUser()
-            user = data?.user
-        } catch {
-            // Called outside Next.js request scope (e.g. CLI verification or background task)
-            return { id: "dev-admin-id", email: "admin@genesoft.ai" }
-        }
-
-        if (!user) {
-            if (process.env.NODE_ENV !== "production") {
-                return { id: "dev-admin-id", email: "admin@genesoft.ai" }
-            }
-            throw new Error("Unauthorized: Please sign in")
-        }
-
-        const supabase = await createClient()
-        const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", user.id)
-            .single()
-
-        if (!profile || (profile as any).role !== "SUPER_ADMIN") {
-            if (process.env.NODE_ENV !== "production") {
-                return { id: user.id, email: user.email || "admin@genesoft.ai" }
-            }
-            throw new Error("Forbidden: Super Admin access required")
-        }
-
-        return user
-    } catch (err: any) {
+        supabase = await createClient()
+    } catch {
+        // Only reachable outside a Next.js request (CLI verification scripts), never from a browser request
         if (process.env.NODE_ENV !== "production") {
             return { id: "dev-admin-id", email: "admin@genesoft.ai" }
         }
-        throw err
+        throw new Error("Unauthorized: Please sign in")
     }
+
+    const { data } = await supabase.auth.getUser()
+    const user = data?.user
+    if (!user) throw new Error("Unauthorized: Please sign in")
+
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+
+    if (!profile || (profile as any).role !== "SUPER_ADMIN") {
+        throw new Error("Forbidden: Super Admin access required")
+    }
+
+    return user
 }
 
 /**

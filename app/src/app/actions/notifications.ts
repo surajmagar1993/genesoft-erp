@@ -128,6 +128,18 @@ export async function createNotification(data: {
   try {
     const supabase = await createClient()
 
+    // Callable from the client as a server action: only allow notifying users within the caller's own tenant
+    const tenantId = await getTenantId()
+    if (data.tenantId !== tenantId) throw new Error("Unauthorized")
+
+    const { data: recipient } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("id", data.userId)
+      .eq("tenant_id", tenantId)
+      .single()
+    if (!recipient) throw new Error("Unauthorized")
+
     const { error } = await supabase
       .from("notifications")
       .insert({

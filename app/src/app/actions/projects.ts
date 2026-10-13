@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
@@ -470,7 +471,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
     const tenantId = await getTenantId()
 
     // Auto seed starter data if workspace is empty
-    await autoSeedProjectsIfEmpty(tenantId)
+    if (isDemoSeedEnabled()) await autoSeedProjectsIfEmpty(tenantId)
 
     // 1. Fetch all projects with aggregates
     const rawProjects = await prisma.project.findMany({

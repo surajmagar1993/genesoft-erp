@@ -28,7 +28,11 @@ Application source code including components, hooks, actions, and utilities.
   - `australia-tax-engine.ts`: Australia ATO BAS Form & Modulus 89 ABN.
   - `saas-subscription-engine.ts`: Real-time proration mathematics.
   - `email-template-engine.ts`: Transactional email compiler & merge tags.
-  - `get-tenant-id.ts`: Multi-tenant boundary helper.
+  - `get-tenant-id.ts`: Multi-tenant boundary helper (`getTenantId`, plus `getTenantAdminId` for admin-only settings).
+  - `secret-box.ts`: AES-256-GCM `sealSecret`/`openSecret`/`maskSecret` for stored tenant credentials (`ENCRYPTION_KEY`).
+  - `demo-seed.ts`: `isDemoSeedEnabled()` gate for sample-data seeders (`ENABLE_DEMO_SEED`).
+  - `invoice-mapper.ts`: Prisma invoice → `InvoiceDB` mapper shared by actions and the portal PDF route.
+  - `smtp-guard.ts`: Rejects private/internal SMTP hosts and non-mail ports.
   - `utils.ts`: `formatCurrency(amount, code)` global formatter.
   - `prisma.ts`: Prisma client singleton with `@prisma/adapter-pg`.
 
@@ -52,6 +56,9 @@ async function getEntity(
 ### Form Placeholder Rule
 > ⚠️ **NEVER** hardcode example values like `"QT-2024-001"` or `"John Doe"` in form placeholders.
 > Always use instructional text: `"Enter quotation number"`, `"Contact full name"`.
+
+### Tenant Scoping (Required)
+Prisma bypasses RLS. Any query using a client-supplied id must include `tenantId`, and referenced ids must be verified against the tenant. See "Security Rules" in the root `CLAUDE.md`.
 
 ### Dynamic API Routes
 All API routes that access the database MUST include:
