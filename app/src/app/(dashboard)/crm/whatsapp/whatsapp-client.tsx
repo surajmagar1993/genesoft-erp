@@ -25,7 +25,11 @@ import {
     Calendar,
     ArrowUpRight,
     Loader2,
+    Info,
+    Key,
+    Lock,
 } from "lucide-react"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -59,15 +63,15 @@ interface Props {
         phone: string | null
         email: string | null
         type: string
-        updatedAt: Date
+        updatedAt: Date | string
     }>
     invoices: Array<{
         id: string
         invoice_number: string
         customer_name: string
-        total_amount: any
+        total_amount: number | string
         status: string
-        due_date: Date | null
+        due_date: Date | string | null
         contact?: { id: string; name: string; phone: string | null } | null
     }>
     companyName: string
@@ -865,39 +869,73 @@ export default function WhatsAppClient({
                                         onChange={(e) => setConfig({ ...config, mode: e.target.value as any })}
                                         className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
                                     >
-                                        <option value="SIMULATION">Simulation Gateway (Zero API Key required)</option>
+                                        <option value="SIMULATION">Simulation Gateway (Zero API Key required - Sandbox)</option>
                                         <option value="DIRECT_LINK">Direct wa.me Links Only (WhatsApp Web / App)</option>
                                         <option value="CLOUD_API">Meta Graph API v20.0 (Automated Server Delivery)</option>
                                     </select>
                                 </div>
 
-                                <div className="space-y-1.5">
-                                    <Label className="text-xs font-semibold">Phone Number ID (Meta Graph API)</Label>
-                                    <Input
-                                        value={config.phoneNumberId || ""}
-                                        onChange={(e) => setConfig({ ...config, phoneNumberId: e.target.value })}
-                                        placeholder="e.g. 109283746501928"
-                                        className="text-xs bg-background"
-                                    />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold">Phone Number ID (Meta Graph API)</Label>
+                                        <Input
+                                            value={config.phoneNumberId || ""}
+                                            onChange={(e) => setConfig({ ...config, phoneNumberId: e.target.value })}
+                                            placeholder="e.g. 109283746501928"
+                                            className="text-xs bg-background"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold">WhatsApp Business Account (WABA ID)</Label>
+                                        <Input
+                                            value={config.wabaId || ""}
+                                            onChange={(e) => setConfig({ ...config, wabaId: e.target.value })}
+                                            placeholder="e.g. 293847561029384"
+                                            className="text-xs bg-background"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold">Meta App ID (Client ID)</Label>
+                                        <Input
+                                            value={config.appId || ""}
+                                            onChange={(e) => setConfig({ ...config, appId: e.target.value })}
+                                            placeholder="e.g. 849302194857201"
+                                            className="text-xs bg-background font-mono"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold">Meta App Secret</Label>
+                                        <PasswordInput
+                                            value={config.appSecret || ""}
+                                            onChange={(e) => setConfig({ ...config, appSecret: e.target.value })}
+                                            placeholder="App Secret from Meta Dashboard"
+                                            className="text-xs bg-background font-mono"
+                                        />
+                                    </div>
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-semibold">WhatsApp Business Account ID (WABA ID)</Label>
-                                    <Input
-                                        value={config.wabaId || ""}
-                                        onChange={(e) => setConfig({ ...config, wabaId: e.target.value })}
-                                        placeholder="e.g. 293847561029384"
-                                        className="text-xs bg-background"
-                                    />
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <Label className="text-xs font-semibold">Permanent System User Access Token</Label>
-                                    <Input
-                                        type="password"
+                                    <Label className="text-xs font-semibold flex items-center justify-between">
+                                        <span>Permanent System User Access Token</span>
+                                        <span className="text-[10px] text-muted-foreground font-normal">Supports Eye toggle</span>
+                                    </Label>
+                                    <PasswordInput
                                         value={config.accessToken || ""}
                                         onChange={(e) => setConfig({ ...config, accessToken: e.target.value })}
-                                        placeholder="EAAG..."
+                                        placeholder="EAAG... (System User Permanent Token)"
+                                        className="text-xs bg-background font-mono"
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <Label className="text-xs font-semibold">Webhook Verify Token</Label>
+                                    <Input
+                                        value={config.verifyToken || "genesoft_wa_verify_token"}
+                                        onChange={(e) => setConfig({ ...config, verifyToken: e.target.value })}
+                                        placeholder="genesoft_wa_verify_token"
                                         className="text-xs bg-background font-mono"
                                     />
                                 </div>
@@ -922,6 +960,15 @@ export default function WhatsAppClient({
                                         />
                                     </div>
                                 </div>
+
+                                {config.mode === "CLOUD_API" && (
+                                    <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start gap-2">
+                                        <Info className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600" />
+                                        <span>
+                                            In <strong>Meta Cloud API</strong> mode, messages are dispatched directly via Meta Graph API v20.0. Ensure your Meta System User has permissions: <code className="font-mono font-bold">whatsapp_business_messaging</code> and <code className="font-mono font-bold">whatsapp_business_management</code>.
+                                        </span>
+                                    </div>
+                                )}
 
                                 <div className="pt-3 border-t flex items-center justify-end gap-2">
                                     <Button

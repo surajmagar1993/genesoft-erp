@@ -9,11 +9,15 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Save, X, Loader2 } from "lucide-react"
+import { ArrowLeft, Save, X, Loader2, AlertCircle } from "lucide-react"
 import { COUNTRIES } from "@/lib/constants/countries"
 import { createContact, updateContact } from "@/app/actions/crm/contacts"
 import { TAX_EXEMPTION_REASONS } from "@/lib/gst-engine"
 import { Switch } from "@/components/ui/switch"
+import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
+import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { toast } from "sonner"
 
 export interface ContactFormData {
     type: "INDIVIDUAL" | "COMPANY"
@@ -107,26 +111,46 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
         setIsSubmitting(true)
         setSaveError(null)
 
-        const displayName =
-            form.type === "COMPANY"
-                ? form.companyName
-                : `${form.firstName} ${form.lastName}`.trim()
+        // Validate required fields
+        if (form.type === "COMPANY" && !form.companyName.trim()) {
+            const err = "Please enter Company Name."
+            setSaveError(err)
+            toast.error(err)
+            setIsSubmitting(false)
+            return
+        }
+
+        if (form.type === "INDIVIDUAL" && !form.firstName.trim() && !form.lastName.trim() && !form.displayName.trim()) {
+            const err = "Please enter First Name or Contact Name."
+            setSaveError(err)
+            toast.error(err)
+            setIsSubmitting(false)
+            return
+        }
+
+        let computedDisplayName = form.type === "COMPANY"
+            ? form.companyName.trim()
+            : `${form.firstName} ${form.lastName}`.trim()
+
+        if (!computedDisplayName) {
+            computedDisplayName = form.displayName.trim() || form.email.trim() || "New Contact"
+        }
 
         const payload = {
-            display_name: displayName || form.displayName,
+            display_name: computedDisplayName,
             type: form.type,
-            first_name: form.type === "INDIVIDUAL" ? form.firstName : null,
-            last_name: form.type === "INDIVIDUAL" ? form.lastName : null,
-            company_name: form.type === "COMPANY" ? form.companyName : null,
-            email: form.email || null,
+            first_name: form.type === "INDIVIDUAL" ? (form.firstName || null) : null,
+            last_name: form.type === "INDIVIDUAL" ? (form.lastName || null) : null,
+            company_name: form.type === "COMPANY" ? (form.companyName || null) : null,
+            email: form.email ? form.email.trim() : null,
             phone: form.phone ? `${form.phoneDialCode} ${form.phone}`.trim() : null,
             mobile: form.mobile ? `${form.mobileDialCode} ${form.mobile}`.trim() : null,
             website: form.website || null,
             customer_group: form.customerGroup || "retail",
             country_code: form.countryCode || "IN",
             currency_code: form.currencyCode || "INR",
-            gstin: form.gstin || null,
-            pan: form.pan || null,
+            gstin: form.gstin ? form.gstin.trim() : null,
+            pan: form.pan ? form.pan.trim() : null,
             cin: form.cin || null,
             tan: form.tan || null,
             msme_udyam: form.msmeUdyam || null,
@@ -158,21 +182,36 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
             is_active: true,
         }
 
-        const result = mode === "create"
-            ? await createContact(payload as any)
-            : await updateContact(initialData!.id!, payload as any)
+        try {
+            const result = mode === "create"
+                ? await createContact(payload as any)
+                : await updateContact(initialData!.id!, payload as any)
 
-        if (result.error) {
-            setSaveError(result.error)
+            if (result.error) {
+                setSaveError(result.error)
+                toast.error(result.error)
+                setIsSubmitting(false)
+            } else {
+                toast.success(mode === "create" ? "Contact created successfully!" : "Contact updated successfully!")
+                router.push("/crm/contacts")
+                router.refresh()
+            }
+        } catch (err: any) {
+            const msg = err.message || "Failed to save contact"
+            setSaveError(msg)
+            toast.error(msg)
             setIsSubmitting(false)
-        } else {
-            router.push("/crm/contacts")
-            router.refresh()
         }
     }
 
     return (
         <div className="space-y-6">
+            {saveError && (
+                <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{saveError}</AlertDescription>
+                </Alert>
+            )}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => router.push("/crm/contacts")}>
@@ -483,24 +522,80 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                         <TabsContent value="address" className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="billingStreet">Street Address</Label>
-                                <Input id="billingStreet" value={form.billingStreet} onChange={(e) => update("billingStreet", e.target.value)} />
+                                <Input
+                                    id="billingStreet"
+                                    value={form.billingStreet}
+                                    onChange={(e) => update("billingStreet", e.target.value)}
+                                    placeholder="e.g. 123 Business Boulevard, Suite 400"
+                                />
                             </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="billingCity">City</Label>
-                                    <Input id="billingCity" value={form.billingCity} onChange={(e) => update("billingCity", e.target.value)} />
+                                    <Label htmlFor="billingCountry">Country</Label>
+                                    <AutoSuggestInput
+                                        id="billingCountry"
+                                        value={form.billingCountry}
+                                        onChange={(e) => update("billingCountry", e.target.value)}
+                                        options={searchCountries(form.billingCountry).map((c) => ({
+                                            label: c.name,
+                                            value: c.name,
+                                            subLabel: c.code,
+                                            icon: c.flag,
+                                        }))}
+                                        onSelectOption={(opt) => {
+                                            update("billingCountry", opt.value)
+                                            if (opt.subLabel) update("countryCode", opt.subLabel)
+                                        }}
+                                        placeholder="Start typing country (e.g. India, United States)..."
+                                    />
                                 </div>
+
                                 <div className="space-y-2">
                                     <Label htmlFor="billingState">State / Province</Label>
-                                    <Input id="billingState" value={form.billingState} onChange={(e) => update("billingState", e.target.value)} />
+                                    <AutoSuggestInput
+                                        id="billingState"
+                                        value={form.billingState}
+                                        onChange={(e) => update("billingState", e.target.value)}
+                                        options={searchStates(form.billingState, form.billingCountry).map((s) => ({
+                                            label: s.name,
+                                            value: s.name,
+                                            subLabel: s.code,
+                                        }))}
+                                        onSelectOption={(opt) => update("billingState", opt.value)}
+                                        placeholder="Start typing state (e.g. Maharashtra, California)..."
+                                    />
                                 </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="billingCity">City</Label>
+                                    <AutoSuggestInput
+                                        id="billingCity"
+                                        value={form.billingCity}
+                                        onChange={(e) => update("billingCity", e.target.value)}
+                                        options={searchCities(form.billingCity, form.billingState, form.billingCountry).map((city) => ({
+                                            label: city.name,
+                                            value: city.name,
+                                            subLabel: city.stateName,
+                                        }))}
+                                        onSelectOption={(opt) => {
+                                            update("billingCity", opt.value)
+                                            if (!form.billingState && opt.subLabel) {
+                                                update("billingState", opt.subLabel)
+                                            }
+                                        }}
+                                        placeholder="Start typing city (e.g. Mumbai, New York, Dubai)..."
+                                    />
+                                </div>
+
                                 <div className="space-y-2">
                                     <Label htmlFor="billingZip">ZIP / Postal Code</Label>
-                                    <Input id="billingZip" value={form.billingZip} onChange={(e) => update("billingZip", e.target.value)} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="billingCountry">Country</Label>
-                                    <Input id="billingCountry" value={form.billingCountry} onChange={(e) => update("billingCountry", e.target.value)} />
+                                    <Input
+                                        id="billingZip"
+                                        value={form.billingZip}
+                                        onChange={(e) => update("billingZip", e.target.value)}
+                                        placeholder="e.g. 400001, 10001"
+                                    />
                                 </div>
                             </div>
                         </TabsContent>

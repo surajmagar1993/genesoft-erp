@@ -45,12 +45,9 @@ export const TAX_JURISDICTIONS: Record<string, TaxJurisdictionConfig> = {
     taxLabel: "GST",
     defaultRate: 18.0,
     standardRates: [0, 5, 12, 18, 28],
-    financeTaxItems: [
-      { name: "GST Returns (GSTR)", href: "/finance/gst-returns", shortName: "🇮🇳 India GST" },
-      { name: "TDS & Withholding", href: "/finance/tds", shortName: "🇮🇳 TDS 26Q" },
-    ],
-    hasEwayBills: true,
-    hasWithholdingTax: true,
+    financeTaxItems: [],
+    hasEwayBills: false,
+    hasWithholdingTax: false,
   },
   AE: {
     countryCode: "AE",

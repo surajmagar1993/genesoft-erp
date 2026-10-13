@@ -51,6 +51,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
+import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -325,6 +327,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
     const [whAddress, setWhAddress] = useState("")
     const [whCity, setWhCity] = useState("")
     const [whState, setWhState] = useState("")
+    const [whCountry, setWhCountry] = useState("India")
     const [whContactName, setWhContactName] = useState("")
     const [whContactPhone, setWhContactPhone] = useState("")
     const [whIsDefault, setWhIsDefault] = useState(false)
@@ -385,6 +388,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
         setWhAddress(warehouse.address || "")
         setWhCity(warehouse.city || "")
         setWhState(warehouse.state || "")
+        setWhCountry(warehouse.country || "India")
         setWhContactName(warehouse.contactName || "")
         setWhContactPhone(warehouse.contactPhone || "")
         setWhIsDefault(warehouse.isDefault)
@@ -399,6 +403,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
         setWhAddress("")
         setWhCity("")
         setWhState("")
+        setWhCountry("India")
         setWhContactName("")
         setWhContactPhone("")
         setWhIsDefault(initialData.warehouses.length === 0)
@@ -502,6 +507,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                     address: whAddress,
                     city: whCity,
                     state: whState,
+                    country: whCountry,
                     contactName: whContactName,
                     contactPhone: whContactPhone,
                     isDefault: whIsDefault
@@ -514,6 +520,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                     address: whAddress,
                     city: whCity,
                     state: whState,
+                    country: whCountry,
                     contactName: whContactName,
                     contactPhone: whContactPhone,
                     isDefault: whIsDefault
@@ -2309,23 +2316,63 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                             />
                         </div>
 
+                        <div className="space-y-2">
+                            <Label className="text-xs font-medium">Country</Label>
+                            <AutoSuggestInput
+                                id="wh-country"
+                                value={whCountry}
+                                onChange={(e) => setWhCountry(e.target.value)}
+                                options={searchCountries(whCountry).map((c) => ({
+                                    label: c.name,
+                                    value: c.name,
+                                    subLabel: c.code,
+                                    icon: c.flag,
+                                }))}
+                                onSelectOption={(opt) => setWhCountry(opt.value)}
+                                placeholder="Start typing country..."
+                                className="text-xs h-9"
+                            />
+                        </div>
+
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-2">
-                                <Label className="text-xs font-medium">City</Label>
-                                <Input 
-                                    placeholder="Mumbai"
-                                    value={whCity}
-                                    onChange={(e) => setWhCity(e.target.value)}
-                                    className="text-xs"
+                                <Label className="text-xs font-medium">State / Region</Label>
+                                <AutoSuggestInput
+                                    id="wh-state"
+                                    value={whState}
+                                    onChange={(e) => setWhState(e.target.value)}
+                                    options={searchStates(whState, whCountry).map((s) => ({
+                                        label: s.name,
+                                        value: s.name,
+                                        subLabel: s.code,
+                                    }))}
+                                    onSelectOption={(opt) => setWhState(opt.value)}
+                                    placeholder="Start typing state..."
+                                    className="text-xs h-9"
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label className="text-xs font-medium">State / Region</Label>
-                                <Input 
-                                    placeholder="Maharashtra"
-                                    value={whState}
-                                    onChange={(e) => setWhState(e.target.value)}
-                                    className="text-xs"
+                                <Label className="text-xs font-medium">City</Label>
+                                <AutoSuggestInput
+                                    id="wh-city"
+                                    value={whCity}
+                                    onChange={(e) => setWhCity(e.target.value)}
+                                    options={searchCities(whCity, whState, whCountry).map((c) => ({
+                                        label: c.name,
+                                        value: c.name,
+                                        subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                    }))}
+                                    onSelectOption={(opt) => {
+                                        setWhCity(opt.value)
+                                        if (opt.subLabel) {
+                                            const parts = opt.subLabel.split(",")
+                                            if (parts.length > 1 && !whState) {
+                                                setWhState(parts[0].trim())
+                                            }
+                                        }
+                                    }}
+                                    placeholder="Start typing city..."
+                                    className="text-xs h-9"
                                 />
                             </div>
                         </div>

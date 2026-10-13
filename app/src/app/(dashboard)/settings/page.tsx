@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards, Zap } from "lucide-react"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
 import { getTenantPaymentGateways } from "@/app/actions/finance/gateways"
+import CompanyProfileTab from "./company-profile-tab"
 import TaxConfigClient from "./tax-config-client"
 import BillingTab from "./billing-tab"
 import PaymentGatewaysTab from "./payment-gateways-tab"
@@ -19,7 +20,7 @@ export default async function SettingsPage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
                     <p className="text-muted-foreground mt-1">
-                        Manage your organization, payment gateways, and workspace configuration.
+                        Manage your organization, branding, payment gateways, and workspace configuration.
                     </p>
                 </div>
                 <Link
@@ -34,7 +35,7 @@ export default async function SettingsPage() {
             <Tabs defaultValue="organization" className="space-y-4">
                 <TabsList className="bg-muted/50 p-1">
                     <TabsTrigger value="organization" className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4" /> Organization
+                        <Building2 className="h-4 w-4" /> Organization & Branding
                     </TabsTrigger>
                     <TabsTrigger value="taxation" className="flex items-center gap-2">
                         <ShieldCheck className="h-4 w-4" /> Taxation
@@ -52,73 +53,7 @@ export default async function SettingsPage() {
 
                 {/* Organization Settings */}
                 <TabsContent value="organization" className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                        <Card className="lg:col-span-4 transition-all hover:border-primary/20">
-                            <CardHeader className="border-b bg-muted/10">
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <Building2 className="h-5 w-5 text-primary" /> Company Profile
-                                </CardTitle>
-                                <CardDescription>Update your public identity for quotes & invoices.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="pt-6 space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-3 rounded-lg border bg-accent/10">
-                                        <label className="text-[10px] font-bold uppercase text-muted-foreground">Entity Name</label>
-                                        <p className="font-semibold text-sm truncate">{settings?.name || "Not Set"}</p>
-                                    </div>
-                                    <div className="p-3 rounded-lg border bg-accent/10">
-                                        <label className="text-[10px] font-bold uppercase text-muted-foreground">GSTIN / TRN</label>
-                                        <p className="font-semibold text-sm truncate">{(settings as any)?.gstin || "Pending"}</p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-3 rounded-lg border flex gap-3 items-center group transition-colors hover:bg-primary/5">
-                                        <Mail className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                                        <div className="min-w-0">
-                                            <label className="text-[10px] font-bold uppercase text-muted-foreground block leading-none mb-1">Support Email</label>
-                                            <p className="text-xs truncate">{settings?.email || "No email linked"}</p>
-                                        </div>
-                                    </div>
-                                    <div className="p-3 rounded-lg border flex gap-3 items-center group transition-colors hover:bg-primary/5">
-                                        <Globe className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-                                        <div className="min-w-0">
-                                            <label className="text-[10px] font-bold uppercase text-muted-foreground block leading-none mb-1">Website</label>
-                                            <p className="text-xs truncate">{settings?.website || "Enter URL"}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <Card className="border-dashed flex items-start gap-3 p-4 bg-muted/5">
-                                    <MapPin className="h-4 w-4 text-primary mt-1 shrink-0" />
-                                    <div className="min-w-0">
-                                        <label className="text-[10px] font-bold uppercase text-muted-foreground">Registered Address</label>
-                                        <p className="text-sm mt-1 leading-relaxed text-muted-foreground">
-                                          {settings?.address ? JSON.stringify(settings.address) : "No formal address defined. Update this to include on Quote PDFs."}
-                                        </p>
-                                    </div>
-                                </Card>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="lg:col-span-3 border-primary/10 overflow-hidden relative group">
-                            <CardHeader className="bg-primary/5 border-b border-primary/10">
-                                <CardTitle className="text-md">Brand Asset</CardTitle>
-                                <CardDescription>Company Logo (Alpha)</CardDescription>
-                            </CardHeader>
-                            <CardContent className="h-56 flex flex-col items-center justify-center space-y-4">
-                                {settings?.logo_url ? (
-                                    <img src={settings.logo_url} alt="Logo" className="max-h-24 object-contain shadow-sm rounded border p-2" />
-                                ) : (
-                                    <div className="h-24 w-24 rounded-full bg-accent/20 border-2 border-dashed border-accent flex flex-col items-center justify-center text-accent ring-8 ring-accent/5">
-                                      <Building2 className="h-10 w-10 opacity-30 group-hover:scale-110 transition-transform" />
-                                    </div>
-                                )}
-                                <p className="text-xs text-muted-foreground text-center max-w-xs">Recommended: SVG or Transparent PNG <br/>(Max 2MB)</p>
-                            </CardContent>
-                            <div className="absolute inset-x-0 bottom-0 py-2 text-center bg-muted/50 border-t items-center flex justify-center text-[10px] font-bold uppercase text-primary cursor-not-allowed opacity-50">
-                                Coming Soon: Upload Logo
-                            </div>
-                        </Card>
-                    </div>
+                    <CompanyProfileTab initialSettings={settings} />
                 </TabsContent>
 
                 {/* Taxation Settings */}

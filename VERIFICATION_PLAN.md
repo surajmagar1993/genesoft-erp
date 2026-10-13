@@ -1,708 +1,167 @@
-# 🧪 Genesoft ERP & CRM — Master Verification Plan (Phase 1 & Phase 2)
+# 🔍 Genesoft ERP & CRM — Comprehensive System Verification & Fix Plan
 
-This verification plan provides a systematic checklist and set of procedures to validate all Phase 1 (MVP) and Phase 2 (Growth) modules of the Genesoft ERP & CRM. It covers **automated checks**, **12 standalone verification scripts**, **manual step-by-step UI test protocols**, and **database-level verification scripts**.
-
----
-
-## 1. Automated Verification Checks
-
-To verify build stability, schema integrity, and initial configurations:
-
-### 1.1 Next.js Build & Compile Test
-Runs static analysis, compiles TypeScript, and checks for server action bindings.
-- **Command**:
-  ```bash
-  npm run build
-  ```
-- **Expectation**: Passes with exit code `0`. Resolves all dynamic routes and verifies that the prisma recursive proxy allows compile-time packaging without a database connection.
-
-### 1.2 Prisma Schema & Migration Verification
-Ensures that the database tables and columns match the active datamodel.
-- **Commands**:
-  ```bash
-  npx prisma validate
-  ```
-- **Expectation**: Schema compiles successfully without warnings or structural errors.
-
-### 1.3 Standalone Phase 2 Verification Test Suites (`app/scripts/`)
-Execute any of the 12 pure TypeScript verification suites to validate business logic, statutory calculations, and engine integrity:
-```bash
-# Integrations & Multi-Channel Communication
-npx tsx scripts/verify-whatsapp-integration.ts     # Meta Cloud API, E.164 normalization, templates, webhooks
-npx tsx scripts/verify-barcode-features.ts         # Code 128 / QR SVG rendering, stock adjustment logic
-
-# Multi-Country Tax & Statutory Compliance
-npx tsx scripts/verify-gst-returns.ts              # India GSTR-1, GSTR-3B & 2B reconciliation matrix
-npx tsx scripts/verify-eway-features.ts            # India E-Way Bill Rule 138, NIC JSON, distance calculation
-npx tsx scripts/verify-tds-features.ts             # India TDS/TCS sections, 206AA penalty, Form 26Q
-npx tsx scripts/verify-uae-vat.ts                  # UAE VAT (5%), 7 Emirates breakdown, FAF audit file
-npx tsx scripts/verify-ksa-zatca.ts                # KSA ZATCA Fatoora Phase 1 & 2, TLV QR, Zakat base
-npx tsx scripts/verify-uk-vat.ts                   # UK HMRC MTD VAT 9-Box, Modulus 97 VRN validation
-npx tsx scripts/verify-australia-tax.ts            # ATO BAS Form (G1-G11, 1A, 1B), Modulus 89 ABN validation
-
-# Platform Administration & SaaS Lifecycle
-npx tsx scripts/verify-email-templates.ts          # Transactional email presets, merge tags, Resend fallback
-npx tsx scripts/verify-saas-subscription.ts        # 4-Tier matrix, proration math, platform B2B invoices
-npx tsx scripts/verify-invoice-features.ts         # Terms & conditions, digital signatures, Proforma Invoices
-```
-- **Expectation**: All 12 test suites execute with code 0 and 100% assertions passing.
+> **Generated:** 2026-10-13  
+> **Status:** ✅ VERIFIED & COMPLETED LIVE  
+> **Target Accounts:**
+> - **Tenant Account:** `vicky.magar1993@gmail.com` | Tenant ID: `118e6784-41d5-49d9-a947-b66bae55278c`
+> - **Super Admin Account:** `suraj.magar1993@gmail.com`
+> - **Verification Tooling:** Dual Chrome Sessions (Window 1: Super Admin | Window 2: Tenant Portal)
 
 ---
 
-## 2. Database Verification Queries (Supabase SQL Editor)
+## 📋 Executive Verification Summary
 
-Use these SQL checks in the Supabase SQL editor to ensure Row-Level Security (RLS) policies and core seeds are functioning.
+All requested fixes and verification workflows have been executed, tested live in real browser sessions, and validated end-to-end:
 
-### 2.1 Multi-Tenant Separation (RLS) Test
-Verify that the `my_tenant_id()` policy successfully isolates data.
-```sql
--- 1. Check active tenants
-SELECT id, name, plan, is_active FROM tenants;
-
--- 2. Verify that users are mapped to profiles and tenants
-SELECT p.id, p.email, p.role, t.name as tenant_name 
-FROM profiles p 
-LEFT JOIN tenants t ON p.tenant_id = t.id;
-
--- 3. Verify that invoice line items cascade from correct tenant_ids
-SELECT id, invoice_number, tenant_id, customer_name, total FROM invoices;
-```
-
-### 2.2 Chart of Accounts (CoA) Seed Verification
-Verify that the Indian template of 39 accounts has seeded correctly.
-```sql
-SELECT tenant_id, code, name, type, parent_id 
-FROM accounts 
-ORDER BY code ASC 
-LIMIT 10;
-```
+| Item | Requirement | Status | Verification Result |
+| :--- | :--- | :---: | :--- |
+| **1.1** | **Unhide Password Toggle** | ✅ COMPLETED | `PasswordInput` with Eye / EyeOff icon added to Login & Signup. Tested live: toggling reveals plain text and hides password. |
+| **1.2** | **Contact Creation Fix** | ✅ COMPLETED | Fixed `contacts.ts` Prisma mapping, fallback for empty `displayName`, added Sonner toast & visual Alert. Created "Apex Global Technologies" live. |
+| **1.3** | **Address Auto-Suggest** | ✅ COMPLETED | Comprehensive `geo-locations.ts` dataset created. Integrated `AutoSuggestInput` for Country, State, and City in both Contact and Company forms. Tested live with "Maha" ➔ "Maharashtra MH", "Pun" ➔ "Pune Maharashtra". |
+| **1.4** | **CRM Contacts vs Companies** | ✅ COMPLETED | Database schema updated with `gstin`, `country_code`, and `state`. Created "OmniTech Solutions Inc" in Companies and verified listing, metrics, and relationships. |
+| **1.5** | **Remove TDS & GST Returns** | ✅ COMPLETED | Removed `TDS & Withholding` and `GST Returns (GSTR)` from `layout.tsx` navigation and `tax-jurisdiction.ts`. Verified live in sidebar. |
+| **1.6** | **Tenant Logo & Profile Editing** | ✅ COMPLETED | Created interactive `CompanyProfileTab` in `/settings`. Added Logo upload file selector, direct URL input, live image preview, and full entity profile editing (Name, GSTIN, Email, Phone, Address with AutoSuggest). Saved & verified live. |
+| **1.7** | **Subscription & Plan Monitoring** | ✅ COMPLETED | Verified Razorpay keys in `.env`, MRR calculations (₹4,999/mo), ARR (₹59,988), and Tenant Plan Ledger in `/admin/subscriptions` across all 8 tenants. |
+| **1.8** | **CRM Emails & Web Forms** | ✅ EXPLAINED | Verified `/crm/emails` (inbox, threads, templates) and `/crm/forms` (form builder, public lead capture, embed hub). |
+| **1.9** | **WhatsApp Integration** | ✅ VERIFIED | Verified `/crm/whatsapp` with Meta Cloud API, simulation mode, 6 transactional message templates, and `wa.me` click-to-chat. |
 
 ---
 
-## 3. Manual UI Test Protocols (Step-by-Step)
+## 🛠️ Phase 1: High-Priority Fixes & Implementation Details
 
-### 3.1 Authentication & Role Authorization
-1. **Onboarding / Signup**:
-   - Go to `/register` and sign up a new account.
-   - **Expectation**: Creates a new `Tenant` record, seeds the Indian Chart of Accounts (39 accounts), and links the profile as `ADMIN`.
-2. **Access Control**:
-   - Attempt to access the Super Admin page `/admin/dashboard` as a standard admin.
-   - **Expectation**: Middleware catches the role discrepancy and redirects the user back to `/crm/contacts`.
+- [x] **1.1 Authentication Show/Hide Password Toggle**
+  - **Component Created:** `app/src/components/ui/password-input.tsx`
+  - **Integrated Pages:**
+    - `app/src/app/(auth)/login/page.tsx`
+    - `app/src/app/(auth)/register/page.tsx`
+  - **Live Test:** Navigated to `http://localhost:3000/login`, typed password, clicked "Show password", confirmed text input switch, clicked "Hide password", confirmed password mask.
 
-### 3.2 SaaS Super Admin Command Center (`/admin/dashboard`)
-*Requires login with a `SUPER_ADMIN` account (e.g. `suraj.magar1993@gmail.com`).*
-1. **KPI Verification**:
-   - Verify that **Total Tenants**, **Active Trials**, and **Revenue Estimate** display correct database counts.
-2. **Analytics Charts**:
-   - Ensure the Recharts **Tenant Growth** line chart and **Global Presence** regional pie chart render correctly.
-3. **Database Health Latency**:
-   - Check the quick status box. It should display a latency reading (e.g., `85ms`) and show `HEALTHY`.
-4. **Recent System Logs**:
-   - Verify that the incident monitor displays real-time logs with color-coded severity.
+- [x] **1.2 Contact Creation Robustness & Error Handling**
+  - **Server Action Updated:** `app/src/app/actions/crm/contacts.ts`
+  - **Root Cause Resolved:**
+    1. `displayName` in PostgreSQL schema requires `NOT NULL`. If user typed only company name or partial names, it failed silently. Added automatic fallback hierarchy: `companyName || `${firstName} ${lastName}` || email || "Unnamed Contact"`.
+    2. Switched from manual Supabase queries to `prisma.contact` for strict typing, tenant isolation, and connection pooling.
+    3. Added `toast.success`, `toast.error`, and inline `<Alert variant="destructive">` in `ContactForm`.
+  - **Live Test:** Created contact "Apex Global Technologies" (`contact@apexglobal.com`) with address in Pune, Maharashtra. Verified redirection to `/crm/contacts` and record presence in table.
 
-### 3.3 CRM Module (Contacts, Leads, Deals & Timeline)
-1. **Contacts Listing & CSV Import**:
-   - Navigate to `/crm/contacts`.
-   - Click the "Import CSV" button and upload a dummy contact list.
-   - **Expectation**: Records populate the contact grid dynamically with paginated controls.
-2. **Lead-to-Deal Conversion**:
-   - Create a Lead at `/crm/leads/new`.
-   - On the Lead details tab view, click "Convert to Deal".
-   - **Expectation**: Creates a Deal mapping back to the contact and updates lead status to `CONVERTED`.
-3. **Interactive Timeline & Tasks**:
-   - Go to any Lead detail view and create a task. Mark it as complete.
-   - Add a call interaction log in the Communications tab.
-   - **Expectation**: Task completes dynamically, and the timeline logs the call interaction with a timestamp.
+- [x] **1.3 Address Auto-Suggest (City, State, Country)**
+  - **Dataset Created:** `app/src/lib/constants/geo-locations.ts` with hundreds of verified countries, states/provinces (India, USA, UAE, UK, Australia, Saudi Arabia, Canada), and major cities.
+  - **Component Created:** `app/src/components/ui/auto-suggest-input.tsx`
+  - **Live Test:** Typing "Maha" in State input displayed "Maharashtra MH" button. Clicking it populated state and scoped city search. Typing "Pun" displayed "Pune Maharashtra".
 
-### 3.4 Sales & Indian GST Invoice Engine
-1. **Product Catalog**:
-   - Create a Product. Set type to `PRODUCT`, associate an HSN/SAC code, and select a default `Tax Group` (e.g., GST 18%).
-2. **GST Invoice Creation**:
-   - Go to `/sales/invoices/new` and select a customer.
-   - Set the billing address state to the same as your company state (Intra-state CGST + SGST test).
-   - Add a line item.
-   - **Expectation**: Tax totals compute automatically showing splitting CGST and SGST.
-   - Change place of supply state to a different state (Inter-state IGST test).
-   - **Expectation**: Split tax columns merge into a single IGST percentage and amount.
-3. **PDF Generation & Email Delivery**:
-   - Click "Save & View Invoice", then click "Download PDF".
-   - **Expectation**: The invoice compiles a clean PDF with HSN Summary Table, Bank Details, and Total in Words.
-   - Click "Email Invoice".
-   - **Expectation**: A Resend email triggers and sends the PDF invoice attachment to the customer.
+- [x] **1.4 CRM Contacts vs. Companies Distinct Separation**
+  - **Purpose Distinction:**
+    - **Contacts (`/crm/contacts`):** Human buyers, vendor representatives, individual customers, and billing contacts.
+    - **Companies (`/crm/companies`):** Legal corporate accounts, organizations, B2B enterprise entities with annual revenue, industry, employee counts, and GSTIN/tax numbers.
+  - **Database Migration Applied:** Added `gstin TEXT`, `country_code TEXT`, and `state TEXT` to `companies` table via Supabase SQL.
+  - **Component Updated:** `app/src/components/crm/company-form.tsx` and `app/src/app/actions/crm/companies.ts`.
+  - **Live Test:** Created company "OmniTech Solutions Inc" in Bengaluru, Karnataka. Verified in `/crm/companies` directory with metrics updated to 1 active company.
 
-### 3.5 Finance Ledger & AP/AR Tracking
-1. **Automated Ledger Ledger Entry**:
-   - View the Contact details Ledger tab for a client.
-   - Save an Invoice for $1,000 for that contact.
-   - **Expectation**: Contact balance increases by $1,000, and a `debit` entry of $1,000 appears on the Ledger.
-2. **Partial Payments Logic**:
-   - Record a partial payment of $400 against the invoice.
-   - **Expectation**: Invoice status shifts to `PARTIALLY_PAID`, customer balance updates to outstanding $600, and a `credit` entry of $400 is added on the Ledger.
-3. **Accounts Payable (AP)**:
-   - Navigate to `/finance/bills`. Create a vendor bill.
-   - **Expectation**: Vendor bill persists and appears on the AR/AP dashboard outstanding balance grids.
-4. **Exchange Rate ledger**:
-    - Record a transaction using a different currency (e.g., USD).
-    - **Expectation**: The ledger entry converts the amount to the tenant's base currency (e.g., INR) based on system exchange rates, updates contact balance, and logs the original values.
+- [x] **1.5 Menu Cleanup: Removed TDS & Withholding and GST Returns**
+  - **Files Updated:**
+    - `app/src/app/(dashboard)/layout.tsx` (removed `/finance/tds` and `/finance/gst-returns` from navigation and statutory tax routes).
+    - `app/src/lib/tax-jurisdiction.ts` (cleared `financeTaxItems` for India).
+  - **Live Test:** Inspected Finance menu in sidebar: confirmed only Chart of Accounts, Expenses, Bank Reconciliation, Budgets, Receivables, Payables, Bills, Payments, VAT/Tax modules, and Reports are visible.
+
+- [x] **1.6 Tenant User Profile & Company Profile Enhancements**
+  - **Component Created:** `app/src/app/(dashboard)/settings/company-profile-tab.tsx`
+  - **Server Action Updated:** `app/src/app/actions/settings/tenant.ts`
+  - **Storage Configured:** Created public Supabase storage bucket `tenant-logos` with RLS policies.
+  - **Features Provided:**
+    - Upload local image file (PNG, JPG, SVG, WebP up to 3MB) with instant FileReader preview.
+    - Paste direct hosted image URL with live preview.
+    - Remove logo button.
+    - Editable Company Profile: Entity Name, GSTIN / TRN, Support Email, Phone, Website, and Registered Office Address with Country/State/City AutoSuggest.
+  - **Live Test:** Navigated to `/settings` as `vicky.magar1993@gmail.com`. Set GSTIN to `27ABCDE1234F1Z5`, Support Email to `support@fixocomputers.com`, and configured brand logo. Successfully saved and verified live badge.
+
+- [x] **1.7 Subscription & Plan Monitoring Verification**
+  - **Razorpay Keys Configured:** `RAZORPAY_KEY_ID=rzp_test_SaWno1QW1SlNQs` and secret present in `app/.env`.
+  - **Platform Billing Engine:** `app/src/lib/saas-subscription-engine.ts` defines tiers (FREE, BASIC, PRO, ENTERPRISE) with quotas for contacts, invoices, members, and warehouses.
+  - **Super Admin Telemetry:** Verified `/admin/subscriptions`:
+    - Tracks 8 active tenants across all regions.
+    - Estimated MRR: ₹4,999 | Annualized ARR: ₹59,988.
+    - Detailed Tenant Subscription Ledger with plan tier, active/trial status, trial expiration dates, and B2B invoices.
 
 ---
 
-### 3.6 SaaS Super Admin Tenant Management Protocols
-1. **Manual Business Onboarding (`/admin/tenants/new`)**:
-   - Navigate to `/admin/tenants/new`.
-   - Fill in Business Name, primary email, domain, operating country, and currency.
-   - Leave "Auto-seed Standard Chart of Accounts" checked. Click "Provision Tenant".
-   - **Expectation**: Tenant record is created in PostgreSQL with active trial window, 39 standard accounts (Assets, Liabilities, Equity, Revenue, Expenses) are seeded in `accounts` table, action is logged in `AdminAuditLog`, and user is redirected to `/admin/tenants/[id]`.
-2. **Tenant 360° Profile & User Roster (`/admin/tenants/[id]`)**:
-   - Navigate to the newly provisioned tenant page.
-   - **Expectation**: Top KPI cards render (Revenue, Invoices, Contacts, Users), Overview tab shows all entity metadata, Team Members tab lists registered users, Business Footprint shows entity counts, and Governance Audit Trail lists the creation event.
-3. **In-Place Lifecycle Controls**:
-   - Click "Extend Trial (+7d)".
-   - **Expectation**: Expiration date increments by 7 days, toast notification appears, and audit log records the extension.
-   - Click "Edit Profile", change official phone/website, and save.
-   - **Expectation**: Updated fields persist and revalidate immediately.
-   - Click "Suspend Account".
-   - **Expectation**: Tenant status badge shifts to "Suspended" with red dot, and suspension is logged.
+## 🔎 Phase 2: Functional Explanation of CRM Modules
+
+### 📧 2.1 CRM Emails (`/crm/emails`)
+- **What it is:** A centralized corporate email inbox and customer communication center embedded inside the CRM.
+- **Why it is used:** Sales and customer success teams do not need to switch between Gmail/Outlook and the ERP. All emails sent to or received from a client are automatically logged in that Contact's and Deal's timeline.
+- **Key Functions:**
+  1. **Multi-Mailbox Support:** Connect corporate inboxes (e.g. `sales@acmeglobal.com`, `support@genesoft.ai`) via SMTP/IMAP.
+  2. **Entity Thread Linking:** Messages are automatically tagged to matching Contacts, Leads, Deals, or Quotes.
+  3. **Merge-Tag Templates:** Pre-designed templates for Welcome Emails, SLA Renewals, Quote Follow-ups, and Invoice Notifications with tags like `{{contact.name}}`, `{{company.name}}`.
+  4. **Open & Engagement Tracking:** Tracks delivery and open rates.
+
+### 🌐 2.2 CRM Web Forms (`/crm/forms`)
+- **What it is:** A no-code intake form builder for embedding on company websites and landing pages.
+- **Why it is used:** To capture inbound customer inquiries, quote requests, and support tickets automatically without manual data entry.
+- **Key Functions:**
+  1. **Form Studio:** Create custom forms (Contact Us, RFQ, Demo Request, Feedback) with custom fields.
+  2. **Embed Hub:** Provides copy-paste HTML/iFrame code snippets and public shareable URLs (`/forms/[code]`).
+  3. **Auto-Lead Generation:** When a website visitor submits the form, a new CRM Lead/Contact is created instantly, tagged with source attribution, and routed to sales.
+  4. **Spam Protection:** Built-in honeypot and rate-limiting.
+
+### 💬 2.3 WhatsApp Business Hub (`/crm/whatsapp`)
+- **What it is:** Official Meta WhatsApp Business API integration and click-to-chat communication desk.
+- **Why it is used:** WhatsApp has a 98% open rate compared to email. It enables automated transactional alerts (PDF invoices, payment links) directly on client phones.
+- **Key Functions:**
+  1. **3 Operating Modes:**
+     - `CLOUD_API`: Official Meta Graph Cloud API with verified sender ID.
+     - `DIRECT_LINK`: One-click `wa.me` click-to-chat opening WhatsApp Web / Desktop directly.
+     - `SIMULATION`: Sandbox testing mode for drafting messages without sending real SMS/API charges.
+  2. **Transactional Templates:** Tax Invoice dispatch, Payment Receipt acknowledgment, Overdue payment reminders, Order confirmations.
+  3. **Contact Chat History:** Audit trail of all outbound messages per customer.
 
 ---
 
-### 3.7 SaaS Platform Security & Governance Protocols (`/admin/security`)
-1. **Security Command Center & Telemetry**:
-   - Navigate to `/admin/security`.
-   - **Expectation**: Top telemetry cards render live values for **2FA Mandate**, **Global Rate Limit**, **Firewall Blocklist**, and **Idle Session Guard**.
-2. **Access Policy Enforcement**:
-   - On the **Access Control** tab, toggle "Enforce Two-Factor Authentication (2FA)" or change "Session Inactivity Timeout".
-   - Click "Save Policy".
-   - **Expectation**: Success toast appears, updated policy settings persist in database, and an entry with action `SECURITY_POLICY_UPDATE` is committed to `AdminAuditLog`.
-3. **Firewall & IP Blocklist Management**:
-   - Navigate to the **Firewall** tab.
-   - Click "Block IP Address", enter a test IP (e.g., `192.168.1.100`) and a reason.
-   - **Expectation**: IP appears immediately in the Active Blocklist table with status `BLOCKED`, and action `SECURITY_IP_BLOCK` is logged in the audit trail.
-   - Click "Unblock" on the blocked entry.
-   - **Expectation**: Entry is removed from blocklist, action `SECURITY_IP_UNBLOCK` is logged, and UI revalidates immediately.
-4. **Rate Limiting & Abuse Prevention**:
-   - Navigate to the **Rate Limiting** tab.
-   - Adjust "Max Requests Per Minute" or "Burst Allowance" threshold.
-   - Click "Update Rate Limits".
-   - **Expectation**: Settings save successfully and are confirmed in the Security Audit Trail.
-5. **Security Incident & Audit Trail**:
-   - Navigate to the **Security Audit Trail** tab.
-   - **Expectation**: Displays paginated, chronologically ordered log of security events (IP blocks, policy updates, admin logins) with target details, metadata JSON inspector, and timestamp.
+## 🧪 Live Browser Verification Record
 
----
+### Window 1: Super Admin (`suraj.magar1993@gmail.com`)
+1. **Login:** Successfully authenticated using unhide password toggle.
+2. **Dashboard (`/admin/dashboard`):** 8 Tenants, 8 Active Users, ₹4,999 Estimated MRR, system healthy.
+3. **Subscriptions (`/admin/subscriptions`):** Verified tenant list, plan distributions (7 Free, 1 Enterprise), ARR calculation, and subscription invoices.
 
-### 3.8 Inventory & Multi-Warehouse Operations Protocols (`/inventory`)
-1. **Initial Auto-Provisioning & Telemetry**:
-   - Navigate to `/inventory`.
-   - **Expectation**: Page provisions default "Central Logistics Hub" (`WH-MAIN`) if none exists, maps existing products, and renders 4-column KPI cards (Total Valuation, Total Units, Active Warehouses, Low/Out of Stock).
-2. **Multi-Depot Warehouse Provisioning**:
-   - Click "New Warehouse", enter facility name (e.g. `West Coast Distribution`), code `WH-02`, city, and manager contact. Click "Create Warehouse".
-   - **Expectation**: Warehouse persists in `warehouses` table, appears immediately under the "Warehouses" tab with item counts, and increments the Active Warehouses KPI card.
-3. **Stock Adjustment (Receiving & Write-offs)**:
-   - Click "Adjust Stock", select an item, choose facility, select `IN` (Stock In), enter quantity `100`, and provide a PO reference.
-   - **Expectation**: Warehouse stock increments by 100, product aggregate stock updates, Total Valuation increases, and a `STOCK IN` transaction appears in the "Movement Ledger" tab.
-   - Repeat with `DAMAGE` or `OUT`.
-   - **Expectation**: Warehouse balance decrements appropriately and write-off is logged in audit trail.
-4. **Inter-Warehouse Stock Transfer**:
-   - Click "Transfer Stock", select item, source `WH-MAIN`, destination `WH-02`, and quantity `25`.
-   - **Expectation**: Units in `WH-MAIN` decrease by 25, units in `WH-02` increase by 25, total tenant-wide stock remains invariant, and a `TRANSFER` record is logged in the Movement Ledger with source and destination arrows.
-5. **Low Stock Thresholds & Restock Action**:
-   - Perform an adjustment setting an item's stock below its reorder point (e.g., <= 10).
-   - **Expectation**: Item receives amber "Low Stock" badge, low-stock warning callout banner appears, item lists under "Reorder Alerts" tab with calculated deficit units and estimated restock cost, and clicking "Receive Stock" opens the pre-filled adjustment dialog.
-
----
-
-### 3.9 Purchase & Vendor Procurement Protocols (`/purchase`)
-1. **Procurement Command Center & Telemetry**:
-   - Navigate to `/purchase`.
-   - **Expectation**: Top KPI cards render real-time values for **Procurement Spend**, **Open Purchase Orders**, **Pending Receipts**, and **Active Suppliers**.
-2. **Vendor Directory Registration**:
-   - Click "New Supplier", enter company name, representative contact name, email, phone, GSTIN, city, and state. Click "Register Supplier".
-   - **Expectation**: Vendor persists in `contacts` table with `customerGroup: "vendor"`, tags `['vendor', 'supplier']`, and appears immediately under the "Suppliers & Vendors" tab.
-3. **Purchase Order Creation & Sequential Numbering**:
-   - Click "New Purchase Order".
-   - Select the newly registered supplier, choose target warehouse, and specify expected delivery date.
-   - Add line items selecting catalog products or entering custom line items with unit price, quantity, and GST tax percentage (e.g., 18%).
-   - Verify live financial summary calculation (Subtotal, Estimated Tax, Grand Total). Click "Save Purchase Order".
-   - **Expectation**: Order is created with sequential number `PO-YYYY-XXXX`, status `DRAFT`, itemized records in `purchase_order_items`, and appears in the "Purchase Orders" tab table.
-4. **Lifecycle State Transitions**:
-   - From the actions dropdown on a `DRAFT` order, click "Mark as Sent". Status badge changes to blue "Sent".
-   - Click "Approve Order". Status badge changes to amber "Approved", and order appears in the "Pending Receipts" operational intake queue tab.
-5. **Multi-Facility Goods Receipt Intake (`/purchase` -> `/inventory`)**:
-   - In the "Pending Receipts" queue or via the order actions menu, click "Intake Goods".
-   - Confirm target warehouse and enter quantity received for each line item. Click "Confirm Receipt & Update Stock".
-   - **Expectation**:
-     - `receivedQty` updates on line items.
-     - If all items received, PO status updates to green "Received"; if partial, status shifts to sky blue "Partially Received".
-     - In `warehouses`, target facility stock balances increment atomically.
-     - In `products`, aggregate `stockQty` increments by received units.
-     - An immutable `IN` transaction is created in `stock_movements` linked to the warehouse and item.
-6. **Accounts Payable Vendor Bill Conversion (`/purchase` -> `/finance/bills`)**:
-   - On an approved or received PO without an existing bill, click "Convert to Vendor Bill".
-   - Select due date (defaults to Net 30) and optional custom invoice reference. Click "Create Vendor Bill".
-   - **Expectation**:
-     - A formal `Bill` is generated in `bills` with itemized line items mapped to `/finance/bills`.
-     - `billId` is linked to `purchase_orders`.
-     - The vendor's payable balance in `contacts` increments by the total bill amount.
-     - A double-entry `CREDIT` ledger entry is appended to `ledger_entries` under the vendor's account.
-     - The PO table displays a direct clickable link to the generated Bill.
-
----
-
-### 3.10 HR & Workforce Management Protocols (`/hr`)
-1. **Initial Provisioning & Auto-Seeded Departments**:
-   - Navigate to `/hr`.
-   - **Expectation**: If no departments exist for the tenant, the system auto-seeds 5 standard departments (*Engineering & Technology*, *Sales & Business Development*, *Finance & Accounts*, *Operations & Logistics*, *Human Resources*) with predefined designations.
-   - Top KPI cards render real-time values for **Total Headcount**, **Present Today**, **Pending Leaves**, and **Departments & Teams**.
-2. **Employee Registration (`EMP-XXXX`)**:
-   - Click "Add Employee", fill in First Name, Last Name, Work Email, Phone, Joining Date, Department, Designation, Employment Type, and Base Salary. Click "Register Employee".
-   - **Expectation**: Employee record is created with sequential employee number (e.g., `EMP-0001`), status `ACTIVE`, and appears in the "Directory" tab table.
-3. **Daily Attendance Tracking**:
-   - Navigate to the "Attendance" tab or click "Mark Attendance".
-   - Select employee, verify target date, choose status `PRESENT`, specify Check-in time `09:00` and Check-out time `17:30`, and save.
-   - **Expectation**: Attendance record persists in `attendances` table with calculated 8.5 working hours, daily summary badges update, and the "Present Today" KPI card increments.
-4. **Leave Application & Management Decisions**:
-   - Click "Apply Leave", choose employee, select leave type (e.g., `CASUAL`), choose start and end dates, specify reason, and submit.
-   - **Expectation**: Leave request is created with status `PENDING`, duration is calculated in days, and "Pending Leaves" KPI increments.
-   - Under the "Leaves" tab, click "Approve".
-   - **Expectation**: Status transitions to green "Approved" badge with audit timestamp, and pending count decrements.
-5. **Organizational Structuring**:
-   - Navigate to the "Organization" tab.
-   - Verify departmental cards show employee headcounts and assigned manager names.
-   - Click "Add Department" to create custom business units, or "Add Designation" to introduce new organizational job titles.
-
----
-
-### 3.11 Project Management & Delivery Protocols (`/projects`)
-1. **Initial Provisioning & Auto-Seeding**:
-   - Navigate to `/projects`.
-   - **Expectation**: If no projects exist for the tenant, the system auto-seeds realistic starter template projects (*Enterprise ERP & Cloud Infrastructure Modernization* and *B2B Customer Self-Service Mobile Portal*) populated with deliverables, milestones, Kanban tasks, staff assignments, and billable time logs.
-   - Top KPI cards render real-time values for **Active Projects**, **Task Velocity** (% completion progress bar), **Tracked Effort** (total & billable hours), and **Portfolio Budget** (in INR).
-2. **Project Creation (`PRJ-XXXX`)**:
-   - Click "New Project", specify Project Title, Client Account, Lead Manager (from `/hr`), Billing Type (`FIXED_FEE`, `TIME_AND_MATERIALS`, `NON_BILLABLE`), Budget, and Start/Target End dates.
-   - **Expectation**: Project persists in `projects` table with sequential code `PRJ-XXXX`, status `PLANNING`, manager auto-allocated as team lead, and appears in the Projects Directory table.
-3. **Agile Kanban Sprint Board**:
-   - Navigate to the "Kanban Board" tab.
-   - Verify tasks are sorted across 5 columns: `BACKLOG`, `TODO`, `IN_PROGRESS`, `IN_REVIEW`, and `DONE`.
-   - Each card displays the task code (`TSK-XXXX`), priority badge, project code, linked milestone, assignee avatar/name, and actual vs estimated hours.
-   - Use the inline stage switcher dropdown on a task to advance it from `TODO` to `IN_PROGRESS` or `DONE`.
-   - **Expectation**: Status updates seamlessly in the database; completing a task automatically records `completedAt` timestamp and updates project completion percentage.
-4. **Milestone Tracking & Sign-offs**:
-   - Navigate to the "Milestones" tab.
-   - Click "Add Milestone", assign to project, enter title, key deliverable description, target due date, and save.
-   - Click "Mark Done" on an in-progress milestone.
-   - **Expectation**: Milestone status toggles to `COMPLETED` with completed timestamp.
-5. **Team Resource Allocation**:
-   - Under the "Resource Allocation" tab, view staff members assigned to the scoped project.
-   - Click "Allocate Team Member", select an active employee from `/hr`, assign their project role (e.g., "Senior Full-Stack Engineer"), set hourly billing rate, and confirm.
-   - **Expectation**: Employee is linked in `project_members` and appears in the team roster.
-6. **Timesheets & Effort Tracking**:
-   - Under the "Time Tracking & Logs" tab or via top bar "Log Hours", click "Log Work Hours".
-   - Select project, choose specific task, select employee, enter duration (e.g., `4.5`), work description, and toggle Billable.
-   - **Expectation**:
-     - Time entry records in `project_time_entries`.
-     - `actualHours` accumulator increments automatically on the target `ProjectTask`.
-     - Tracked Effort KPI card updates hours and recalculates billable ratio.
-
----
-
-### 3.12 Rental Management & Asset Leasing Protocols (`/sales/rental`)
-1. **Initial Provisioning & Fleet Telemetry**:
-   - Navigate to `/sales/rental`.
-   - **Expectation**:
-     - System auto-provisions default equipment fleet (*Caterpillar 320D Hydraulic Excavator*, *Apple MacBook Pro 16" M3 Max*, *Yamaha DZR12-D Audio Rig*, *Mercedes Sprinter Van*, *Genie Scissor Lift*, *Sony FX6 Cinema Camera*) with predefined daily, weekly, monthly rates and security deposits.
-     - Top KPI cards render real-time values for **Fleet Availability** (available % vs rented units), **Active Leases** (active contracts & total pipeline value in INR), **Security Deposits Held** (escrow protection), and **Damages & Penalties** (assessed fee totals).
-2. **Asset Registration (`AST-XXXX`)**:
-   - Click "Register Asset", enter Asset Name, Category, Serial Number, Daily/Weekly/Monthly rates, Security Deposit, Condition (`EXCELLENT`, `GOOD`, `FAIR`), Depot Warehouse, and Description. Click "Register Asset".
-   - **Expectation**: Asset persists in `rental_assets` table with auto-generated code `AST-XXXX`, status `AVAILABLE`, and appears in the "Asset Fleet Directory" tab table.
-3. **Rental Agreement Drafting & Asset Checkout (`RNT-YYYY-XXXX`)**:
-   - Click "New Rental Agreement".
-   - Select hiring customer, choose available asset, specify start date and return date (e.g. 7 days), and review estimated total rent and required security deposit.
-   - Click "Activate Agreement & Check Out".
-   - **Expectation**:
-     - Agreement persists in `rental_agreements` with sequential code `RNT-YYYY-XXXX`, status `ACTIVE`, and linked line items in `rental_agreement_items`.
-     - Target asset status transitions atomically from `AVAILABLE` to `RENTED`.
-     - Active Leases KPI increments and contract value updates.
-4. **Return Gear & Damage Inspection Workflow**:
-   - On an active or overdue agreement row, click "Return Gear".
-   - In the inspection modal, verify return date, inspect condition (e.g., `DAMAGED` or `EXCELLENT`), input inspection notes, assess optional damage fee or late fee.
-   - Note the deposit refund recalculation: `Deposit - Damage Fee - Late Fee`.
-   - Click "Confirm Return & Restock".
-   - **Expectation**:
-     - Formal inspection record commits to `rental_returns` table.
-     - Agreement status updates to `RETURNED` with recorded return date and reconciled deposit status.
-     - If returned in `DAMAGED` condition, asset status shifts to `MAINTENANCE`; if `EXCELLENT`/`GOOD`, asset returns to `AVAILABLE` status.
-5. **Direct GST Sales Invoice Generation (`/sales/rental` -> `/sales/invoices`)**:
-   - On an agreement without an existing invoice, click "Invoice".
-   - **Expectation**:
-     - System generates an official `Invoice` in `invoices` with sequential numbering (`INV-YYYY-XXXX`).
-     - Line items map rental period days, daily rates, and any assessed damage/late fees with SAC code `9973` and GST 18%.
-     - Agreement displays the linked invoice badge (e.g. `INV-2026-0004`).
-     - Navigating to `/sales/invoices` confirms the newly created invoice ready for payment tracking or PDF download.
-
----
-
-### 3.13 Credit Notes & Customer Refunds Protocols (`/sales/credit-notes`)
-1. **Initial Provisioning & Credit Telemetry**:
-   - Navigate to `/sales/credit-notes`.
-   - **Expectation**:
-     - If no credit notes exist for the tenant, the system auto-provisions initial demonstration credit notes (*Sales Return / Defective Unit RMA* and *Billing Rate Correction & Promotional Rebate*) with linked customer ledger entries and items.
-     - 4-column KPI telemetry renders real-time counts and amounts for:
-       - **Total Credit Issued**: Sum of active credits (`ISSUED`, `PARTIALLY_APPLIED`, `APPLIED`).
-       - **Unallocated Credit**: Remaining balance available to apply to future invoices or cash refunds.
-       - **Cash/Bank Disbursed**: Total cash/bank payouts issued against credit notes.
-       - **Voided Credits**: Total count and value of cancelled credit instruments.
-2. **Issuing a Credit Note (`CN-YYYY-XXXX`)**:
-   - Click "Issue Credit Note".
-   - Select Customer/Contact.
-   - (Optional) Select a linked Sales Invoice (`INV-YYYY-XXXX`).
-   - Select Credit Reason (`SALES_RETURN`, `DEFECTIVE_GOODS`, `PRICE_CORRECTION`, `GOODWILL_REBATE`, etc.).
-   - Specify line items: Item description, Unit Price, Quantity, Tax Rate (e.g., 18% GST).
-   - If `SALES_RETURN` or `DEFECTIVE_GOODS`, optionally check "Restock Inventory to Warehouse" and select target depot.
-   - Click "Issue Credit Note".
-   - **Expectation**:
-     - Credit note persists in `credit_notes` table with code `CN-YYYY-XXXX`, status `ISSUED`, line items in `credit_note_items`.
-     - If inventory restock checked, `warehouse_stocks` increments and a `stock_movements` record of type `RESTOCK` is created.
-     - Customer ledger balance updates with a `"CREDIT_NOTE"` transaction reducing receivables.
-3. **Applying Credit Note to Unpaid Sales Invoice**:
-   - On a credit note with remaining balance, click "Apply to Invoice".
-   - Select target invoice with pending balance.
-   - Enter allocation amount (up to the lesser of the unallocated credit or invoice pending balance).
-   - Click "Allocate Credit".
-   - **Expectation**:
-     - Credit note `remainingAmount` decrements; status updates to `PARTIALLY_APPLIED` or `APPLIED`.
-     - Target invoice `paid_amount` increments; invoice status shifts to `PAID` or `PARTIAL`.
-     - Record added to Applied Invoices ledger tab.
-4. **Disbursing Cash or Bank Refund**:
-   - On a credit note with remaining balance, click "Disburse Refund".
-   - Select payment mode (`BANK_TRANSFER`, `CHEQUE`, `CASH`, `UPI`), enter reference number (e.g., UTR / Transaction ID), refund amount, and notes.
-   - Click "Process Refund Payout".
-   - **Expectation**:
-     - `CreditNoteRefund` record persists in `credit_note_refunds`.
-     - Credit note `remainingAmount` decrements.
-     - Customer ledger records a `"REFUND"` debit balancing the accounts.
-     - History displays under the "Cash & Bank Refunds" tab.
-5. **Voiding a Credit Note**:
-   - On an unapplied credit note, click "Void". Confirm the prompt.
-   - **Expectation**:
-     - Credit note status changes to `VOID`.
-     - Reverse transaction entries are logged in the customer ledger.
-     - Unallocated credit decreases and Voided Credits KPI increments.
-
----
-
-### 3.14 Expense Management & General Ledger Protocols (`/finance/expenses`)
-1. **Initial Provisioning & Financial Telemetry**:
-   - Navigate to `/finance/expenses`.
-   - **Expectation**:
-     - If no expenses exist for the tenant, the system auto-provisions realistic operational business expenses (*AWS Cloud Compute & EC2 Hosting*, *Corporate Headquarters Office Rent*, *Google Ads & Marketing Campaigns*, *Client Pitch Travel & Meals*, *High-Speed Leased Line Internet*) with balanced double-entry Journal Vouchers in the General Ledger.
-     - 4-column KPI telemetry renders real-time totals for:
-       - **Operational Expenses**: Gross paid and approved business spending in current fiscal period.
-       - **Pending Approvals**: Total value and count of unapproved employee claims.
-       - **Top Expense Driver**: Dominant expenditure category with total outlay.
-       - **Input Tax Credit (ITC)**: Total deductible GST claimable against output tax liabilities.
-2. **Recording an Expense with Automatic General Ledger Posting**:
-   - Click "Record Expense".
-   - Enter Title (e.g. *Datadog Monitoring & APM Subscription*).
-   - Select Category (e.g. *Software & Hosting*).
-   - Select Expense Account from Chart of Accounts (e.g. `5650 — Software & Cloud Infrastructure`).
-   - Select Payment Account (e.g. `1120 — Bank Account (HDFC)`).
-   - Select or enter Payee/Vendor (e.g. *Datadog Inc*).
-   - Enter Net Amount (e.g. ₹20,000) and GST rate 18% (Tax: ₹3,600, Total: ₹23,600).
-   - Leave "Auto-Post to General Ledger" checked and submit.
-   - **Expectation**:
-     - Expense voucher persists with code `EXP-YYYY-XXXX`, status `PAID`.
-     - Automatically creates a balanced double-entry Journal Voucher `JE-YYYY-XXXX`:
-       - Debit: `5650 — Software & Cloud Infrastructure` (₹20,000).
-       - Debit: `1400 — Input GST (ITC)` (₹3,600).
-       - Credit: `1120 — Bank Account (HDFC)` (₹23,600).
-     - $\sum \text{Debit} = \sum \text{Credit} = ₹23,600$ verified balanced.
-     - Account balances in Chart of Accounts update accordingly.
-3. **Double-Entry Journal Voucher Authoring**:
-   - Click "New Journal Voucher" or switch to "General Ledger Vouchers" tab and click "Post Manual Voucher".
-   - Specify Date, Reference, and Narration (e.g., *Annual Office Equipment Depreciation Journal*).
-   - Add lines:
-     - Line 1: Debit `5800 — Depreciation` for ₹15,000.
-     - Line 2: Credit `1520 — Office Equipment` for ₹15,000.
-   - Verify the real-time balance indicator reports "Balanced Entry".
-   - Click "Post Journal Voucher".
-   - **Expectation**:
-     - Journal entry commits with code `JE-YYYY-XXXX` and status `POSTED`.
-     - Line items appear in the General Ledger table and update respective account balances.
-     - Attempting to submit unbalanced entries is rejected by both client and server guards.
-4. **Account T-Ledger Statement Inspection**:
-   - Switch to the "Account T-Ledger" tab.
-   - Select an account from the dropdown (e.g. `1120 — Bank Account` or `5650 — Software & Cloud Infrastructure`).
-   - **Expectation**:
-     - Top banner displays account code, account classification (`ASSET`, `EXPENSE`, etc.), current balance, and voucher volume.
-     - Chronological ledger table displays all posted vouchers impacting that account with Date, Voucher Ref, Narration, Debit, Credit, and calculated Running Balance.
-5. **Employee Reimbursement Workflow**:
-   - Click "Record Expense", check "This is an Employee Reimbursement Claim", select an employee from `/hr`, and submit.
-   - **Expectation**:
-     - Expense voucher is created with status `PENDING_APPROVAL`.
-     - Pending Approvals KPI card increments count and amount.
-     - Under the "Expenses Register" tab, clicking "Approve" advances status to `APPROVED`.
-     - Clicking "Mark Paid" shifts status to `PAID`, marks reimbursement claim settled, and automatically posts the balanced Journal Voucher.
-6. **Voiding an Expense**:
-   - Click the void icon (ban button) on an active expense row. Confirm the prompt.
-   - **Expectation**:
-     - Expense status updates to `VOID`.
-     - Linked Journal Entry status transitions to `VOID`.
-     - General Ledger account balances are atomically reversed.
-
----
-
-### 3.15 Price Lists & Customer Tier Pricing Protocols (`/sales/price-lists`)
-1. **Initial Provisioning & Rate Card Telemetry**:
-   - Navigate to `/sales/price-lists`.
-   - **Expectation**:
-     - System auto-seeds realistic starter rate cards (*Wholesale Partner Rate Card*, *Enterprise VIP Corporate Rate Card*, *High-Volume Distributor Rate Card*) with tiered volume breaks across catalog products (*Enterprise ERP License*, *Cloud Database Engine*, *Industrial IoT Sensor Node*).
-     - 4-column KPI telemetry renders real-time values for:
-       - **Active Rate Cards**: Count of active pricing policies.
-       - **Product Price Rules**: Total custom price overrides with progressive volume breaks.
-       - **Avg Tier Discount**: Average percentage savings configured across price lists.
-       - **Assigned Accounts**: Customers mapped to specialized pricing tiers.
-2. **Catalog Pricing Comparison Matrix Inspection**:
-   - Click the "Item Pricing Matrix" tab.
-   - **Expectation**:
-     - Comprehensive grid displays all products, catalog base prices, and side-by-side columns for each active rate card (`PL-WHOLESALE`, `PL-ENTERPRISE-VIP`, `PL-DISTRIBUTOR`).
-     - Each cell displays effective unit prices, discount badges (e.g. `-15%`, `-20%`), and volume tier tags.
-3. **Volume Discount Tiers View**:
-   - Switch to the "Volume Break Tiers" tab.
-   - **Expectation**:
-     - Cards display progressive volume breaks grouped by rate card (e.g. Min Order: 1 unit, 5 units, 20 units, 100 units) with lower unit prices for higher quantities.
-4. **Interactive Real-Time Price Simulator**:
-   - Switch to the "Interactive Price Simulator" tab.
-   - Pick a customer (e.g. Enterprise or Wholesale customer).
-   - Select a product (e.g. *Enterprise ERP Cloud Platform Annual License*).
-   - Enter quantity (e.g. `25`).
-   - Click "Resolve Price".
-   - **Expectation**:
-     - Simulator displays complete breakdown: Catalog Base Price, Effective Contract Unit Price, Net Line Total, Total Customer Savings (₹ and %), and confirms the matched volume break tier ($Q \ge 20$).
-5. **Rate Card Authoring & Volume Break Overrides**:
-   - Click "New Rate Card", enter Code (e.g. `PL-GOV`), Name (e.g. *Government & Educational Rate Card*), Scheme (`PERCENTAGE_DISCOUNT`), Default Discount (`25%`), Target Group (`ALL`), and submit.
-   - **Expectation**: New rate card appears in the Directory and Matrix tables.
-   - Click "Add Product Rule", select the new rate card, pick a product, specify `minQuantity = 10` and `customPrice = 75000`.
-   - **Expectation**: Custom override rule commits and immediately reflects in the matrix and simulator.
-6. **Customer Pricing Tier Assignment**:
-   - Click "Assign Customer", select a customer contact from CRM, select an assigned rate card, and confirm.
-   - **Expectation**: Customer is linked to the price list; future sales documents and simulator lookups automatically inherit the contracted rate card.
-
----
-
-### 3.16 Bank Reconciliation Protocols (`/finance/bank-reconciliation`)
-1. **Initial Provisioning & Account Telemetry**:
-   - Navigate to `/finance/bank-reconciliation`.
-   - **Expectation**:
-     - If no bank accounts exist for the tenant, the system auto-provisions realistic corporate bank accounts (*HDFC Primary Corporate Current Account* linked to CoA 1120 and *ICICI Forex & Escrow Current Account*) with an active March 2026 statement batch and diverse transaction lines.
-     - 4-column KPI telemetry renders real-time figures for:
-       - **Statement Balance**: Closing statement balance reported by the bank feed.
-       - **ERP Book Balance**: System general ledger balance from the linked Chart of Accounts node.
-       - **Cleared Balance**: Total cleared deposits and debits plus opening balance.
-       - **Reconciliation Variance ($\Delta$)**: Live mathematical difference between Statement Ending Balance and Cleared Balance. Displays a green "Balanced" badge when reconciled.
-2. **Reconciliation Match Desk (Split-Screen Workbench)**:
-   - Review the "Reconciliation Match Desk" tab.
-   - **Expectation**:
-     - Left pane lists all imported bank lines with Date, Transaction Type (`DEPOSIT` or `WITHDRAWAL`), Narration, Payee, Reference (UTR/Cheque/IMPS), Amount, and Status (`UNMATCHED`, `MATCHED`, `RECONCILED`).
-     - Right pane lists open ERP candidate records (Inbound Customer Payments, Outbound Vendor PO Payments, Operational Expenses).
-3. **Smart Rule-Based Auto-Matching Engine**:
-   - Click "Run Auto-Match".
-   - **Expectation**:
-     - The engine scans unmatched bank transactions against open ERP payments and expenses.
-     - Matches exact transaction references, invoice IDs, or identical amounts within $\pm 14$ days.
-     - Successfully matched lines update to `MATCHED` with a badge (`EXACT` or `RULE`), incrementing the Cleared Balance and shrinking the variance.
-4. **Manual Record Matching**:
-   - On an unmatched bank line, click "Match".
-   - Select an open ERP candidate payment or expense from the modal dialog.
-   - Click "Link".
-   - **Expectation**:
-     - Bank line links to the chosen system record, shifts to `MATCHED`, and updates running reconciliation balances.
-5. **Quick Expense & Instant Reconcile (Bank Charges / Interest)**:
-   - On an unmatched bank withdrawal (such as quarterly bank charges or interest debit), click "Quick Expense".
-   - Select Expense Category (e.g. *Bank Charges & Commission*), verify the prefilled amount, select the CoA expense account (e.g. `5700`), and click "Post & Instantly Reconcile".
-   - **Expectation**:
-     - An operational `Expense` voucher is created.
-     - A balanced General Ledger double-entry Journal Voucher (`JE-YYYY-XXXX`) is automatically posted (debiting Bank Charges, crediting Bank Account).
-     - The bank line is immediately marked `RECONCILED`.
-6. **Corporate Bank Account Management**:
-   - Switch to the "Bank Accounts Directory" tab.
-   - Click "Add Account", enter Bank Name (e.g. *State Bank of India*), Account Number, IFSC, Account Type (`CURRENT`), opening balance, and link to Chart of Accounts.
-   - Click "Create Account".
-   - **Expectation**:
-     - Account persists in `bank_accounts` table and displays in the directory with balance badges and routing information.
-7. **Statement Batch Import**:
-   - Switch to "Statement Batches & Periods" tab or click "Import Statement".
-   - Provide Statement Number (e.g. `STMT-2026-04-HDFC`), date range, opening/closing balances, and paste CSV lines.
-   - Click "Parse & Import Statement".
-   - **Expectation**:
-     - Creates `bank_statements` record and itemized `bank_transactions`.
-     - Appears in the statement history table with reconciled progress bar.
-8. **Finalizing & Locking Reconciliation**:
-   - Once all lines are cleared and variance reaches zero ($\Delta = ₹0.00$), click "Finalize".
-   - Confirm the lock prompt.
-   - **Expectation**:
-     - Statement status updates to `RECONCILED` with timestamp.
-     - All matched lines are locked as permanently `RECONCILED`.
-
----
-
-### 3.17 Recurring Invoices & Subscription Billing Protocols (`/sales/invoices/recurring`)
-1. **Initial Provisioning & Subscription Telemetry**:
-   - Navigate to `/sales/invoices/recurring`.
-   - **Expectation**:
-     - If no recurring profiles exist for the tenant, the system auto-provisions realistic client retainers (*Enterprise Cloud Managed DevOps Retainer [Monthly]*, *Annual Enterprise ERP Infrastructure License [Annually]*, *Quarterly Database Cluster Replication SLA [Quarterly]*).
-     - 4-column KPI telemetry renders real-time totals for:
-       - **Active Retainers**: Total count of active ongoing subscription contracts.
-       - **Monthly Run Rate (MRR)**: Normalized monthly revenue pipeline across all frequencies.
-       - **Next Run Scheduled**: Earliest upcoming next run date with countdown indicator ("Runs in X days").
-       - **Invoices Generated**: Total lifetime sales invoices spawned from recurring schedules.
-2. **Subscription Profiles Directory & Inspection**:
-   - Review the "Subscription Profiles" tab.
-   - Filter by status (`ACTIVE`, `PAUSED`, `COMPLETED`) or search by profile title/client.
-   - **Expectation**:
-     - Cards display Profile Code (`REC-YYYY-XXXX`), Cadence badge, Total recurring amount, Client company, Next run date with countdown tag, and Cycles completed progress.
-3. **Instant Invoice Generation ("Run Now" Trigger)**:
-   - On an active profile card, click "Run Now".
-   - Review confirmation modal and confirm.
-   - **Expectation**:
-     - An authentic Sales Invoice (`INV-YYYY-XXXX`) is spawned in `invoices` with full line items, HSN/SAC codes, and GST taxes.
-     - Profile `cyclesCompleted` increments by 1.
-     - Profile `nextRunDate` automatically shifts forward by the cadence interval (e.g. +1 month for monthly, +1 year for annual).
-     - Execution record is appended to `recurring_executions`.
-4. **Schedule Forecast Calendar**:
-   - Switch to the "Billing Forecast Schedule" tab.
-   - **Expectation**:
-     - Chronological list of upcoming billing events over the next 90 days.
-     - Displays expected invoice amounts and direct "Run Now" actions.
-5. **Generation History & Audit Log**:
-   - Switch to the "Generation History & Audit Log" tab.
-   - **Expectation**:
-     - Itemized table of all spawned invoices with execution timestamps, billed amounts, and working "View Invoice" links navigating to the generated invoice record.
-6. **Creating a New Recurring Billing Schedule**:
-   - Click "New Recurring Schedule".
-   - Enter Title (e.g. *Biweekly IT Support Retainer*), select Customer Contact, Frequency (`BIWEEKLY`), Start Date, Payment Terms (`NET_15`).
-   - Add line items with Qty, Unit Price, GST tax rate (e.g. 18%).
-   - Click "Create Schedule".
-   - **Expectation**:
-     - Profile persists with sequential numbering `REC-YYYY-XXXX`.
-     - Displays in directory and updates MRR telemetry card.
-7. **Pause / Resume & Status Management**:
-   - Click "Pause" on an active profile.
-   - **Expectation**:
-     - Status updates to `PAUSED`, MRR recalculates, and profile is excluded from automated batch runs.
-   - Click "Resume" to restore status to `ACTIVE`.
-
----
-
-### 3.18 CRM Email Integration & Corporate Inbox Protocols (`/crm/emails`)
-1. **Initial Provisioning & Telemetry**:
-   - Navigate to `/crm/emails`.
-   - **Expectation**:
-     - System auto-seeds corporate mailboxes (*Corporate Sales Desk*, *Strategic Partnerships Desk*), standardized sales outreach templates (*Cold Outreach - Cloud ERP Modernization*, *Post-Demo Proposal*, *Contract Renewal*), and initial correspondence threads linked to CRM Contacts and Deals.
-     - 4-column KPI telemetry renders real-time counts for:
-       - **Active Conversations**: Total conversation threads tracked.
-       - **Unread Inbound**: Inbound emails requiring team response.
-       - **Sent Outreach**: Outbound emails synchronized with CRM customer timelines.
-       - **Email Open Rate**: Real-time engagement percentage based on tracking pixels.
-2. **Modern 3-Pane Email Navigation**:
-   - Left Pane: Quick folder switcher (**Inbox**, **Unread**, **Starred**, **Sent**, **Archive**), CRM Linked Threads filters (**Contacts**, **Leads**, **Deals**), and Connected Mailbox accounts with status indicators.
-   - Middle Pane: Live search bar (by sender, subject, body, contact) and thread cards showing unread badges, direction indicators (`Inbound`/`Sent`), open tracking indicators, and CRM association badges.
-   - Right Pane: Conversation Reader & CRM 360° Inspector.
-3. **Reading & Interacting with Conversation Threads**:
-   - Click a conversation thread in the middle pane.
-   - **Expectation**:
-     - Thread marks as read in real time; unread counter decrements.
-     - Top action bar displays thread subject, star toggle, and delete action.
-     - CRM 360° Context Bar renders linked Contact (with direct link to `/crm/contacts`), linked Lead (to `/crm/leads`), or linked Deal (to `/crm/deals`).
-     - Chronological message history renders clean formatted correspondence with sender/recipient metadata, timestamps, and open tracking telemetry.
-4. **Sending Quick Inline Replies**:
-   - At the bottom of the conversation reader, select sending mailbox from the "via" dropdown.
-   - Type a reply in the quick response textarea (or select a quick template from "Insert Template...").
-   - Click "Send Reply".
-   - **Expectation**:
-     - Message is dispatched and appended to the thread.
-     - Automatically logs a corresponding `CommunicationLog` record of type `EMAIL` to maintain 360° timeline parity.
-5. **Composing Corporate Emails with Merge-Tag Templates**:
-   - Click "Compose Email" button in the top header.
-   - Select sending account, pick CRM Recipient (Contact, Lead, or Custom), and optionally associate a Deal.
-   - Select an Email Template from the "Load Template" dropdown (e.g. *Cold Outreach* or *Post-Demo Proposal*).
-   - **Expectation**:
-     - Template subject and body load dynamically.
-     - Merge tags (`{{contact.name}}`, `{{company.name}}`, `{{deal.name}}`, `{{user.name}}`) are automatically evaluated and replaced with real CRM entity values.
-   - Click "Send Email".
-   - **Expectation**:
-     - Email is created, thread is tracked, and toast confirms dispatch and CRM activity feed recording.
-6. **Corporate Mailbox Account Management**:
-   - Click "Mailboxes" in the header.
-   - Review connected corporate accounts (Gmail, Outlook, IMAP/SMTP).
-   - Add a new account specifying Display Name, Email Address, and Provider.
-   - Click "Sync" to trigger manual mailbox synchronization.
-7. **Email Template Management**:
-   - Click "Templates" in the header.
-   - Review existing templates categorized by `SALES`, `FOLLOW_UP`, `BILLING`, etc.
-   - Create custom templates with dynamic merge tags (`{{contact.name}}`, `{{deal.name}}`, `{{company.name}}`).
-
----
-
-### 3.19 CRM Web Forms & Inbound Lead Capture Protocols (`/crm/forms`)
-1. **Initial Provisioning & Lead Capture Telemetry**:
-   - Navigate to `/crm/forms`.
-   - **Expectation**:
-     - System auto-seeds starter web intake forms (*Enterprise Cloud ERP Demo Request*, *Website General Contact & Consultation*) with predefined schema fields, brand styling, and sample submission records.
-     - 4-column KPI telemetry renders real-time counts for:
-       - **Active Web Forms**: Count of live intake endpoints accepting inbound submissions.
-       - **Total Submissions**: Cumulative count of inbound responses received.
-       - **Inbound Leads Captured**: Count of verified CRM Leads generated, with a working direct link to `/crm/leads`.
-       - **Avg. Conversion Rate**: Top-funnel lead qualification percentage.
-2. **Forms Directory & Lifecycle Controls**:
-   - Review the "Forms Directory" tab.
-   - Search by title or code (`FORM-YYYY-XXXX`), or filter by type (`Contact`, `Quote / RFQ`, `Demo Request`, `Feedback`, `Support`) and status (`Active`, `Paused`, `Draft`, `Archived`).
-   - Click the "Pause / Activate" toggle icon on any form card.
-   - **Expectation**:
-     - Form status updates in real time.
-     - Paused forms reject public submissions with a clear notice, while active forms accept traffic.
-3. **Form Studio & Visual Schema Builder**:
-   - Switch to the "Form Studio & Builder" tab or click the edit icon on any form card.
-   - Modify Form Title, Description, Button CTA Text, Brand Primary Color picker (swatches + hex), Success Message, and optional Redirect URL.
-   - Reorder input fields using the Up/Down controls, toggle the "Required" validation flag, or customize placeholder text.
-   - Click "Add Custom Field" to add new inputs (Text, Email, Phone/Tel, Textarea, Select Dropdown, Number).
-   - Observe the sticky right-side **Live Interactive Preview** pane updating in real time with exact brand colors and form styling.
-   - Click "Save Changes".
-   - **Expectation**:
-     - Configurations persist to `web_forms` in the database.
-4. **Live Form Submission Simulator**:
-   - Click "Preview" on any form card or click "Test Simulator" in the top header.
-   - Fill out the simulated form inputs with realistic prospect details (e.g. *Alexander Vance*, *alexander.vance@techcorp.io*, *Vance Technologies*).
-   - Click "Submit Request".
-   - **Expectation**:
-     - Submission completes with celebratory success confirmation screen.
-     - Automatically creates a new `Lead` in `leads` linked to the contact details.
-     - Appends a new submission log to `form_submissions`.
-     - Clicking "View In CRM Leads" navigates directly to `/crm/leads` where the newly captured prospect is present.
-5. **Submissions Feed & Raw Payload Inspector**:
-   - Switch to the "Submissions Feed" tab.
-   - Search by submitter name, email, or company.
-   - **Expectation**:
-     - Table displays Timestamp, Origin Web Form, Submitter Name & Email, CRM Lead badge (with direct link to `/crm/leads`), and Status badge (`PROCESSED`, `SPAM`).
-     - Clicking "Inspect" opens the modal displaying full raw JSON submission payload and client metadata.
-6. **Embed & Integration Hub**:
-   - Switch to the "Embed & Integration Hub" tab or click "Embed" on any form card.
-   - Review the 4 available integration modalities:
-     - **Responsive HTML iFrame**: Self-sizing `<iframe src="...">` snippet with one-click copy.
-     - **JavaScript Widget Script**: Asynchronous dynamic widget script snippet.
-     - **Direct Shareable URL**: Public link (`/forms/[code]`) with one-click copy.
-     - **Public REST API & cURL**: Production-grade cURL command for programmatic Jamstack, mobile, or webhook integration.
-7. **Public Standalone Form Page & CORS Intake API**:
-   - Open `/forms/[code]` in a browser window.
-   - **Expectation**:
-     - Standalone branded page renders without ERP dashboard chrome.
-     - Hidden anti-spam honeypot field (`_hp_company`) guards against automated scrapers.
-     - Submitting the form validates inputs, triggers the public intake pipeline, and presents the success message or executes the redirect.
-   - Send a `POST` request to `/api/forms/[id]/submit` from an external domain or test script.
-   - **Expectation**:
-     - Responds with `200 OK` and CORS headers (`Access-Control-Allow-Origin: *`), returns `{ success: true, leadId, message }`.
-
-
-
+### Window 2: Tenant Portal (`vicky.magar1993@gmail.com`)
+1. **Login:** Successfully logged in.
+2. **Contacts (`/crm/contacts`):** Created new Contact "Apex Global Technologies" with address auto-suggest ("Maha" ➔ "Maharashtra", "Pun" ➔ "Pune"). Contact saved and verified in list.
+3. **Companies (`/crm/companies`):** Created new Company "OmniTech Solutions Inc" in Bengaluru, Karnataka with address auto-suggest. Company saved and verified in list.
+4. **Settings (`/settings`):** Updated Company Profile (GSTIN `27ABCDE1234F1Z5`, Email `support@fixocomputers.com`, and configured brand logo). Verified live preview and successful database update.
+5. **Navigation Menu:** Verified that TDS and GST Returns are removed from Finance sidebar.
+6. **CRM Hubs:** Verified Web Forms (`/crm/forms`), Emails (`/crm/emails`), and WhatsApp Hub (`/crm/whatsapp`).
+7. **Email Integration & SMTP Credentials (`/crm/emails`):**
+   - **Database Migration:** Added `smtp_password` and `imap_password` columns to `email_accounts` in PostgreSQL and updated Prisma schema.
+   - **Credentials Form:** Created dedicated input fields for SMTP Host, SMTP Port, SMTP Username/Login, SMTP Password (with interactive Eye/EyeOff toggle), Direct SSL/TLS toggle, and collapsible IMAP settings.
+   - **Provider Presets:** Auto-populates recommended host and port configurations for Google Workspace (Gmail), Microsoft 365 (Outlook), SendGrid, and Resend.
+   - **Live SMTP Verification:** Integrated `testSmtpConnection` with `nodemailer` transporter verification. Tested and verified live connection to `smtp.gmail.com:587` with green status banner.
+   - **Multiple Mailboxes:** Connected and saved new mailbox "Corporate Support Desk" (`support@genesoft.ai`), and verified it in both the Mailboxes list and the Compose Email dropdown.
+8. **WhatsApp Business Hub Corrections & Gateway Credentials (`/crm/whatsapp`):**
+   - **Decimal Serialization Fix:** Fixed Next.js Server Component error where Prisma `Decimal` instances in Invoices crashed JSON serialization (`whatsapp/page.tsx`).
+   - **Meta Developer Credentials:** Added Meta App ID (Client ID) and Meta App Secret inputs to the Gateway Settings form.
+   - **Show/Hide Password Toggles:** Implemented `PasswordInput` with interactive Eye/EyeOff unmask toggles for both the Meta App Secret and the Permanent System User Access Token.
+   - **Webhook Verify Token Customization:** Made the Webhook Verify Token directly customizable and copyable in the settings form, and persisted it in `Tenant.settings.whatsapp`.
+   - **Live Verification:** Navigated to `/crm/whatsapp`, switched to Gateway Settings tab, filled credentials, tested show/hide toggles, saved configuration, and triggered live connection test with verified success banner.
+9. **Web Forms Hub Corrections & Anti-Spam Security (`/crm/forms`):**
+   - **Missing Studio Form Settings Exposed:** Added input fields in Form Studio for Notification Alert Email (`notifyEmail`), Default Lead Status dropdown (`defaultLeadStatus`), and Lead Source Attribution (`defaultLeadSource`).
+   - **Automated Sales Email Alert:** Integrated automated email dispatch in `submitPublicForm` action using the CRM Email Engine whenever a public visitor submits a form with a configured alert email.
+   - **Anti-Spam & Bot Protection Credentials:** Added reCAPTCHA / Cloudflare Turnstile Site Key (Public) and Secret Key (with `PasswordInput` interactive Eye/EyeOff toggle) inside the Embed & Integration Hub.
+   - **Live Verification:** Verified Form Studio settings synchronization, filled and tested reCAPTCHA site key and secret key (revealing and masking with Eye toggle), and saved keys with immediate toast confirmation.
+10. **Operations Suite Verification & Schema Alignments (`/purchase`, `/inventory`, `/manufacturing`, `/hr`, `/projects`):**
+   - **Inventory Schema Bug Resolved:** Identified and fixed `PrismaClientValidationError` in `app/src/app/actions/batch-serial.ts`:
+     - Replaced invalid `purchaseOrder.poNumber` with `purchaseOrder.orderNumber`.
+     - Replaced invalid `product.barcode` selection with `product.customAttributes` (safely resolving barcode from customAttributes or falling back to SKU).
+   - **Address Auto-Suggestion Integration:**
+     - Added `AutoSuggestInput` for Country, State, and City in **Warehouse Depot Provisioning** modal in `/inventory`.
+     - Added `AutoSuggestInput` for Country, State, and City in **New Supplier / Vendor** modal in `/purchase`.
+   - **Live Navigation & End-to-End Validation:**
+     - **Purchase (`/purchase` & `/purchase/rfq`):** Verified procurement spend telemetry, PO status filters, and RFQ tenders comparison studio.
+     - **Inventory (`/inventory`):** Verified live stock levels, valuation (₹5,00,000 across 50 units), barcode utilities, created new warehouse "Northern Cold Storage Hub" (WH-2) live via form and verified persistence.
+     - **Manufacturing (`/manufacturing`):** Verified Work Orders, Bill of Materials (BOM), and Quality Control (QC) tabs with zero errors.
+     - **HR & Workforce (`/hr`):** Verified Employee Roster, Attendance rosters, Leave approvals, Departments (5 active units), Payroll, and ATS recruitment.
+     - **Employee Portal (`/hr/portal`):** Verified graceful non-linked employee state with redirection to directory.
+     - **Performance & Training (`/hr/performance`):** Verified 360 appraisal cycles, OKRs, and corporate training catalogs.
+     - **Projects (`/projects`):** Verified Agile Kanban board, sprint milestones, time tracking logs, and portfolio budget telemetry (₹7,30,000).
 
 

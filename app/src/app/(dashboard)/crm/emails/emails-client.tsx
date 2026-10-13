@@ -25,6 +25,7 @@ import {
     deleteEmailAccount,
     createEmailTemplate,
     deleteEmailTemplate,
+    testSmtpConnection,
 } from "@/app/actions/crm/emails"
 import {
     Mail,
@@ -60,7 +61,14 @@ import {
     X,
     Layers,
     Calendar,
+    Key,
+    Server,
+    Lock,
+    Shield,
+    Info,
+    Loader2,
 } from "lucide-react"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -137,9 +145,62 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
     const [newAccountName, setNewAccountName] = useState("")
     const [newAccountEmail, setNewAccountEmail] = useState("")
     const [newAccountProvider, setNewAccountProvider] = useState<EmailProvider>(EmailProvider.GMAIL)
-    const [newAccountHost, setNewAccountHost] = useState("")
+    // IMAP Inbound
+    const [newAccountHost, setNewAccountHost] = useState("imap.gmail.com")
     const [newAccountPort, setNewAccountPort] = useState(993)
     const [newAccountUser, setNewAccountUser] = useState("")
+    const [newAccountImapPass, setNewAccountImapPass] = useState("")
+    const [newAccountImapSecure, setNewAccountImapSecure] = useState(true)
+    const [showImapSettings, setShowImapSettings] = useState(false)
+    // SMTP Outbound
+    const [newAccountSmtpHost, setNewAccountSmtpHost] = useState("smtp.gmail.com")
+    const [newAccountSmtpPort, setNewAccountSmtpPort] = useState(587)
+    const [newAccountSmtpUser, setNewAccountSmtpUser] = useState("")
+    const [newAccountSmtpPass, setNewAccountSmtpPass] = useState("")
+    const [newAccountSmtpSecure, setNewAccountSmtpSecure] = useState(false)
+    const [newAccountIsDefault, setNewAccountIsDefault] = useState(false)
+    // Testing state
+    const [isTestingSmtp, setIsTestingSmtp] = useState(false)
+    const [smtpTestResult, setSmtpTestResult] = useState<{ success: boolean; message: string } | null>(null)
+
+    // Provider preset switcher
+    const handleProviderChange = (prov: EmailProvider) => {
+        setNewAccountProvider(prov)
+        setSmtpTestResult(null)
+        if (prov === EmailProvider.GMAIL) {
+            setNewAccountSmtpHost("smtp.gmail.com")
+            setNewAccountSmtpPort(587)
+            setNewAccountSmtpSecure(false)
+            setNewAccountHost("imap.gmail.com")
+            setNewAccountPort(993)
+        } else if (prov === EmailProvider.OUTLOOK) {
+            setNewAccountSmtpHost("smtp.office365.com")
+            setNewAccountSmtpPort(587)
+            setNewAccountSmtpSecure(false)
+            setNewAccountHost("outlook.office365.com")
+            setNewAccountPort(993)
+        } else if (prov === EmailProvider.SENDGRID) {
+            setNewAccountSmtpHost("smtp.sendgrid.net")
+            setNewAccountSmtpPort(587)
+            setNewAccountSmtpUser("apikey")
+            setNewAccountSmtpSecure(false)
+            setNewAccountHost("")
+            setNewAccountPort(993)
+        } else if (prov === EmailProvider.RESEND) {
+            setNewAccountSmtpHost("smtp.resend.com")
+            setNewAccountSmtpPort(465)
+            setNewAccountSmtpUser("resend")
+            setNewAccountSmtpSecure(true)
+            setNewAccountHost("")
+            setNewAccountPort(993)
+        } else {
+            setNewAccountSmtpHost("")
+            setNewAccountSmtpPort(587)
+            setNewAccountSmtpSecure(false)
+            setNewAccountHost("")
+            setNewAccountPort(993)
+        }
+    }
 
     // New Template Form State
     const [newTemplateName, setNewTemplateName] = useState("")
@@ -464,9 +525,40 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
         })
     }
 
+    // Handler: Test SMTP Server Connection
+    const handleTestSmtp = async () => {
+        if (!newAccountSmtpHost.trim()) {
+            toast.error("Please enter the SMTP Host server")
+            return
+        }
+        setIsTestingSmtp(true)
+        setSmtpTestResult(null)
+        try {
+            const res = await testSmtpConnection({
+                host: newAccountSmtpHost.trim(),
+                port: Number(newAccountSmtpPort) || 587,
+                user: newAccountSmtpUser.trim() || newAccountEmail.trim() || undefined,
+                pass: newAccountSmtpPass.trim() || undefined,
+                secure: newAccountSmtpSecure,
+            })
+            setSmtpTestResult(res)
+            if (res.success) {
+                toast.success(res.message)
+            } else {
+                toast.error(res.message)
+            }
+        } catch (err: any) {
+            const msg = err.message || "Failed to test SMTP connection"
+            setSmtpTestResult({ success: false, message: msg })
+            toast.error(msg)
+        } finally {
+            setIsTestingSmtp(false)
+        }
+    }
+
     // Handler: Create Corporate Mailbox Account
     const handleCreateAccount = async () => {
-        if (!newAccountName || !newAccountEmail) {
+        if (!newAccountName.trim() || !newAccountEmail.trim()) {
             toast.error("Account name and email are required")
             return
         }
@@ -474,16 +566,20 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
         startTransition(async () => {
             try {
                 const res = await createEmailAccount({
-                    name: newAccountName,
-                    email: newAccountEmail,
+                    name: newAccountName.trim(),
+                    email: newAccountEmail.trim().toLowerCase(),
                     provider: newAccountProvider,
-                    imapHost: newAccountHost || "imap.mailserver.local",
+                    smtpHost: newAccountSmtpHost.trim() || "smtp.mailserver.local",
+                    smtpPort: Number(newAccountSmtpPort) || 587,
+                    smtpUser: newAccountSmtpUser.trim() || newAccountEmail.trim(),
+                    smtpPassword: newAccountSmtpPass.trim() || undefined,
+                    smtpSecure: newAccountSmtpSecure,
+                    imapHost: newAccountHost.trim() || "imap.mailserver.local",
                     imapPort: Number(newAccountPort) || 993,
-                    imapUser: newAccountUser || newAccountEmail,
-                    smtpHost: "smtp.mailserver.local",
-                    smtpPort: 587,
-                    smtpUser: newAccountEmail,
-                    isDefault: accounts.length === 0,
+                    imapUser: newAccountUser.trim() || newAccountEmail.trim(),
+                    imapPassword: newAccountImapPass.trim() || undefined,
+                    imapSecure: newAccountImapSecure,
+                    isDefault: newAccountIsDefault || accounts.length === 0,
                 })
 
                 if (!res.success) {
@@ -495,6 +591,9 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                 setIsAccountsModalOpen(false)
                 setNewAccountName("")
                 setNewAccountEmail("")
+                setNewAccountSmtpPass("")
+                setNewAccountImapPass("")
+                setSmtpTestResult(null)
                 router.refresh()
             } catch (err: any) {
                 toast.error(err.message || "Failed to add account")
@@ -1588,7 +1687,14 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                                         </Badge>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">{acc.email}</p>
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                                    <span>{acc.email}</span>
+                                                    {acc.smtpHost && (
+                                                        <span className="font-mono text-[11px] text-muted-foreground/80">
+                                                            • SMTP: {acc.smtpHost}:{acc.smtpPort || 587}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -1619,67 +1725,273 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                         </div>
 
                         {/* Add New Mailbox Form */}
-                        <div className="rounded-xl border p-4 bg-card space-y-3">
-                            <h4 className="text-sm font-semibold flex items-center gap-1.5">
-                                <Plus className="h-4 w-4 text-primary" />
-                                Connect New Corporate Mailbox
-                            </h4>
+                        <div className="rounded-xl border p-4 bg-card space-y-4">
+                            <div>
+                                <h4 className="text-sm font-semibold flex items-center gap-1.5">
+                                    <Plus className="h-4 w-4 text-primary" />
+                                    Connect New Corporate Mailbox
+                                </h4>
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                    Link your Google Workspace, Microsoft 365, or custom SMTP/IMAP corporate mail server.
+                                </p>
+                            </div>
 
+                            {/* Service Provider Selection */}
+                            <div>
+                                <label className="text-xs font-medium">Provider Service</label>
+                                <select
+                                    value={newAccountProvider}
+                                    onChange={(e) => handleProviderChange(e.target.value as EmailProvider)}
+                                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs mt-1"
+                                >
+                                    <option value={EmailProvider.GMAIL}>Google Workspace / Gmail (OAuth / App Password)</option>
+                                    <option value={EmailProvider.OUTLOOK}>Microsoft Outlook / Office 365</option>
+                                    <option value={EmailProvider.CUSTOM_SMTP_IMAP}>Custom Corporate IMAP & SMTP</option>
+                                    <option value={EmailProvider.SENDGRID}>SendGrid Service (Transactional SMTP)</option>
+                                    <option value={EmailProvider.RESEND}>Resend Service (Developer SMTP)</option>
+                                </select>
+                            </div>
+
+                            {/* Basic Details */}
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label className="text-xs font-medium">Display Name</label>
+                                    <label className="text-xs font-medium">Display Name <span className="text-destructive">*</span></label>
                                     <Input
                                         placeholder="e.g. Sales Outreach Desk"
                                         value={newAccountName}
                                         onChange={(e) => setNewAccountName(e.target.value)}
-                                        className="h-8 text-sm mt-1"
+                                        className="h-8 text-xs mt-1"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-medium">Corporate Email Address</label>
+                                    <label className="text-xs font-medium">Corporate Email Address <span className="text-destructive">*</span></label>
                                     <Input
+                                        type="email"
                                         placeholder="sales@yourcompany.com"
                                         value={newAccountEmail}
                                         onChange={(e) => setNewAccountEmail(e.target.value)}
-                                        className="h-8 text-sm mt-1"
+                                        className="h-8 text-xs mt-1"
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label className="text-xs font-medium">Provider Service</label>
-                                    <select
-                                        value={newAccountProvider}
-                                        onChange={(e) => setNewAccountProvider(e.target.value as EmailProvider)}
-                                        className="w-full h-8 rounded-md border border-input bg-background px-2 text-xs mt-1"
+                            {/* SMTP Outgoing Server (Outreach & Automated Dispatch) */}
+                            <div className="rounded-lg border bg-muted/30 p-3.5 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                        <Send className="h-3.5 w-3.5 text-primary" />
+                                        <span className="text-xs font-semibold uppercase tracking-wider text-foreground">
+                                            Outgoing Server (SMTP Credentials)
+                                        </span>
+                                    </div>
+                                    <Badge variant="outline" className="text-[10px] font-mono">
+                                        Port {newAccountSmtpPort}
+                                    </Badge>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2.5">
+                                    <div className="col-span-2">
+                                        <label className="text-[11px] font-medium text-muted-foreground">SMTP Host Server</label>
+                                        <Input
+                                            placeholder="smtp.gmail.com"
+                                            value={newAccountSmtpHost}
+                                            onChange={(e) => setNewAccountSmtpHost(e.target.value)}
+                                            className="h-8 text-xs mt-1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-medium text-muted-foreground">Port</label>
+                                        <Input
+                                            type="number"
+                                            placeholder="587"
+                                            value={newAccountSmtpPort}
+                                            onChange={(e) => setNewAccountSmtpPort(Number(e.target.value) || 587)}
+                                            className="h-8 text-xs mt-1"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2.5">
+                                    <div>
+                                        <label className="text-[11px] font-medium text-muted-foreground">SMTP Username / Login</label>
+                                        <Input
+                                            placeholder={newAccountEmail || "username@domain.com"}
+                                            value={newAccountSmtpUser}
+                                            onChange={(e) => setNewAccountSmtpUser(e.target.value)}
+                                            className="h-8 text-xs mt-1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-[11px] font-medium text-muted-foreground">
+                                            SMTP Password / App Password
+                                        </label>
+                                        <PasswordInput
+                                            placeholder="App password or secret key"
+                                            value={newAccountSmtpPass}
+                                            onChange={(e) => setNewAccountSmtpPass(e.target.value)}
+                                            className="h-8 text-xs mt-1"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-1">
+                                    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={newAccountSmtpSecure}
+                                            onChange={(e) => setNewAccountSmtpSecure(e.target.checked)}
+                                            className="rounded border-input text-primary h-3.5 w-3.5"
+                                        />
+                                        <span>Use SSL/TLS (Direct SSL on Port 465)</span>
+                                    </label>
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleTestSmtp}
+                                        disabled={isTestingSmtp || !newAccountSmtpHost}
+                                        className="h-7 text-xs gap-1.5"
                                     >
-                                        <option value={EmailProvider.GMAIL}>Google Workspace (Gmail)</option>
-                                        <option value={EmailProvider.OUTLOOK}>Microsoft Outlook / 365</option>
-                                        <option value={EmailProvider.CUSTOM_SMTP_IMAP}>Custom Corporate IMAP & SMTP</option>
-                                        <option value={EmailProvider.SENDGRID}>SendGrid Service</option>
-                                        <option value={EmailProvider.RESEND}>Resend Service</option>
-                                    </select>
+                                        {isTestingSmtp ? (
+                                            <>
+                                                <Loader2 className="h-3 w-3 animate-spin" />
+                                                Verifying...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <RefreshCw className="h-3 w-3" />
+                                                Test SMTP Connection
+                                            </>
+                                        )}
+                                    </Button>
                                 </div>
-                                <div>
-                                    <label className="text-xs font-medium">IMAP Host Server</label>
-                                    <Input
-                                        placeholder="imap.mailserver.com"
-                                        value={newAccountHost}
-                                        onChange={(e) => setNewAccountHost(e.target.value)}
-                                        className="h-8 text-sm mt-1"
-                                    />
-                                </div>
+
+                                {/* SMTP Test Feedback Banner */}
+                                {smtpTestResult && (
+                                    <div
+                                        className={`p-2.5 rounded-lg border text-xs flex items-start gap-2 ${
+                                            smtpTestResult.success
+                                                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400"
+                                                : "bg-destructive/10 border-destructive/30 text-destructive"
+                                        }`}
+                                    >
+                                        {smtpTestResult.success ? (
+                                            <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600" />
+                                        ) : (
+                                            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-destructive" />
+                                        )}
+                                        <div className="flex-1">
+                                            <span className="font-semibold">
+                                                {smtpTestResult.success ? "Connection Verified:" : "Connection Failed:"}
+                                            </span>{" "}
+                                            {smtpTestResult.message}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Provider Tips */}
+                                {newAccountProvider === EmailProvider.GMAIL && (
+                                    <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
+                                        <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                        <span>
+                                            Google Workspace / Gmail requires a 16-character <strong>App Password</strong> generated in Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords.
+                                        </span>
+                                    </div>
+                                )}
+                                {newAccountProvider === EmailProvider.OUTLOOK && (
+                                    <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-800 dark:text-blue-300 flex items-start gap-1.5">
+                                        <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                        <span>
+                                            Microsoft 365 requires SMTP AUTH enabled on your mailbox or an App Password generated under Security settings.
+                                        </span>
+                                    </div>
+                                )}
                             </div>
+
+                            {/* Inbound IMAP Sync Section (Collapsible toggle) */}
+                            <div className="rounded-lg border bg-muted/20 p-3 space-y-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowImapSettings(!showImapSettings)}
+                                    className="w-full flex items-center justify-between text-left text-xs font-semibold text-muted-foreground hover:text-foreground"
+                                >
+                                    <div className="flex items-center gap-1.5">
+                                        <Inbox className="h-3.5 w-3.5 text-primary" />
+                                        <span>Inbound Mailbox Synchronization (IMAP - Optional)</span>
+                                    </div>
+                                    <span className="text-[10px] text-primary underline">
+                                        {showImapSettings ? "Hide IMAP Settings" : "Configure IMAP"}
+                                    </span>
+                                </button>
+
+                                {showImapSettings && (
+                                    <div className="pt-2 space-y-2.5 border-t border-border/50">
+                                        <div className="grid grid-cols-3 gap-2.5">
+                                            <div className="col-span-2">
+                                                <label className="text-[11px] font-medium text-muted-foreground">IMAP Host Server</label>
+                                                <Input
+                                                    placeholder="imap.gmail.com"
+                                                    value={newAccountHost}
+                                                    onChange={(e) => setNewAccountHost(e.target.value)}
+                                                    className="h-8 text-xs mt-1"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[11px] font-medium text-muted-foreground">IMAP Port</label>
+                                                <Input
+                                                    type="number"
+                                                    placeholder="993"
+                                                    value={newAccountPort}
+                                                    onChange={(e) => setNewAccountPort(Number(e.target.value) || 993)}
+                                                    className="h-8 text-xs mt-1"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-2.5">
+                                            <div>
+                                                <label className="text-[11px] font-medium text-muted-foreground">IMAP Username</label>
+                                                <Input
+                                                    placeholder={newAccountEmail || "username@domain.com"}
+                                                    value={newAccountUser}
+                                                    onChange={(e) => setNewAccountUser(e.target.value)}
+                                                    className="h-8 text-xs mt-1"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="text-[11px] font-medium text-muted-foreground">IMAP Password</label>
+                                                <PasswordInput
+                                                    placeholder="••••••••••••••••"
+                                                    value={newAccountImapPass}
+                                                    onChange={(e) => setNewAccountImapPass(e.target.value)}
+                                                    className="h-8 text-xs mt-1"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Default mailbox toggle */}
+                            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={newAccountIsDefault}
+                                    onChange={(e) => setNewAccountIsDefault(e.target.checked)}
+                                    className="rounded border-input text-primary h-3.5 w-3.5"
+                                />
+                                <span>Set as default mailbox for outgoing CRM campaigns and replies</span>
+                            </label>
 
                             <Button
                                 size="sm"
                                 onClick={handleCreateAccount}
                                 disabled={isPending || !newAccountName || !newAccountEmail}
-                                className="w-full gap-2 mt-2"
+                                className="w-full gap-2 mt-2 h-9"
                             >
                                 <CheckCircle2 className="h-4 w-4" />
-                                Save & Connect Mailbox
+                                {isPending ? "Connecting Mailbox..." : "Save & Connect Mailbox"}
                             </Button>
                         </div>
                     </div>

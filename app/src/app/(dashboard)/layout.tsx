@@ -92,8 +92,6 @@ import { getTenantSettings } from "@/app/actions/settings/tenant"
 import { getGlobalSettings } from "@/app/actions/saas/admin"
 
 const STATUTORY_TAX_ROUTES = [
-    "/finance/gst-returns",
-    "/finance/tds",
     "/finance/vat-uae",
     "/finance/vat-ksa",
     "/finance/tax-australia",
@@ -148,8 +146,6 @@ const navigation = [
             { name: "Payables", href: "/finance/payable", icon: Wallet },
             { name: "Bills", href: "/finance/bills", icon: FileText },
             { name: "Payments", href: "/finance/payments", icon: CreditCard },
-            { name: "TDS & Withholding", href: "/finance/tds", icon: Percent },
-            { name: "GST Returns (GSTR)", href: "/finance/gst-returns", icon: FileSpreadsheet },
             { name: "UAE VAT (Form 201)", href: "/finance/vat-uae", icon: Landmark },
             { name: "KSA VAT & ZATCA", href: "/finance/vat-ksa", icon: ShieldCheck },
             { name: "Australia BAS (GST)", href: "/finance/tax-australia", icon: Landmark },

@@ -81,6 +81,8 @@ import {
 } from "@/app/actions/purchase"
 import { formatCurrency } from "@/lib/utils"
 import { PurchaseOrderStatus } from "@prisma/client"
+import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
+import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 
 interface PurchaseClientProps {
     initialData: PurchaseOverviewData
@@ -124,6 +126,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
     const [vendorGstin, setVendorGstin] = useState("")
     const [vendorCity, setVendorCity] = useState("")
     const [vendorState, setVendorState] = useState("")
+    const [vendorCountry, setVendorCountry] = useState("India")
     const [vendorCountryCode, setVendorCountryCode] = useState("IN")
     const [isSubmittingVendor, setIsSubmittingVendor] = useState(false)
 
@@ -1886,23 +1889,63 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                 />
                             </div>
 
-                            <div className="space-y-1">
-                                <Label htmlFor="vendor-city">City</Label>
-                                <Input
-                                    id="vendor-city"
-                                    placeholder="City"
-                                    value={vendorCity}
-                                    onChange={(e) => setVendorCity(e.target.value)}
+                            <div className="space-y-1 sm:col-span-2">
+                                <Label htmlFor="vendor-country">Country</Label>
+                                <AutoSuggestInput
+                                    id="vendor-country"
+                                    value={vendorCountry}
+                                    onChange={(e) => setVendorCountry(e.target.value)}
+                                    options={searchCountries(vendorCountry).map((c) => ({
+                                        label: c.name,
+                                        value: c.name,
+                                        subLabel: c.code,
+                                        icon: c.flag,
+                                    }))}
+                                    onSelectOption={(opt) => {
+                                        setVendorCountry(opt.value)
+                                        if (opt.subLabel) setVendorCountryCode(opt.subLabel)
+                                    }}
+                                    placeholder="Start typing country..."
                                 />
                             </div>
 
                             <div className="space-y-1">
                                 <Label htmlFor="vendor-state">State / Region</Label>
-                                <Input
+                                <AutoSuggestInput
                                     id="vendor-state"
-                                    placeholder="State or Province"
                                     value={vendorState}
                                     onChange={(e) => setVendorState(e.target.value)}
+                                    options={searchStates(vendorState, vendorCountry).map((s) => ({
+                                        label: s.name,
+                                        value: s.name,
+                                        subLabel: s.code,
+                                    }))}
+                                    onSelectOption={(opt) => setVendorState(opt.value)}
+                                    placeholder="Start typing state..."
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <Label htmlFor="vendor-city">City</Label>
+                                <AutoSuggestInput
+                                    id="vendor-city"
+                                    value={vendorCity}
+                                    onChange={(e) => setVendorCity(e.target.value)}
+                                    options={searchCities(vendorCity, vendorState, vendorCountry).map((c) => ({
+                                        label: c.name,
+                                        value: c.name,
+                                        subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
+                                    }))}
+                                    onSelectOption={(opt) => {
+                                        setVendorCity(opt.value)
+                                        if (opt.subLabel) {
+                                            const parts = opt.subLabel.split(",")
+                                            if (parts.length > 1 && !vendorState) {
+                                                setVendorState(parts[0].trim())
+                                            }
+                                        }
+                                    }}
+                                    placeholder="Start typing city..."
                                 />
                             </div>
                         </div>

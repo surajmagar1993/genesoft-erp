@@ -148,7 +148,7 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
                     select: { id: true, batchNumber: true }
                 },
                 purchaseOrder: {
-                    select: { id: true, poNumber: true }
+                    select: { id: true, orderNumber: true }
                 }
             },
             orderBy: { createdAt: "desc" },
@@ -156,7 +156,7 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
         }),
         prisma.product.findMany({
             where: { tenantId, type: "PRODUCT", isActive: true },
-            select: { id: true, name: true, sku: true, barcode: true, unit: true, stockQty: true },
+            select: { id: true, name: true, sku: true, customAttributes: true, unit: true, stockQty: true },
             orderBy: { name: "asc" }
         }),
         prisma.warehouse.findMany({
@@ -242,7 +242,7 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
             serialNumber: s.serialNumber,
             status: s.status,
             purchaseOrderId: s.purchaseOrderId,
-            poNumber: s.purchaseOrder?.poNumber || null,
+            poNumber: s.purchaseOrder?.orderNumber || null,
             warrantyMonths: s.warrantyMonths,
             warrantyExpiry: s.warrantyExpiry,
             notes: s.notes,
@@ -271,7 +271,7 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
             id: p.id,
             name: p.name,
             sku: p.sku,
-            barcode: p.barcode,
+            barcode: (p.customAttributes as any)?.barcode || p.sku || null,
             unit: p.unit,
             stockQty: Number(p.stockQty)
         })),
@@ -810,7 +810,7 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
                 serialNumber: serial.serialNumber,
                 status: serial.status,
                 purchaseOrderId: serial.purchaseOrderId,
-                poNumber: serial.purchaseOrder?.poNumber || null,
+                poNumber: serial.purchaseOrder?.orderNumber || null,
                 warrantyMonths: serial.warrantyMonths,
                 warrantyExpiry: serial.warrantyExpiry,
                 notes: serial.notes,
@@ -845,7 +845,7 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
                 id: serial.product.id,
                 name: serial.product.name,
                 sku: serial.product.sku,
-                barcode: serial.product.barcode,
+                barcode: (serial.product.customAttributes as any)?.barcode || serial.product.sku || null,
                 category: serial.product.category,
                 stockQty: Number(serial.product.stockQty)
             },
@@ -934,7 +934,7 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
                     serialNumber: s.serialNumber,
                     status: s.status,
                     purchaseOrderId: s.purchaseOrderId,
-                    poNumber: s.purchaseOrder?.poNumber || null,
+                    poNumber: s.purchaseOrder?.orderNumber || null,
                     warrantyMonths: s.warrantyMonths,
                     warrantyExpiry: s.warrantyExpiry,
                     notes: s.notes,
@@ -946,7 +946,7 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
                 id: batch.product.id,
                 name: batch.product.name,
                 sku: batch.product.sku,
-                barcode: batch.product.barcode,
+                barcode: (batch.product.customAttributes as any)?.barcode || batch.product.sku || null,
                 category: batch.product.category,
                 stockQty: Number(batch.product.stockQty)
             },

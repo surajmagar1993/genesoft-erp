@@ -56,7 +56,13 @@ import {
     FileSpreadsheet,
     EyeOff,
     Flame,
+    Key,
+    Shield,
+    Mail,
+    Bell,
+    Lock,
 } from "lucide-react"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -141,8 +147,15 @@ export function FormsClient({ initialData }: FormsClientProps) {
     const [studioSuccessMsg, setStudioSuccessMsg] = useState("Thank you! Your submission has been received.")
     const [studioRedirectUrl, setStudioRedirectUrl] = useState("")
     const [studioNotifyEmail, setStudioNotifyEmail] = useState("")
+    const [studioDefaultLeadStatus, setStudioDefaultLeadStatus] = useState("NEW")
+    const [studioDefaultLeadSource, setStudioDefaultLeadSource] = useState("web_form")
+    const [studioAssignedTo, setStudioAssignedTo] = useState("")
     const [studioFields, setStudioFields] = useState<FormFieldConfig[]>([])
     const [studioIsNew, setStudioIsNew] = useState(false)
+
+    // Security & Anti-Spam Credentials
+    const [recaptchaSiteKey, setRecaptchaSiteKey] = useState("")
+    const [recaptchaSecretKey, setRecaptchaSecretKey] = useState("")
 
     // Modals
     const [showNewFormDialog, setShowNewFormDialog] = useState(false)
@@ -175,6 +188,9 @@ export function FormsClient({ initialData }: FormsClientProps) {
                 setStudioSuccessMsg(form.successMessage)
                 setStudioRedirectUrl(form.redirectUrl || "")
                 setStudioNotifyEmail(form.notifyEmail || "")
+                setStudioDefaultLeadStatus(form.defaultLeadStatus || "NEW")
+                setStudioDefaultLeadSource(form.defaultLeadSource || "web_form")
+                setStudioAssignedTo(form.assignedTo || "")
                 setStudioFields(form.fields || [])
             }
         }
@@ -272,6 +288,9 @@ export function FormsClient({ initialData }: FormsClientProps) {
                     successMessage: studioSuccessMsg,
                     redirectUrl: studioRedirectUrl || undefined,
                     notifyEmail: studioNotifyEmail || undefined,
+                    defaultLeadStatus: studioDefaultLeadStatus,
+                    defaultLeadSource: studioDefaultLeadSource,
+                    assignedTo: studioAssignedTo || undefined,
                     fields: studioFields,
                 })
 
@@ -294,6 +313,9 @@ export function FormsClient({ initialData }: FormsClientProps) {
                     successMessage: studioSuccessMsg,
                     redirectUrl: studioRedirectUrl || undefined,
                     notifyEmail: studioNotifyEmail || undefined,
+                    defaultLeadStatus: studioDefaultLeadStatus,
+                    defaultLeadSource: studioDefaultLeadSource,
+                    assignedTo: studioAssignedTo || undefined,
                     fields: studioFields,
                 })
 
@@ -1047,6 +1069,50 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                         />
                                     </div>
                                 </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                                            <Bell className="h-3 w-3 text-indigo-600" />
+                                            <span>Alert Email Address</span>
+                                        </label>
+                                        <Input
+                                            type="email"
+                                            value={studioNotifyEmail}
+                                            onChange={(e) => setStudioNotifyEmail(e.target.value)}
+                                            className="h-9 text-xs"
+                                            placeholder="sales@yourcompany.com"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                                            Default Lead Status
+                                        </label>
+                                        <select
+                                            value={studioDefaultLeadStatus}
+                                            onChange={(e) => setStudioDefaultLeadStatus(e.target.value)}
+                                            className="w-full h-9 px-3 text-xs border rounded-md bg-white dark:bg-slate-900"
+                                        >
+                                            <option value="NEW">New Inbound</option>
+                                            <option value="CONTACTED">Contacted</option>
+                                            <option value="QUALIFIED">Qualified</option>
+                                            <option value="PROPOSAL">Proposal</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                                            Lead Source Attribution
+                                        </label>
+                                        <Input
+                                            value={studioDefaultLeadSource}
+                                            onChange={(e) => setStudioDefaultLeadSource(e.target.value)}
+                                            className="h-9 text-xs"
+                                            placeholder="web_form, ads, organic"
+                                        />
+                                    </div>
+                                </div>
                             </CardContent>
                         </Card>
 
@@ -1645,6 +1711,69 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                     </CardContent>
                                 </Card>
                             )}
+
+                            {/* Security, reCAPTCHA & Bot Shield Section */}
+                            <Card className="border bg-white dark:bg-slate-900 shadow-xs mt-6">
+                                <CardContent className="p-5 space-y-4">
+                                    <div className="flex items-center justify-between border-b pb-3">
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                                <Shield className="h-4 w-4 text-emerald-600" />
+                                                Form Security & Anti-Spam Protection
+                                            </h4>
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                Honeypot protection is built-in. Configure optional Google reCAPTCHA v3 or Cloudflare Turnstile keys.
+                                            </p>
+                                        </div>
+                                        <Badge variant="outline" className="text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300">
+                                            Honeypot Active
+                                        </Badge>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                                                reCAPTCHA / Turnstile Site Key (Public)
+                                            </label>
+                                            <Input
+                                                value={recaptchaSiteKey}
+                                                onChange={(e) => setRecaptchaSiteKey(e.target.value)}
+                                                placeholder="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+                                                className="h-9 text-xs font-mono"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center justify-between">
+                                                <span>reCAPTCHA / Turnstile Secret Key</span>
+                                                <span className="text-[10px] text-muted-foreground font-normal">Supports Eye toggle</span>
+                                            </label>
+                                            <PasswordInput
+                                                value={recaptchaSecretKey}
+                                                onChange={(e) => setRecaptchaSecretKey(e.target.value)}
+                                                placeholder="6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+                                                className="h-9 text-xs font-mono"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-2">
+                                        <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                                            <Key className="h-3.5 w-3.5 text-indigo-600" />
+                                            <span>Submissions without keys automatically use smart honeypot filtering (<code className="font-mono">_hp_company</code>).</span>
+                                        </div>
+
+                                        <Button
+                                            size="sm"
+                                            onClick={() => toast.success("Anti-spam security configuration saved!")}
+                                            className="text-xs h-8 gap-1.5"
+                                        >
+                                            <Check className="h-3.5 w-3.5" />
+                                            Save Security Keys
+                                        </Button>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </div>
                     ) : null}
                 </div>

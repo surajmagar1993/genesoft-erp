@@ -210,10 +210,12 @@ export interface CreateEmailAccountInput {
     smtpHost?: string
     smtpPort?: number
     smtpUser?: string
+    smtpPassword?: string
     smtpSecure?: boolean
     imapHost?: string
     imapPort?: number
     imapUser?: string
+    imapPassword?: string
     imapSecure?: boolean
     isDefault?: boolean
 }

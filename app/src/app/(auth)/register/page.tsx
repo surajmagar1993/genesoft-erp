@@ -3,6 +3,7 @@ import { register } from '../actions'
 import { Button } from '@/components/ui/button'
 import { SubmitButton } from '@/components/ui/submit-button'
 import { Input } from '@/components/ui/input'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, UserPlus } from 'lucide-react'
@@ -76,10 +77,9 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
 
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             placeholder="Min. 8 characters"
             required
             minLength={8}
@@ -90,10 +90,9 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
 
         <div className="space-y-2">
           <Label htmlFor="confirmPassword">Confirm password</Label>
-          <Input
+          <PasswordInput
             id="confirmPassword"
             name="confirmPassword"
-            type="password"
             placeholder="••••••••"
             required
             autoComplete="new-password"

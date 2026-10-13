@@ -56,13 +56,21 @@ export default async function WhatsAppHubPage() {
     ])
 
     const contacts = rawContacts.map((c: any) => ({
-        ...c,
+        id: c.id,
         name: c.displayName,
+        phone: c.phone,
+        email: c.email,
+        type: c.type,
+        updatedAt: c.updatedAt ? c.updatedAt.toISOString() : new Date().toISOString(),
     }))
 
     const invoices = rawInvoices.map((inv: any) => ({
-
-        ...inv,
+        id: inv.id,
+        invoice_number: inv.invoiceNumber || "",
+        customer_name: inv.contact?.displayName || (inv.billTo as any)?.name || "Customer",
+        total_amount: Number(inv.total) || 0,
+        status: inv.status,
+        due_date: inv.dueDate ? inv.dueDate.toISOString() : null,
         contact: inv.contact
             ? {
                   id: inv.contact.id,
@@ -70,14 +78,15 @@ export default async function WhatsAppHubPage() {
                   phone: inv.contact.phone,
               }
             : null,
-    })) as any
+    }))
 
     const settings = (tenant?.settings as any) || {}
-    const messages = Array.isArray(settings.whatsapp?.messages) ? settings.whatsapp.messages : []
+    const rawMessages = Array.isArray(settings.whatsapp?.messages) ? settings.whatsapp.messages : []
+    const messages = JSON.parse(JSON.stringify(rawMessages))
 
     return (
         <WhatsAppClient
-            initialConfig={config}
+            initialConfig={JSON.parse(JSON.stringify(config))}
             initialMessages={messages}
             contacts={contacts}
             invoices={invoices}

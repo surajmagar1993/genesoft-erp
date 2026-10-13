@@ -454,6 +454,36 @@ export async function submitPublicForm(payload: SubmitPublicFormPayload): Promis
             })
         }
 
+        // 6. Automated Sales Notification Alert if notifyEmail is configured
+        if (form.notifyEmail) {
+            try {
+                const defaultEmailAcc = await prisma.emailAccount.findFirst({
+                    where: { tenantId, isDefault: true, isActive: true },
+                })
+                if (defaultEmailAcc) {
+                    const { sendEmail } = await import("./emails")
+                    await sendEmail({
+                        emailAccountId: defaultEmailAcc.id,
+                        toEmail: form.notifyEmail,
+                        subject: `🔔 New Web Form Lead: ${form.title} - ${fullName || companyName || email || "Inquiry"}`,
+                        bodyHtml: `<h3>New Web Form Lead Captured</h3>
+                        <p><strong>Form:</strong> ${form.title} (${form.code})</p>
+                        <p><strong>Lead:</strong> ${leadTitle}</p>
+                        <p><strong>Contact Email:</strong> ${email || "N/A"}</p>
+                        <p><strong>Phone:</strong> ${phone || "N/A"}</p>
+                        <p><strong>Company:</strong> ${companyName || "N/A"}</p>
+                        <hr/>
+                        <p><strong>Submission Details:</strong></p>
+                        <pre style="background:#f4f4f4;padding:10px;border-radius:4px;">${JSON.stringify(data, null, 2)}</pre>`,
+                        leadId: createdLead.id,
+                        contactId: resolvedContactId || undefined,
+                    })
+                }
+            } catch (notifyErr) {
+                console.warn("Failed to dispatch form notify email:", notifyErr)
+            }
+        }
+
         revalidatePath("/crm/forms")
         revalidatePath("/crm/leads")
 

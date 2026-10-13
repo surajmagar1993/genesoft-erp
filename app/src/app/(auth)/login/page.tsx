@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { login } from '../actions'
 import { Button } from '@/components/ui/button'
-import { SubmitButton } from '@/components/ui/submit-button'
 import { Input } from '@/components/ui/input'
+import { SubmitButton } from '@/components/ui/submit-button'
+import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, CheckCircle2, LogIn } from 'lucide-react'
@@ -65,10 +66,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               Forgot password?
             </Link>
           </div>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             placeholder="••••••••"
             required
             autoComplete="current-password"

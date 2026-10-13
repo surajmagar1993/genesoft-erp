@@ -15,6 +15,8 @@ export type WhatsAppMode = "CLOUD_API" | "DIRECT_LINK" | "SIMULATION"
 export interface WhatsAppConfig {
     phoneNumberId?: string
     wabaId?: string // WhatsApp Business Account ID
+    appId?: string // Meta App ID / Client ID
+    appSecret?: string // Meta App Secret
     accessToken?: string
     verifyToken?: string // Webhook verify token
     defaultCountryCode?: string // Default country code e.g. "91", "1", "44", "971", "966", "61"

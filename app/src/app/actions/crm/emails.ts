@@ -279,21 +279,56 @@ export async function sendEmail(data: SendEmailInput): Promise<{
         let emailAccountId = data.emailAccountId
         let senderEmail = "sales@acmeglobal.com"
         let senderName = "Genesoft Sales"
+        let accountRecord: any = null
 
         if (emailAccountId) {
-            const acc = await prisma.emailAccount.findUnique({ where: { id: emailAccountId } })
-            if (acc) {
-                senderEmail = acc.email
-                senderName = acc.name
+            accountRecord = await prisma.emailAccount.findUnique({ where: { id: emailAccountId } })
+            if (accountRecord) {
+                senderEmail = accountRecord.email
+                senderName = accountRecord.name
             }
         } else {
-            const defaultAcc = await prisma.emailAccount.findFirst({
+            accountRecord = await prisma.emailAccount.findFirst({
                 where: { tenantId, isDefault: true },
             })
-            if (defaultAcc) {
-                emailAccountId = defaultAcc.id
-                senderEmail = defaultAcc.email
-                senderName = defaultAcc.name
+            if (accountRecord) {
+                emailAccountId = accountRecord.id
+                senderEmail = accountRecord.email
+                senderName = accountRecord.name
+            }
+        }
+
+        // Live SMTP delivery if real SMTP credentials are provided
+        if (
+            accountRecord?.smtpHost &&
+            accountRecord.smtpPassword &&
+            !accountRecord.smtpHost.includes(".local")
+        ) {
+            try {
+                const nodemailer = await import("nodemailer")
+                const transporter = nodemailer.createTransport({
+                    host: accountRecord.smtpHost.trim(),
+                    port: Number(accountRecord.smtpPort) || 587,
+                    secure: accountRecord.smtpSecure ?? (Number(accountRecord.smtpPort) === 465),
+                    auth: {
+                        user: accountRecord.smtpUser?.trim() || accountRecord.email.trim(),
+                        pass: accountRecord.smtpPassword.trim(),
+                    },
+                    connectionTimeout: 10000,
+                })
+
+                await transporter.sendMail({
+                    from: `"${senderName}" <${senderEmail}>`,
+                    to: data.toEmail.trim(),
+                    cc: data.cc?.trim() || undefined,
+                    bcc: data.bcc?.trim() || undefined,
+                    subject: data.subject.trim(),
+                    text: finalBodyText,
+                    html: finalBodyHtml,
+                })
+            } catch (smtpErr: any) {
+                console.error("Live SMTP dispatch error:", smtpErr)
+                return { error: `SMTP Dispatch failed: ${smtpErr.message || "Could not connect to SMTP server"}` }
             }
         }
 
@@ -498,12 +533,14 @@ export async function createEmailAccount(data: CreateEmailAccountInput): Promise
                 email: data.email.trim().toLowerCase(),
                 provider: data.provider || EmailProvider.CUSTOM_SMTP_IMAP,
                 smtpHost: data.smtpHost?.trim() || null,
-                smtpPort: data.smtpPort || 587,
+                smtpPort: data.smtpPort ? Number(data.smtpPort) : 587,
                 smtpUser: data.smtpUser?.trim() || null,
+                smtpPassword: data.smtpPassword?.trim() || null,
                 smtpSecure: data.smtpSecure !== false,
                 imapHost: data.imapHost?.trim() || null,
-                imapPort: data.imapPort || 993,
+                imapPort: data.imapPort ? Number(data.imapPort) : 993,
                 imapUser: data.imapUser?.trim() || null,
+                imapPassword: data.imapPassword?.trim() || null,
                 imapSecure: data.imapSecure !== false,
                 isDefault: !!data.isDefault,
                 isActive: true,
@@ -515,6 +552,39 @@ export async function createEmailAccount(data: CreateEmailAccountInput): Promise
     } catch (err: any) {
         console.error("createEmailAccount error:", err)
         return { error: err.message || "Failed to configure email account" }
+    }
+}
+
+export async function testSmtpConnection(params: {
+    host: string
+    port: number
+    user?: string
+    pass?: string
+    secure?: boolean
+}): Promise<{ success: boolean; message: string }> {
+    try {
+        if (!params.host?.trim()) {
+            return { success: false, message: "SMTP host server is required." }
+        }
+
+        const nodemailer = await import("nodemailer")
+        const transporter = nodemailer.createTransport({
+            host: params.host.trim(),
+            port: Number(params.port) || 587,
+            secure: params.secure ?? (Number(params.port) === 465),
+            auth: params.user && params.pass ? {
+                user: params.user.trim(),
+                pass: params.pass.trim(),
+            } : undefined,
+            connectionTimeout: 8000,
+            greetingTimeout: 8000,
+        })
+
+        await transporter.verify()
+        return { success: true, message: "SMTP server verified successfully! Connection established." }
+    } catch (err: any) {
+        console.error("testSmtpConnection error:", err)
+        return { success: false, message: err.message || "Failed to connect to SMTP server." }
     }
 }
 

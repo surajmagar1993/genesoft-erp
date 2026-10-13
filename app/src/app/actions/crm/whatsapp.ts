@@ -35,7 +35,9 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
         return {
             phoneNumberId: wa.phoneNumberId || "",
             wabaId: wa.wabaId || "",
-            accessToken: wa.accessToken ? "••••••••" + wa.accessToken.slice(-4) : "",
+            appId: wa.appId || "",
+            appSecret: wa.appSecret || "",
+            accessToken: wa.accessToken || "",
             verifyToken: wa.verifyToken || "genesoft_wa_verify_token",
             defaultCountryCode: wa.defaultCountryCode || (tenant?.countryCode === "US" ? "1" : "91"),
             mode: wa.mode || "SIMULATION",
@@ -53,6 +55,8 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
 export async function saveWhatsAppConfig(payload: {
     phoneNumberId?: string
     wabaId?: string
+    appId?: string
+    appSecret?: string
     accessToken?: string
     verifyToken?: string
     defaultCountryCode?: string
@@ -73,15 +77,22 @@ export async function saveWhatsAppConfig(payload: {
         const currentSettings = (tenant?.settings as any) || {}
         const currentWa = currentSettings.whatsapp || {}
 
-        // Only update token if provided (avoid overwriting with masked token)
+        // Only update token/secret if provided (avoid overwriting with empty)
         let tokenToSave = currentWa.accessToken
-        if (payload.accessToken && !payload.accessToken.startsWith("••••")) {
+        if (payload.accessToken !== undefined) {
             tokenToSave = payload.accessToken
+        }
+
+        let appSecretToSave = currentWa.appSecret
+        if (payload.appSecret !== undefined) {
+            appSecretToSave = payload.appSecret
         }
 
         const updatedWa: WhatsAppConfig = {
             phoneNumberId: payload.phoneNumberId ?? currentWa.phoneNumberId,
             wabaId: payload.wabaId ?? currentWa.wabaId,
+            appId: payload.appId ?? currentWa.appId,
+            appSecret: appSecretToSave,
             accessToken: tokenToSave,
             verifyToken: payload.verifyToken || currentWa.verifyToken || "genesoft_wa_verify_token",
             defaultCountryCode: payload.defaultCountryCode || currentWa.defaultCountryCode || "91",

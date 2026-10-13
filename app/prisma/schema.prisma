@@ -2433,12 +2433,14 @@ model EmailAccount {
   smtpHost              String?       @map("smtp_host")
   smtpPort              Int?          @default(587) @map("smtp_port")
   smtpUser              String?       @map("smtp_user")
+  smtpPassword          String?       @map("smtp_password")
   smtpSecure            Boolean       @default(true) @map("smtp_secure")
   
   // IMAP settings
   imapHost              String?       @map("imap_host")
   imapPort              Int?          @default(993) @map("imap_port")
   imapUser              String?       @map("imap_user")
+  imapPassword          String?       @map("imap_password")
   imapSecure            Boolean       @default(true) @map("imap_secure")
   
   isDefault             Boolean       @default(false) @map("is_default")
