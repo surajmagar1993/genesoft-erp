@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PLATFORM, telHref } from "@/lib/constants/platform"
 import { Mail, Phone, MapPin, Send, MessageSquare, Building2, User } from "lucide-react";
 import { PublicNavbar } from "@/components/marketing/navbar";
 import { PublicFooter } from "@/components/marketing/footer";
@@ -50,9 +51,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Email Us</p>
-                    <a href="mailto:hello@genesoftinfotech.com" className="text-base font-semibold text-slate-800 dark:text-slate-200 hover:text-orange-500 transition-colors">
-                      hello@genesoftinfotech.com
-                    </a>
+                    <a href={`mailto:${PLATFORM.email}`} className="text-base font-semibold text-slate-800 dark:text-slate-200 hover:text-orange-500 transition-colors">{PLATFORM.email}</a>
                   </div>
                 </div>
 
@@ -62,9 +61,7 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Call Us</p>
-                    <a href="tel:+918888885285" className="text-base font-semibold text-slate-800 dark:text-slate-200 hover:text-blue-500 transition-colors">
-                      +91 8888885285
-                    </a>
+                    <a href={telHref(PLATFORM.phone)} className="text-base font-semibold text-slate-800 dark:text-slate-200 hover:text-blue-500 transition-colors">{PLATFORM.phone}</a>
                   </div>
                 </div>
 
@@ -214,12 +211,12 @@ export default function ContactPage() {
                   </div>
                   <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800">
                     <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Technical Support</h4>
-                    <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 break-all">hello@genesoftinfotech.com</p>
+                    <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 break-all">{PLATFORM.email}</p>
                     <p className="text-xs text-slate-500 mt-1">For client setup assistance</p>
                   </div>
                   <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800">
                     <h4 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">PR & Inquiries</h4>
-                    <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 break-all">hello@genesoftinfotech.com</p>
+                    <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 break-all">{PLATFORM.email}</p>
                     <p className="text-xs text-slate-500 mt-1">For corporate communications</p>
                   </div>
                   <div className="p-4 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800">

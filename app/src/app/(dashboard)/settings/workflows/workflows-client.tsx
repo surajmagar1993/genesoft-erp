@@ -383,7 +383,7 @@ export function WorkflowsClient({
                 if (type === "SEND_NOTIFICATION") defaultParams = { recipientRole: "ADMIN", message: "Workflow notification alert." }
                 if (type === "SEND_EMAIL") defaultParams = { emailSubject: "Automated Notification", emailBody: "Please see attached update." }
                 if (type === "CREATE_TASK") defaultParams = { taskTitle: "Follow up on automated workflow", taskPriority: "HIGH", taskDueDays: 2 }
-                if (type === "CALL_WEBHOOK") defaultParams = { webhookUrl: "https://api.external.com/webhooks/listener" }
+                if (type === "CALL_WEBHOOK") defaultParams = { webhookUrl: "" }
                 if (type === "UPDATE_STATUS") defaultParams = { newStatus: "PROCESSED" }
                 return { actionType: type, params: defaultParams }
             })
@@ -1356,7 +1356,7 @@ export function WorkflowsClient({
                                                 <Input
                                                     value={act.params.webhookUrl || ""}
                                                     onChange={e => updateActionParam(i, "webhookUrl", e.target.value)}
-                                                    placeholder="https://api.external.com/webhooks/listener"
+                                                    placeholder="Your endpoint (must start with https://)"
                                                     className="h-7 text-xs font-mono"
                                                 />
                                             </div>

@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { requireTaxId } from "@/lib/tax-identity"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { COMPANY } from "@/lib/constants/company"
 import {
@@ -74,9 +75,9 @@ export async function getAustralianBasOverview(params?: {
   })
 
   const tenantSettings = (tenant?.settings as Record<string, any>) || {}
-  const taxpayerAbn = tenantSettings.abn || tenantSettings.australia_abn || "51 824 753 556"
-  const taxpayerLegalName = tenant?.name || COMPANY.name || "Genesoft ERP Australia Pty Ltd"
-  const taxpayerAddress = tenantSettings.address || "Level 25, 100 Barangaroo Avenue, Sydney NSW 2000"
+  const taxpayerAbn = tenantSettings.abn || tenantSettings.australia_abn || ""
+  const taxpayerLegalName = tenant?.name || ""
+  const taxpayerAddress = tenantSettings.address || ""
 
   // Fetch Outward Invoices
   const invoicesDb = await prisma.invoice.findMany({
@@ -195,6 +196,7 @@ export async function exportAustralianBasJson(params?: {
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }) {
   const overview = await getAustralianBasOverview(params)
+  requireTaxId(overview.report.taxpayerAbn, "ABN")
   const jsonPayload = formatAustralianBasJson(overview.report)
   return JSON.stringify(jsonPayload, null, 2)
 }
@@ -204,5 +206,6 @@ export async function exportAustralianBasCsv(params?: {
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }) {
   const overview = await getAustralianBasOverview(params)
+  requireTaxId(overview.report.taxpayerAbn, "ABN")
   return formatAustralianBasCsv(overview.report)
 }

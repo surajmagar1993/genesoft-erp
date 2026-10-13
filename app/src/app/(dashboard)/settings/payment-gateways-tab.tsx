@@ -45,8 +45,8 @@ export default function PaymentGatewaysTab({
     const [testingStripe, setTestingStripe] = useState(false)
     const [testingPayPal, setTestingPayPal] = useState(false)
 
-    const stripeWebhookUrl = `${appUrl || "https://erp.genesoft.ai"}/api/webhooks/stripe`
-    const paypalWebhookUrl = `${appUrl || "https://erp.genesoft.ai"}/api/webhooks/paypal`
+    const stripeWebhookUrl = `${appUrl || (typeof window !== "undefined" ? window.location.origin : "")}/api/webhooks/stripe`
+    const paypalWebhookUrl = `${appUrl || (typeof window !== "undefined" ? window.location.origin : "")}/api/webhooks/paypal`
 
     const handleCopy = (text: string, label: string) => {
         navigator.clipboard.writeText(text)

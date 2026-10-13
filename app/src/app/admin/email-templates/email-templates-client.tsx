@@ -96,7 +96,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
 
     // Test send modal
     const [isTestModalOpen, setIsTestModalOpen] = useState(false)
-    const [testRecipient, setTestRecipient] = useState("admin@genesoft.ai")
+    const [testRecipient, setTestRecipient] = useState("")
     const [isSendingTest, setIsSendingTest] = useState(false)
     const [testResult, setTestResult] = useState<{ success: boolean; message: string; simulated?: boolean } | null>(null)
 

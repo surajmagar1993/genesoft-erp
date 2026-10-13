@@ -1008,7 +1008,9 @@ export function compileUsStateSalesTaxSchedule(
   >()
 
   for (const inv of invoices) {
-    const code = (inv.stateCode || "NY").toUpperCase()
+    // Sales with no known state can't count toward any state's nexus threshold
+    if (!inv.stateCode) continue
+    const code = inv.stateCode.toUpperCase()
     const current = stateAggMap.get(code) || {
       grossSales: 0,
       exemptSales: 0,
@@ -1206,8 +1208,23 @@ export function calculateUsSalesTax(params: CalculateTaxParams): CalculateTaxRes
     }
   }
 
-  const destRule = US_STATE_TAX_RULES[destinationState] || US_STATE_TAX_RULES.NY
-  const originRule = US_STATE_TAX_RULES[originState] || US_STATE_TAX_RULES.NY
+  const destRule = US_STATE_TAX_RULES[destinationState]
+  const originRule = US_STATE_TAX_RULES[originState] || destRule
+
+  // Never borrow another state's rate: without a known destination there is nothing to apply
+  if (!destRule) {
+    return {
+      applicableState: destinationState || "",
+      sourcingApplied: "DESTINATION",
+      baseRate: 0,
+      localRate: 0,
+      effectiveRate: 0,
+      baseTax: 0,
+      localTax: 0,
+      totalTax: 0,
+      statutoryReason: "Destination state unknown. Add the customer's billing state to calculate sales tax.",
+    }
+  }
 
   const isIntrastate = originState === destinationState
 

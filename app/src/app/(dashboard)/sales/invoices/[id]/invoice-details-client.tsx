@@ -137,7 +137,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
     }
 
     const handleOpenWhatsAppDirect = () => {
-        const portalBase = typeof window !== "undefined" ? window.location.origin : "https://erp.genesoft.ai"
+        const portalBase = typeof window !== "undefined" ? window.location.origin : ""
         const text = `Hello ${invoice.customer_name}, your invoice ${invoice.invoice_number} for ${invoice.currency_code || "INR"} ${totalInvoiceAmount.toFixed(2)} from ${COMPANY.name} is ready. View & pay online: ${portalBase}/portal/${invoice.id}. Thank you!`
         const link = generateWhatsAppDirectLink(whatsAppPhone || "", text)
         window.open(link, "_blank")
@@ -148,7 +148,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
     const [copiedPaymentLink, setCopiedPaymentLink] = useState(false)
 
     const getPortalPaymentUrl = () => {
-        const origin = typeof window !== "undefined" ? window.location.origin : "https://erp.genesoft.ai"
+        const origin = typeof window !== "undefined" ? window.location.origin : ""
         return `${origin}/portal/${invoice.id}?pay=true`
     }
 

@@ -379,7 +379,7 @@ export async function createDeliveryChallan(input: CreateDeliveryChallanInput) {
             quantity: qty,
             unit: item.unit || "PCS",
             unitPrice: price,
-            taxRate: item.taxRate || 18,
+            taxRate: item.taxRate ?? 18,
             taxableAmount: lineTaxable,
             taxAmount: lineTax,
             totalAmount: lineTotal

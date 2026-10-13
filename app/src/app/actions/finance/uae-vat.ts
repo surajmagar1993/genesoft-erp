@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { requireTaxId } from "@/lib/tax-identity"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { COMPANY } from "@/lib/constants/company"
 import {
@@ -73,9 +74,9 @@ export async function getUaeVatOverview(params?: {
   })
 
   const tenantSettings = (tenant?.settings as Record<string, any>) || {}
-  const taxpayerTrn = tenantSettings.trn || tenantSettings.vat_trn || "100234567890003"
-  const taxpayerLegalName = tenant?.name || COMPANY.name || "Genesoft Technologies FZ-LLC"
-  const taxpayerAddress = tenantSettings.address || "Dubai Internet City, Dubai, UAE"
+  const taxpayerTrn = tenantSettings.trn || tenantSettings.vat_trn || ""
+  const taxpayerLegalName = tenant?.name || ""
+  const taxpayerAddress = tenantSettings.address || ""
 
   // Fetch Outward Invoices in Period
   const invoicesDb = await prisma.invoice.findMany({
@@ -218,6 +219,7 @@ export async function exportUaeVat201Json(params: {
   quarter: "Q1" | "Q2" | "Q3" | "Q4"
 }): Promise<{ filename: string; json: string }> {
   const overview = await getUaeVatOverview(params)
+  requireTaxId(overview.report.taxpayerTrn, "Tax Registration Number (TRN)")
   const jsonPayload = formatUaeVat201Json(overview.report)
   const filename = `FTA_VAT201_${overview.report.taxpayerTrn}_${params.year}_${params.quarter}.json`
 
@@ -235,6 +237,7 @@ export async function exportUaeVat201Csv(params: {
   quarter: "Q1" | "Q2" | "Q3" | "Q4"
 }): Promise<{ filename: string; csv: string }> {
   const overview = await getUaeVatOverview(params)
+  requireTaxId(overview.report.taxpayerTrn, "Tax Registration Number (TRN)")
   const csv = formatUaeVat201Csv(overview.report)
   const filename = `FTA_VAT201_${overview.report.taxpayerTrn}_${params.year}_${params.quarter}.csv`
 

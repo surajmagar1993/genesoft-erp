@@ -358,7 +358,8 @@ export async function sendInvoiceViaWhatsApp(params: {
         const totalFormatted = `${currency} ${Number(invoice.total_amount).toFixed(2)}`
 
         const portalBase = appUrl()
-        const paymentLink = `${portalBase}/portal/${invoice.contact?.portalToken || invoice.id}`
+        // Only customers with portal access have a working link; otherwise leave it out
+        const paymentLink = invoice.contact?.portalToken ? `${portalBase}/portal/${invoice.contact.portalToken}` : ""
 
         // Calculate days overdue if past due date
         let daysOverdue = "0"

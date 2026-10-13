@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { requireTaxId } from "@/lib/tax-identity"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { COMPANY } from "@/lib/constants/company"
 import {
@@ -72,9 +73,9 @@ export async function getUkVatOverview(params?: {
   })
 
   const tenantSettings = (tenant?.settings as Record<string, any>) || {}
-  const taxpayerVrn = tenantSettings.uk_vrn || tenantSettings.vrn || "GB 999 9999 73"
-  const taxpayerLegalName = tenant?.name || COMPANY.name || "Genesoft Technologies UK Ltd"
-  const taxpayerAddress = tenantSettings.address || "100 Bishopsgate, London EC2N 4AG, United Kingdom"
+  const taxpayerVrn = tenantSettings.uk_vrn || tenantSettings.vrn || ""
+  const taxpayerLegalName = tenant?.name || ""
+  const taxpayerAddress = tenantSettings.address || ""
 
   // Fetch Outward Invoices
   const invoicesDb = await prisma.invoice.findMany({
@@ -208,6 +209,7 @@ export async function exportUkMtdJson(params?: {
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }) {
   const overview = await getUkVatOverview(params)
+  requireTaxId(overview.report.taxpayerVrn, "VAT registration number (VRN)")
   const jsonPayload = formatUkMtdJson(overview.report)
   return JSON.stringify(jsonPayload, null, 2)
 }
@@ -217,5 +219,6 @@ export async function exportUkMtdCsv(params?: {
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }) {
   const overview = await getUkVatOverview(params)
+  requireTaxId(overview.report.taxpayerVrn, "VAT registration number (VRN)")
   return formatUkMtdCsv(overview.report)
 }

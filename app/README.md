@@ -104,6 +104,8 @@ Create `.env.local` in `app/` (never commit it). Variables the code reads:
 | `CRON_SECRET` | Recommended | Protects the daily job at `/api/cron/workflows` (scheduled in `vercel.json`): overdue-invoice / bill-due workflow rules, due recurring invoices and IMAP inbox sync. Vercel sends it automatically; without it the job refuses to run. |
 | `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Optional | Platform-wide Meta webhook verify token (tenants also get their own). |
 | `ENCRYPTION_KEY` | Recommended | Encrypts stored tenant credentials (gateway keys, WhatsApp tokens, SMTP passwords). Any long random string, e.g. `openssl rand -base64 32`. Changing it makes stored secrets unreadable. |
+| `PLATFORM_GSTIN` | Optional | Genesoft's own GSTIN, printed on platform subscription receipts. Unset = no tax ID printed. `PLATFORM_LEGAL_NAME`, `PLATFORM_EMAIL`, `PLATFORM_PHONE` override the defaults in `src/lib/constants/platform.ts`. |
+| `COMPANY_NAME`, `COMPANY_ADDRESS`, `COMPANY_GSTIN`, `COMPANY_STATE` | No | Last-resort seller details for single-company installs. Leave unset on the SaaS: each tenant's own Settings are used, and nothing is invented when they're empty. |
 | `ENABLE_DEMO_SEED` | No | `true` fills empty modules with sample data. Leave unset in production. |
 | `COMPANY_NAME`, `COMPANY_GSTIN`, `COMPANY_STATE`, `COMPANY_ADDRESS` | Optional | Fallback supplier details on invoices. |
 

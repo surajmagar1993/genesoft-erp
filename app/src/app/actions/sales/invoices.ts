@@ -666,6 +666,7 @@ export async function sendInvoiceEmail(
 
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) return { error: "RESEND_API_KEY is not configured" }
+  if (!process.env.RESEND_DOMAIN) return { error: "RESEND_DOMAIN is not configured" }
 
   // Generate PDF
   let pdfBuffer: Buffer
@@ -696,7 +697,7 @@ export async function sendInvoiceEmail(
   const documentLabel = isProforma ? "Proforma Invoice" : "Tax Invoice"
 
   const { error: emailError } = await resend.emails.send({
-    from: `${supplierName} <invoices@${process.env.RESEND_DOMAIN ?? "yourdomain.com"}>`,
+    from: `${supplierName} <invoices@${process.env.RESEND_DOMAIN}>`,
     to: [recipientEmail],
     subject: `${documentLabel} ${invoice.invoice_number} from ${supplierName}`,
     html: `

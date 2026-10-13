@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { requireTaxId } from "@/lib/tax-identity"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { COMPANY } from "@/lib/constants/company"
 import {
@@ -70,9 +71,9 @@ export async function getGstReturnsOverview(params?: {
   })
 
   const tenantSettings = (tenant?.settings as Record<string, any>) || {}
-  const supplierGstin = tenantSettings.gstin || COMPANY.gstin || "27AABCG1234F1Z5"
-  const supplierLegalName = tenant?.name || COMPANY.name || "Genesoft ERP Enterprises Ltd."
-  const supplierState = tenantSettings.state || COMPANY.state || "Maharashtra"
+  const supplierGstin = tenantSettings.gstin || ""
+  const supplierLegalName = tenant?.name || ""
+  const supplierState = tenantSettings.state || ""
 
   // Fetch Invoices in Period
   const invoicesDb = await prisma.invoice.findMany({
@@ -277,6 +278,7 @@ export async function exportGstr1Json(params: {
   month: number
 }): Promise<{ filename: string; json: string }> {
   const overview = await getGstReturnsOverview(params)
+  requireTaxId(overview.gstr1.supplierGstin, "GSTIN")
   const jsonPayload = formatGstr1Json(overview.gstr1)
   const period = getIndianGstPeriod(params.year, params.month)
   const filename = `GSTR1_${overview.gstr1.supplierGstin}_${period.fp}.json`
@@ -296,6 +298,7 @@ export async function exportGstr1Csv(params: {
   table: "b2b" | "hsn"
 }): Promise<{ filename: string; csv: string }> {
   const overview = await getGstReturnsOverview(params)
+  requireTaxId(overview.gstr1.supplierGstin, "GSTIN")
   const period = getIndianGstPeriod(params.year, params.month)
 
   let csv = ""
@@ -319,6 +322,7 @@ export async function exportGstr3bJson(params: {
   month: number
 }): Promise<{ filename: string; json: string }> {
   const overview = await getGstReturnsOverview(params)
+  requireTaxId(overview.gstr3b.supplierGstin, "GSTIN")
   const jsonPayload = formatGstr3bJson(overview.gstr3b)
   const period = getIndianGstPeriod(params.year, params.month)
   const filename = `GSTR3B_${overview.gstr3b.supplierGstin}_${period.fp}.json`

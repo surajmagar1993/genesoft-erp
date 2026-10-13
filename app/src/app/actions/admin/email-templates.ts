@@ -43,7 +43,7 @@ async function logAdminAction(action: string, targetId?: string, targetType?: st
         await prisma.adminAuditLog.create({
             data: {
                 adminId: user.id,
-                adminEmail: user.email || "system@genesoft.ai",
+                adminEmail: user.email || "unknown",
                 action,
                 targetId,
                 targetType,
@@ -81,7 +81,7 @@ export async function getSystemEmailTemplates(): Promise<SystemEmailTemplatesOve
 
     // 1. Check outbound mail provider status
     const hasResend = Boolean(process.env.RESEND_API_KEY)
-    const resendDomain = process.env.RESEND_DOMAIN || "genesoft.ai"
+    const resendDomain = process.env.RESEND_DOMAIN || ""
 
     // 2. Fetch custom overrides from database if any exist
     const customOverridesMap: Record<string, any> = {}
@@ -266,7 +266,10 @@ export async function sendTestSystemEmail(input: {
         })
 
         const apiKey = process.env.RESEND_API_KEY
-        const domain = process.env.RESEND_DOMAIN || "genesoft.ai"
+        const domain = process.env.RESEND_DOMAIN
+        if (process.env.RESEND_API_KEY && !domain) {
+            return { success: false, message: "", error: "RESEND_DOMAIN isn't set, so there's no verified sender address." }
+        }
         const fromEmail = `Platform System <notifications@${domain}>`
 
         if (apiKey) {

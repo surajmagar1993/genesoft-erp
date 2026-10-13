@@ -1,3 +1,5 @@
+import { PLATFORM } from "@/lib/constants/platform"
+
 /**
  * SAAS SUBSCRIPTION LIFECYCLE & PRORATION ENGINE
  * 
@@ -573,9 +575,9 @@ export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): stri
     <div class="invoice-card">
         <div class="header">
             <div class="brand">
-                <h1>Genesoft Cloud ERP</h1>
-                <p>Genesoft Technologies Private Limited &bull; Platform Subscriptions</p>
-                <p>GSTIN/Tax ID: 29AABCU9603R1ZM &bull; billing@genesoft.ai</p>
+                <h1>${PLATFORM.productName}</h1>
+                <p>${PLATFORM.legalName} &bull; Platform Subscriptions</p>
+                <p>${PLATFORM.gstin ? `GSTIN: ${PLATFORM.gstin} &bull; ` : ""}${PLATFORM.email}</p>
             </div>
             <div style="text-align: right;">
                 <span class="badge">PAID RECEIPT</span>
@@ -639,7 +641,7 @@ export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): stri
         </div>
 
         <div class="footer">
-            Thank you for building your organization with Genesoft ERP. For billing inquiries, contact billing@genesoft.ai.
+            Thank you for building your organization with ${PLATFORM.productName}. For billing inquiries, contact ${PLATFORM.email}.
         </div>
     </div>
 </body>

@@ -62,8 +62,8 @@ export function getInvoiceSummary(invoice: InvoiceDB) {
         : (invoice.tenants?.address?.street 
             ? `${invoice.tenants.address.street}, ${invoice.tenants.address.city || ""}, ${invoice.tenants.address.state || ""}` 
             : COMPANY.address)
-    const companyPhone = invoice.tenants?.phone || "+91 98765 43210"
-    const companyEmail = invoice.tenants?.email || "billing@genesoft.com"
+    const companyPhone = invoice.tenants?.phone || ""
+    const companyEmail = invoice.tenants?.email || ""
 
     return {
         items,

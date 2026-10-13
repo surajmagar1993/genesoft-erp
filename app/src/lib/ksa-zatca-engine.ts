@@ -356,8 +356,8 @@ export function generateZatcaUblXml(data: ZatcaXmlPayload): string {
       </cac:PartyIdentification>
       <cac:PostalAddress>
         <cbc:StreetName>${escapeXml(data.seller.street)}</cbc:StreetName>
-        <cbc:BuildingNumber>${escapeXml(data.seller.buildingNumber || "1234")}</cbc:BuildingNumber>
-        <cbc:CitySubdivisionName>${escapeXml(data.seller.district || "Central")}</cbc:CitySubdivisionName>
+        <cbc:BuildingNumber>${escapeXml(data.seller.buildingNumber || "")}</cbc:BuildingNumber>
+        <cbc:CitySubdivisionName>${escapeXml(data.seller.district || "")}</cbc:CitySubdivisionName>
         <cbc:CityName>${escapeXml(data.seller.city)}</cbc:CityName>
         <cbc:PostalZone>${escapeXml(data.seller.postalZone)}</cbc:PostalZone>
         <cac:Country>
@@ -380,9 +380,9 @@ export function generateZatcaUblXml(data: ZatcaXmlPayload): string {
   <cac:AccountingCustomerParty>
     <cac:Party>
       <cac:PostalAddress>
-        <cbc:StreetName>${escapeXml(data.buyer?.street || "King Fahd Road")}</cbc:StreetName>
-        <cbc:CityName>${escapeXml(data.buyer?.city || "Riyadh")}</cbc:CityName>
-        <cbc:PostalZone>${escapeXml(data.buyer?.postalZone || "11564")}</cbc:PostalZone>
+        <cbc:StreetName>${escapeXml(data.buyer?.street || "")}</cbc:StreetName>
+        <cbc:CityName>${escapeXml(data.buyer?.city || "")}</cbc:CityName>
+        <cbc:PostalZone>${escapeXml(data.buyer?.postalZone || "")}</cbc:PostalZone>
         <cac:Country>
           <cbc:IdentificationCode>SA</cbc:IdentificationCode>
         </cac:Country>
@@ -674,9 +674,9 @@ export function compileKsaVatReturn(params: {
 
   return {
     period,
-    taxpayerVatNumber: taxpayerVatNumber || "300123456789003",
-    taxpayerLegalName: taxpayerLegalName || "Genesoft Technologies KSA LLC",
-    taxpayerAddress: taxpayerAddress || "King Fahd Road, Riyadh, Saudi Arabia",
+    taxpayerVatNumber: taxpayerVatNumber || "",
+    taxpayerLegalName: taxpayerLegalName || "",
+    taxpayerAddress: taxpayerAddress || "",
     salesStandardRated: {
       taxableAmount: Math.round(salesStandardTaxable * 100) / 100,
       vatAmount: totalOutputVat,

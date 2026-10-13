@@ -458,7 +458,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
 
     // Pre-calculate base public URL
     const activeTargetForm = selectedEmbedForm || (forms.length > 0 ? forms[0] : null)
-    const publicOrigin = typeof window !== "undefined" ? window.location.origin : "https://app.yourdomain.com"
+    const publicOrigin = typeof window !== "undefined" ? window.location.origin : ""
     const publicSubmitEndpoint = activeTargetForm
         ? `${publicOrigin}/api/forms/${activeTargetForm.id}/submit`
         : `${publicOrigin}/api/forms/{formId}/submit`

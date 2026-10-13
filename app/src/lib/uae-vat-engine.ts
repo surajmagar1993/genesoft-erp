@@ -426,9 +426,9 @@ export function compileFormVat201(params: {
 
   return {
     period,
-    taxpayerTrn: taxpayerTrn || "100123456789003",
-    taxpayerLegalName: taxpayerLegalName || "Genesoft Technologies FZ-LLC",
-    taxpayerAddress: taxpayerAddress || "Dubai Internet City, Dubai, UAE",
+    taxpayerTrn: taxpayerTrn || "",
+    taxpayerLegalName: taxpayerLegalName || "",
+    taxpayerAddress: taxpayerAddress || "",
     box1Emirates,
     box1TotalTaxable,
     box1TotalVat,

@@ -340,9 +340,9 @@ export function compileUkMtdVatReturn(params: {
 
   return {
     period,
-    taxpayerVrn: taxpayerVrn || "GB 999 9999 73",
-    taxpayerLegalName: taxpayerLegalName || "Genesoft Technologies UK Ltd",
-    taxpayerAddress: taxpayerAddress || "100 Bishopsgate, London EC2N 4AG, United Kingdom",
+    taxpayerVrn: taxpayerVrn || "",
+    taxpayerLegalName: taxpayerLegalName || "",
+    taxpayerAddress: taxpayerAddress || "",
     box1VatDueSales: Math.round(box1VatDueSales * 100) / 100,
     box2VatDueAcquisitions: Math.round(box2VatDueAcquisitions * 100) / 100,
     box3TotalVatDue,

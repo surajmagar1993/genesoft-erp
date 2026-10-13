@@ -190,7 +190,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                     quantity: it.qty,
                     unit: "PCS",
                     unitPrice: it.unitPrice,
-                    taxRate: it.taxPercent || 18,
+                    taxRate: it.taxPercent ?? 18,
                     hsnCode: "8471"
                 }))
             )

@@ -57,7 +57,7 @@ export const STATE_GST_CODES: Record<string, StateGstEntry> = {
  * Normalizes state name / code to get a 2-digit GST state code.
  */
 export function getStateCodeFromName(stateInput: string): string {
-  if (!stateInput) return "27" // default Maharashtra
+  if (!stateInput) return "" // unknown: callers treat it as not determinable
   const clean = stateInput.trim()
   // Check if already 2-digit code
   if (/^\d{2}$/.test(clean) && STATE_GST_CODES[clean]) return clean
@@ -76,7 +76,7 @@ export function getStateCodeFromName(stateInput: string): string {
       return code
     }
   }
-  return "27"
+  return ""
 }
 
 export function getStateNameFromCode(code: string): string {
@@ -528,10 +528,11 @@ export function buildGstr1Report(params: {
     const hasValidGstin = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(contactGstin)
 
     // Determine POS
-    const rawPos = inv.placeOfSupply || inv.billTo?.state || inv.contact?.displayName || supplierState
-    const pos = getStateCodeFromName(rawPos)
-    const posName = getStateNameFromCode(pos)
-    const isInterState = pos !== supplierStateCode
+    // Unknown place of supply is treated as the supplier's own state (intra-state)
+    const rawPos = inv.placeOfSupply || inv.billTo?.state || supplierState
+    const pos = getStateCodeFromName(rawPos) || supplierStateCode
+    const posName = pos ? getStateNameFromCode(pos) : "Unknown"
+    const isInterState = !!pos && !!supplierStateCode && pos !== supplierStateCode
 
     const isExport = inv.type === "EXPORT" || (inv.contact?.displayName || "").toLowerCase().includes("export")
 
@@ -568,11 +569,12 @@ export function buildGstr1Report(params: {
       invSgst += itmSgst
       invIgst += itmIgst
 
-      const effRate = Number(itm.igstRate || 0) || (Number(itm.cgstRate || 0) + Number(itm.sgstRate || 0)) || 18
+      // 0% (exempt / nil-rated) is a real rate, not "unknown"
+      const effRate = Number(itm.igstRate || 0) || (Number(itm.cgstRate || 0) + Number(itm.sgstRate || 0))
       if (effRate > mainRate) mainRate = effRate
 
       // HSN Table 12 aggregation
-      const hsnCode = (itm.hsnSacCode || "998311").trim()
+      const hsnCode = (itm.hsnSacCode || "").trim()
       const hsnKey = `${hsnCode}_${effRate}`
       const existingHsn = hsnMap.get(hsnKey)
       if (existingHsn) {
@@ -611,7 +613,7 @@ export function buildGstr1Report(params: {
         val: invTotal,
         taxableValue: invSubtotal,
         igstAmount: invIgst,
-        rate: mainRate || 18,
+        rate: mainRate,
       })
     } else if (hasValidGstin) {
       // Table 4: B2B Invoices (registered)
@@ -630,7 +632,7 @@ export function buildGstr1Report(params: {
         sgstAmount: invSgst,
         igstAmount: invIgst,
         cessAmount: 0,
-        rate: mainRate || 18,
+        rate: mainRate,
       })
     } else if (isInterState && invTotal > B2C_LARGE_THRESHOLD) {
       // Table 5: B2CL (unregistered, interstate, > ₹2.5L)
@@ -643,11 +645,11 @@ export function buildGstr1Report(params: {
         taxableValue: invSubtotal,
         igstAmount: invIgst,
         cessAmount: 0,
-        rate: mainRate || 18,
+        rate: mainRate,
       })
     } else {
       // Table 7: B2CS (unregistered, intrastate of any value or interstate <= ₹2.5L)
-      const b2csKey = `${pos}_${mainRate || 18}`
+      const b2csKey = `${pos}_${mainRate}`
       const existingB2cs = b2csMap.get(b2csKey)
       if (existingB2cs) {
         existingB2cs.taxableValue = Math.round((existingB2cs.taxableValue + invSubtotal) * 100) / 100
@@ -659,7 +661,7 @@ export function buildGstr1Report(params: {
           sply_ty: isInterState ? "INTER" : "INTRA",
           pos,
           posName,
-          rate: mainRate || 18,
+          rate: mainRate,
           taxableValue: invSubtotal,
           cgstAmount: invCgst,
           sgstAmount: invSgst,
@@ -725,8 +727,8 @@ export function buildGstr1Report(params: {
 
   return {
     period,
-    supplierGstin: supplierGstin || "27AABCG1234F1Z5",
-    supplierLegalName: supplierLegalName || "Genesoft ERP Enterprises Ltd.",
+    supplierGstin: supplierGstin || "",
+    supplierLegalName: supplierLegalName || "",
     supplierStateCode,
     summary: {
       totalInvoicesCount: validInvoices.length,

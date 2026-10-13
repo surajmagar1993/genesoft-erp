@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { requireTaxId } from "@/lib/tax-identity"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { COMPANY } from "@/lib/constants/company"
 import {
@@ -76,12 +77,13 @@ const STATE_NAME_TO_CODE: Record<string, string> = {
   "DISTRICT OF COLUMBIA": "DC",
 }
 
+/** Two-letter US state code, or "" when it can't be determined (never a guess). */
 function resolveStateCode(rawState?: string | null): string {
-  if (!rawState) return "NY"
+  if (!rawState) return ""
   const cleaned = rawState.trim().toUpperCase()
   if (US_STATE_TAX_RULES[cleaned]) return cleaned
   if (STATE_NAME_TO_CODE[cleaned]) return STATE_NAME_TO_CODE[cleaned]
-  return "NY"
+  return ""
 }
 
 export async function getUsTaxOverview(params?: {
@@ -211,14 +213,14 @@ export async function getUsTaxOverview(params?: {
     const rawReason = (c.taxExemptionReason as ExemptionType) || "RESALE"
     const validReason: ExemptionType = EXEMPTION_STATUTES[rawReason] ? rawReason : "RESALE"
     const statute = EXEMPTION_STATUTES[validReason]
-    const certNum = c.taxExemptionCertificate || `EX-${c.displayName.substring(0, 3).toUpperCase()}-2026`
+    const certNum = c.taxExemptionCertificate || ""
 
     // Default expiry 1 year from updated date or end of current tax year
     const expiryDateStr = `${taxYear}-12-31`
     const { status, daysToExpiry } = evaluateCertificateStatus(expiryDateStr)
 
     const addr = (c.billingAddress as Record<string, any>) || {}
-    const state = resolveStateCode(addr.state || c.countryCode || "CA")
+    const state = resolveStateCode(addr.state)
 
     return {
       id: c.id,
@@ -294,7 +296,7 @@ export async function exportUsTaxCsv(params: {
     where: { id: tenantId },
     select: { name: true },
   })
-  const payerName = tenant?.name || COMPANY.name || "Genesoft ERP Inc."
+  const payerName = tenant?.name || ""
 
   const overview = await getUsTaxOverview(params)
   return formatUsStateSalesTaxCsv(overview.stateSchedules, payerName, params.taxYear)
@@ -307,8 +309,8 @@ export async function export1099FireCsvAction(params: { taxYear: number }): Prom
     select: { name: true, settings: true },
   })
   const settings = (tenant?.settings as Record<string, any>) || {}
-  const payerName = tenant?.name || COMPANY.name || "Genesoft ERP Inc."
-  const payerEin = settings.ein || settings.tax_id || "12-3456789"
+  const payerName = tenant?.name || ""
+  const payerEin = requireTaxId(settings.ein || settings.tax_id, "EIN")
 
   const overview = await getUsTaxOverview({ taxYear: params.taxYear, quarter: "ALL" })
   return format1099FireCsv(overview.vendor1099Records, payerName, payerEin, params.taxYear)

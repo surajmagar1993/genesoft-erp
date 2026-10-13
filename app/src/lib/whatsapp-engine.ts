@@ -72,7 +72,7 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, WhatsAppTemplate> =
             amount: "₹18,500.00",
             company_name: "Genesoft ERP Corp",
             due_date: "15 Oct 2026",
-            payment_link: "https://erp.genesoft.ai/portal/pay/inv_42",
+            payment_link: "https://app.example.com/portal/pay/inv_42",
         },
     },
     PAYMENT_RECEIPT_ALERT: {
@@ -104,7 +104,7 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, WhatsAppTemplate> =
             amount: "₹45,200.00",
             due_date: "01 Sep 2026",
             days_overdue: "11",
-            payment_link: "https://erp.genesoft.ai/portal/pay/inv_38",
+            payment_link: "https://app.example.com/portal/pay/inv_38",
             company_name: "Genesoft ERP Corp",
         },
     },
@@ -121,7 +121,7 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, WhatsAppTemplate> =
             amount: "₹7,250.00",
             company_name: "Genesoft ERP Corp",
             delivery_date: "18 Sep 2026",
-            tracking_link: "https://erp.genesoft.ai/track/SO-89",
+            tracking_link: "https://app.example.com/track/SO-89",
         },
     },
     SUPPORT_TICKET_UPDATE: {
@@ -136,7 +136,7 @@ export const WHATSAPP_TEMPLATES: Record<WhatsAppTemplateKey, WhatsAppTemplate> =
             ticket_id: "TCK-408",
             ticket_title: "Bank Statement Sync Issue",
             latest_update: "Our engineering team has reconciled the statement lines.",
-            portal_link: "https://erp.genesoft.ai/portal/tickets/408",
+            portal_link: "https://app.example.com/portal/tickets/408",
         },
     },
     CUSTOMER_WELCOME: {
@@ -218,6 +218,11 @@ export function generateWhatsAppDirectLink(phone: string, text: string, defaultC
 export function interpolateWhatsAppTemplate(templateText: string, variables: Record<string, string>): string {
     let result = templateText
     for (const [key, val] of Object.entries(variables)) {
+        if (!val && /_link$/.test(key)) {
+            // No link (e.g. customer without portal access): drop the "…: {{link}}" sentence
+            result = result.replace(new RegExp(`\\s*[^.!?]*:\\s*{{\\s*${key}\\s*}}\\.?`, "g"), "")
+            continue
+        }
         const regex = new RegExp(`{{\\s*${key}\\s*}}`, "g")
         result = result.replace(regex, val || "")
     }

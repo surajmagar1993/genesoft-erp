@@ -336,9 +336,9 @@ export function compileAustralianBas(params: {
 
   return {
     period,
-    taxpayerAbn: taxpayerAbn || "51 824 753 556",
-    taxpayerLegalName: taxpayerLegalName || "Genesoft ERP Australia Pty Ltd",
-    taxpayerAddress: taxpayerAddress || "Level 25, 100 Barangaroo Avenue, Sydney NSW 2000",
+    taxpayerAbn: taxpayerAbn || "",
+    taxpayerLegalName: taxpayerLegalName || "",
+    taxpayerAddress: taxpayerAddress || "",
     g1TotalSales: Math.round(g1TotalSales * 100) / 100,
     g2ExportSales: Math.round(g2ExportSales * 100) / 100,
     g3OtherGstFreeSales: Math.round(g3OtherGstFreeSales * 100) / 100,

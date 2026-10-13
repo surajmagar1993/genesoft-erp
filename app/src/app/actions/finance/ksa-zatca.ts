@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { requireTaxId } from "@/lib/tax-identity"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { COMPANY } from "@/lib/constants/company"
 import {
@@ -98,9 +99,9 @@ export async function getKsaVatOverview(params?: {
   })
 
   const tenantSettings = (tenant?.settings as Record<string, any>) || {}
-  const taxpayerVatNumber = tenantSettings.ksa_vat_number || tenantSettings.vat_number || "310123456789003"
-  const taxpayerLegalName = tenant?.name || COMPANY.name || "Genesoft Middle East KSA LLC"
-  const taxpayerAddress = tenantSettings.address || "King Fahd Road, Riyadh, Saudi Arabia"
+  const taxpayerVatNumber = tenantSettings.ksa_vat_number || tenantSettings.vat_number || ""
+  const taxpayerLegalName = tenant?.name || ""
+  const taxpayerAddress = tenantSettings.address || ""
 
   // Fetch Invoices in Period
   const invoicesDb = await prisma.invoice.findMany({
@@ -296,8 +297,8 @@ export async function generateZatcaInvoicePayload(invoiceId: string) {
   if (!invoice) throw new Error("Invoice not found.")
 
   const tenantSettings = (invoice.tenant?.settings as Record<string, any>) || {}
-  const sellerVatNumber = tenantSettings.ksa_vat_number || tenantSettings.vat_number || "310123456789003"
-  const sellerName = invoice.tenant?.name || COMPANY.name || "Genesoft Middle East KSA LLC"
+  const sellerVatNumber = requireTaxId(tenantSettings.ksa_vat_number || tenantSettings.vat_number, "VAT number")
+  const sellerName = invoice.tenant?.name || ""
 
   const buyerVat = (invoice.contact?.trn || "").trim()
   const isB2B = validateKsaVatNumber(buyerVat).isValid
@@ -384,6 +385,7 @@ export async function exportKsaVatReturnJson(params?: {
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }) {
   const overview = await getKsaVatOverview(params)
+  requireTaxId(overview.report.taxpayerVatNumber, "VAT number")
   const jsonPayload = formatKsaVatReturnJson(overview.report)
   return JSON.stringify(jsonPayload, null, 2)
 }
@@ -393,6 +395,7 @@ export async function exportKsaVatReturnCsv(params?: {
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }) {
   const overview = await getKsaVatOverview(params)
+  requireTaxId(overview.report.taxpayerVatNumber, "VAT number")
   return formatKsaVatReturnCsv(overview.report)
 }
 

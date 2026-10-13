@@ -141,14 +141,13 @@ export default function WhatsAppClient({
             setTemplateVars({})
         } else {
             const tmpl = WHATSAPP_TEMPLATES[key]
+            // Only real values are pre-filled; sample values show as placeholders, never as message text
             const initialVars: Record<string, string> = {
-                customer_name: selectedContact?.name || "Customer",
+                customer_name: selectedContact?.name || "",
                 company_name: companyName,
             }
             tmpl.variables.forEach((v) => {
-                if (!initialVars[v]) {
-                    initialVars[v] = tmpl.sampleVariables[v] || ""
-                }
+                if (!initialVars[v]) initialVars[v] = ""
             })
             setTemplateVars(initialVars)
             setCustomText(interpolateWhatsAppTemplate(tmpl.bodyTemplate, initialVars))
@@ -1004,7 +1003,7 @@ export default function WhatsAppClient({
                                     <div className="flex items-center gap-2">
                                         <Input
                                             readOnly
-                                            value={`${typeof window !== "undefined" ? window.location.origin : "https://erp.genesoft.ai"}/api/webhooks/whatsapp`}
+                                            value={`${typeof window !== "undefined" ? window.location.origin : ""}/api/webhooks/whatsapp`}
                                             className="text-xs bg-muted font-mono"
                                         />
                                         <Button
@@ -1152,7 +1151,7 @@ export default function WhatsAppClient({
                                 </span>
                                 <div className="p-3 rounded-xl bg-[#d9fdd3] text-emerald-950 dark:bg-emerald-900/60 dark:text-emerald-100 text-xs shadow-xs">
                                     {dispatchType === "INVOICE_DISPATCH"
-                                        ? `Hello ${selectedInvoice.customer_name}, your invoice ${selectedInvoice.invoice_number} for ${currencyCode} ${Number(selectedInvoice.total_amount).toFixed(2)} from ${companyName} is ready. Due Date: ${selectedInvoice.due_date ? new Date(selectedInvoice.due_date).toLocaleDateString() : "Immediate"}. View and pay online: https://erp.genesoft.ai/portal/${selectedInvoice.id}. Thank you for your business!`
+                                        ? `Hello ${selectedInvoice.customer_name}, your invoice ${selectedInvoice.invoice_number} for ${currencyCode} ${Number(selectedInvoice.total_amount).toFixed(2)} from ${companyName} is ready. Due Date: ${selectedInvoice.due_date ? new Date(selectedInvoice.due_date).toLocaleDateString() : "Immediate"}. View and pay online: ${typeof window !== "undefined" ? window.location.origin : ""}/portal/…. Thank you for your business!`
                                         : `Dear ${selectedInvoice.customer_name}, a quick reminder that invoice ${selectedInvoice.invoice_number} for ${currencyCode} ${Number(selectedInvoice.total_amount).toFixed(2)} was due on ${selectedInvoice.due_date ? new Date(selectedInvoice.due_date).toLocaleDateString() : "Immediate"}. Please settle the balance at your earliest convenience. Contact ${companyName} if you have any questions.`}
                                 </div>
                             </div>

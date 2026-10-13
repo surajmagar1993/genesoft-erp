@@ -75,7 +75,7 @@ All requested fixes and verification workflows have been executed, tested live i
   - **Live Test:** Navigated to `/settings` as `vicky.magar1993@gmail.com`. Set GSTIN to `27ABCDE1234F1Z5`, Support Email to `support@fixocomputers.com`, and configured brand logo. Successfully saved and verified live badge.
 
 - [x] **1.7 Subscription & Plan Monitoring Verification**
-  - **Razorpay Keys Configured:** `RAZORPAY_KEY_ID=rzp_test_SaWno1QW1SlNQs` and secret present in `app/.env`.
+  - **Razorpay Keys Configured:** `RAZORPAY_KEY_ID=rzp_test_********` and secret present in `app/.env`.
   - **Platform Billing Engine:** `app/src/lib/saas-subscription-engine.ts` defines tiers (FREE, BASIC, PRO, ENTERPRISE) with quotas for contacts, invoices, members, and warehouses.
   - **Super Admin Telemetry:** Verified `/admin/subscriptions`:
     - Tracks 8 active tenants across all regions.

@@ -379,7 +379,7 @@ export async function runWorkflowSimulator(
                     summary = `Generated task: "${act.params.taskTitle || "Workflow Task"}" (Priority: ${act.params.taskPriority || "MEDIUM"}, Due in ${act.params.taskDueDays || 1}d)`
                     break
                 case "CALL_WEBHOOK":
-                    summary = `Sent POST webhook payload to ${act.params.webhookUrl || "https://api.external.com/webhook"}`
+                    summary = act.params.webhookUrl ? `Would POST to ${act.params.webhookUrl}` : "No webhook URL set"
                     break
                 case "UPDATE_STATUS":
                     summary = `Target entity status transitioned to [${act.params.newStatus || "PROCESSED"}]`

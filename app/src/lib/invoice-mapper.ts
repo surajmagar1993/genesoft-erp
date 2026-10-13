@@ -1,4 +1,5 @@
 import { COMPANY } from "@/lib/constants/company"
+import { getStateNameFromCode } from "@/lib/gst-returns-engine"
 import type {
   InvoiceDB,
   InvoiceStatus,
@@ -11,7 +12,10 @@ import type {
 export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB } {
   const billTo = (inv.billTo as Record<string, any>) || {}
   const tenantSettings = (inv.tenant?.settings as Record<string, any>) || {}
-  const supplierState = tenantSettings.state || COMPANY.state
+  // A GSTIN starts with the 2-digit state code, so it gives the state when Settings has none
+  const supplierGstin: string = tenantSettings.gstin || COMPANY.gstin || ""
+  const gstinStateCode = /^\d{2}/.test(supplierGstin) ? supplierGstin.slice(0, 2) : ""
+  const supplierState = tenantSettings.state || COMPANY.state || (gstinStateCode ? getStateNameFromCode(gstinStateCode) : "")
   const placeOfSupply = inv.placeOfSupply || ""
   const isInter = placeOfSupply ? placeOfSupply !== supplierState : false
 
@@ -34,7 +38,7 @@ export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB
     signatory_name: billTo.signatoryName || tenantSettings.signatory_name || "Authorized Representative",
     signatory_designation: billTo.signatoryDesignation || tenantSettings.signatory_designation || "Authorized Signatory",
     signature_url: inv.signatureUrl || tenantSettings.signature_url || null,
-    supplier_gstin: tenantSettings.gstin || COMPANY.gstin,
+    supplier_gstin: supplierGstin,
     supplier_state: supplierState,
     place_of_supply: placeOfSupply,
     supply_type: isInter ? "inter" : "intra",

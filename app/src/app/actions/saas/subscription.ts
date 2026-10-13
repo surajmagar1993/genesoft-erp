@@ -35,7 +35,7 @@ async function getCallerContext(targetTenantId?: string) {
 
     return {
         userId: user.id,
-        email: user.email || "user@genesoft.ai",
+        email: user.email || "unknown",
         isSuperAdmin,
         isTenantAdmin: isSuperAdmin || role === "ADMIN",
         tenantId: effectiveTenantId as string | undefined,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PLATFORM, telHref } from "@/lib/constants/platform"
 import Image from "next/image";
 import { Github, Twitter, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 
@@ -61,11 +62,11 @@ export function PublicFooter() {
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <Mail className="w-4 h-4 text-orange-600 mt-1" />
-                <span className="text-slate-500 dark:text-slate-400 text-sm">hello@genesoftinfotech.com</span>
+                <span className="text-slate-500 dark:text-slate-400 text-sm">{PLATFORM.email}</span>
               </li>
               <li className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-orange-600 mt-1" />
-                <span className="text-slate-500 dark:text-slate-400 text-sm">+91 8888885285</span>
+                <span className="text-slate-500 dark:text-slate-400 text-sm">{PLATFORM.phone}</span>
               </li>
               <li className="flex items-start gap-3">
                 <MapPin className="w-4 h-4 text-orange-600 mt-1" />
@@ -81,7 +82,7 @@ export function PublicFooter() {
 
         <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-slate-400 dark:text-slate-500 text-sm">
-            © {currentYear} Genesoft Infotech Private Limited. All rights reserved.
+            © {currentYear} {PLATFORM.legalName}. All rights reserved.
           </p>
           <div className="flex items-center gap-6 text-sm text-slate-400 hover:text-slate-600 transition-colors">
             <Link href="/privacy">Privacy Policy</Link>
