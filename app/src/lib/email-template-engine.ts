@@ -664,6 +664,10 @@ export function interpolateMergeTags(
 /**
  * Compiles a system transactional email with custom overrides and wraps in responsive HTML.
  */
+function escapeHtml(text: string): string {
+    return text.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
+}
+
 export function compileSystemEmail(params: {
     templateKey: SystemTemplateKey
     customSubject?: string
@@ -671,26 +675,32 @@ export function compileSystemEmail(params: {
     customBodyText?: string
     variables?: Record<string, string>
     actionButton?: { label: string; url: string }
+    /** Fill missing tags with sample data (previews and test sends only, never real emails) */
+    useSampleData?: boolean
 }): CompiledEmail {
-    const { templateKey, customSubject, customBodyHtml, customBodyText, variables = {}, actionButton } = params
+    const { templateKey, customSubject, customBodyHtml, customBodyText, variables = {}, actionButton, useSampleData = true } = params
     const definition = SYSTEM_EMAIL_TEMPLATES[templateKey]
 
     if (!definition) {
         throw new Error(`Unknown system template key: ${templateKey}`)
     }
 
-    // Merge mock variables as fallback defaults
-    const resolvedVars = {
-        ...definition.mockVariables,
+    // Sample values fill missing tags only in previews; real emails leave them blank
+    const resolvedVars: Record<string, string> = {
+        ...(useSampleData ? definition.mockVariables : {}),
         ...variables,
     }
+    // Values are data, not markup: escape them for the HTML part
+    const htmlVars = Object.fromEntries(
+        Object.entries(resolvedVars).map(([k, v]) => [k, escapeHtml(String(v ?? ""))])
+    )
 
     const rawSubject = customSubject || definition.subject
     const rawHtml = customBodyHtml || definition.bodyHtml
     const rawText = customBodyText || definition.bodyText
 
     const compiledSubject = interpolateMergeTags(rawSubject, resolvedVars)
-    const compiledInnerHtml = interpolateMergeTags(rawHtml, resolvedVars)
+    const compiledInnerHtml = interpolateMergeTags(rawHtml, htmlVars)
     const compiledText = interpolateMergeTags(rawText, resolvedVars)
 
     // Wrap in standard responsive layout

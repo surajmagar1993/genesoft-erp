@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import { useState } from "react"
 import { Building2, Calendar, MoreHorizontal, UserCheck, UserX, CreditCard } from "lucide-react"
@@ -24,12 +25,12 @@ export function TenantActionsDropdown({ tenant }: { tenant: any }) {
     const handleExtendTrial = async () => {
         try {
             setIsLoading(true)
-            await extendTenantTrial(tenant.id, 7) // +7 days
+            unwrap(await extendTenantTrial(tenant.id, 7)) // +7 days
             toast.success("Trial extended by 7 days")
             router.refresh()
         } catch (error) {
             console.error(error)
-            toast.error("Failed to extend trial")
+            toast.error(error instanceof Error ? error.message : "Failed to extend trial")
         } finally {
             setIsLoading(false)
         }
@@ -38,12 +39,12 @@ export function TenantActionsDropdown({ tenant }: { tenant: any }) {
     const handleToggleStatus = async () => {
         try {
             setIsLoading(true)
-            await toggleTenantStatus(tenant.id, !tenant.isActive)
+            unwrap(await toggleTenantStatus(tenant.id, !tenant.isActive))
             toast.success(`Tenant ${tenant.isActive ? 'suspended' : 'activated'} successfully`)
             router.refresh()
         } catch (error) {
             console.error(error)
-            toast.error("Failed to update status")
+            toast.error(error instanceof Error ? error.message : "Failed to update status")
         } finally {
             setIsLoading(false)
         }
@@ -52,12 +53,12 @@ export function TenantActionsDropdown({ tenant }: { tenant: any }) {
     const handleUpgradePlan = async () => {
         try {
             setIsLoading(true)
-            await updateTenantPlan(tenant.id, "PRO") // Assuming PRO upgrade for now
+            unwrap(await updateTenantPlan(tenant.id, "PRO"))
             toast.success("Tenant upgraded to PRO")
             router.refresh()
         } catch (error) {
             console.error(error)
-            toast.error("Failed to update plan")
+            toast.error(error instanceof Error ? error.message : "Failed to update plan")
         } finally {
             setIsLoading(false)
         }

@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { appUrl } from "@/lib/app-url"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards, Zap, Users } from "lucide-react"
@@ -11,14 +12,26 @@ import PaymentGatewaysTab from "./payment-gateways-tab"
 import TeamTab from "./team-tab"
 import { getTenantRole } from "@/lib/get-tenant-id"
 import { getTeamMembers } from "@/app/actions/settings/team"
+import { getBillingPricing } from "@/app/actions/saas/subscription"
 
-export default async function SettingsPage() {
+const SETTINGS_TABS = ["organization", "taxation", "account", "gateways", "billing", "team"]
+
+export default async function SettingsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ tab?: string; success?: string; canceled?: string }>
+}) {
+    const params = await searchParams
+    // Stripe Checkout returns here with ?tab=billing&success=true (or canceled=true)
+    const initialTab = SETTINGS_TABS.includes(params.tab || "") ? params.tab! : "organization"
+    const checkoutResult = params.success === "true" ? "success" : params.canceled === "true" ? "canceled" : undefined
     const settings = await getTenantSettings()
     const gatewayConfig = await getTenantPaymentGateways()
+    const billingPricing = await getBillingPricing().catch(() => undefined)
     const role = await getTenantRole()
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN"
     const teamMembers = isAdmin ? await getTeamMembers() : []
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || ""
+    const siteUrl = appUrl()
 
     return (
         <div className="space-y-6">
@@ -44,7 +57,7 @@ export default async function SettingsPage() {
                 </div>
             )}
 
-            <Tabs defaultValue="organization" className="space-y-4">
+            <Tabs defaultValue={initialTab === "team" && !isAdmin ? "organization" : initialTab} className="space-y-4">
                 <TabsList className="bg-muted/50 p-1">
                     <TabsTrigger value="organization" className="flex items-center gap-2">
                         <Building2 className="h-4 w-4" /> Organization & Branding
@@ -118,12 +131,12 @@ export default async function SettingsPage() {
 
                 {/* Payment Gateways */}
                 <TabsContent value="gateways">
-                    <PaymentGatewaysTab initialConfig={gatewayConfig} appUrl={appUrl} />
+                    <PaymentGatewaysTab initialConfig={gatewayConfig} appUrl={siteUrl} />
                 </TabsContent>
 
                 {/* Billing Settings */}
                 <TabsContent value="billing">
-                    <BillingTab settings={settings as any} />
+                    <BillingTab settings={settings as any} pricing={billingPricing} checkoutResult={checkoutResult} />
                 </TabsContent>
 
                 {/* Team & Roles (workspace admins only) */}

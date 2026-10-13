@@ -15,11 +15,23 @@ export default async function TenantsPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }> 
 }) {
     const searchParams = await props.searchParams
-    const tenants = await getTenants({
+    const page = Math.max(1, parseInt(searchParams.page as string) || 1)
+    const { tenants, total, limit } = await getTenants({
         search: searchParams.search as string,
         plan: searchParams.plan as string,
-        status: searchParams.status as string
+        status: searchParams.status as string,
+        page
     })
+    const totalPages = Math.max(1, Math.ceil(total / limit))
+    const pageHref = (p: number) => {
+        const query = new URLSearchParams()
+        for (const key of ["search", "plan", "status"]) {
+            const value = searchParams[key]
+            if (typeof value === "string" && value) query.set(key, value)
+        }
+        query.set("page", String(p))
+        return `/admin/tenants?${query.toString()}`
+    }
 
     return (
         <div className="space-y-6">
@@ -33,7 +45,7 @@ export default async function TenantsPage(props: {
                 </div>
                 <div className="flex items-center gap-3">
                     <Badge variant="outline" className="px-3 py-1 font-semibold border-primary/20 bg-primary/5 hidden sm:inline-flex">
-                        {tenants.length} Total Businesses
+                        {total} Total Businesses
                     </Badge>
                     <Link href="/admin/tenants/new">
                         <Button className="gap-2 shadow-sm font-semibold">
@@ -115,6 +127,24 @@ export default async function TenantsPage(props: {
                     </Table>
                 </CardContent>
             </Card>
+
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                    <span>Page {page} of {totalPages}</span>
+                    <div className="flex gap-2">
+                        {page > 1 ? (
+                            <Link href={pageHref(page - 1)}><Button variant="outline" size="sm">Previous</Button></Link>
+                        ) : (
+                            <Button variant="outline" size="sm" disabled>Previous</Button>
+                        )}
+                        {page < totalPages ? (
+                            <Link href={pageHref(page + 1)}><Button variant="outline" size="sm">Next</Button></Link>
+                        ) : (
+                            <Button variant="outline" size="sm" disabled>Next</Button>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

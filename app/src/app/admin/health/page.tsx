@@ -1,69 +1,79 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Activity, Cpu, Database, Globe, Zap, Server, ShieldCheck, Wifi, HardDrive } from "lucide-react"
-import { getDatabaseHealth } from "@/app/actions/saas/admin"
+import { Activity, Database, ShieldCheck, HardDrive, Mail, CreditCard, KeyRound, Users } from "lucide-react"
+import { getDatabaseHealth, getServiceHealth } from "@/app/actions/saas/admin"
 import { formatDistanceToNow } from "date-fns"
 
 export default async function SystemHealthPage() {
-    const health = await getDatabaseHealth()
-    
+    const [health, externalServices] = await Promise.all([getDatabaseHealth(), getServiceHealth()])
+
+    const icons: Record<string, any> = {
+        "Auth (Supabase)": ShieldCheck,
+        "Email (Resend)": Mail,
+        "Payments (Razorpay)": CreditCard,
+        "Payments (Stripe)": CreditCard,
+        "Webhooks & Cron secrets": KeyRound,
+    }
     const services = [
-        { name: "Node.js API Cluster", status: "Operational", uptime: "99.98%", latency: "42ms", icon: Server },
-        { 
-            name: "Primary Database (PostgreSQL)", 
-            status: health.status === "HEALTHY" ? "Operational" : "Degraded", 
-            uptime: "100%", 
-            latency: health.latency || "---", 
+        {
+            name: "Database (PostgreSQL)",
+            status: health.status === "HEALTHY" ? "Operational" : "Down",
+            latency: health.latency || "—",
+            detail: health.status === "HEALTHY" ? `Size: ${health.databaseSize}` : (health as any).error || "Unreachable",
             icon: Database,
-            extra: `Size: ${health.databaseSize || "0MB"}`
         },
-        { name: "Auth Service (Supabase)", status: "Operational", uptime: "99.99%", latency: "85ms", icon: ShieldCheck },
-        { name: "Edge Runtime (Global)", status: "Operational", uptime: "99.95%", latency: "18ms", icon: Globe },
-        { name: "Storage Engine", status: "Operational", uptime: "99.99%", latency: "120ms", icon: Zap },
-        { name: "Real-time Gateway", status: "Operational", uptime: "99.85%", latency: "210ms", icon: Wifi },
+        ...externalServices.map((svc) => ({
+            name: svc.name,
+            status: svc.status,
+            latency: svc.latencyMs !== null ? `${svc.latencyMs}ms` : "—",
+            detail: svc.detail,
+            icon: icons[svc.name] || Activity,
+        })),
     ]
+    const down = services.filter((svc) => svc.status === "Down")
+    const allOk = down.length === 0
 
     return (
         <div className="space-y-8 animate-in fade-in duration-700">
             <div className="flex flex-col gap-2">
                 <h1 className="text-3xl font-bold tracking-tight">System Infrastructure Health</h1>
                 <p className="text-muted-foreground text-lg">
-                    Real-time status monitoring for Genesoft SaaS core services and global edge nodes.
+                    Live checks of the database and the services Genesoft depends on, run when this page loads.
                 </p>
             </div>
 
             {/* Overall Status */}
             <Card className={cn(
                 "border-emerald-500/20 shadow-lg overflow-hidden relative",
-                health.status === "HEALTHY" ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20"
+                allOk ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20"
             )}>
                 <div className={cn(
                     "absolute top-0 left-0 w-1 h-full",
-                    health.status === "HEALTHY" ? "bg-emerald-500" : "bg-red-500"
+                    allOk ? "bg-emerald-500" : "bg-red-500"
                 )} />
                 <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div className={cn(
                                 "h-12 w-12 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]",
-                                health.status === "HEALTHY" ? "bg-emerald-500/20 text-emerald-500" : "bg-red-500/20 text-red-500"
+                                allOk ? "bg-emerald-500/20 text-emerald-500" : "bg-red-500/20 text-red-500"
                             )}>
                                 <ShieldCheck className="h-6 w-6" />
                             </div>
                             <div>
                                 <h2 className={cn(
                                     "text-xl font-bold",
-                                    health.status === "HEALTHY" ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"
+                                    allOk ? "text-emerald-700 dark:text-emerald-400" : "text-red-700 dark:text-red-400"
                                 )}>
-                                    {health.status === "HEALTHY" ? "All Systems Operational" : "System Degradation Detected"}
+                                    {allOk ? "All Checked Services Operational" : `${down.length} Service${down.length === 1 ? "" : "s"} Down: ${down.map((svc) => svc.name).join(", ")}`}
                                 </h2>
                                 <p className="text-sm opacity-80">
-                                    Last scan: {health.timestamp ? formatDistanceToNow(new Date(health.timestamp)) : "Just now"} ago • Database Size: {health.databaseSize}
+                                    Checked {health.timestamp ? formatDistanceToNow(new Date(health.timestamp)) : "just now"} ago • Database size: {health.databaseSize ?? "unknown"}
                                 </p>
                             </div>
                         </div>
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/30 font-black">
-                            HEALTH SCORE 1.0
+                        <Badge variant="outline" className="font-black">
+                            {services.filter((svc) => svc.status === "Operational").length} / {services.filter((svc) => svc.status !== "Not configured").length} OK
                         </Badge>
                     </div>
                 </CardContent>
@@ -107,11 +117,11 @@ export default async function SystemHealthPage() {
                 <Card className="bg-card/40 backdrop-blur border-primary/5">
                     <CardContent className="p-4 flex items-center gap-4">
                         <div className="p-2 bg-primary/10 rounded-lg text-primary">
-                           <Zap className="w-5 h-5" />
+                           <Users className="w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] uppercase font-bold text-muted-foreground">Active Load</p>
-                           <p className="text-xl font-black">Normal</p>
+                           <p className="text-[10px] uppercase font-bold text-muted-foreground">Total Users</p>
+                           <p className="text-xl font-black">{health.metrics?.users || 0}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -128,7 +138,9 @@ export default async function SystemHealthPage() {
                                 </div>
                                 <Badge variant="secondary" className={cn(
                                     "border-none text-[10px] h-5",
-                                    service.status === "Operational" ? "bg-emerald-500/10 text-emerald-600" : "bg-red-500/10 text-red-600"
+                                    service.status === "Operational" ? "bg-emerald-500/10 text-emerald-600"
+                                        : service.status === "Down" ? "bg-red-500/10 text-red-600"
+                                        : "bg-muted text-muted-foreground"
                                 )}>
                                     {service.status}
                                 </Badge>
@@ -136,32 +148,12 @@ export default async function SystemHealthPage() {
                             <CardTitle className="text-base mt-4">{service.name}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Uptime</p>
-                                    <p className="text-sm font-black">{service.uptime}</p>
-                                </div>
-                                <div className="space-y-1 text-right">
-                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Latency</p>
+                            <div className="flex items-end justify-between gap-4">
+                                <p className="text-xs text-muted-foreground">{service.detail}</p>
+                                <div className="space-y-1 text-right shrink-0">
+                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Response</p>
                                     <p className="text-sm font-black text-primary">{service.latency}</p>
                                 </div>
-                            </div>
-                            {service.extra && (
-                                <p className="mt-2 text-[10px] font-mono text-muted-foreground">{service.extra}</p>
-                            )}
-                            
-                            {/* Simple Sparkline Mock */}
-                            <div className="mt-4 h-12 flex items-end gap-1 overflow-hidden">
-                                {Array.from({ length: 20 }).map((_, i) => (
-                                    <div 
-                                        key={i} 
-                                        className={cn(
-                                            "w-full rounded-t-sm",
-                                            service.status === "Operational" ? "bg-emerald-500/20" : "bg-red-500/20"
-                                        )} 
-                                        style={{ height: `${Math.random() * 80 + 20}%` }} 
-                                    />
-                                ))}
                             </div>
                         </CardContent>
                     </Card>

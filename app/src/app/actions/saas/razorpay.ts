@@ -1,41 +1,61 @@
 "use server"
 
-import { prisma } from "../../../lib/prisma"
 import { razorpay } from "../../../lib/razorpay"
 import { getTenantAdminId, getTenantId } from "../../../lib/get-tenant-id"
-import { getPlanPrice, type BillingCycle, type PlanTier } from "../../../lib/saas-subscription-engine"
+import type { BillingCycle, PlanTier } from "../../../lib/saas-subscription-engine"
+import { quotePlanChange } from "../../../lib/plan-change"
+import { PLAN_CHANGE_KIND, applyPaidRazorpayOrder } from "../../../lib/razorpay-plan"
+import { toSmallestCurrencyUnit } from "../../../lib/payment-gateway-engine"
+import type { PaidPlan } from "../../../lib/stripe-plans"
+import { createCheckoutSession } from "./stripe"
+import { revalidatePath } from "next/cache"
 import crypto from "crypto"
 
 const PAID_PLANS: PlanTier[] = ["BASIC", "PRO", "ENTERPRISE"]
 
+export type PlanCheckout =
+  | { gateway: "RAZORPAY"; keyId: string; orderId: string; amount: number; currency: string; plan: PlanTier; cycle: BillingCycle }
+  | { gateway: "STRIPE"; url: string }
+
 /**
- * Creates a Razorpay order for the caller's own tenant.
- * Amount is priced server-side from the plan catalog; tenant and plan are pinned in the order notes.
+ * Starts paying for an upgrade. The amount is the server's prorated quote at
+ * the live price (Admin → Pricing). INR-style regions pay through Razorpay
+ * (order pinned to this tenant, plan and cycle); Stripe regions go to Stripe
+ * Checkout. The plan only changes once the gateway confirms payment.
  */
-export async function createRazorpayOrder(plan: PlanTier, cycle: BillingCycle = "MONTHLY", currency: string = "INR") {
+export async function createPlanCheckout(plan: PlanTier, cycle: BillingCycle = "MONTHLY"): Promise<PlanCheckout> {
   const tenantId = await getTenantAdminId()
-
   if (!PAID_PLANS.includes(plan)) throw new Error("Invalid plan")
-  const amount = getPlanPrice(plan, cycle, currency)
-  if (!amount || amount <= 0) throw new Error("Plan is not available in this currency")
 
-  const options = {
-    amount: Math.round(amount * 100), // Razorpay expects amount in paisa
-    currency,
-    receipt: `rcpt_${tenantId.slice(0, 8)}_${Date.now()}`,
-    notes: {
-      tenantId,
-      plan,
-      cycle,
-    }
+  const { quote, pricing } = await quotePlanChange(tenantId, plan, cycle)
+  if (!(quote.netPayableToday > 0)) {
+    throw new Error("Nothing to pay for this change. Use the plan change button instead.")
   }
 
+  if (pricing.gateway === "STRIPE") {
+    const { url } = await createCheckoutSession(plan as PaidPlan, cycle)
+    if (!url) throw new Error("Stripe checkout is not available")
+    return { gateway: "STRIPE", url }
+  }
+
+  const keyId = process.env.RAZORPAY_KEY_ID
+  if (!keyId || !process.env.RAZORPAY_KEY_SECRET) throw new Error("Razorpay is not configured")
+
   try {
-    const order = await razorpay.orders.create(options)
+    const order = await razorpay.orders.create({
+      amount: toSmallestCurrencyUnit(quote.netPayableToday, pricing.currency),
+      currency: pricing.currency,
+      receipt: `plan_${tenantId.slice(0, 8)}_${Date.now()}`,
+      notes: { kind: PLAN_CHANGE_KIND, tenantId, plan, cycle },
+    })
     return {
-      id: order.id,
-      amount: order.amount,
+      gateway: "RAZORPAY",
+      keyId,
+      orderId: order.id,
+      amount: Number(order.amount),
       currency: order.currency,
+      plan,
+      cycle,
     }
   } catch (error) {
     console.error("Razorpay Order Error:", error)
@@ -66,20 +86,11 @@ export async function verifyRazorpayPayment(orderId: string, paymentId: string, 
 
   const order = await razorpay.orders.fetch(orderId)
   const notes = (order.notes || {}) as Record<string, string>
-  const plan = notes.plan as PlanTier
-
   if (notes.tenantId !== tenantId) throw new Error("Order does not belong to this account")
-  if (!PAID_PLANS.includes(plan)) throw new Error("Order has no valid plan")
-  if (order.status !== "paid" && Number(order.amount_paid) < Number(order.amount)) {
-    throw new Error("Order is not paid")
-  }
 
-  return await prisma.tenant.update({
-    where: { id: tenantId },
-    data: {
-      plan,
-      isTrial: false,
-      trialEndsAt: null, // Subscribed users don't have trial ends
-    },
-  })
+  const result = await applyPaidRazorpayOrder(order as never)
+  if (!result) throw new Error("This order is not a plan payment")
+
+  revalidatePath("/settings")
+  return { success: true, plan: notes.plan, invoice: result.invoice ?? null }
 }

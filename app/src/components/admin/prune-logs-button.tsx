@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -18,11 +19,11 @@ export function PruneLogsButton() {
 
         setIsPending(true)
         try {
-            await clearSystemLogs()
+            unwrap(await clearSystemLogs())
             toast.success("All system logs have been pruned")
             router.refresh()
         } catch (error) {
-            toast.error("Failed to prune logs")
+            toast.error(error instanceof Error ? error.message : "Failed to prune logs")
         } finally {
             setIsPending(false)
         }

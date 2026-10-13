@@ -350,6 +350,8 @@ export interface CalculateProrationParams {
     cycleStartDate?: Date | string
     cycleEndDate?: Date | string
     currentPaidAmount?: number
+    /** Prices to use (e.g. from Admin → Pricing); defaults to the built-in catalog */
+    pricing?: RegionalPricing
 }
 
 /**
@@ -365,9 +367,10 @@ export function calculateSubscriptionProration(params: CalculateProrationParams)
         cycleStartDate,
         cycleEndDate,
         currentPaidAmount,
+        pricing,
     } = params
 
-    const catalog = getRegionalPricing(currencyCode)
+    const catalog = pricing ?? getRegionalPricing(currencyCode)
     const currentRank = getTierRank(currentPlan)
     const targetRank = getTierRank(targetPlan)
 
@@ -474,6 +477,10 @@ export function compileSaaSSubscriptionInvoice(params: {
     currency?: string
     paymentMethod?: string
     transactionRef?: string
+    /** Prices to use; defaults to the built-in catalog */
+    pricing?: RegionalPricing
+    /** Amount actually charged (e.g. a prorated upgrade); defaults to the plan price */
+    amountPaid?: number
 }): SaaSPlatformInvoice {
     const {
         tenantId,
@@ -483,10 +490,12 @@ export function compileSaaSSubscriptionInvoice(params: {
         currency = "INR",
         paymentMethod = "Razorpay / Card",
         transactionRef,
+        pricing,
+        amountPaid,
     } = params
 
-    const catalog = getRegionalPricing(currency)
-    const grossAmount = billingCycle === "ANNUAL" ? catalog.annual[plan] : catalog.monthly[plan]
+    const catalog = pricing ?? getRegionalPricing(currency)
+    const grossAmount = amountPaid ?? (billingCycle === "ANNUAL" ? catalog.annual[plan] : catalog.monthly[plan])
 
     // Regional tax split: e.g. 18% GST for India, 20% VAT for UK, 5% UAE, 15% KSA
     let taxRate = 18.0

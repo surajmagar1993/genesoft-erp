@@ -1,6 +1,8 @@
 "use server"
 
+import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 
 /**
@@ -15,7 +17,8 @@ const WRITER_ROLES = ["USER", "MANAGER", "ADMIN", "SUPER_ADMIN"]
 const MANAGER_ROLES = ["MANAGER", "ADMIN", "SUPER_ADMIN"]
 const TENANT_ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"]
 
-async function getTenantContext(): Promise<{ tenantId: string; role: string }> {
+// Cached per request: a page or action that checks several times hits the database once
+const getTenantContext = cache(async (): Promise<{ tenantId: string; role: string }> => {
   const supabase = await createClient()
 
   const {
@@ -43,8 +46,23 @@ async function getTenantContext(): Promise<{ tenantId: string; role: string }> {
     redirect("/login?error=Your+account+has+been+deactivated.+Please+contact+your+administrator.")
   }
 
-  return { tenantId: profile.tenant_id, role: profile.role ?? "USER" }
-}
+  const role: string = profile.role ?? "USER"
+
+  // A workspace suspended by the platform admin (Admin → Tenants) loses access.
+  // Platform admins keep theirs so they can still reach /admin.
+  if (role !== "SUPER_ADMIN") {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: profile.tenant_id },
+      select: { isActive: true },
+    })
+    if (tenant && !tenant.isActive) {
+      await supabase.auth.signOut()
+      redirect("/login?error=This+workspace+has+been+suspended.+Please+contact+support.")
+    }
+  }
+
+  return { tenantId: profile.tenant_id, role }
+})
 
 /**
  * Returns the tenant_id for the currently authenticated user (any role).

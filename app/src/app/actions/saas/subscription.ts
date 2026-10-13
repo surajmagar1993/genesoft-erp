@@ -4,10 +4,11 @@ import { prisma } from "@/lib/prisma"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { quotePlanChange, applyPlanChange } from "@/lib/plan-change"
+import { getEffectivePricing, type EffectivePricing } from "@/lib/plan-pricing"
 import {
     PlanTier,
     BillingCycle,
-    calculateSubscriptionProration,
     compileSaaSSubscriptionInvoice,
     SaaSPlatformInvoice,
     ProrationQuote,
@@ -136,6 +137,15 @@ export async function getTenantSubscriptionDetails(targetTenantId?: string): Pro
 }
 
 /**
+ * The caller's live plan prices (Admin → Pricing, falling back to the catalog)
+ * and which gateway takes payment for their currency.
+ */
+export async function getBillingPricing(targetTenantId?: string): Promise<EffectivePricing> {
+    const details = await getTenantSubscriptionDetails(targetTenantId)
+    return getEffectivePricing(details.currency)
+}
+
+/**
  * Real-time proration quote for moving from current plan to target plan.
  */
 export async function calculatePlanChangeQuote(params: {
@@ -145,16 +155,7 @@ export async function calculatePlanChangeQuote(params: {
 }): Promise<ProrationQuote> {
     const { targetPlan, billingCycle, targetTenantId } = params
     const details = await getTenantSubscriptionDetails(targetTenantId)
-
-    const quote = calculateSubscriptionProration({
-        currentPlan: details.currentPlan,
-        targetPlan,
-        currentBillingCycle: details.billingCycle,
-        targetBillingCycle: billingCycle,
-        currencyCode: details.currency,
-        cycleEndDate: details.renewalDate,
-    })
-
+    const { quote } = await quotePlanChange(details.tenantId, targetPlan, billingCycle)
     return quote
 }
 
@@ -192,29 +193,21 @@ export async function executePlanChange(params: {
     }
 
     try {
-        const tenant = await prisma.tenant.findUnique({
-            where: { id: tenantId },
-            select: { id: true, name: true, plan: true, currencyCode: true, settings: true },
-        })
-
-        if (!tenant) {
-            return { success: false, message: "", error: "Tenant not found" }
-        }
-
+        const { quote, tenant } = await quotePlanChange(tenantId, targetPlan, billingCycle)
         const currentPlan = (tenant.plan as PlanTier) || "FREE"
         const settings = (tenant.settings as any) || {}
         const currentSub = settings.subscription || {}
-        const existingInvoices: SaaSPlatformInvoice[] = Array.isArray(currentSub.invoices) ? currentSub.invoices : []
 
-        const quote = calculateSubscriptionProration({
-            currentPlan,
-            targetPlan,
-            currentBillingCycle: currentSub.billingCycle || "MONTHLY",
-            targetBillingCycle: billingCycle,
-            currencyCode: tenant.currencyCode,
-        })
-
-        let generatedInvoice: SaaSPlatformInvoice | undefined
+        // Anything that costs money goes through checkout (createPlanCheckout),
+        // which applies the plan only after the gateway confirms payment.
+        // Platform admins can still change a plan directly (comp / manual billing).
+        if (quote.netPayableToday > 0 && !caller.isSuperAdmin) {
+            return {
+                success: false,
+                message: "",
+                error: "This change needs a payment. Use Upgrade to pay at checkout.",
+            }
+        }
 
         if (quote.isDowngrade && !immediate) {
             // Schedule downgrade at the end of current cycle
@@ -251,51 +244,14 @@ export async function executePlanChange(params: {
             }
         }
 
-        // Immediate upgrade or immediate downgrade
-        if (targetPlan !== "FREE") {
-            generatedInvoice = compileSaaSSubscriptionInvoice({
-                tenantId: tenant.id,
-                tenantName: tenant.name,
-                plan: targetPlan,
-                billingCycle,
-                currency: tenant.currencyCode,
-                transactionRef: paymentReference,
-            })
-        }
-
-        const updatedInvoices = generatedInvoice
-            ? [generatedInvoice, ...existingInvoices]
-            : existingInvoices
-
-        const updatedSubscription = {
-            ...currentSub,
+        // Immediate downgrade, free change, or a platform admin's manual change
+        const { invoice: generatedInvoice } = await applyPlanChange(tenantId, {
+            targetPlan,
             billingCycle,
-            renewalDate: quote.nextBillingDate,
-            lastPlanChange: new Date().toISOString(),
-            scheduledDowngrade: null, // Clear any pending downgrade
-            invoices: updatedInvoices,
-        }
-
-        await prisma.tenant.update({
-            where: { id: tenantId },
-            data: {
-                plan: targetPlan as any,
-                isTrial: false, // Transition out of trial upon active plan change
-                trialEndsAt: null,
-                settings: {
-                    ...settings,
-                    subscription: updatedSubscription,
-                },
-            },
-        })
-
-        const actionType = quote.isUpgrade ? "TENANT_PLAN_UPGRADE" : "TENANT_PLAN_DOWNGRADE"
-        await logAudit(actionType, tenantId, {
-            fromPlan: currentPlan,
-            toPlan: targetPlan,
-            billingCycle,
-            netPaid: quote.netPayableToday,
-            invoiceNumber: generatedInvoice?.invoiceNumber,
+            paymentRef: caller.isSuperAdmin ? paymentReference : undefined,
+            amountPaid: caller.isSuperAdmin ? undefined : 0,
+            paymentMethod: caller.isSuperAdmin ? "Manual (platform admin)" : "No charge",
+            actor: { id: caller.userId, email: caller.email },
         })
 
         revalidatePath("/settings")
@@ -343,15 +299,19 @@ export async function generateSaaSInvoice(params: {
         })
 
         if (!tenant) return { success: false, error: "Tenant not found" }
+        if (plan === "FREE") return { success: false, error: "Free plan has nothing to invoice" }
 
+        // Bill at the live price for the tenant's currency (Admin → Pricing)
+        const pricing = await getEffectivePricing(tenant.currencyCode)
         const invoice = compileSaaSSubscriptionInvoice({
             tenantId: tenant.id,
             tenantName: tenant.name,
             plan,
             billingCycle,
-            currency: tenant.currencyCode,
+            currency: pricing.currency,
             paymentMethod,
             transactionRef,
+            pricing,
         })
 
         const settings = (tenant.settings as any) || {}

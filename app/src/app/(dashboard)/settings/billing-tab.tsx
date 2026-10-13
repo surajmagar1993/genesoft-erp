@@ -44,18 +44,32 @@ import {
     executePlanChange,
     getTenantSubscriptionDetails,
 } from "@/app/actions/saas/subscription"
+import { createPlanCheckout, verifyRazorpayPayment } from "@/app/actions/saas/razorpay"
+import type { EffectivePricing } from "@/lib/plan-pricing"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
 interface BillingTabProps {
     settings: any
+    /** Live prices from Admin → Pricing for this workspace's currency */
+    pricing?: EffectivePricing
+    /** Set when Stripe Checkout sends the customer back (?success=true / ?canceled=true) */
+    checkoutResult?: "success" | "canceled"
 }
 
-export default function BillingTab({ settings }: BillingTabProps) {
+type RazorpayResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }
+type RazorpayInstance = { open: () => void; on: (event: string, cb: (res: { error?: { description?: string } }) => void) => void }
+declare global {
+    interface Window {
+        Razorpay?: new (options: Record<string, unknown>) => RazorpayInstance
+    }
+}
+
+export default function BillingTab({ settings, pricing, checkoutResult }: BillingTabProps) {
     const router = useRouter()
     const currentPlan: PlanTier = (settings?.plan as PlanTier) || "FREE"
     const currency = settings?.currency_code || settings?.currencyCode || "INR"
-    const catalog = useMemo(() => getRegionalPricing(currency), [currency])
+    const catalog = useMemo(() => pricing ?? getRegionalPricing(currency), [pricing, currency])
 
     // Subscription metadata from tenant settings
     const subSettings = settings?.settings?.subscription || {}
@@ -93,10 +107,13 @@ export default function BillingTab({ settings }: BillingTabProps) {
             targetPlan,
             currentBillingCycle: initialCycle,
             targetBillingCycle: billingCycle,
-            currencyCode: currency,
-            cycleEndDate: subSettings?.renewalDate || settings?.trialEndsAt,
+            currencyCode: catalog.currency,
+            cycleEndDate: subSettings?.renewalDate || undefined,
+            pricing: catalog,
         })
-    }, [currentPlan, targetPlan, initialCycle, billingCycle, currency, subSettings?.renewalDate, settings?.trialEndsAt])
+    }, [currentPlan, targetPlan, initialCycle, billingCycle, catalog, subSettings?.renewalDate])
+
+    const needsPayment = !!prorationQuote && prorationQuote.netPayableToday > 0
 
     // Trigger plan selection
     const handleOpenPlanChange = (tier: PlanTier) => {
@@ -111,11 +128,16 @@ export default function BillingTab({ settings }: BillingTabProps) {
 
         setIsProcessing(true)
         try {
+            // Paid changes: the plan switches only after the gateway confirms payment
+            if (needsPayment) {
+                await payForPlanChange(targetPlan)
+                return
+            }
+
             const res = await executePlanChange({
                 targetPlan,
                 billingCycle,
                 immediate: prorationQuote.isDowngrade ? downgradeImmediate : true,
-                paymentReference: `MANUAL-${Date.now()}`,
             })
 
             if (res.success) {
@@ -144,6 +166,48 @@ export default function BillingTab({ settings }: BillingTabProps) {
         }
     }
 
+    // Checkout: Stripe redirects; Razorpay opens its modal, then the server verifies the signature
+    const payForPlanChange = async (plan: PlanTier) => {
+        const checkout = await createPlanCheckout(plan, billingCycle)
+        if (checkout.gateway === "STRIPE") {
+            window.location.href = checkout.url
+            return
+        }
+        if (!window.Razorpay) throw new Error("Payment window failed to load. Refresh the page and try again.")
+
+        await new Promise<void>((resolve, reject) => {
+            const rzp = new window.Razorpay!({
+                key: checkout.keyId,
+                order_id: checkout.orderId,
+                amount: checkout.amount,
+                currency: checkout.currency,
+                name: "Genesoft ERP",
+                description: `${checkout.plan} plan (${checkout.cycle === "ANNUAL" ? "yearly" : "monthly"})`,
+                prefill: { email: settings?.email || undefined },
+                handler: async (response: RazorpayResponse) => {
+                    try {
+                        const res = await verifyRazorpayPayment(
+                            response.razorpay_order_id,
+                            response.razorpay_payment_id,
+                            response.razorpay_signature
+                        )
+                        if (res.invoice) setInvoices((prev) => [res.invoice!, ...prev])
+                        setScheduledDowngrade(null)
+                        setIsChangeModalOpen(false)
+                        toast.success(`Payment received. You're now on ${checkout.plan}.`)
+                        router.refresh()
+                        resolve()
+                    } catch (err) {
+                        reject(err)
+                    }
+                },
+                modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
+            })
+            rzp.on("payment.failed", (res) => reject(new Error(res.error?.description || "Payment failed")))
+            rzp.open()
+        })
+    }
+
     // Open Printable Receipt
     const handleViewReceipt = (inv: SaaSPlatformInvoice) => {
         setSelectedInvoice(inv)
@@ -163,8 +227,43 @@ export default function BillingTab({ settings }: BillingTabProps) {
 
     const tierKeys: PlanTier[] = ["FREE", "BASIC", "PRO", "ENTERPRISE"]
 
+    // Plan picked on the public pricing page at signup, not activated yet
+    const intendedPlan: PlanTier | null =
+        subSettings?.intendedPlan && getTierRank(subSettings.intendedPlan) > getTierRank(currentPlan)
+            ? subSettings.intendedPlan
+            : null
+
     return (
         <div className="space-y-8 animate-in fade-in duration-300">
+            {checkoutResult === "success" && (
+                <div className="flex items-start gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:text-emerald-300">
+                    <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0" />
+                    <p>
+                        Payment received. Your plan switches as soon as Stripe confirms it, usually within a few seconds.
+                        If it still shows the old plan, refresh this page.
+                    </p>
+                </div>
+            )}
+            {checkoutResult === "canceled" && (
+                <div className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300">
+                    <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
+                    <p>Checkout was cancelled. You haven&apos;t been charged and your plan hasn&apos;t changed.</p>
+                </div>
+            )}
+            {intendedPlan && !checkoutResult && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+                    <div className="flex items-start gap-3 text-sm">
+                        <Sparkles className="h-5 w-5 mt-0.5 shrink-0 text-primary" />
+                        <p>
+                            You picked the <strong>{intendedPlan}</strong> plan when you signed up. Activate it whenever you&apos;re ready.
+                        </p>
+                    </div>
+                    <Button size="sm" onClick={() => handleOpenPlanChange(intendedPlan)}>
+                        Activate {intendedPlan}
+                    </Button>
+                </div>
+            )}
+
             {/* Current Plan Summary Header */}
             <Card className="border-primary/20 bg-primary/5 relative overflow-hidden backdrop-blur-sm shadow-sm">
                 <div className="absolute top-0 right-0 p-4 opacity-10 rotate-12 pointer-events-none">
@@ -608,7 +707,9 @@ export default function BillingTab({ settings }: BillingTabProps) {
                             ) : (
                                 <>
                                     <Check className="h-4 w-4" />
-                                    Confirm & Activate
+                                    {needsPayment
+                                        ? `Pay ${prorationQuote!.symbol}${prorationQuote!.netPayableToday.toLocaleString()} & Upgrade`
+                                        : "Confirm & Activate"}
                                 </>
                             )}
                         </Button>

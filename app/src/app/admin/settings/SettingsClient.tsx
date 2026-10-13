@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -47,11 +48,11 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
         e.preventDefault()
         try {
             setIsLoading(true)
-            await updateGlobalSettings({
+            unwrap(await updateGlobalSettings({
                 maintenanceMode,
                 allowSignups,
                 bannerMessage: bannerMessage.trim() ? bannerMessage.trim() : null
-            })
+            }))
             toast.success("System settings and broadcast message updated successfully")
             router.refresh()
         } catch (error: any) {

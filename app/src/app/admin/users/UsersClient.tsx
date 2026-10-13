@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -88,7 +89,7 @@ export function UsersClient({
     const handleToggleStatus = async (user: any) => {
         try {
             setIsLoading(true)
-            await toggleUserStatus(user.id, !user.isActive)
+            unwrap(await toggleUserStatus(user.id, !user.isActive))
             toast.success(`User ${user.isActive ? 'suspended' : 'activated'} successfully`)
             router.refresh()
         } catch (error: any) {
@@ -102,7 +103,7 @@ export function UsersClient({
     const handleRoleChange = async (userId: string, newRole: string) => {
         try {
             setIsLoading(true)
-            await updateUserRole(userId, newRole)
+            unwrap(await updateUserRole(userId, newRole))
             toast.success(`User role updated to ${newRole}`)
             router.refresh()
         } catch (error: any) {

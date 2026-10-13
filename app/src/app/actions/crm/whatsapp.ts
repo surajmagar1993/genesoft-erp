@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { appUrl } from "@/lib/app-url"
 import { getTenantAdminId, getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { maskSecret, openSecret, sealSecret } from "@/lib/secret-box"
@@ -356,7 +357,7 @@ export async function sendInvoiceViaWhatsApp(params: {
         const currency = invoice.currency_code || tenant?.currencyCode || "INR"
         const totalFormatted = `${currency} ${Number(invoice.total_amount).toFixed(2)}`
 
-        const portalBase = process.env.NEXT_PUBLIC_APP_URL || "https://erp.genesoft.ai"
+        const portalBase = appUrl()
         const paymentLink = `${portalBase}/portal/${invoice.contact?.portalToken || invoice.id}`
 
         // Calculate days overdue if past due date

@@ -5,6 +5,7 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { fromSmallestCurrencyUnit } from "@/lib/payment-gateway-engine"
 import { planForSubscription, subscriptionStanding, type PaidPlan } from "@/lib/stripe-plans"
+import { applyPlanChange } from "@/lib/plan-change"
 
 export const dynamic = "force-dynamic"
 
@@ -102,16 +103,28 @@ export async function POST(req: Request) {
         return new NextResponse("Tenant ID missing in metadata", { status: 400 })
       }
 
+      const tenantId = session.metadata.tenantId
       const plan = planForSubscription(subscription) ?? (session.metadata.plan as PaidPlan | undefined)
       await prisma.tenant.update({
-        where: { id: session.metadata.tenantId },
+        where: { id: tenantId },
         data: {
           stripeSubscriptionId: subscription.id,
           stripeCustomerId: subscription.customer as string,
-          ...(plan ? { plan } : {}),
-          isTrial: false,
         },
       })
+      if (plan) {
+        // Same bookkeeping as Razorpay: cycle, renewal date and a receipt (idempotent per session)
+        await applyPlanChange(tenantId, {
+          targetPlan: plan,
+          billingCycle: session.metadata.cycle === "ANNUAL" ? "ANNUAL" : "MONTHLY",
+          paymentRef: session.id,
+          amountPaid:
+            session.amount_total != null
+              ? fromSmallestCurrencyUnit(session.amount_total, session.currency || "usd")
+              : undefined,
+          paymentMethod: "Stripe",
+        })
+      }
     }
   }
 

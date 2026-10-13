@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -112,12 +113,12 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
     const handleExtendTrial = async () => {
         try {
             setIsLoading(true)
-            await extendTenantTrial(tenant.id, 7)
+            unwrap(await extendTenantTrial(tenant.id, 7))
             toast.success("Trial extended by 7 days")
             router.refresh()
         } catch (error) {
             console.error(error)
-            toast.error("Failed to extend trial")
+            toast.error(error instanceof Error ? error.message : "Failed to extend trial")
         } finally {
             setIsLoading(false)
         }
@@ -126,12 +127,12 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
     const handleToggleStatus = async () => {
         try {
             setIsLoading(true)
-            await toggleTenantStatus(tenant.id, !tenant.isActive)
+            unwrap(await toggleTenantStatus(tenant.id, !tenant.isActive))
             toast.success(`Tenant ${tenant.isActive ? 'suspended' : 'activated'} successfully`)
             router.refresh()
         } catch (error) {
             console.error(error)
-            toast.error("Failed to update status")
+            toast.error(error instanceof Error ? error.message : "Failed to update status")
         } finally {
             setIsLoading(false)
         }
@@ -140,12 +141,12 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
     const handlePlanChange = async (newPlan: string) => {
         try {
             setIsLoading(true)
-            await updateTenantPlan(tenant.id, newPlan)
+            unwrap(await updateTenantPlan(tenant.id, newPlan))
             toast.success(`Tenant plan updated to ${newPlan}`)
             router.refresh()
         } catch (error) {
             console.error(error)
-            toast.error("Failed to change plan")
+            toast.error(error instanceof Error ? error.message : "Failed to change plan")
         } finally {
             setIsLoading(false)
         }
@@ -155,7 +156,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
         e.preventDefault()
         try {
             setIsLoading(true)
-            await updateTenantDetails(tenant.id, editForm)
+            unwrap(await updateTenantDetails(tenant.id, editForm))
             toast.success("Tenant profile updated successfully")
             setIsEditOpen(false)
             router.refresh()

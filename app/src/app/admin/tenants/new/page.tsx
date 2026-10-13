@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -75,7 +76,7 @@ export default function NewTenantPage() {
 
         try {
             setIsLoading(true)
-            const newTenant = await createTenant({
+            const newTenant = unwrap(await createTenant({
                 name: form.name,
                 email: form.email || undefined,
                 domain: form.domain || undefined,
@@ -85,7 +86,7 @@ export default function NewTenantPage() {
                 plan: form.plan,
                 trialDays: Number(form.trialDays) || 0,
                 seedAccounts: form.seedAccounts
-            })
+            }))
 
             toast.success("Business tenant provisioned successfully!")
             router.push(`/admin/tenants/${newTenant.id}`)
@@ -160,6 +161,10 @@ export default function NewTenantPage() {
                                     placeholder="Enter administrative contact email"
                                     className="bg-background"
                                 />
+                                <p className="text-[11px] text-muted-foreground">
+                                    Saved as the workspace contact. No login is created for it: inviting users from here needs the
+                                    Supabase service-role key, which isn&apos;t configured yet.
+                                </p>
                             </div>
                         </div>
 

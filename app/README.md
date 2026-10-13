@@ -100,8 +100,7 @@ Create `.env.local` in `app/` (never commit it). Variables the code reads:
 | `NEXT_PUBLIC_SITE_URL` | Yes | Base URL for password-reset links. |
 | `RESEND_API_KEY`, `RESEND_DOMAIN` | For email | Transactional email; sender domain must be verified in Resend. |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | For SaaS billing | Plan checkout and the `/api/webhooks/razorpay` signature check. |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Optional | Platform Stripe billing (not configured yet). |
-| `STRIPE_PRICE_BASIC`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_ENTERPRISE` | With Stripe | Stripe price ids per plan. A plan without a price can't be bought through Stripe. |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Optional | Platform Stripe billing for regions whose Admin → Pricing gateway is STRIPE. Stripe prices are created and kept in sync automatically (lookup keys `genesoft_<plan>_<cycle>_<currency>`); no price ids to configure. |
 | `CRON_SECRET` | Recommended | Protects the daily job at `/api/cron/workflows` (scheduled in `vercel.json`): overdue-invoice / bill-due workflow rules, due recurring invoices and IMAP inbox sync. Vercel sends it automatically; without it the job refuses to run. |
 | `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Optional | Platform-wide Meta webhook verify token (tenants also get their own). |
 | `ENCRYPTION_KEY` | Recommended | Encrypts stored tenant credentials (gateway keys, WhatsApp tokens, SMTP passwords). Any long random string, e.g. `openssl rand -base64 32`. Changing it makes stored secrets unreadable. |

@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { appUrl } from "@/lib/app-url"
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
@@ -50,6 +51,8 @@ export async function register(formData: FormData) {
   const slug = formData.get('slug') as string
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
+  const requestedPlan = String(formData.get('plan') || '').toUpperCase()
+  const intendedPlan = ['BASIC', 'PRO', 'ENTERPRISE'].includes(requestedPlan) ? requestedPlan : null
 
   if (!(await getPlatformGate()).allowSignups) {
     redirect('/register?error=New+signups+are+currently+closed')
@@ -77,7 +80,7 @@ export async function register(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/login`,
+      emailRedirectTo: `${appUrl()}/auth/confirm?next=/crm/contacts`,
       data: {
         full_name: fullName,
         company_name: company,
@@ -106,6 +109,8 @@ export async function register(formData: FormData) {
           plan: 'FREE',
           isTrial: true,
           trialEndsAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days trial
+          // Remember the plan picked on the pricing page so Billing can offer it
+          ...(intendedPlan ? { settings: { subscription: { intendedPlan } } } : {}),
         }
       })
 
@@ -139,7 +144,8 @@ export async function forgotPassword(formData: FormData) {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+    // The email links to /auth/confirm, which signs the user in and opens /reset-password
+    redirectTo: `${appUrl()}/auth/confirm?next=/reset-password`,
   })
 
   if (error) {
@@ -147,6 +153,36 @@ export async function forgotPassword(formData: FormData) {
   }
 
   redirect('/forgot-password?message=Password+reset+link+sent+to+your+email')
+}
+
+/**
+ * Sets a new password for the user signed in by a password reset link.
+ */
+export async function updatePassword(formData: FormData) {
+  const password = String(formData.get('password') || '')
+  const confirmPassword = String(formData.get('confirmPassword') || '')
+
+  if (password.length < 8) {
+    redirect('/reset-password?error=Password+must+be+at+least+8+characters')
+  }
+  if (password !== confirmPassword) {
+    redirect('/reset-password?error=Passwords+do+not+match')
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    redirect('/forgot-password?error=Your+reset+link+has+expired.+Please+request+a+new+one.')
+  }
+
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) {
+    redirect(`/reset-password?error=${encodeURIComponent(error.message)}`)
+  }
+
+  // Sign out so they sign in again with the new password
+  await supabase.auth.signOut()
+  redirect('/login?message=Password+updated.+Please+sign+in+with+your+new+password.')
 }
 
 export async function logout() {

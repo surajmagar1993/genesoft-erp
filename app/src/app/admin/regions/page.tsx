@@ -20,7 +20,7 @@ export default async function RegionsPage() {
                         </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                        Jurisdiction routing, distributed edge nodes, and regional tenant cluster telemetry.
+                        Tenants by country, with each region's currency and statutory tax engine. All regions are served by the same deployment.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -51,8 +51,8 @@ export default async function RegionsPage() {
                             <Server className="h-5 w-5" />
                         </div>
                         <div>
-                            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Active Clusters</p>
-                            <p className="text-2xl font-black">{data.activeClusters} Active</p>
+                            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Regions In Use</p>
+                            <p className="text-2xl font-black">{data.activeClusters} of {data.totalRegions}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -75,8 +75,8 @@ export default async function RegionsPage() {
                             <Activity className="h-5 w-5" />
                         </div>
                         <div>
-                            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Global Latency</p>
-                            <p className="text-2xl font-black text-emerald-500">~24ms</p>
+                            <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Active Tenants</p>
+                            <p className="text-2xl font-black text-emerald-500">{data.regions.reduce((sum: number, r: any) => sum + r.activeTenants, 0)}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -125,9 +125,9 @@ export default async function RegionsPage() {
                                 <div className="flex items-center justify-between text-muted-foreground">
                                     <span className="flex items-center gap-1.5">
                                         <Server className="h-3.5 w-3.5 text-primary" />
-                                        Primary Cluster
+                                        Billing Currency
                                     </span>
-                                    <span className="font-mono text-foreground font-semibold">{region.cluster}</span>
+                                    <span className="font-mono text-foreground font-semibold">{region.currency}</span>
                                 </div>
 
                                 <div className="flex items-center justify-between text-muted-foreground">
@@ -141,10 +141,10 @@ export default async function RegionsPage() {
                                 <div className="flex items-center justify-between text-muted-foreground">
                                     <span className="flex items-center gap-1.5">
                                         <Wifi className="h-3.5 w-3.5 text-blue-500" />
-                                        Avg Edge Latency
+                                        Active Tenants
                                     </span>
                                     <Badge variant="outline" className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
-                                        {region.latency}
+                                        {region.activeTenants} of {region.tenantCount}
                                     </Badge>
                                 </div>
                             </div>

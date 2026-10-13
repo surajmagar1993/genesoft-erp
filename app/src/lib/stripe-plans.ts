@@ -1,28 +1,89 @@
 import type Stripe from "stripe"
+import { toSmallestCurrencyUnit } from "@/lib/payment-gateway-engine"
+import type { BillingCycle } from "@/lib/saas-subscription-engine"
 
 export type PaidPlan = "BASIC" | "PRO" | "ENTERPRISE"
 
-/**
- * Stripe price ids per plan, from STRIPE_PRICE_BASIC / STRIPE_PRICE_PRO /
- * STRIPE_PRICE_ENTERPRISE. Unset prices simply aren't offered.
- */
-export function stripePriceIds(): Partial<Record<PaidPlan, string>> {
-    const ids: Partial<Record<PaidPlan, string>> = {}
-    if (process.env.STRIPE_PRICE_BASIC) ids.BASIC = process.env.STRIPE_PRICE_BASIC
-    if (process.env.STRIPE_PRICE_PRO) ids.PRO = process.env.STRIPE_PRICE_PRO
-    if (process.env.STRIPE_PRICE_ENTERPRISE) ids.ENTERPRISE = process.env.STRIPE_PRICE_ENTERPRISE
-    return ids
-}
-
 const PAID_PLANS: PaidPlan[] = ["BASIC", "PRO", "ENTERPRISE"]
 
-/** The plan a subscription is for: its price id first, then the plan we put in its metadata. */
+/**
+ * Every Stripe price the app sells is found by a lookup key such as
+ * "genesoft_pro_monthly_inr". Stripe prices can't change, so a new price
+ * takes over the key (transfer_lookup_key) and the old one is archived;
+ * checkout always uses whatever currently holds the key.
+ */
+export function stripeLookupKey(plan: PaidPlan, cycle: BillingCycle, currency: string): string {
+    return `genesoft_${plan}_${cycle}_${currency}`.toLowerCase()
+}
+
+/** Stable Stripe product id per plan, so prices group under one product. */
+function stripeProductId(plan: PaidPlan): string {
+    return `genesoft_${plan.toLowerCase()}`
+}
+
+async function ensureProduct(stripe: Stripe, plan: PaidPlan): Promise<string> {
+    const id = stripeProductId(plan)
+    try {
+        const product = await stripe.products.retrieve(id)
+        if (!product.active) await stripe.products.update(id, { active: true })
+        return id
+    } catch (err) {
+        if ((err as { code?: string }).code !== "resource_missing") throw err
+        await stripe.products.create({ id, name: `Genesoft ERP ${plan.charAt(0)}${plan.slice(1).toLowerCase()}`, metadata: { plan } })
+        return id
+    }
+}
+
+/**
+ * Makes sure the Stripe price under this plan's lookup key matches `amount`
+ * (in major units). Creates a new price and archives the old one when the
+ * amount changed. Returns the active price id.
+ */
+export async function ensureStripePrice(
+    stripe: Stripe,
+    params: { plan: PaidPlan; cycle: BillingCycle; currency: string; amount: number }
+): Promise<string> {
+    const currency = params.currency.toLowerCase()
+    const lookupKey = stripeLookupKey(params.plan, params.cycle, currency)
+    const unitAmount = toSmallestCurrencyUnit(params.amount, currency)
+    const interval = params.cycle === "ANNUAL" ? "year" : "month"
+
+    const existing = (await stripe.prices.list({ lookup_keys: [lookupKey], active: true, limit: 1 })).data[0]
+    if (
+        existing &&
+        existing.unit_amount === unitAmount &&
+        existing.currency === currency &&
+        existing.recurring?.interval === interval
+    ) {
+        return existing.id
+    }
+
+    const product = await ensureProduct(stripe, params.plan)
+    const price = await stripe.prices.create({
+        product,
+        currency,
+        unit_amount: unitAmount,
+        recurring: { interval },
+        lookup_key: lookupKey,
+        transfer_lookup_key: true,
+        metadata: { plan: params.plan, cycle: params.cycle },
+    })
+    if (existing) await stripe.prices.update(existing.id, { active: false })
+    return price.id
+}
+
+/** The plan a subscription is for: from its price (lookup key / metadata), then the subscription metadata. */
 export function planForSubscription(subscription: Stripe.Subscription): PaidPlan | null {
-    const priceId = subscription.items?.data?.[0]?.price?.id
-    const byPrice = (Object.entries(stripePriceIds()) as [PaidPlan, string][]).find(([, id]) => id === priceId)
-    if (byPrice) return byPrice[0]
-    const fromMetadata = subscription.metadata?.plan as PaidPlan | undefined
-    return fromMetadata && PAID_PLANS.includes(fromMetadata) ? fromMetadata : null
+    const price = subscription.items?.data?.[0]?.price
+    const candidates = [
+        price?.metadata?.plan,
+        price?.lookup_key?.match(/^genesoft_([a-z]+)_/)?.[1]?.toUpperCase(),
+        subscription.metadata?.plan,
+    ]
+    for (const candidate of candidates) {
+        if (candidate && PAID_PLANS.includes(candidate as PaidPlan)) return candidate as PaidPlan
+    }
+    return null
 }
 
 /**

@@ -2,6 +2,12 @@
 
 import { prisma } from "../../../lib/prisma"
 import { clearPlatformGateCache } from "@/lib/platform-security"
+import { stripe } from "@/lib/stripe"
+import { ensureStripePrice, type PaidPlan } from "@/lib/stripe-plans"
+import { annualFromMonthly } from "@/lib/plan-pricing"
+import { calculatePlatformMrr } from "@/lib/platform-mrr"
+import { sendSystemEmail } from "@/lib/system-email"
+import { toActionResult } from "@/lib/action-result"
 // import { type Role } from "@prisma/client"
 import { createClient } from "../../../lib/supabase/server"
 import { revalidatePath } from "next/cache"
@@ -16,18 +22,39 @@ async function ensureSuperAdmin() {
 
     if (!user) throw new Error("Unauthorized")
 
-    // Use Supabase client for simple role check (works over HTTPS, more resilient than TCP)
+    // Use Supabase client for simple role check (works over HTTPS, more resilient than TCP).
+    // "*" so a database without the is_active column still works.
     const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', user.id)
         .single()
 
-    if (!profile || (profile as any).role !== "SUPER_ADMIN") {
+    if (!profile || (profile as any).role !== "SUPER_ADMIN" || (profile as any).is_active === false) {
         throw new Error("Forbidden: Super Admin access required")
     }
 
     return user
+}
+
+const PLANS = ["FREE", "BASIC", "PRO", "ENTERPRISE"] as const
+const ROLES = ["SUPER_ADMIN", "ADMIN", "MANAGER", "USER", "VIEWER"] as const
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function assertPlan(plan: unknown): asserts plan is (typeof PLANS)[number] {
+    if (!PLANS.includes(plan as (typeof PLANS)[number])) throw new Error("Invalid plan")
+}
+
+function assertEmail(email: string | null | undefined) {
+    if (email && !EMAIL_RE.test(email.trim())) throw new Error("Invalid email address")
+}
+
+/** Throws if the domain is already used by another tenant. */
+async function assertDomainFree(domain: string, exceptTenantId?: string) {
+    const existing = await prisma.tenant.findUnique({ where: { domain }, select: { id: true } })
+    if (existing && existing.id !== exceptTenantId) {
+        throw new Error(`Domain '${domain}' is already assigned to another business.`)
+    }
 }
 
 /**
@@ -91,21 +118,17 @@ export async function getPlatformStats() {
         }),
         prisma.tenant.findMany({
             select: {
-                plan: true
+                plan: true,
+                isActive: true,
+                isTrial: true,
+                currencyCode: true,
+                settings: true
             }
         })
     ])
 
-    // More accurate revenue estimation based on Plan types
-    const planWeights: Record<string, number> = {
-        'FREE': 0,
-        'BASIC': 499,
-        'PRO': 999,
-        'ENTERPRISE': 4999
-    }
-    
-    // Summing revenue from tenants based on their current plan (rough estimate)
-    const revenueEst = (tenantPlans || []).reduce((sum: number, t: any) => sum + (planWeights[t.plan] || 0), 0)
+    // Monthly recurring revenue (INR) from paying, active tenants at live prices
+    const { mrr: revenueEst } = await calculatePlatformMrr(tenantPlans || [])
 
     return {
         totalTenants,
@@ -130,7 +153,7 @@ export async function getTenants(params: {
     plan?: string,
     status?: string
 } = {}) {
-    const { page = 1, limit = 10, search, plan, status } = params
+    const { page = 1, limit = 25, search, plan, status } = params
     await ensureSuperAdmin()
 
     const where: any = {}
@@ -149,25 +172,28 @@ export async function getTenants(params: {
     }
 
     try {
-        const tenants = await prisma.tenant.findMany({
-            where,
-            include: {
-                users: {
-                    select: {
-                        id: true
+        const [tenants, total] = await Promise.all([
+            prisma.tenant.findMany({
+                where,
+                include: {
+                    users: {
+                        select: {
+                            id: true
+                        }
                     }
-                }
-            },
-            orderBy: {
-                createdAt: "desc"
-            },
-            skip: (page - 1) * limit,
-            take: limit
-        })
-        return tenants
+                },
+                orderBy: {
+                    createdAt: "desc"
+                },
+                skip: (page - 1) * limit,
+                take: limit
+            }),
+            prisma.tenant.count({ where })
+        ])
+        return { tenants, total, page, limit }
     } catch (error) {
         console.error("getTenants error:", error)
-        return []
+        return { tenants: [], total: 0, page, limit }
     }
 }
 
@@ -181,8 +207,9 @@ export async function getAdminAuditLogs(page: number = 1, limit: number = 50) {
     })
 }
 
-export async function updateTenantPlan(tenantId: string, plan: any) {
+async function _updateTenantPlan(tenantId: string, plan: any) {
     await ensureSuperAdmin()
+    assertPlan(plan)
 
     const updated = await prisma.tenant.update({
         where: { id: tenantId },
@@ -195,15 +222,22 @@ export async function updateTenantPlan(tenantId: string, plan: any) {
     return updated
 }
 
-export async function extendTenantTrial(tenantId: string, days: number) {
+async function _extendTenantTrial(tenantId: string, days: number) {
     await ensureSuperAdmin()
+
+    if (!Number.isInteger(days) || days < 1 || days > 365) {
+        throw new Error("Extend the trial by 1 to 365 days")
+    }
 
     const tenant: any = await prisma.tenant.findUnique({
         where: { id: tenantId },
         select: { trialEndsAt: true }
     })
+    if (!tenant) throw new Error("Tenant not found")
 
-    const currentEnd = (tenant as any)?.trialEndsAt || new Date()
+    // An already-expired trial is extended from today, not from its old end date
+    const now = new Date()
+    const currentEnd = tenant.trialEndsAt && tenant.trialEndsAt > now ? tenant.trialEndsAt : now
     const newEnd = new Date(currentEnd)
     newEnd.setDate(newEnd.getDate() + days)
 
@@ -221,7 +255,7 @@ export async function extendTenantTrial(tenantId: string, days: number) {
     return updated
 }
 
-export async function toggleTenantStatus(tenantId: string, isActive: boolean) {
+async function _toggleTenantStatus(tenantId: string, isActive: boolean) {
     await ensureSuperAdmin()
 
     const updated = await prisma.tenant.update({
@@ -230,8 +264,9 @@ export async function toggleTenantStatus(tenantId: string, isActive: boolean) {
     })
     
     await logAdminAction(isActive ? "TENANT_ACTIVATE" : "TENANT_SUSPEND", tenantId, "TENANT")
-    
+
     revalidatePath('/admin/tenants')
+    revalidatePath(`/admin/tenants/${tenantId}`)
     return updated
 }
 
@@ -301,7 +336,7 @@ export async function getTenantById(tenantId: string) {
 /**
  * Super Admin manual tenant creation and provisioning with automatic Chart of Accounts seeding.
  */
-export async function createTenant(data: {
+async function _createTenant(data: {
     name: string
     email?: string
     domain?: string
@@ -329,15 +364,17 @@ export async function createTenant(data: {
     if (!name || !name.trim()) {
         throw new Error("Business name is required")
     }
+    assertPlan(plan)
+    assertEmail(email)
+    if (!Number.isInteger(trialDays) || trialDays < 0 || trialDays > 365) {
+        throw new Error("Trial must be 0 to 365 days")
+    }
+    if (!/^[A-Z]{2}$/.test(countryCode) || !/^[A-Z]{3}$/.test(currencyCode)) {
+        throw new Error("Invalid country or currency code")
+    }
 
     if (domain && domain.trim()) {
-        const cleanDomain = domain.trim().toLowerCase()
-        const existing = await prisma.tenant.findUnique({
-            where: { domain: cleanDomain }
-        })
-        if (existing) {
-            throw new Error(`Domain '${cleanDomain}' is already assigned to another business.`)
-        }
+        await assertDomainFree(domain.trim().toLowerCase())
     }
 
     const trialEndsAt = new Date()
@@ -438,7 +475,7 @@ export async function createTenant(data: {
 /**
  * Update comprehensive tenant profile and configuration.
  */
-export async function updateTenantDetails(
+async function _updateTenantDetails(
     tenantId: string, 
     data: {
         name?: string
@@ -456,6 +493,11 @@ export async function updateTenantDetails(
     }
 ) {
     await ensureSuperAdmin()
+
+    if (data.name !== undefined && !data.name.trim()) throw new Error("Business name is required")
+    if (data.plan !== undefined) assertPlan(data.plan)
+    if (data.email !== undefined) assertEmail(data.email)
+    if (data.domain) await assertDomainFree(data.domain.trim().toLowerCase(), tenantId)
 
     const updatePayload: any = {}
     if (data.name !== undefined) updatePayload.name = data.name.trim()
@@ -505,8 +547,10 @@ export async function getPricingPlans() {
     }
 }
 
-export async function updatePricingPlan(id: string, data: { amount: number, isActive: boolean }) {
+async function _updatePricingPlan(id: string, data: { amount: number, isActive: boolean }) {
     await ensureSuperAdmin()
+
+    if (!(Number(data.amount) > 0)) throw new Error("Price must be greater than zero")
 
     const updated = await prisma.pricingPlan.update({
         where: { id },
@@ -515,8 +559,42 @@ export async function updatePricingPlan(id: string, data: { amount: number, isAc
             isActive: data.isActive
         }
     })
+
+    // Keep Stripe in step: Stripe prices can't be edited, so a changed amount
+    // becomes a new monthly + annual price under the plan's lookup keys.
+    // Razorpay needs nothing here: its orders are priced from this table.
+    let stripeSync: { synced: boolean; error?: string } = { synced: false }
+    if (updated.isActive && updated.tier !== "FREE" && stripe) {
+        try {
+            const monthly = Number(updated.amount)
+            for (const [cycle, amount] of [["MONTHLY", monthly], ["ANNUAL", annualFromMonthly(monthly)]] as const) {
+                await ensureStripePrice(stripe, {
+                    plan: updated.tier as PaidPlan,
+                    cycle,
+                    currency: updated.currency,
+                    amount,
+                })
+            }
+            stripeSync = { synced: true }
+        } catch (err) {
+            console.error("updatePricingPlan: Stripe price sync failed", err)
+            stripeSync = { synced: false, error: err instanceof Error ? err.message : "Stripe sync failed" }
+        }
+    }
+
+    await logAdminAction("PRICING_PLAN_UPDATE", id, "PRICING_PLAN", {
+        regionCode: updated.regionCode,
+        tier: updated.tier,
+        amount: Number(updated.amount),
+        currency: updated.currency,
+        isActive: updated.isActive,
+        stripeSync,
+    })
+
     revalidatePath('/admin/pricing')
-    return updated
+    revalidatePath('/settings')
+    revalidatePath('/pricing')
+    return { ...updated, amount: Number(updated.amount), stripeSync }
 }
 
 export async function getSupportTickets(page: number = 1, limit: number = 15) {
@@ -543,6 +621,19 @@ export async function getSupportTickets(page: number = 1, limit: number = 15) {
     }
 }
 
+export async function getSupportTicket(ticketId: string) {
+    await ensureSuperAdmin()
+
+    return await prisma.supportTicket.findUnique({
+        where: { id: ticketId },
+        include: {
+            tenant: {
+                select: { name: true }
+            }
+        }
+    })
+}
+
 export async function getTicketMessages(ticketId: string) {
     await ensureSuperAdmin()
 
@@ -552,25 +643,52 @@ export async function getTicketMessages(ticketId: string) {
     })
 }
 
-export async function replyToTicket(ticketId: string, content: string) {
+async function _replyToTicket(ticketId: string, content: string) {
     const user = await ensureSuperAdmin()
+
+    const text = content?.trim()
+    if (!text) throw new Error("Reply can't be empty")
+    const ticket = await prisma.supportTicket.findUnique({ where: { id: ticketId }, select: { id: true } })
+    if (!ticket) throw new Error("Ticket not found")
 
     // Create the message
     const message = await prisma.supportMessage.create({
         data: {
             ticketId,
-            content,
+            content: text,
             senderId: user.id,
             isFromAdmin: true
         }
     })
 
-    // Update ticket status to PENDING (waiting for user response)
-    await prisma.supportTicket.update({
+    // Answered: in progress until the tenant replies or it's closed
+    const updatedTicket = await prisma.supportTicket.update({
         where: { id: ticketId },
-        data: { status: "IN_PROGRESS" }
+        data: { status: "IN_PROGRESS" },
+        include: { tenant: { select: { name: true, email: true } } }
     })
 
+    // Email whoever opened the ticket (first tenant-side message), else the workspace email
+    const opener = await prisma.supportMessage.findFirst({
+        where: { ticketId, isFromAdmin: false },
+        orderBy: { createdAt: "asc" },
+        select: { senderId: true }
+    })
+    const openerUser = opener?.senderId
+        ? await prisma.user.findUnique({ where: { id: opener.senderId }, select: { email: true, fullName: true } })
+        : null
+    await sendSystemEmail("SUPPORT_TICKET_UPDATE", openerUser?.email || updatedTicket.tenant.email, {
+        customer_name: openerUser?.fullName || updatedTicket.tenant.name,
+        ticket_id: ticketId.slice(-8).toUpperCase(),
+        ticket_title: updatedTicket.subject,
+        ticket_status: "IN_PROGRESS",
+        latest_message: text,
+        agent_name: "Genesoft Support",
+        company_name: "Genesoft ERP",
+    })
+
+    revalidatePath(`/admin/support/${ticketId}`)
+    revalidatePath('/admin/support')
     return message
 }
 
@@ -617,10 +735,18 @@ export async function getDatabaseHealth() {
             prisma.systemLog.count()
         ])
 
+        let databaseSize = "Unknown"
+        try {
+            const sizeRows = await prisma.$queryRaw<{ size: string }[]>`SELECT pg_size_pretty(pg_database_size(current_database())) AS size`
+            databaseSize = sizeRows[0]?.size ?? "Unknown"
+        } catch {
+            // Size needs pg_database_size permission; the health check itself already passed
+        }
+
         return {
             status: "HEALTHY",
             latency: `${latency}ms`,
-            databaseSize: "Optimized",
+            databaseSize,
             metrics: {
                 tenants: tenantCount,
                 users: userCount,
@@ -635,6 +761,72 @@ export async function getDatabaseHealth() {
             timestamp: new Date().toISOString()
         }
     }
+}
+
+export interface ServiceHealth {
+    name: string
+    status: "Operational" | "Down" | "Not configured"
+    latencyMs: number | null
+    detail: string
+}
+
+async function timedCheck(name: string, configured: boolean, check: () => Promise<string>): Promise<ServiceHealth> {
+    if (!configured) return { name, status: "Not configured", latencyMs: null, detail: "Credentials not set" }
+    const started = Date.now()
+    try {
+        const detail = await check()
+        return { name, status: "Operational", latencyMs: Date.now() - started, detail }
+    } catch (err) {
+        return { name, status: "Down", latencyMs: Date.now() - started, detail: err instanceof Error ? err.message : "Check failed" }
+    }
+}
+
+/**
+ * Live checks of the external services the app depends on, each with its
+ * measured response time. Nothing here is cached or estimated.
+ */
+export async function getServiceHealth(): Promise<ServiceHealth[]> {
+    await ensureSuperAdmin()
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    const timeout = () => AbortSignal.timeout(8000)
+
+    return Promise.all([
+        timedCheck("Auth (Supabase)", !!(supabaseUrl && anonKey), async () => {
+            const res = await fetch(`${supabaseUrl}/auth/v1/health`, { headers: { apikey: anonKey! }, signal: timeout(), cache: "no-store" })
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            return "Sign-in service reachable"
+        }),
+        timedCheck("Email (Resend)", !!process.env.RESEND_API_KEY, async () => {
+            const res = await fetch("https://api.resend.com/domains", {
+                headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+                signal: timeout(),
+                cache: "no-store",
+            })
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            const body = await res.json() as { data?: { name: string; status: string }[] }
+            const domain = body.data?.find((d) => d.name === process.env.RESEND_DOMAIN)
+            if (process.env.RESEND_DOMAIN && !domain) throw new Error(`${process.env.RESEND_DOMAIN} is not added in Resend`)
+            if (domain && domain.status !== "verified") throw new Error(`${domain.name} is ${domain.status}`)
+            return domain ? `${domain.name} verified` : "API reachable"
+        }),
+        timedCheck("Payments (Razorpay)", !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET), async () => {
+            const auth = Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`).toString("base64")
+            const res = await fetch("https://api.razorpay.com/v1/orders?count=1", { headers: { Authorization: `Basic ${auth}` }, signal: timeout(), cache: "no-store" })
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            return process.env.RAZORPAY_KEY_ID!.startsWith("rzp_test_") ? "Test mode" : "Live mode"
+        }),
+        timedCheck("Payments (Stripe)", !!stripe, async () => {
+            await stripe!.balance.retrieve()
+            return process.env.STRIPE_SECRET_KEY!.startsWith("sk_test_") ? "Test mode" : "Live mode"
+        }),
+        timedCheck("Webhooks & Cron secrets", true, async () => {
+            const missing = ["RAZORPAY_WEBHOOK_SECRET", "CRON_SECRET", "ENCRYPTION_KEY"].filter((k) => !process.env[k])
+            if (missing.length) throw new Error(`Missing: ${missing.join(", ")}`)
+            return "Webhook, cron and encryption secrets set"
+        }),
+    ])
 }
 
 /**
@@ -710,9 +902,12 @@ export async function getDashboardCharts() {
 /**
  * Truncate all system logs (Maintenance).
  */
-export async function clearSystemLogs() {
+async function _clearSystemLogs() {
     await ensureSuperAdmin()
-    return await prisma.systemLog.deleteMany({})
+    const result = await prisma.systemLog.deleteMany({})
+    await logAdminAction("SYSTEM_LOGS_CLEARED", "system_logs", "SYSTEM", { deleted: result.count })
+    revalidatePath('/admin/logs')
+    return result
 }
 
 export interface SecuritySettings {
@@ -839,7 +1034,7 @@ export async function getSecurityOverview() {
 /**
  * Update global security posture (2FA, rate limits, session policies).
  */
-export async function updateSecurityPolicy(policy: Partial<SecuritySettings>) {
+async function _updateSecurityPolicy(policy: Partial<SecuritySettings>) {
     await ensureSuperAdmin()
 
     await logAdminAction("SECURITY_POLICY_UPDATE", "system_security", "SECURITY", policy)
@@ -868,7 +1063,7 @@ export async function updateSecurityPolicy(policy: Partial<SecuritySettings>) {
 /**
  * Add an IP to the platform blocklist.
  */
-export async function addBlockedIp(ip: string, reason: string) {
+async function _addBlockedIp(ip: string, reason: string) {
     await ensureSuperAdmin()
 
     const cleanIp = ip.trim()
@@ -886,7 +1081,7 @@ export async function addBlockedIp(ip: string, reason: string) {
 /**
  * Remove an IP from the platform blocklist.
  */
-export async function removeBlockedIp(ip: string) {
+async function _removeBlockedIp(ip: string) {
     await ensureSuperAdmin()
 
     const cleanIp = ip.trim()
@@ -934,7 +1129,7 @@ export async function getGlobalSettings() {
     }
 }
 
-export async function updateGlobalSettings(data: {
+async function _updateGlobalSettings(data: {
     maintenanceMode?: boolean
     allowSignups?: boolean
     bannerMessage?: string | null
@@ -1026,8 +1221,23 @@ export async function getGlobalUsers(params: {
     }
 }
 
-export async function toggleUserStatus(userId: string, isActive: boolean) {
-    await ensureSuperAdmin()
+/**
+ * Stops changes that would lock the platform out of /admin: changing your own
+ * account, or removing the last active SUPER_ADMIN.
+ */
+async function assertSafeUserChange(callerId: string, userId: string, removesSuperAdmin: boolean) {
+    if (userId === callerId) throw new Error("You can't change your own role or status here.")
+    if (!removesSuperAdmin) return
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, isActive: true } })
+    if (!target) throw new Error("User not found")
+    if (target.role !== "SUPER_ADMIN" || !target.isActive) return
+    const others = await prisma.user.count({ where: { role: "SUPER_ADMIN", isActive: true, id: { not: userId } } })
+    if (others === 0) throw new Error("The platform needs at least one active Super Admin.")
+}
+
+async function _toggleUserStatus(userId: string, isActive: boolean) {
+    const caller = await ensureSuperAdmin()
+    await assertSafeUserChange(caller.id, userId, !isActive)
 
     const updated = await prisma.user.update({
         where: { id: userId },
@@ -1043,8 +1253,10 @@ export async function toggleUserStatus(userId: string, isActive: boolean) {
     return updated
 }
 
-export async function updateUserRole(userId: string, role: any) {
-    await ensureSuperAdmin()
+async function _updateUserRole(userId: string, role: any) {
+    const caller = await ensureSuperAdmin()
+    if (!ROLES.includes(role)) throw new Error("Invalid role")
+    await assertSafeUserChange(caller.id, userId, role !== "SUPER_ADMIN")
 
     const updated = await prisma.user.update({
         where: { id: userId },
@@ -1087,21 +1299,14 @@ export async function getPlatformSubscriptions() {
             orderBy: { createdAt: "desc" }
         })
 
-        const planMonthlyRate: Record<string, number> = {
-            FREE: 0,
-            BASIC: 499,
-            PRO: 999,
-            ENTERPRISE: 4999
-        }
-
-        let totalMrr = 0
+        // MRR (INR) from paying, active tenants at live prices; trials and suspended tenants don't count
+        const { mrr: totalMrr, payingTenants, byCurrency: mrrByCurrency } = await calculatePlatformMrr(tenants)
         const planCounts: Record<string, number> = { FREE: 0, BASIC: 0, PRO: 0, ENTERPRISE: 0 }
         const allInvoices: any[] = []
 
         tenants.forEach((t: any) => {
             const planKey = (t.plan || "FREE") as string
             planCounts[planKey] = (planCounts[planKey] || 0) + 1
-            totalMrr += planMonthlyRate[planKey] || 0
 
             const subMeta = (t.settings as any)?.subscription || {}
             if (Array.isArray(subMeta.invoices)) {
@@ -1120,6 +1325,9 @@ export async function getPlatformSubscriptions() {
         return {
             totalTenants: tenants.length,
             totalMrr,
+            mrrCurrency: "INR",
+            payingTenants,
+            mrrByCurrency,
             planCounts,
             tenants,
             invoices: allInvoices.slice(0, 30)
@@ -1129,6 +1337,9 @@ export async function getPlatformSubscriptions() {
         return {
             totalTenants: 0,
             totalMrr: 0,
+            mrrCurrency: "INR",
+            payingTenants: 0,
+            mrrByCurrency: {},
             planCounts: { FREE: 0, BASIC: 0, PRO: 0, ENTERPRISE: 0 },
             tenants: [],
             invoices: []
@@ -1162,10 +1373,8 @@ export async function getPlatformRegions() {
                 code: "IN",
                 name: "India",
                 flag: "🇮🇳",
-                cluster: "BOM1 - Asia South (Mumbai)",
                 currency: "INR",
                 taxScheme: "GST & TDS 26Q",
-                latency: "24ms",
                 status: "ACTIVE",
             },
             {
@@ -1173,10 +1382,8 @@ export async function getPlatformRegions() {
                 code: "AE",
                 name: "United Arab Emirates",
                 flag: "🇦🇪",
-                cluster: "DXB1 - Middle East (Dubai)",
                 currency: "AED",
                 taxScheme: "UAE VAT 201",
-                latency: "68ms",
                 status: "ACTIVE",
             },
             {
@@ -1184,10 +1391,8 @@ export async function getPlatformRegions() {
                 code: "SA",
                 name: "Saudi Arabia",
                 flag: "🇸🇦",
-                cluster: "RUH1 - Middle East (Riyadh)",
                 currency: "SAR",
                 taxScheme: "ZATCA E-Invoicing / KSA VAT",
-                latency: "74ms",
                 status: "ACTIVE",
             },
             {
@@ -1195,10 +1400,8 @@ export async function getPlatformRegions() {
                 code: "US",
                 name: "United States",
                 flag: "🇺🇸",
-                cluster: "IAD1 - US East (N. Virginia)",
                 currency: "USD",
                 taxScheme: "US State Sales Tax",
-                latency: "142ms",
                 status: "ACTIVE",
             },
             {
@@ -1206,10 +1409,8 @@ export async function getPlatformRegions() {
                 code: "GB",
                 name: "United Kingdom",
                 flag: "🇬🇧",
-                cluster: "LHR1 - Europe West (London)",
                 currency: "GBP",
                 taxScheme: "UK VAT (MTD)",
-                latency: "118ms",
                 status: "ACTIVE",
             },
             {
@@ -1217,16 +1418,15 @@ export async function getPlatformRegions() {
                 code: "AU",
                 name: "Australia",
                 flag: "🇦🇺",
-                cluster: "SYD1 - Asia Pacific (Sydney)",
                 currency: "AUD",
                 taxScheme: "ATO BAS & GST",
-                latency: "165ms",
                 status: "ACTIVE",
             },
         ]
 
         const regions = definedRegions.map(reg => {
-            const matchingTenants = tenants.filter((t: any) => (t.countryCode || "IN").toUpperCase() === reg.code)
+            const codes = reg.code === "GB" ? ["GB", "UK"] : [reg.code]
+            const matchingTenants = tenants.filter((t: any) => codes.includes((t.countryCode || "IN").toUpperCase()))
             const userCount = matchingTenants.reduce((sum: number, t: any) => sum + (t.users?.length || 0), 0)
             return {
                 ...reg,
@@ -1256,3 +1456,63 @@ export async function getPlatformRegions() {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Mutations are exported through toActionResult so their error messages reach
+// the admin UI in production (see src/lib/action-result.ts).
+// ---------------------------------------------------------------------------
+
+export async function updateTenantPlan(...args: Parameters<typeof _updateTenantPlan>) {
+    return toActionResult(() => _updateTenantPlan(...args))
+}
+
+export async function extendTenantTrial(...args: Parameters<typeof _extendTenantTrial>) {
+    return toActionResult(() => _extendTenantTrial(...args))
+}
+
+export async function toggleTenantStatus(...args: Parameters<typeof _toggleTenantStatus>) {
+    return toActionResult(() => _toggleTenantStatus(...args))
+}
+
+export async function createTenant(...args: Parameters<typeof _createTenant>) {
+    return toActionResult(() => _createTenant(...args))
+}
+
+export async function updateTenantDetails(...args: Parameters<typeof _updateTenantDetails>) {
+    return toActionResult(() => _updateTenantDetails(...args))
+}
+
+export async function updatePricingPlan(...args: Parameters<typeof _updatePricingPlan>) {
+    return toActionResult(() => _updatePricingPlan(...args))
+}
+
+export async function replyToTicket(...args: Parameters<typeof _replyToTicket>) {
+    return toActionResult(() => _replyToTicket(...args))
+}
+
+export async function clearSystemLogs(...args: Parameters<typeof _clearSystemLogs>) {
+    return toActionResult(() => _clearSystemLogs(...args))
+}
+
+export async function updateSecurityPolicy(...args: Parameters<typeof _updateSecurityPolicy>) {
+    return toActionResult(() => _updateSecurityPolicy(...args))
+}
+
+export async function addBlockedIp(...args: Parameters<typeof _addBlockedIp>) {
+    return toActionResult(() => _addBlockedIp(...args))
+}
+
+export async function removeBlockedIp(...args: Parameters<typeof _removeBlockedIp>) {
+    return toActionResult(() => _removeBlockedIp(...args))
+}
+
+export async function updateGlobalSettings(...args: Parameters<typeof _updateGlobalSettings>) {
+    return toActionResult(() => _updateGlobalSettings(...args))
+}
+
+export async function toggleUserStatus(...args: Parameters<typeof _toggleUserStatus>) {
+    return toActionResult(() => _toggleUserStatus(...args))
+}
+
+export async function updateUserRole(...args: Parameters<typeof _updateUserRole>) {
+    return toActionResult(() => _updateUserRole(...args))
+}

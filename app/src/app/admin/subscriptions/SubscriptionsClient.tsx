@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -38,6 +39,7 @@ interface SubscriptionsClientProps {
     data: {
         totalTenants: number
         totalMrr: number
+        payingTenants?: number
         planCounts: Record<string, number>
         tenants: any[]
         invoices: any[]
@@ -52,7 +54,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
     const handleExtendTrial = async (tenantId: string) => {
         try {
             setIsLoading(true)
-            await extendTenantTrial(tenantId, 7)
+            unwrap(await extendTenantTrial(tenantId, 7))
             toast.success("Trial extended by 7 days")
             router.refresh()
         } catch (error: any) {
@@ -114,7 +116,9 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                             <div className="text-xl font-bold mt-1 text-foreground">
                                 {formatCurrency(data.totalMrr)}
                             </div>
-                            <span className="text-[10px] text-emerald-600 font-semibold">Monthly Recurring</span>
+                            <span className="text-[10px] text-emerald-600 font-semibold">
+                                From {data.payingTenants ?? 0} paying tenant{data.payingTenants === 1 ? "" : "s"} (trials excluded)
+                            </span>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
                             <TrendingUp className="h-5 w-5" />

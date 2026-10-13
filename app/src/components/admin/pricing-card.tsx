@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -19,13 +20,19 @@ export function PricingCard({ plan }: { plan: any }) {
     const handleUpdate = async () => {
         try {
             setIsLoading(true)
-            await updatePricingPlan(plan.id, {
+            const result = unwrap(await updatePricingPlan(plan.id, {
                 amount: parseFloat(amount),
                 isActive,
-            })
-            toast.success(`${plan.tier} plan updated successfully`)
+            }))
+            if (result.stripeSync.error) {
+                toast.warning(`${plan.tier} price saved, but Stripe wasn't updated: ${result.stripeSync.error}`)
+            } else if (result.stripeSync.synced) {
+                toast.success(`${plan.tier} price saved and updated in Stripe`)
+            } else {
+                toast.success(`${plan.tier} plan updated successfully`)
+            }
         } catch (error) {
-            toast.error("Failed to update plan")
+            toast.error(error instanceof Error ? error.message : "Failed to update plan")
             console.error(error)
         } finally {
             setIsLoading(false)

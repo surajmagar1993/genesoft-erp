@@ -515,6 +515,15 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                             {t.key}
                                         </span>
                                         <div className="flex items-center gap-2">
+                                            <Badge
+                                                variant="outline"
+                                                className="text-[10px] py-0 px-1.5"
+                                                title={(t as { sentAutomatically?: boolean }).sentAutomatically
+                                                    ? "The platform sends this email automatically"
+                                                    : "Not sent automatically yet; preview and test sends only"}
+                                            >
+                                                {(t as { sentAutomatically?: boolean }).sentAutomatically ? "Sent automatically" : "Preview only"}
+                                            </Badge>
                                             {t.isCustomized ? (
                                                 <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
                                                     Customized

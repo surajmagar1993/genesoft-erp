@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -77,7 +78,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
         e.preventDefault()
         try {
             setIsLoading(true)
-            await updateSecurityPolicy(policyForm)
+            unwrap(await updateSecurityPolicy(policyForm))
             toast.success("Security policies updated successfully")
             router.refresh()
         } catch (error: any) {
@@ -97,7 +98,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
 
         try {
             setIsLoading(true)
-            await addBlockedIp(ipForm.ip, ipForm.reason)
+            unwrap(await addBlockedIp(ipForm.ip, ipForm.reason))
             toast.success(`IP ${ipForm.ip} added to firewall blocklist`)
             setIpForm({ ip: "", reason: "" })
             setIsAddIpOpen(false)
@@ -113,7 +114,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
     const handleRemoveBlockedIp = async (ip: string) => {
         try {
             setIsLoading(true)
-            await removeBlockedIp(ip)
+            unwrap(await removeBlockedIp(ip))
             toast.success(`IP ${ip} removed from blocklist`)
             router.refresh()
         } catch (error: any) {

@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 
 import React, { useState } from "react"
 import { useChatMessages, Message } from "@/hooks/use-chat-messages"
@@ -27,11 +28,11 @@ export function AdminChatView({ ticketId, initialMessages }: AdminChatViewProps)
 
     setIsSending(true)
     try {
-      await replyToTicket(ticketId, reply)
+      unwrap(await replyToTicket(ticketId, reply))
       setReply("")
       toast.success("Reply dispatched")
     } catch (err) {
-      toast.error("Failed to send reply")
+      toast.error(err instanceof Error ? err.message : "Failed to send reply")
     } finally {
       setIsSending(false)
     }

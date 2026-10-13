@@ -132,11 +132,13 @@ These are marked done above but are simulated or not enforced. The UI now says s
 - [x] **Workflow Automation**: rules fire on real events and a daily cron (2026-10-13). Left: "update status" actions only run in the simulator.
 - [x] **CRM Email**: IMAP inbox sync works (manual + daily cron); sending without an SMTP mailbox now errors instead of logging a fake send (2026-10-13). Left: open tracking.
 - [ ] **Stripe / PayPal invoice checkout**: live mode isn't wired to the gateway APIs; portal online payment is switched off.
-- [x] **Stripe SaaS billing**: plan comes from the price (`STRIPE_PRICE_*`); a failed renewal keeps the plan (2026-10-13).
+- [x] **Stripe SaaS billing**: plan comes from the price; a failed renewal keeps the plan; prices sync from Admin → Pricing automatically (2026-10-13).
+- [x] **Plan upgrades**: tenants used to upgrade for free (fake `MANUAL-` payment reference). Upgrades now pay the prorated amount through Razorpay or Stripe Checkout first (2026-10-13).
 - [ ] **Platform Security (`/admin/security`)**: IP blocklist, maintenance mode and the signup switch are enforced (2026-10-13). 2FA, session timeout, login lockout and API rate limits are still stored only (labelled in the UI).
 - [x] **Web Forms**: 5 submissions / 10 min per IP, alert emails escaped and actually sent (2026-10-13). Left: CAPTCHA (the fake settings card was removed).
 - [x] **Recurring invoices**: due profiles run in the daily cron (2026-10-13).
 - [ ] **Tests**: Vitest unit tests cover the security and workflow libraries (`npm test`); no UI or integration tests yet.
+- [x] **Password reset**: the reset email linked to a page that didn't exist; added `/auth/confirm` + `/reset-password` and branded Supabase emails (2026-10-13).
 - [ ] **Lint**: 1021 errors, 983 of them `no-explicit-any`; the rest are React Compiler advisories (`set-state-in-effect`, `purity`).
 - [ ] **Dependencies**: non-breaking `npm audit fix` applied in `app/` (48 → 22). The rest are inside the Prisma 7.4 CLI and dev-only shadcn / eslint-config-next and need major upgrades.
 

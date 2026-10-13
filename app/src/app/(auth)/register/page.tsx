@@ -10,12 +10,16 @@ import { AlertCircle, UserPlus } from 'lucide-react'
 import { WorkspaceSlugInput } from '@/components/auth/workspace-slug-input'
 
 interface RegisterPageProps {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; plan?: string }>
 }
+
+const PAID_PLANS = ["BASIC", "PRO", "ENTERPRISE"]
 
 export default async function RegisterPage({ searchParams }: RegisterPageProps) {
   const params = await searchParams
   const error = params.error
+  // Plan picked on the public pricing page; the trial starts on Free and Billing offers this upgrade
+  const chosenPlan = PAID_PLANS.includes((params.plan || "").toUpperCase()) ? params.plan!.toUpperCase() : null
 
   return (
     <div className="space-y-6">
@@ -23,7 +27,9 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
       <div className="space-y-2 text-center">
         <h1 className="text-2xl font-bold tracking-tight">Create account</h1>
         <p className="text-sm text-muted-foreground">
-          Start your free trial today
+          {chosenPlan
+            ? `Start with a 15-day free trial. You can activate ${chosenPlan} from Settings → Billing anytime.`
+            : "Start your free trial today"}
         </p>
       </div>
 
@@ -35,6 +41,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
       )}
 
       <form action={register} className="space-y-4">
+        {chosenPlan && <input type="hidden" name="plan" value={chosenPlan} />}
         <div className="space-y-2">
           <Label htmlFor="fullName">Full name</Label>
           <Input

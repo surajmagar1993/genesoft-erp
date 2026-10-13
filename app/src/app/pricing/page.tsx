@@ -2,70 +2,21 @@ import Link from "next/link";
 import { Check, ArrowRight, Zap, Shield, Globe, Minus } from "lucide-react";
 import { PublicNavbar } from "@/components/marketing/navbar";
 import { PublicFooter } from "@/components/marketing/footer";
-import { prisma } from "@/lib/prisma";
+import { getEffectivePricing } from "@/lib/plan-pricing";
 import { Plan } from "@prisma/client";
 import { headers } from "next/headers";
 
-async function getPricingPlans(regionCode: string) {
-  try {
-    const plans = await prisma.pricingPlan.findMany({
-      where: { regionCode, isActive: true },
-      orderBy: { amount: "asc" }
-    });
-    return plans;
-  } catch (error) {
-    console.error("Failed to fetch pricing plans:", error);
-    return [];
-  }
-}
+// The prices customers are actually charged: Admin → Pricing, falling back to the built-in catalog
+const REGION_CURRENCY: Record<string, string> = { IN: "INR", US: "USD", UK: "GBP", AE: "AED", SA: "SAR" }
 
-const regionalFallbacks: Record<string, { currency: string, plans: any[] }> = {
-  IN: {
-    currency: "INR",
-    plans: [
-      { tier: Plan.FREE, amount: 0, currency: "INR" },
-      { tier: Plan.BASIC, amount: 499, currency: "INR" },
-      { tier: Plan.PRO, amount: 999, currency: "INR" },
-      { tier: Plan.ENTERPRISE, amount: 4999, currency: "INR" }
-    ]
-  },
-  US: {
-    currency: "USD",
-    plans: [
-      { tier: Plan.FREE, amount: 0, currency: "USD" },
-      { tier: Plan.BASIC, amount: 9, currency: "USD" },
-      { tier: Plan.PRO, amount: 29, currency: "USD" },
-      { tier: Plan.ENTERPRISE, amount: 99, currency: "USD" }
-    ]
-  },
-  UK: {
-    currency: "GBP",
-    plans: [
-      { tier: Plan.FREE, amount: 0, currency: "GBP" },
-      { tier: Plan.BASIC, amount: 8, currency: "GBP" },
-      { tier: Plan.PRO, amount: 25, currency: "GBP" },
-      { tier: Plan.ENTERPRISE, amount: 80, currency: "GBP" }
-    ]
-  },
-  AE: {
-    currency: "AED",
-    plans: [
-      { tier: Plan.FREE, amount: 0, currency: "AED" },
-      { tier: Plan.BASIC, amount: 35, currency: "AED" },
-      { tier: Plan.PRO, amount: 110, currency: "AED" },
-      { tier: Plan.ENTERPRISE, amount: 360, currency: "AED" }
-    ]
-  },
-  SA: {
-    currency: "SAR",
-    plans: [
-      { tier: Plan.FREE, amount: 0, currency: "SAR" },
-      { tier: Plan.BASIC, amount: 35, currency: "SAR" },
-      { tier: Plan.PRO, amount: 110, currency: "SAR" },
-      { tier: Plan.ENTERPRISE, amount: 375, currency: "SAR" }
-    ]
-  }
-};
+async function getPricingPlans(region: string) {
+  const pricing = await getEffectivePricing(REGION_CURRENCY[region] || "USD")
+  return ([Plan.FREE, Plan.BASIC, Plan.PRO, Plan.ENTERPRISE] as const).map((tier) => ({
+    tier,
+    amount: pricing.monthly[tier],
+    currency: pricing.currency,
+  }))
+}
 
 function getPricingRegion(countryCode: string): string {
   const code = countryCode?.toUpperCase() || "US";
@@ -109,11 +60,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
 
   const region = getPricingRegion(activeRegion);
 
-  const dbPlans = await getPricingPlans(region);
-  
-  // Fallback plans if database is empty or fetch fails
-  const fallback = regionalFallbacks[region] || regionalFallbacks["US"];
-  const plans = dbPlans.length > 0 ? dbPlans : fallback.plans;
+  const plans = await getPricingPlans(region);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950">

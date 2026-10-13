@@ -23,11 +23,11 @@ async function ensureSuperAdmin() {
 
     const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("*")
         .eq("id", user.id)
         .single()
 
-    if (!profile || (profile as any).role !== "SUPER_ADMIN") {
+    if (!profile || (profile as any).role !== "SUPER_ADMIN" || (profile as any).is_active === false) {
         throw new Error("Forbidden: Super Admin access required")
     }
 
@@ -132,13 +132,18 @@ export async function getSystemEmailTemplates(): Promise<SystemEmailTemplatesOve
         }
     })
 
+    // Which templates the platform actually sends today; the rest are previews only.
+    // Sign-up emails come from Supabase Auth, so WELCOME_ONBOARDING isn't sent from here.
+    const AUTO_SENT: SystemTemplateKey[] = ["SUPPORT_TICKET_UPDATE"]
+    const templatesWithUsage = templates.map((t) => ({ ...t, sentAutomatically: AUTO_SENT.includes(t.key as SystemTemplateKey) }))
+
     const allTags = new Set<string>()
     templates.forEach((t) => t.mergeTags.forEach((tag) => allTags.add(tag.tag)))
     const activeCount = templates.filter((t) => t.isActive).length
     const categories = new Set(templates.map((t) => t.category))
 
     return {
-        templates,
+        templates: templatesWithUsage,
         gatewayStatus: {
             provider: hasResend ? "RESEND" : "SIMULATION",
             isConfigured: hasResend,
@@ -275,19 +280,12 @@ export async function sendTestSystemEmail(input: {
             })
 
             if (sendError) {
-                console.warn("Resend test send notification:", sendError.message)
-                // If custom domain is unverified or recipient restricted by sandbox tier, record and notify gracefully
-                await logAdminAction("EMAIL_TEMPLATE_TEST_DISPATCH", templateKey, "EMAIL_TEST", {
-                    templateKey,
-                    recipient: recipientEmail.trim(),
-                    provider: "SIMULATION_FALLBACK",
-                    note: sendError.message,
-                    deliveredAt: new Date().toISOString(),
-                })
+                console.warn("Resend test send failed:", sendError.message)
                 return {
-                    success: true,
-                    simulated: true,
-                    message: `[Simulated Dispatch] Template compiled & rendered perfectly. Live delivery paused by Resend (${sendError.message}).`,
+                    success: false,
+                    simulated: false,
+                    message: "",
+                    error: `Resend didn't send the test email: ${sendError.message}`,
                 }
             }
 

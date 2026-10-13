@@ -1,5 +1,4 @@
-import { getTicketMessages } from "@/app/actions/saas/admin"
-import { prisma } from "@/lib/prisma"
+import { getSupportTicket, getTicketMessages } from "@/app/actions/saas/admin"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Building2, ArrowLeft } from "lucide-react"
@@ -11,14 +10,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     const { id } = await params
     const ticketId = id
     
-    const ticket = await prisma.supportTicket.findUnique({
-        where: { id: ticketId },
-        include: {
-            tenant: {
-                select: { name: true }
-            }
-        }
-    })
+    const ticket = await getSupportTicket(ticketId)
 
     if (!ticket) notFound()
 
