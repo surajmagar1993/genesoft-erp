@@ -13,6 +13,7 @@ import { cleanTaxRate, getTenantTaxContext, invoiceItemTaxColumns, supplyTypeFor
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
 import { postToLedger } from "@/lib/ledger"
+import { nextInvoiceNumber } from "@/lib/invoice-number"
 
 /* ── Types ── */
 export type InvoiceStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "CANCELLED"
@@ -175,45 +176,7 @@ export async function getInvoiceById(id: string): Promise<(InvoiceDB & { tenants
 /* ── Get Next Invoice Number (Supports TAX_INVOICE and PROFORMA) ── */
 export async function getNextInvoiceNumber(type: "TAX_INVOICE" | "PROFORMA" = "TAX_INVOICE"): Promise<string> {
   const tenantId = await getTenantId()
-
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: tenantId },
-    select: { settings: true, fiscalYearStart: true },
-  })
-
-  const tenantSettings = (tenant?.settings as Record<string, any>) || {}
-  const fiscalMonthStart = tenantSettings.fiscal_year_start || tenant?.fiscalYearStart || 1
-
-  const now = new Date()
-  let startYear = now.getFullYear()
-  const currentMonth = now.getMonth() + 1 // 1..12
-
-  if (currentMonth < fiscalMonthStart) {
-    startYear -= 1
-  }
-  const endYear = startYear + 1
-  const fyPrefix = `${startYear}-${endYear.toString().slice(-2)}`
-  const prefix = type === "PROFORMA" ? `PI-${fyPrefix}-` : `INV-${fyPrefix}-`
-
-  const latestInvoice = await prisma.invoice.findFirst({
-    where: {
-      tenantId,
-      invoiceNumber: { startsWith: prefix },
-    },
-    orderBy: { invoiceNumber: "desc" },
-    select: { invoiceNumber: true },
-  })
-
-  let nextSeq = 1
-  if (latestInvoice && latestInvoice.invoiceNumber) {
-    const parts = latestInvoice.invoiceNumber.split("-")
-    const lastSeq = parseInt(parts[parts.length - 1], 10)
-    if (!isNaN(lastSeq)) {
-      nextSeq = lastSeq + 1
-    }
-  }
-
-  return `${prefix}${nextSeq.toString().padStart(4, "0")}`
+  return nextInvoiceNumber(tenantId, type)
 }
 
 /* ── Create ── */

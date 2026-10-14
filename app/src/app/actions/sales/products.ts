@@ -3,6 +3,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { stamped } from "@/lib/db-row"
+import { prisma } from "@/lib/prisma"
 
 /* ── Types ── */
 export type ProductType = "PRODUCT" | "SERVICE"
@@ -31,6 +33,34 @@ export interface ProductDB {
   updated_at: string
 }
 
+
+/*
+ * The live products table names its price column "unitPrice" (camelCase),
+ * while the screens use unit_price. Translate only here, at the database edge.
+ */
+const WRITABLE_COLUMNS = [
+  "type", "name", "category", "brand", "model_no", "serial_no", "sku", "hsn_sac_code", "description",
+  "currency", "unit", "stock_qty", "is_active", "custom_attributes", "tax_group_id",
+] as const
+
+function toDbRow(input: Record<string, unknown>): Record<string, unknown> {
+  const row: Record<string, unknown> = {}
+  for (const key of WRITABLE_COLUMNS) if (input[key] !== undefined) row[key] = input[key]
+  if (input.unit_price !== undefined) {
+    const price = Number(input.unit_price)
+    if (!Number.isFinite(price) || price < 0) throw new Error("Unit price must be zero or more")
+    row.unitPrice = price
+  }
+  if (row.type !== undefined && row.type !== "PRODUCT" && row.type !== "SERVICE") throw new Error("Type must be PRODUCT or SERVICE")
+  if (row.name !== undefined && !String(row.name).trim()) throw new Error("Product name is required")
+  return row
+}
+
+function fromDbRow<T extends Record<string, unknown>>(row: T): ProductDB {
+  const { unitPrice, ...rest } = row as T & { unitPrice?: unknown }
+  return { ...(rest as unknown as ProductDB), unit_price: Number(unitPrice ?? (row as { unit_price?: unknown }).unit_price ?? 0) }
+}
+
 /* ── Read All ── */
 export async function getProducts(
   page: number = 1, 
@@ -50,7 +80,7 @@ export async function getProducts(
     console.error("getProducts error:", error.message)
     return { data: [], total: 0 }
   }
-  return { data: data ?? [], total: count || 0 }
+  return { data: (data ?? []).map(fromDbRow), total: count || 0 }
 }
 
 /* ── Read One ── */
@@ -69,7 +99,7 @@ export async function getProductById(id: string): Promise<ProductDB | null> {
     console.error("getProductById error:", error.message)
     return null
   }
-  return data
+  return data ? fromDbRow(data) : null
 }
 
 /* ── Create ── */
@@ -98,12 +128,18 @@ export async function createProduct(
   const supabase = await createClient()
   const tenantId = await getTenantWriterId()
 
+  let row: Record<string, unknown>
+  try {
+    row = toDbRow(payload as unknown as Record<string, unknown>)
+  } catch (err) {
+    return { id: null, error: err instanceof Error ? err.message : "Invalid product" }
+  }
   const { data, error } = await supabase
     .from("products")
-    .insert({
-      ...payload,
+    .insert(stamped({
+      ...row,
       tenant_id: tenantId,
-    })
+    }))
     .select("id")
     .single()
 
@@ -128,11 +164,17 @@ export async function updateProduct(
   const tenantId = await getTenantWriterId()
 
   const { id, ...fields } = payload
+  let row: Record<string, unknown>
+  try {
+    row = toDbRow(fields as unknown as Record<string, unknown>)
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Invalid product" }
+  }
 
   const { error } = await supabase
     .from("products")
     .update({
-      ...fields,
+      ...row,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id)
@@ -184,7 +226,7 @@ export async function exportProducts(limit: number = 1000): Promise<ProductDB[]>
     console.error("exportProducts error:", error.message)
     return []
   }
-  return data ?? []
+  return (data ?? []).map(fromDbRow)
 }
 
 export async function importProducts(
@@ -193,26 +235,38 @@ export async function importProducts(
   const supabase = await createClient()
   const tenantId = await getTenantWriterId()
 
-  const insertData = products.map(p => ({
-    name: p.name || "Unknown Product",
-    type: p.type || "PRODUCT",
-    unit_price: p.unit_price ? parseFloat(p.unit_price) : 0,
-    currency: p.currency || "INR",
-    unit: p.unit || "Nos",
-    stock_qty: p.stock_qty ? parseFloat(p.stock_qty) : 0,
-    is_active: p.is_active !== undefined ? p.is_active : true,
-    category: p.category || null,
-    brand: p.brand || null,
-    sku: p.sku || null,
-    hsn_sac_code: p.hsn_sac_code || null,
-    description: p.description || null,
-    ...p, // override
-    tenant_id: tenantId,
-  }))
+  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
+  let insertData: Record<string, unknown>[]
+  try {
+    if (!Array.isArray(products) || products.length === 0) throw new Error("The file has no products")
+    if (products.length > 5000) throw new Error("Import up to 5,000 products at a time")
+    insertData = products.map((p, i) => {
+      try {
+        // Only real product columns are imported; anything else in the file is ignored
+        return {
+          ...toDbRow({
+            ...p,
+            name: p.name || "Unknown Product",
+            type: String(p.type || "PRODUCT").toUpperCase(),
+            unit_price: p.unit_price ?? p.unitPrice ?? 0,
+            currency: p.currency || tenant?.currencyCode || "INR",
+            unit: p.unit || "Nos",
+            stock_qty: p.stock_qty !== undefined && p.stock_qty !== "" ? parseFloat(p.stock_qty) || 0 : 0,
+            is_active: p.is_active === undefined || p.is_active === "" ? true : p.is_active === true || p.is_active === "true",
+          }),
+          tenant_id: tenantId,
+        }
+      } catch (err) {
+        throw new Error(`Row ${i + 1}: ${err instanceof Error ? err.message : "invalid"}`)
+      }
+    })
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Invalid file", count: 0 }
+  }
 
   const { data, error } = await supabase
     .from("products")
-    .insert(insertData)
+    .insert(insertData.map(stamped))
     .select("id")
 
   if (error) {

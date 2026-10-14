@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { stamped } from "@/lib/db-row"
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT"
@@ -85,7 +86,7 @@ export async function createTask(
 
   const { data, error } = await supabase
     .from("tasks")
-    .insert([{ ...formData, tenant_id: tenantId }])
+    .insert([stamped({ ...formData, tenant_id: tenantId })])
     .select()
     .single()
 

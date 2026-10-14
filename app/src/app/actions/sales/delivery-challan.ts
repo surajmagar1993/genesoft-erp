@@ -2,6 +2,9 @@
 
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
+import { recordContactTransaction } from "@/lib/contact-ledger"
+import { nextInvoiceNumber } from "@/lib/invoice-number"
+import { buildInvoiceLines, contactPlaceOfSupply } from "@/lib/invoice-lines"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
@@ -447,30 +450,32 @@ export async function updateDeliveryChallanStatus(id: string, status: ChallanSta
 export async function convertChallanToInvoice(challanId: string) {
     const tenantId = await getTenantWriterId()
 
+    const challan = await prisma.deliveryChallan.findUnique({
+        where: { id: challanId, tenantId },
+        include: { items: true, contact: true }
+    })
+    if (!challan) throw new Error("Delivery challan not found.")
+    if (challan.convertedInvoiceId) throw new Error("This delivery challan has already been converted into an invoice.")
+    if (!challan.contactId || !challan.contact) {
+        throw new Error("Delivery challan must be associated with a valid customer contact to generate a Tax Invoice.")
+    }
+
+    // Tax follows the business's country; place of supply from the challan, else the customer
+    const placeOfSupply = challan.placeOfSupply || contactPlaceOfSupply(challan.contact)
+    const built = await buildInvoiceLines(tenantId, (challan.items as { productId: string | null; productName: string; description: string | null; hsnCode: string | null; quantity: unknown; unitPrice: unknown; taxRate: unknown }[]).map((item) => ({
+        productId: item.productId,
+        description: item.description?.trim() ? `${item.productName} — ${item.description}` : item.productName,
+        hsnSacCode: item.hsnCode,
+        quantity: Number(item.quantity),
+        unitPrice: Number(item.unitPrice),
+        taxRate: Number(item.taxRate ?? 0),
+    })), placeOfSupply)
+    const invoiceNumber = await nextInvoiceNumber(tenantId)
+
     return await prisma.$transaction(async (tx: any) => {
-        const challan = await tx.deliveryChallan.findUnique({
-            where: { id: challanId, tenantId },
-            include: { items: true, contact: true }
-        })
-
-        if (!challan) {
-            throw new Error("Delivery challan not found.")
-        }
-
-        if (challan.convertedInvoiceId) {
-            throw new Error("This delivery challan has already been converted into an invoice.")
-        }
-
-        if (!challan.contactId) {
-            throw new Error("Delivery challan must be associated with a valid customer contact to generate a Tax Invoice.")
-        }
-
-        // Generate sequential invoice number INV-YYYY-XXXX
-        const currentYear = new Date().getFullYear()
-        const count = await tx.invoice.count({
-            where: { tenantId }
-        })
-        const invoiceNumber = `INV-${currentYear}-${String(count + 1).padStart(4, "0")}`
+        // Re-check inside the transaction so two clicks can't create two invoices
+        const fresh = await tx.deliveryChallan.findFirst({ where: { id: challanId, tenantId }, select: { convertedInvoiceId: true } })
+        if (fresh?.convertedInvoiceId) throw new Error("This delivery challan has already been converted into an invoice.")
 
         // 1. Create Tax Invoice
         const invoice = await tx.invoice.create({
@@ -481,29 +486,22 @@ export async function convertChallanToInvoice(challanId: string) {
                 type: InvoiceType.TAX_INVOICE,
                 status: InvoiceStatus.SENT,
                 invoiceDate: new Date(),
-                billTo: challan.deliveryAddress || challan.contact?.billingAddress || {},
-                shipTo: challan.deliveryAddress || challan.contact?.shippingAddress || {},
-                placeOfSupply: challan.placeOfSupply || null,
-                subtotal: challan.taxableAmount,
-                taxAmount: challan.taxAmount,
+                billTo: {
+                    name: challan.contact.displayName,
+                    email: challan.contact.email || "",
+                    gstin: challan.contact.gstin || null,
+                    address: challan.contact.billingAddress || null,
+                },
+                shipTo: challan.deliveryAddress || challan.contact.shippingAddress || {},
+                placeOfSupply,
+                subtotal: built.subtotal,
+                taxAmount: built.taxAmount,
                 discount: 0,
-                total: challan.totalValue,
-                currencyCode: "INR",
+                total: built.total,
+                currencyCode: built.currencyCode,
                 notes: `Generated from Delivery Challan ${challan.challanNumber}. Purpose: ${challan.reason.replace(/_/g, " ")}.`,
                 terms: challan.terms || null,
-                items: {
-                    create: challan.items.map((item: any) => ({
-                        productId: item.productId,
-                        productName: item.productName,
-                        description: item.description,
-                        hsnSacCode: item.hsnCode,
-                        quantity: item.quantity,
-                        unitPrice: item.unitPrice,
-                        taxRate: item.taxRate,
-                        taxAmount: item.taxAmount,
-                        totalAmount: item.totalAmount
-                    }))
-                }
+                items: { create: built.items }
             }
         })
 
@@ -519,6 +517,11 @@ export async function convertChallanToInvoice(challanId: string) {
         return { success: true, invoice }
     }).then(async (res: any) => {
         await postToLedger(tenantId, { kind: "invoice", id: res.invoice.id })
+        try {
+            await recordContactTransaction(tenantId, { contactId: challan.contactId!, type: "INVOICE", amount: built.total, currencyCode: built.currencyCode, referenceId: res.invoice.id, description: `Invoice ${invoiceNumber} (challan ${challan.challanNumber})`, date: res.invoice.invoiceDate })
+        } catch (err) {
+            console.error("Customer ledger entry failed for challan invoice:", err)
+        }
         revalidatePath("/sales/delivery-challans")
         revalidatePath("/sales/invoices")
         return res

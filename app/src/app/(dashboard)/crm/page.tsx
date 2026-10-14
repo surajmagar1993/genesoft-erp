@@ -32,7 +32,7 @@ async function getCRMStats() {
     supabase.from("companies").select("*", { count: "exact", head: true }),
     supabase
       .from("leads")
-      .select("id, name, status, created_at")
+      .select("id, title, contact_name, status, created_at")
       .order("created_at", { ascending: false })
       .limit(5),
     supabase
@@ -205,11 +205,11 @@ export default async function CRMPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                {stats.recentLeads.map((lead: { id: string; name: string; status: string; created_at: string }) => (
+                {stats.recentLeads.map((lead: { id: string; title: string; contact_name: string | null; status: string; created_at: string }) => (
                   <Link key={lead.id} href={`/crm/leads/${lead.id}`}>
                     <div className="flex items-center justify-between py-2 border-b border-white/5 hover:bg-white/5 px-2 rounded transition-colors cursor-pointer">
                       <div>
-                        <p className="text-white text-sm font-medium">{lead.name}</p>
+                        <p className="text-white text-sm font-medium">{lead.contact_name ? `${lead.title} · ${lead.contact_name}` : lead.title}</p>
                         <p className="text-white/40 text-xs">{new Date(lead.created_at).toLocaleDateString("en-IN")}</p>
                       </div>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 capitalize">

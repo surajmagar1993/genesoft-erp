@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
+import { recordContactTransaction } from "@/lib/contact-ledger"
+import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { getTenantTaxContext, invoiceItemTaxColumns } from "@/lib/tenant-tax"
 import {
@@ -60,9 +62,8 @@ if (!profile) return { error: "Recurring profile not found" }
     const now = new Date()
     const year = now.getFullYear()
 
-    // Generate sequential invoice number: INV-YYYY-XXXX
-    const count = await prisma.invoice.count({ where: { tenantId } })
-    const invoiceNumber = `INV-${year}-${String(count + 1).padStart(4, "0")}`
+    // Same single numbering series as invoices created by hand
+    const invoiceNumber = await nextInvoiceNumber(tenantId, "TAX_INVOICE", now)
 
     // Calculate due date based on payment terms
     const dueDate = new Date(now)
@@ -166,5 +167,13 @@ if (!profile) return { error: "Recurring profile not found" }
     }, result.id)
 
     await postToLedger(tenantId, { kind: "invoice", id: result.id })
+    // Customer statement (drafts aren't owed yet)
+    if (result.status !== "DRAFT") {
+        try {
+            await recordContactTransaction(tenantId, { contactId: result.contactId, type: "INVOICE", amount: Number(result.total), currencyCode: result.currencyCode, referenceId: result.id, description: `Invoice ${result.invoiceNumber} (recurring)`, date: result.invoiceDate })
+        } catch (err) {
+            console.error("Customer ledger entry failed for recurring invoice:", err)
+        }
+    }
     return { invoice: { id: result.id, invoiceNumber: result.invoiceNumber } }
 }

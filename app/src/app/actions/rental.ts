@@ -2,6 +2,9 @@
 
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
+import { recordContactTransaction } from "@/lib/contact-ledger"
+import { nextInvoiceNumber } from "@/lib/invoice-number"
+import { buildInvoiceLines, contactPlaceOfSupply } from "@/lib/invoice-lines"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
@@ -1056,15 +1059,6 @@ export async function convertAgreementToInvoice(agreementId: string) {
         throw new Error("An invoice has already been generated for this rental agreement")
     }
 
-    // Sequential invoice number
-    const count = await prisma.invoice.count({ where: { tenantId } })
-    const currentYear = new Date().getFullYear()
-    const invoiceNumber = `INV-${currentYear}-${String(count + 1).padStart(4, "0")}`
-
-    const tenant = await prisma.tenant.findUnique({
-        where: { id: tenantId }
-    })
-
     const billTo = {
         name: agreement.contact.displayName,
         email: agreement.contact.email,
@@ -1073,17 +1067,34 @@ export async function convertAgreementToInvoice(agreementId: string) {
         gstin: agreement.contact.gstin || null,
     }
 
-    const subtotal = Number(agreement.totalRentalAmount)
-    const totalDamageLateFees = (agreement.returns as any[]).reduce(
-        (sum: number, r: any) => sum + Number(r.damageFee) + Number(r.lateFee),
+    const totalDamageLateFees = (agreement.returns as { damageFee: unknown; lateFee: unknown }[]).reduce(
+        (sum: number, r) => sum + Number(r.damageFee || 0) + Number(r.lateFee || 0),
         0
     )
-    const grandSubtotal = subtotal + totalDamageLateFees
 
-    // Approximate GST 18% standard
-    const taxRate = 18
-    const taxAmount = Math.round((grandSubtotal * (taxRate / 100)) * 100) / 100
-    const total = grandSubtotal + taxAmount
+    // Tax follows the business's country (India: CGST+SGST or IGST; elsewhere VAT/GST)
+    const placeOfSupply = contactPlaceOfSupply(agreement.contact)
+    const built = await buildInvoiceLines(tenantId, [
+        ...(agreement.items as { quantity: unknown; rentalDays: number; totalAmount: unknown; asset: { name: string; assetCode: string } }[]).map((item) => {
+            const qty = Number(item.quantity) || 1
+            return {
+                description: `Rental: ${item.asset.name} (${item.asset.assetCode}) - ${item.rentalDays} Days`,
+                hsnSacCode: "9973", // SAC: leasing or rental services
+                quantity: qty,
+                unitPrice: Math.round((Number(item.totalAmount) / qty) * 100) / 100,
+            }
+        }),
+        ...(totalDamageLateFees > 0
+            ? [{
+                  description: `Rental Damage & Late Return Fees (Agreement #${agreement.agreementNumber})`,
+                  hsnSacCode: "9997",
+                  quantity: 1,
+                  unitPrice: totalDamageLateFees,
+                  taxRate: 0,
+              }]
+            : []),
+    ], placeOfSupply)
+    const invoiceNumber = await nextInvoiceNumber(tenantId)
 
     const newInvoice = await prisma.$transaction(async (tx: any) => {
         const inv = await tx.invoice.create({
@@ -1096,40 +1107,15 @@ export async function convertAgreementToInvoice(agreementId: string) {
                 invoiceDate: new Date(),
                 dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Net 30
                 billTo,
-                placeOfSupply: tenant?.countryCode === "IN" ? "Maharashtra (27)" : "Default",
-                subtotal: grandSubtotal,
-                taxAmount,
+                placeOfSupply,
+                subtotal: built.subtotal,
+                taxAmount: built.taxAmount,
                 discount: 0,
-                total,
-                currencyCode: tenant?.currencyCode || "INR",
+                total: built.total,
+                currencyCode: built.currencyCode,
                 notes: `Generated from Rental Agreement #${agreement.agreementNumber}`,
                 terms: agreement.terms || "Payment due within 30 days of invoice date.",
-                items: {
-                    create: [
-                        ...agreement.items.map((item: any) => ({
-                            tenantId,
-                            description: `Rental: ${item.asset.name} (${item.asset.assetCode}) - ${item.rentalDays} Days`,
-                            hsnSacCode: "9973", // GST SAC code for leasing/rental of machinery & equipment
-                            quantity: item.quantity,
-                            unitPrice: Number(item.rate),
-                            discount: 0,
-                            taxRate,
-                            taxAmount: Math.round((Number(item.totalAmount) * (taxRate / 100)) * 100) / 100,
-                            total: Number(item.totalAmount) + Math.round((Number(item.totalAmount) * (taxRate / 100)) * 100) / 100,
-                        })),
-                        ...(totalDamageLateFees > 0 ? [{
-                            tenantId,
-                            description: `Rental Damage & Late Return Fees (Agreement #${agreement.agreementNumber})`,
-                            hsnSacCode: "9997",
-                            quantity: 1,
-                            unitPrice: totalDamageLateFees,
-                            discount: 0,
-                            taxRate: 0,
-                            taxAmount: 0,
-                            total: totalDamageLateFees,
-                        }] : [])
-                    ]
-                }
+                items: { create: built.items },
             }
         })
 
@@ -1143,6 +1129,12 @@ export async function convertAgreementToInvoice(agreementId: string) {
     })
 
     await postToLedger(tenantId, { kind: "invoice", id: newInvoice.id })
+    // Customer statement: the customer owes this invoice
+    try {
+        await recordContactTransaction(tenantId, { contactId: agreement.contactId, type: "INVOICE", amount: built.total, currencyCode: built.currencyCode, referenceId: newInvoice.id, description: `Invoice ${invoiceNumber} (rental ${agreement.agreementNumber})`, date: newInvoice.invoiceDate })
+    } catch (err) {
+        console.error("Customer ledger entry failed for rental invoice:", err)
+    }
 
     revalidatePath("/sales/rental")
     revalidatePath("/sales/invoices")

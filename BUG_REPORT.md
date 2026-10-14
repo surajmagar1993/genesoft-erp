@@ -2,7 +2,14 @@
 
 **Date:** 14 October 2026 · **Code reviewed:** `main` at `e3a78f2` (includes the general-ledger and P&L work, not yet pushed) · **Environment:** production build run locally against the live Supabase database (read-only checks), plus a throwaway in-memory test database for anything that writes.
 
-This report lists bugs only. Nothing here has been fixed yet.
+This report lists the bugs found. **Fix status** is tracked in the next section.
+
+## Fix log
+| Date | Fixed | Notes |
+|---|---|---|
+| 14 Oct 2026 | **C1, C2, C3, C4, C5**, **M3**, **M6**, **N1** | Leads/deals moved to Prisma (email/phone on the linked contact; search fixed); products map `unit_price` ↔ live `"unitPrice"`; rental and challan invoices built with the business's tax rules and real invoice-line fields; one invoice-number series for every flow (`src/lib/invoice-number.ts`); rental/challan/recurring invoices now reach the customer statement. Covered by `critical-fixes.int.test.ts` and `supabase-writes.int.test.ts`. |
+
+**N1 🔴 (found while fixing) Most records saved through the Supabase client couldn't be saved at all.** In the live database `updated_at` is NOT NULL with no default on 59 tables and there are no triggers, so every Supabase insert that didn't send `updated_at` failed: **products, quotes, sales orders, bills (and bill items, which also sent a non-existent `tenant_id` and no `id`), CRM tasks, communication-log entries, new accounts and the default chart-of-accounts seed.** Confirmed with inserts inside rolled-back transactions on the live DB (fails without `updated_at`, succeeds with it). Fixed with `stamped()` (`src/lib/db-row.ts`) on every such insert; bill items now get an id and no tenant_id.
 
 ---
 
@@ -53,13 +60,13 @@ This report lists bugs only. Nothing here has been fixed yet.
 
 ### 🤝 CRM
 
-**C1 🔴 Leads can't be created or edited from the form**
+**✅ Fixed · C1 🔴 Leads can't be created or edited from the form**
 - Where: `src/components/crm/lead-form.tsx:63` sends `email` and `phone`. `src/app/actions/crm/leads.ts:85` inserts `{ ...formData }` with Supabase.
 - Problem: the live `leads` table has no `email` or `phone` columns, so every insert or update fails with a "column not found" error.
 - Verified: live API, `column leads.email does not exist` / `column leads.phone does not exist`. Fixo has 0 leads.
 - Fix: map the form to real columns (contact name → `contact_name`, email/phone → the linked contact), or add the columns with a migration.
 
-**C2 🔴 Deals can't be created from the form**
+**✅ Fixed · C2 🔴 Deals can't be created from the form**
 - Where: `src/components/crm/deal-form.tsx:82` sends `company`, `contact_name`, `expected_close`. `src/app/actions/crm/deals.ts:87` inserts `{ ...formData }`.
 - Problem: the live `deals` table has `contact_id` and `expected_close_date`, and none of those three columns.
 - Verified: live API, all three columns do not exist. Fixo has 0 deals.
@@ -69,7 +76,7 @@ This report lists bugs only. Nothing here has been fixed yet.
 - Where: `src/app/actions/crm/leads.ts:178`.
 - Problem: conversion reads the lead with Prisma, but the name lives in `leads.contact_name`, a live column missing from `schema.prisma`. The new contact is always "New Contact from Lead" with no email or phone. The deal value is always 0.
 
-**M3 🟡 Two CRM screens always show empty lists**
+**✅ Fixed · M3 🟡 Two CRM screens always show empty lists**
 - `src/app/(dashboard)/crm/page.tsx:35`: "Recent leads" selects `leads.name`, which doesn't exist, so the query errors and the list is empty.
 - `src/app/actions/crm/companies.ts:234`: a company's deals are filtered by `deals.company`, which doesn't exist, so a company page never shows its deals.
 - Verified: live API, both columns do not exist.
@@ -86,12 +93,12 @@ This report lists bugs only. Nothing here has been fixed yet.
 
 ### 🛒 Sales & invoicing
 
-**C3 🔴 Products can't be created, edited or imported**
+**✅ Fixed · C3 🔴 Products can't be created, edited or imported**
 - Where: `src/app/(dashboard)/sales/products/new/page.tsx:22` and the edit page send `unit_price`. `src/app/actions/sales/products.ts:199` (import) does the same.
 - Problem: the live column is `"unitPrice"` (camelCase, no `@map`), so every insert or update fails. The edit page also reads `initialProduct.unit_price` (`edit-client.tsx:26`), so prices show as 0.
 - Verified: live API, `column products.unit_price does not exist`; `unitPrice` works.
 
-**C5 🔴 Delivery challan → invoice always fails**
+**✅ Fixed · C5 🔴 Delivery challan → invoice always fails**
 - Where: `src/app/actions/sales/delivery-challan.ts:497`.
 - Problem: invoice lines are created with `productName`, `taxRate`, `taxAmount` and `totalAmount`, which aren't invoice-line fields, and without the required `lineTotal`. Prisma rejects the write.
 - Also: the currency is hardcoded to `"INR"` (`:491`), and no CGST/SGST/IGST or VAT columns are set.
@@ -105,7 +112,7 @@ This report lists bugs only. Nothing here has been fixed yet.
 - prices and tax groups aren't pulled from the catalog;
 - customer price lists are never applied.
 
-**M6 🟡 Two invoice-number series**
+**✅ Fixed · M6 🟡 Two invoice-number series**
 - The main form uses `INV-<financial year>-NNNN` (for example `INV-2026-27-0001`).
 - Rental (`rental.ts:1060`), challan (`delivery-challan.ts:473`) and recurring (`recurring-runner.ts:64`) invoices use `INV-<year>-<count+1>`.
 - That's two series in one financial year, and count + 1 can repeat an existing number after a deletion, which makes the unique constraint fail.
@@ -154,7 +161,7 @@ This report lists bugs only. Nothing here has been fixed yet.
 
 ### 🌍 Tax & multi-country
 
-**C4 🔴 Rental agreement → invoice always fails**
+**✅ Fixed · C4 🔴 Rental agreement → invoice always fails**
 - Where: `src/app/actions/rental.ts:1116`.
 - Problem: invoice lines use `tenantId`, `taxRate`, `taxAmount` and `total`, which aren't invoice-line fields, and leave out the required `lineTotal`.
 - Also: tax is hardcoded at **18% GST for every country** (`:1084`), and currency falls back to INR.

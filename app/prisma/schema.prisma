@@ -276,6 +276,8 @@ model Lead {
   tenantId    String     @map("tenant_id") @db.Uuid
   contactId   String?    @map("contact_id") @db.Uuid
   title       String
+  /// Person's name as entered on the lead (email/phone live on the linked contact)
+  contactName String?    @map("contact_name")
   source      String? // web_form, referral, cold_call
   status      LeadStatus @default(NEW)
   score       Int        @default(0)

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { prisma } from "@/lib/prisma"
 
 export interface Company {
   id: string
@@ -227,12 +228,20 @@ export async function getCompanyWithRelations(id: string): Promise<CompanyRelati
       .eq("tenant_id", tenantId)
       .eq("company_name", company.name)
       .order("created_at", { ascending: false }),
-    supabase
-      .from("deals")
-      .select("*")
-      .eq("tenant_id", tenantId)
-      .eq("company", company.name)
-      .order("created_at", { ascending: false })
+    // Deals don't store a company; they belong to a contact at this company
+    prisma.deal
+      .findMany({
+        where: { tenantId, contact: { companyName: { equals: company.name, mode: "insensitive" } } },
+        include: { contact: { select: { displayName: true } } },
+        orderBy: { createdAt: "desc" },
+      })
+      .then((rows: { id: string; title: string; value: unknown; stage: string; probability: number; expectedCloseDate: Date | null; createdAt: Date; contact: { displayName: string } | null }[]) => ({
+        data: rows.map((d) => ({
+          id: d.id, title: d.title, value: Number(d.value || 0), stage: d.stage, probability: d.probability,
+          expected_close: d.expectedCloseDate ? d.expectedCloseDate.toISOString().slice(0, 10) : null,
+          contact_name: d.contact?.displayName ?? "", company: company.name, created_at: d.createdAt.toISOString(),
+        })),
+      }))
   ])
 
   const contacts = contactsRes.data ?? []

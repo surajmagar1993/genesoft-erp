@@ -5,6 +5,7 @@ import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { adaptTaxAccounts } from "@/lib/default-accounts"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { stamped } from "@/lib/db-row"
 
 export type AccountType = "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE"
 
@@ -73,7 +74,7 @@ export async function createAccount(
 
   const { error } = await supabase
     .from("accounts")
-    .insert([{ ...formData, tenant_id: tenantId }])
+    .insert([stamped({ ...formData, tenant_id: tenantId })])
 
   if (error) return { error: error.message }
   revalidatePath("/finance/accounts")
@@ -208,7 +209,7 @@ export async function seedDefaultAccounts(): Promise<{ error: string | null; cou
 
   const { error } = await supabase
     .from("accounts")
-    .insert(defaultAccounts)
+    .insert(defaultAccounts.map(stamped))
 
   if (error) return { error: error.message, count: 0 }
   

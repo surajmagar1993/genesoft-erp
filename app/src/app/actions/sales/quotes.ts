@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { stamped } from "@/lib/db-row"
 
 /* ── Types ── */
 export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED"
@@ -152,7 +153,7 @@ export async function createQuote(
   // Insert header
   const { data: quote, error: headerError } = await supabase
     .from("quotes")
-    .insert({
+    .insert(stamped({
       ...headerFields,
       subtotal,
       tax_amount: taxAmount,
@@ -160,7 +161,7 @@ export async function createQuote(
       tenant_id: tenantId,
       currency_code: headerFields.currency_code || "INR",
       valid_until: headerFields.valid_until || null,
-    })
+    }))
     .select("id")
     .single()
 

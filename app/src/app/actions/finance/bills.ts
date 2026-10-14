@@ -6,6 +6,7 @@ import { postToLedger } from "@/lib/ledger"
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
+import { stamped } from "@/lib/db-row"
 
 export type BillStatus = "DRAFT" | "OPEN" | "PARTIALLY_PAID" | "PAID" | "VOID"
 
@@ -124,7 +125,7 @@ export async function createBill(data: BillData) {
 
   const { data: bill, error: billError } = await supabase
     .from("bills")
-    .insert({
+    .insert(stamped({
       tenant_id: tenantId,
       contact_id: data.contactId,
       bill_number: data.billNumber,
@@ -137,7 +138,7 @@ export async function createBill(data: BillData) {
       total: data.total,
       currency_code: data.currencyCode,
       notes: data.notes
-    })
+    }))
     .select()
     .single()
 
@@ -174,7 +175,8 @@ export async function createBill(data: BillData) {
     tax_percent: item.taxPercent,
     tax_amount: item.taxAmount,
     line_total: item.lineTotal,
-    tenant_id: tenantId
+    // bill_items has no tenant_id (it belongs to the bill) and no default id
+    id: crypto.randomUUID(),
   }))
 
   const { error: itemsError } = await supabase
@@ -272,7 +274,8 @@ export async function updateBill(id: string, data: Partial<BillData>) {
       unit_price: item.unitPrice,
       tax_percent: item.taxPercent,
       tax_amount: item.taxAmount,
-      line_total: item.lineTotal
+      line_total: item.lineTotal,
+      id: crypto.randomUUID(),
     }))
 
     const { error: itemsError } = await supabase

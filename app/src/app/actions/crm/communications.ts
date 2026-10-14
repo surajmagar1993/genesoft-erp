@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { stamped } from "@/lib/db-row"
 
 export type CommunicationType = "NOTE" | "CALL" | "EMAIL" | "MEETING" | "SMS" | "OTHER"
 
@@ -68,7 +69,7 @@ export async function createCommunicationLog(
 
   const { data, error } = await supabase
     .from("communication_logs")
-    .insert([{ ...formData, tenant_id: tenantId }])
+    .insert([stamped({ ...formData, tenant_id: tenantId })])
     .select()
     .single()
 

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { stamped } from "@/lib/db-row"
 
 /* ── Types ── */
 export type SalesOrderStatus = "DRAFT" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED"
@@ -153,7 +154,7 @@ export async function createOrder(
   // Insert header
   const { data: order, error: headerError } = await supabase
     .from("sales_orders")
-    .insert({
+    .insert(stamped({
       ...headerFields,
       subtotal,
       tax_amount: taxAmount,
@@ -162,7 +163,7 @@ export async function createOrder(
       currency_code: headerFields.currency_code || "INR",
       expected_date: headerFields.expected_date || null,
       quote_id: headerFields.quote_id || null,
-    })
+    }))
     .select("id")
     .single()
 
