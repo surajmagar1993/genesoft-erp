@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { convertAmount } from "@/lib/exchange-rates"
 import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
+import { payRunEmployerCost } from "@/lib/payroll-rules"
 
 /**
  * General ledger posting. Every business document keeps exactly one live
@@ -34,7 +35,7 @@ export type LedgerRole =
     | "AP" | "OUTPUT_TAX" | "CGST" | "SGST" | "IGST" | "SALARY_PAYABLE" | "PAYROLL_DEDUCTIONS"
     | "OPENING_EQUITY" | "RETAINED_EARNINGS"
     | "SALES" | "SALES_RETURNS"
-    | "COGS" | "PURCHASES" | "SALARIES"
+    | "COGS" | "PURCHASES" | "SALARIES" | "EMPLOYER_CONTRIBUTIONS"
 
 interface RoleSpec {
     type: AccountType
@@ -74,6 +75,7 @@ const ROLES: Record<LedgerRole, RoleSpec> = {
     COGS: { type: "EXPENSE", codes: ["5100"], create: { code: "5100", name: () => "Cost of Goods Sold", description: "Stock bought for resale" } },
     PURCHASES: { type: "EXPENSE", codes: ["5150"], create: { code: "5150", name: () => "Purchases (Bills)", description: "Services and other purchases on supplier bills" } },
     SALARIES: { type: "EXPENSE", codes: ["5200"], create: { code: "5200", name: () => "Salaries & Wages", description: "Staff pay" } },
+    EMPLOYER_CONTRIBUTIONS: { type: "EXPENSE", codes: ["5210"], create: { code: "5210", name: () => "Employer PF & ESI", description: "Employer's share of PF and ESI" } },
 }
 
 type Tx = Prisma.TransactionClient
@@ -452,6 +454,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
             const netPay = slips.length ? slips.reduce((s, p) => s + n(p.netSalary), 0) : n(run.totalNetPay)
             const withheld = gross - unpaid - netPay
             const periodEnd = new Date(Date.UTC(run.periodYear, run.periodMonth, 0, 12))
+            const employerCost = await payRunEmployerCost(tenantId, src.id, tx)
             const out: { sourceType: "PAYROLL"; sourceId: string; draft: DraftJournal | null }[] = [{
                 sourceType: "PAYROLL",
                 sourceId: accrualId,
@@ -464,6 +467,9 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
                         { role: "SALARIES", debit: gross - unpaid },
                         { role: "SALARY_PAYABLE", credit: netPay },
                         { role: "PAYROLL_DEDUCTIONS", credit: withheld },
+                        // Employer PF/ESI: a company cost, owed with the employee deductions
+                        { role: "EMPLOYER_CONTRIBUTIONS", debit: employerCost },
+                        { role: "PAYROLL_DEDUCTIONS", credit: employerCost },
                     ],
                 },
             }]

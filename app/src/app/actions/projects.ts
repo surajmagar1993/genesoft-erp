@@ -1,6 +1,8 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { buildInvoiceLines, contactPlaceOfSupply, type InvoiceLineInput } from "@/lib/invoice-lines"
+import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -1221,5 +1223,105 @@ export async function deleteProjectTime(id: string): Promise<{ success: boolean;
     } catch (err: any) {
         console.error("Failed to delete time entry:", err)
         return { success: false, error: err.message || "Failed to delete time entry" }
+    }
+}
+
+/* ── Project billing ── */
+export interface ProjectInvoiceInput {
+    projectId: string
+    /** TIME: billable, not-yet-billed hours × each member's project rate. FEE: one fixed-fee line. */
+    mode: "TIME" | "FEE"
+    /** Rate for people with no project rate (TIME mode) */
+    defaultRate?: number
+    /** FEE mode amount (defaults to the budget not yet invoiced) */
+    amount?: number
+    description?: string
+}
+
+/**
+ * Bills a project's client: creates a DRAFT invoice (business tax rules,
+ * normal number series) to review and send. Time entries it bills are marked
+ * billed so they're never invoiced twice.
+ */
+export async function createProjectInvoice(input: ProjectInvoiceInput): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
+    const tenantId = await getTenantWriterId()
+    try {
+        const project = await prisma.project.findFirst({
+            where: { id: input.projectId, tenantId },
+            select: { id: true, name: true, projectCode: true, budget: true, clientId: true, client: { select: { displayName: true, email: true, gstin: true, billingAddress: true } } },
+        })
+        if (!project) return { success: false, error: "Project not found" }
+        if (!project.clientId || !project.client) return { success: false, error: "Set the project's client first" }
+
+        let lines: InvoiceLineInput[] = []
+        const entryIds: string[] = []
+        if (input.mode === "TIME") {
+            const entries = await prisma.projectTimeEntry.findMany({
+                where: { tenantId, projectId: project.id, isBillable: true, isBilled: false },
+                select: { id: true, hours: true, employeeId: true, employee: { select: { displayName: true } } },
+            })
+            if (entries.length === 0) return { success: false, error: "No billable hours waiting to be invoiced" }
+            const members = await prisma.projectMember.findMany({ where: { tenantId, projectId: project.id }, select: { employeeId: true, hourlyRate: true } })
+            const rateOf = new Map(members.map((m) => [m.employeeId, Number(m.hourlyRate || 0)]))
+            const byPerson = new Map<string, { name: string; hours: number; ids: string[] }>()
+            for (const e of entries) {
+                const cur = byPerson.get(e.employeeId) ?? { name: e.employee?.displayName || "Team member", hours: 0, ids: [] }
+                cur.hours += Number(e.hours)
+                cur.ids.push(e.id)
+                byPerson.set(e.employeeId, cur)
+            }
+            const missing: string[] = []
+            for (const [employeeId, p] of byPerson) {
+                const rate = rateOf.get(employeeId) || Number(input.defaultRate || 0)
+                if (!(rate > 0)) { missing.push(p.name); continue }
+                lines.push({ description: `${project.name}: ${p.name} — ${Math.round(p.hours * 100) / 100} h`, quantity: Math.round(p.hours * 100) / 100, unitPrice: rate })
+                entryIds.push(...p.ids)
+            }
+            if (missing.length) return { success: false, error: `Add an hourly rate for ${missing.join(", ")} (project team) or enter a default rate` }
+        } else {
+            const already = await prisma.invoice.findMany({
+                where: { tenantId, status: { notIn: ["CANCELLED"] }, billTo: { path: ["projectId"], equals: project.id } },
+                select: { subtotal: true },
+            })
+            const billed = already.reduce((s, i) => s + Number(i.subtotal), 0)
+            const amount = input.amount !== undefined ? Number(input.amount) : Math.max(0, Number(project.budget || 0) - billed)
+            if (!(amount > 0)) return { success: false, error: "Enter the amount to invoice" }
+            lines = [{ description: input.description?.trim() || `${project.name} — project fee`, quantity: 1, unitPrice: Math.round(amount * 100) / 100 }]
+        }
+
+        const built = await buildInvoiceLines(tenantId, lines, contactPlaceOfSupply(project.client))
+        const invoiceNumber = await nextInvoiceNumber(tenantId)
+        const invoice = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+            const inv = await tx.invoice.create({
+                data: {
+                    tenantId,
+                    contactId: project.clientId!,
+                    invoiceNumber,
+                    type: "TAX_INVOICE",
+                    status: "DRAFT",
+                    invoiceDate: new Date(),
+                    billTo: { name: project.client!.displayName, email: project.client!.email || "", gstin: project.client!.gstin || null, address: (project.client!.billingAddress ?? null) as never, reference: project.projectCode || project.name, projectId: project.id },
+                    placeOfSupply: contactPlaceOfSupply(project.client),
+                    subtotal: built.subtotal,
+                    taxAmount: built.taxAmount,
+                    discount: 0,
+                    total: built.total,
+                    currencyCode: built.currencyCode,
+                    notes: `Project ${project.name}`,
+                    items: { create: built.items },
+                },
+                select: { id: true },
+            })
+            if (entryIds.length) {
+                const { count } = await tx.projectTimeEntry.updateMany({ where: { tenantId, id: { in: entryIds }, isBilled: false }, data: { isBilled: true } })
+                if (count !== entryIds.length) throw new Error("Some of these hours were just invoiced elsewhere. Please try again.")
+            }
+            return inv
+        })
+        revalidatePath("/projects")
+        revalidatePath("/sales/invoices")
+        return { success: true, invoiceId: invoice.id }
+    } catch (err) {
+        return { success: false, error: err instanceof Error ? err.message : "Couldn't create the invoice" }
     }
 }

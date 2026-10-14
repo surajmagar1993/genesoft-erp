@@ -1,12 +1,13 @@
 import { prisma } from "@/lib/prisma"
 import { convertAmount } from "@/lib/exchange-rates"
+import { payRunEmployerCost } from "@/lib/payroll-rules"
 
 /**
  * Profit and loss from the business documents, in the business's currency,
  * excluding tax (tax collected or paid isn't income or cost):
  *   revenue  = sales invoices (+ debit notes) − credit notes
  *   COGS     = bill lines for stock products
- *   operating = other bill lines + approved/paid expenses + payroll
+ *   operating = other bill lines + approved/paid expenses + payroll (pay earned + employer PF/ESI)
  * Accrual basis: documents count on their own date, paid or not.
  * Server-only.
  */
@@ -22,7 +23,7 @@ export interface ProfitAndLoss {
 type Dated = { date: Date; amount: number }
 type Num = { toString(): string } | number | string
 type BillRow = { subtotal: Num; discount: Num | null; currencyCode: string | null; billDate: Date; items: { lineTotal: Num; taxAmount: Num; product: { type: string } | null }[] }
-type PayrollRow = { totalGross: Num; periodYear: number; periodMonth: number }
+type PayrollRow = { id: string; totalGross: Num; periodYear: number; periodMonth: number; payslips: { totalGross: Num; unpaidLeaveDeduction: Num | null }[] }
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
@@ -63,7 +64,7 @@ async function loadLines(tenantId: string, start: Date, end: Date) {
         }),
         prisma.payrollRun.findMany({
             where: { tenantId, status: { in: LIVE_PAYROLL as never } },
-            select: { totalGross: true, periodYear: true, periodMonth: true },
+            select: { id: true, totalGross: true, periodYear: true, periodMonth: true, payslips: { select: { totalGross: true, unpaidLeaveDeduction: true } } },
         }),
     ])
 
@@ -91,10 +92,17 @@ async function loadLines(tenantId: string, start: Date, end: Date) {
     const expenseCosts: Dated[] = []
     for (const e of expenses) expenseCosts.push({ date: e.expenseDate, amount: await toBase(Number(e.amount), e.currencyCode) })
 
-    // Payroll is a cost of the month it covers (dated to that month's last day)
-    const payroll: Dated[] = (payrollRuns as PayrollRow[])
-        .map((r) => ({ date: new Date(Date.UTC(r.periodYear, r.periodMonth, 0, 12)), amount: Number(r.totalGross) }))
-        .filter((r: Dated) => r.date >= start && r.date <= end)
+    // Payroll is a cost of the month it covers (dated to that month's last day): pay earned
+    // (gross less unpaid-leave deductions) plus the employer's PF/ESI — the same as the ledger
+    const payroll: Dated[] = []
+    for (const r of payrollRuns as PayrollRow[]) {
+        const date = new Date(Date.UTC(r.periodYear, r.periodMonth, 0, 12))
+        if (date < start || date > end) continue
+        const earned = r.payslips.length
+            ? r.payslips.reduce((sum, p) => sum + Number(p.totalGross) - Number(p.unpaidLeaveDeduction || 0), 0)
+            : Number(r.totalGross)
+        payroll.push({ date, amount: earned + (await payRunEmployerCost(tenantId, r.id)) })
+    }
 
     return { sales, credits, cogs, billCosts, expenseCosts, payroll }
 }

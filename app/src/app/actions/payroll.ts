@@ -4,7 +4,9 @@ import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { getTenantTaxContext } from "@/lib/tenant-tax"
-import { getTenantManagerId } from "@/lib/get-tenant-id"
+import { toActionResult, type ActionResult } from "@/lib/action-result"
+import { ESI_GROSS_LIMIT, getPfWageCeiling, pfWage } from "@/lib/payroll-rules"
+import { getTenantAdminId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
@@ -105,6 +107,8 @@ export interface PayrollOverviewData {
     payRuns: PayrollRunRecord[]
     recentPayslips: PayslipRecord[]
     salaryStructures: SalaryStructureRecord[]
+    /** PF is worked out on basic up to this amount (0 = full basic) */
+    pfWageCeiling: number
     activeEmployees: {
         id: string
         displayName: string
@@ -282,6 +286,7 @@ export async function getPayrollOverview(month?: number, year?: number): Promise
         payRuns,
         recentPayslips,
         salaryStructures,
+        pfWageCeiling: await getPfWageCeiling(tenantId),
         activeEmployees: (employeesRaw as any[]).map((e: any) => ({
             id: e.id,
             displayName: e.displayName,
@@ -445,6 +450,7 @@ export async function generatePayRun(
         })
     }
 
+    const pfCeiling = await getPfWageCeiling(tenantId)
     let totalGrossAccum = 0
     let totalDeductionsAccum = 0
     let totalNetPayAccum = 0
@@ -524,9 +530,10 @@ export async function generatePayRun(
         const totalGross = basicSalary + hra + conveyance + medical + specialAllowance + bonus
 
         // Deductions
-        const pfEmployee = Math.round(basicSalary * (Number(structure.pfEmployeeRate) / 100))
+        // PF on basic up to the PF wage ceiling (Settings; 0 = full basic)
+        const pfEmployee = Math.round(pfWage(basicSalary, pfCeiling) * (Number(structure.pfEmployeeRate) / 100))
         // ESI applicable if gross <= 21,000 INR
-        const esiEmployee = totalGross <= 21000 ? Math.round(totalGross * (Number(structure.esiEmployeeRate) / 100)) : 0
+        const esiEmployee = totalGross <= ESI_GROSS_LIMIT ? Math.round(totalGross * (Number(structure.esiEmployeeRate) / 100)) : 0
         const professionalTax = Number(structure.professionalTax)
         const tdsDeduction = Math.round(totalGross * (Number(structure.tdsPercentage) / 100))
         const otherDeductions = 0
@@ -778,4 +785,19 @@ export async function getPayslipDetails(payslipId: string) {
             currency: tenant?.currencyCode || "INR"
         }
     }
+}
+
+/** Workspace admins set the PF wage ceiling (0 = PF on full basic). */
+export async function updatePfWageCeiling(ceiling: number): Promise<ActionResult<{ pfWageCeiling: number }>> {
+    return toActionResult(async () => {
+        const tenantId = await getTenantAdminId()
+        const value = Number(ceiling)
+        if (!Number.isFinite(value) || value < 0) throw new Error("Enter a ceiling of 0 or more")
+        const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
+        const settings = (tenant?.settings || {}) as Record<string, unknown>
+        const payroll = (settings.payroll || {}) as Record<string, unknown>
+        await prisma.tenant.update({ where: { id: tenantId }, data: { settings: { ...settings, payroll: { ...payroll, pfWageCeiling: value } } as never } })
+        revalidatePath("/hr")
+        return { pfWageCeiling: value }
+    })
 }

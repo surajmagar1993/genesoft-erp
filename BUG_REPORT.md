@@ -13,6 +13,7 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 | 14 Oct 2026 | **M4, M7, M8, M12, M14, M15, M16**, **N6, N7** | Sales order → draft invoice (`convertOrderToInvoice`, once per order); credit limit enforced on issued invoices; account balances only change through journals; leave overlap check + no self-approval for managers; rental returns guarded and refunds validated; work orders won't complete with a raw-material shortage; portal links and public web forms are off for suspended/closed businesses. Covered by `medium-fixes.int.test.ts`. |
 | 14 Oct 2026 | **M9** | No hardcoded ₹ / Indian number format in the app screens: money uses the business's currency (`useTaxRegime().formatMoney`, plain number until it loads) or the document's own currency (`localeForCurrency`); dates use the viewer's locale; discount toggles, chart and Reports page use the right symbol; the India-only e-way notice shows only for INR invoices; the always-₹0 lead "estimated value" row was removed. Remaining ₹ is legitimate (INR pricing page, platform revenue, the INR option in currency pickers). |
 | 14 Oct 2026 | **M1**, **N8** | The Prisma client is now typed everywhere (`src/lib/prisma.ts`) and all `(prisma as any)` / `tx: any` casts (56) are gone, so `tsc` checks every database call. That surfaced N8 and a payslip bug (company email/currency read from fields that don't exist). Covered by `typed-prisma-fixes.int.test.ts`. |
+| 14 Oct 2026 | **M11, M13** | PF is worked out on basic up to the PF wage ceiling (₹15,000 by default, set on HR → Payroll → Salary Structures; 0 = full basic); the employer's PF/ESI is posted to the ledger (Employer PF & ESI expense / payroll liabilities) and counted in the P&L, which agree (`src/lib/payroll-rules.ts`). Projects: "Create invoice" on the Timesheet tab bills unbilled billable hours at each member's project rate (or a default rate), or a fixed fee (default: budget not yet invoiced), as a draft invoice; billed hours are marked so they're never invoiced twice. Covered by `payroll-rules.int.test.ts`, `project-billing.int.test.ts`. |
 
 **N1 🔴 (found while fixing) Most records saved through the Supabase client couldn't be saved at all.** In the live database `updated_at` is NOT NULL with no default on 59 tables and there are no triggers, so every Supabase insert that didn't send `updated_at` failed: **products, quotes, sales orders, bills (and bill items, which also sent a non-existent `tenant_id` and no `id`), CRM tasks, communication-log entries, new accounts and the default chart-of-accounts seed.** Confirmed with inserts inside rolled-back transactions on the live DB (fails without `updated_at`, succeeds with it). Fixed with `stamped()` (`src/lib/db-row.ts`) on every such insert; bill items now get an id and no tenant_id.
 
@@ -204,7 +205,7 @@ There are also 104 `|| "INR"`-style fallbacks. A UAE or UK business sees ₹ in 
 
 **✅ Fixed · M10 🟡 Leave crossing month-end is deducted twice.** A leave overlapping two months counts its full length in **both** months (`payroll.ts:472`).
 
-**M11 🟡 PF and employer costs** (`payroll.ts:497`)
+**✅ Fixed · M11 🟡 PF and employer costs** (`payroll.ts:497`)
 - PF is 12% of the full basic salary with no ₹15,000 wage ceiling.
 - The ₹21,000 ESI threshold is hardcoded.
 - Employer PF/ESI isn't calculated or stored, so company payroll cost is understated, both in reports and in the ledger.
@@ -223,7 +224,7 @@ There are also 104 `|| "INR"`-style fallbacks. A UAE or UK business sees ₹ in 
 
 ### 📁 Projects
 
-**M13 🟡 "Project billing" doesn't exist.** The checklist marks it done, but billable hours and milestones are only tracked; nothing turns them into an invoice.
+**✅ Fixed · M13 🟡 "Project billing" doesn't exist.** The checklist marks it done, but billable hours and milestones are only tracked; nothing turns them into an invoice.
 
 ### 🏠 Rentals
 

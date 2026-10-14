@@ -78,6 +78,7 @@ import {
     removeProjectMember,
     logProjectTime,
     deleteProjectTime,
+    createProjectInvoice,
 } from "@/app/actions/projects"
 import { GanttChartView } from "@/components/projects/gantt-chart-view"
 import {
@@ -97,6 +98,12 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     const { formatMoney, regime: moneyRegime } = useTaxRegime()
     const appLocale = moneyRegime?.locale
     const router = useRouter()
+    // Project billing
+    const [isBillOpen, setIsBillOpen] = useState(false)
+    const [billMode, setBillMode] = useState<"TIME" | "FEE">("TIME")
+    const [billRate, setBillRate] = useState("")
+    const [billAmount, setBillAmount] = useState("")
+    const [billing, setBilling] = useState(false)
     const [isPending, startTransition] = useTransition()
     const [data, setData] = useState<ProjectsOverviewData>(initialData)
 
@@ -1279,15 +1286,78 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                 Detailed log of hours invested by team members on project deliverables.
                             </p>
                         </div>
-                        <Button
-                            size="sm"
-                            className="h-9"
-                            onClick={() => setIsLogTimeOpen(true)}
-                        >
-                            <Clock className="h-4 w-4 mr-1.5" />
-                            Log Work Hours
-                        </Button>
+                        <div className="flex gap-2">
+                            {currentProject && (
+                                <Button size="sm" variant="outline" className="h-9" onClick={() => setIsBillOpen(true)}>
+                                    Create invoice
+                                </Button>
+                            )}
+                            <Button
+                                size="sm"
+                                className="h-9"
+                                onClick={() => setIsLogTimeOpen(true)}
+                            >
+                                <Clock className="h-4 w-4 mr-1.5" />
+                                Log Work Hours
+                            </Button>
+                        </div>
                     </div>
+
+                    <Dialog open={isBillOpen} onOpenChange={setIsBillOpen}>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Invoice {currentProject?.name}</DialogTitle>
+                                <DialogDescription>Creates a draft invoice for the project&apos;s client to review and send.</DialogDescription>
+                            </DialogHeader>
+                            <div className="space-y-3 text-sm">
+                                <label className="flex items-center gap-2">
+                                    <input type="radio" checked={billMode === "TIME"} onChange={() => setBillMode("TIME")} />
+                                    Billable hours not invoiced yet (each person&apos;s project rate)
+                                </label>
+                                {billMode === "TIME" && (
+                                    <div className="space-y-1 pl-6">
+                                        <Label htmlFor="bill-rate" className="text-xs">Rate for people without a project rate (optional)</Label>
+                                        <Input id="bill-rate" type="number" min={0} value={billRate} onChange={(e) => setBillRate(e.target.value)} className="h-8 w-40" />
+                                    </div>
+                                )}
+                                <label className="flex items-center gap-2">
+                                    <input type="radio" checked={billMode === "FEE"} onChange={() => setBillMode("FEE")} />
+                                    Fixed fee
+                                </label>
+                                {billMode === "FEE" && (
+                                    <div className="space-y-1 pl-6">
+                                        <Label htmlFor="bill-amount" className="text-xs">Amount (leave empty for the budget not yet invoiced)</Label>
+                                        <Input id="bill-amount" type="number" min={0} value={billAmount} onChange={(e) => setBillAmount(e.target.value)} className="h-8 w-40" />
+                                    </div>
+                                )}
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsBillOpen(false)}>Cancel</Button>
+                                <Button
+                                    disabled={billing || !currentProject}
+                                    onClick={async () => {
+                                        if (!currentProject) return
+                                        setBilling(true)
+                                        const res = await createProjectInvoice({
+                                            projectId: currentProject.id,
+                                            mode: billMode,
+                                            defaultRate: billRate ? Number(billRate) : undefined,
+                                            amount: billAmount ? Number(billAmount) : undefined,
+                                        })
+                                        setBilling(false)
+                                        if (!res.success || !res.invoiceId) {
+                                            toast.error(res.error || "Couldn't create the invoice")
+                                            return
+                                        }
+                                        toast.success("Draft invoice created. Review and send it.")
+                                        router.push(`/sales/invoices/${res.invoiceId}/edit`)
+                                    }}
+                                >
+                                    Create draft invoice
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
 
                     <Card>
                         <Table>

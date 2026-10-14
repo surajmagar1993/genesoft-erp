@@ -72,7 +72,8 @@ import {
     processPayRun,
     deletePayRun,
     createSalaryStructure,
-    getPayslipDetails
+    getPayslipDetails,
+    updatePfWageCeiling
 } from "@/app/actions/payroll"
 import { RequireRole } from "@/components/auth/role-context"
 
@@ -82,6 +83,14 @@ const MONTH_NAMES = [
 ]
 
 export function PayrollClient({ initialData }: { initialData: PayrollOverviewData }) {
+    const [pfCeiling, setPfCeiling] = useState(String(initialData.pfWageCeiling ?? 15000))
+    const [savingCeiling, startCeiling] = useTransition()
+    const savePfCeiling = () =>
+        startCeiling(async () => {
+            const res = await updatePfWageCeiling(Number(pfCeiling))
+            if (res.success) toast.success(res.data.pfWageCeiling > 0 ? `PF will be worked out on basic pay up to ${res.data.pfWageCeiling}` : "PF will be worked out on full basic pay")
+            else toast.error(res.error)
+        })
     const { formatMoney, regime: moneyRegime } = useTaxRegime()
     const appLocale = moneyRegime?.locale
     const router = useRouter()
@@ -697,6 +706,16 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                 New Structure
                             </Button>
                         </CardHeader>
+                        <div className="flex flex-wrap items-end gap-2 border-t px-6 py-3 text-xs">
+                            <div className="space-y-1">
+                                <Label htmlFor="pf-ceiling" className="text-xs">PF wage ceiling</Label>
+                                <Input id="pf-ceiling" type="number" min={0} step="1" value={pfCeiling} onChange={(e) => setPfCeiling(e.target.value)} className="h-8 w-32 text-xs" />
+                            </div>
+                            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={savePfCeiling} disabled={savingCeiling}>Save</Button>
+                            <p className="text-muted-foreground max-w-md">
+                                PF (employee and employer) is worked out on basic pay up to this amount. The statutory ceiling is 15,000; enter 0 to use full basic pay.
+                            </p>
+                        </div>
                         <CardContent className="p-0">
                             <div className="overflow-x-auto">
                                 <Table>
