@@ -49,7 +49,7 @@ interface RecordTransactionPayload {
  */
 export async function recordTransaction(payload: RecordTransactionPayload) {
   const tenantId = await getTenantWriterId()
-  const { contactId, type, amount, currencyCode = "INR", referenceId, description, date } = payload
+  const { contactId, type, amount, referenceId, description, date } = payload
 
   const transactionAmount = new Prisma.Decimal(amount)
 
@@ -67,8 +67,10 @@ export async function recordTransaction(payload: RecordTransactionPayload) {
 
     if (!tenant || !contact) throw new Error("Tenant or Contact not found")
 
-    // 2. Normalize amount to Base Currency
+    // 2. Normalize amount to Base Currency. Without a currency the amount is
+    // already in the business's own (never assume INR).
     const baseCurrency = tenant.currencyCode
+    const currencyCode = payload.currencyCode || baseCurrency
     let amountInBaseCurrency = transactionAmount
 
     if (currencyCode !== baseCurrency) {

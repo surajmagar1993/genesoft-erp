@@ -1,7 +1,9 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-09-17 | **Status:** P1 100% COMPLETE ✅ | P2 100% COMPLETE ✅ | **P3 in Progress:** Project Management & Invoice Features 100% COMPLETE ✅ | Payroll, Manufacturing, Budgets & RFQ COMPLETE ✅
+> **Last Updated:** 2026-10-14 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
+>
+> The ✅ entries below were written in September 2026 when each module was first built. Several overstate what shipped: the government-filing modules (GST returns, e-way bills, TDS, UAE VAT 201, KSA ZATCA phase 2, UK MTD, Australia BAS) only prepare figures and files, aren't connected to any government system, and are hidden behind `NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`; "official/NIC-compliant/statutory" means "follows the published format", not certified. Stripe/PayPal invoice checkout and portal online payment aren't live. See "Known Gaps" and "Open items".
 
 ---
 
@@ -137,7 +139,7 @@ These are marked done above but are simulated or not enforced. The UI now says s
 - [ ] **Platform Security (`/admin/security`)**: IP blocklist, maintenance mode and the signup switch are enforced (2026-10-13). 2FA, session timeout, login lockout and API rate limits are still stored only (labelled in the UI).
 - [x] **Web Forms**: 5 submissions / 10 min per IP, alert emails escaped and actually sent (2026-10-13). Left: CAPTCHA (the fake settings card was removed).
 - [x] **Recurring invoices**: due profiles run in the daily cron (2026-10-13).
-- [ ] **Tests**: Vitest unit tests cover the security and workflow libraries (`npm test`); no UI or integration tests yet.
+- [x] **Tests**: unit tests (`npm test`) plus integration tests of whole flows against a throwaway PGlite database (`npm run test:integration`: sign-up, invoice → payment → ledger, Razorpay plan checkout, export/close/purge) (2026-10-14). Left: browser (UI) tests.
 - [x] **Password reset**: the reset email linked to a page that didn't exist; added `/auth/confirm` + `/reset-password` and branded Supabase emails (2026-10-13).
 - [ ] **Lint**: 1021 errors, 983 of them `no-explicit-any`; the rest are React Compiler advisories (`set-state-in-effect`, `purity`).
 - [ ] **Dependencies**: non-breaking `npm audit fix` applied in `app/` (48 → 22). The rest are inside the Prisma 7.4 CLI and dev-only shadcn / eslint-config-next and need major upgrades.
@@ -168,3 +170,34 @@ These are marked done above but are simulated or not enforced. The UI now says s
 - [ ] Admin: White Labeling
 - [ ] SaaS: Usage-Based Billing
 - [ ] Integrations: Twilio, Tally/QuickBooks, Google/M365, Zapier/Make, Shopify/WooCommerce
+
+---
+
+## 📋 Open items (review 2026-10-14)
+Done on 2026-10-14: marketing emails with unsubscribe links; workspace data export + close workspace + super admin permanent delete; customer ledger no longer assumes INR (UAE/UK/… balances were converted from INR by mistake); payments moved to Prisma with tenant checks; integration test suite.
+
+**Deferred until go-live (decided by the owner):**
+- [ ] Rotate the credentials in old git history (repo is public): Supabase DB password, Resend key, Razorpay secrets, super admin password. See `GO_LIVE_CHECKLIST.md`.
+- [ ] Database backups: Supabase free plan has none and pauses idle projects (upgrade to Pro, or a nightly dump).
+- [ ] Renew genesoftinfotech.com (expires 2026-12-05, auto-renew off).
+
+**Needs a key or account from the owner:**
+- [ ] Live payments: Razorpay live keys; Stripe keys + webhook (Stripe not configured at all, so non-INR regions can't pay).
+- [ ] `SUPABASE_SERVICE_ROLE_KEY`: needed for inviting team members and for super admin "create tenant" to make a login.
+- [ ] Error monitoring (e.g. Sentry).
+- [ ] `PLATFORM_GSTIN` for Genesoft's own subscription receipts.
+- [ ] Legal review of Privacy, Terms and Refund pages.
+
+**Product gaps:**
+- [ ] Enforce platform 2FA (Supabase TOTP is on, no app screen), session timeout, login lockout, API rate limits (stored only today).
+- [ ] Customer portal online payment of invoices; live Stripe/PayPal invoice checkout.
+- [ ] Workflow "update status" actions; CRM email open tracking; web form CAPTCHA.
+- [ ] REST API (`/api/v1`) for the planned mobile app; then integrations (Tally/QuickBooks, Shopify/WooCommerce, Zapier, Google Workspace, Microsoft 365, Twilio SMS), white-labelling, withholding tax.
+- [ ] Government filing APIs (GSP/NIC/FTA/ZATCA/HMRC/ATO) before turning the filing modules on.
+
+**Engineering:**
+- [ ] Prisma CLI dependencies carry 14 audit warnings (hono, lodash, mysql2… from `prisma dev` tooling, not the running app); fixed only in Prisma 8 (still a release candidate). Upgrade when 8 is stable.
+- [ ] Live database has drifted from `prisma/schema.prisma`: rebuild the schema from the live DB (`prisma db pull` on a copy) and move to real migrations.
+- [ ] ~1,000 lint errors (mostly `any`); browser tests.
+- [ ] The root `package-lock.json` is out of date (Vercel builds from `app/` with `app/package-lock.json`); regenerate or remove it in a coordinated change.
+

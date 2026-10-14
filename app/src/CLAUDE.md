@@ -1,4 +1,4 @@
-> **Last Updated:** 2026-09-12 | **Active Block:** P2 Integrations — WhatsApp Business API Live ✅ | Next: Stripe / PayPal 🔜
+> **Last Updated:** 2026-10-14 | Current rules: root `CLAUDE.md` → Security Rules | Open work: `REMAINING_TASKS.md` → "Open items"
 
 ## 📦 Scope
 Application source code including components, hooks, actions, and utilities.
@@ -17,10 +17,10 @@ Application source code including components, hooks, actions, and utilities.
   - `inventory/barcode-generator-modal.tsx`: Code 128 / QR printable label sheet studio.
   - `notifications-dropdown.tsx`: Interactive notification UI.
   - `admin/dashboard/DashboardCharts.tsx`: Recharts visualizations.
-- `lib/`: Utility functions, Prisma singletons, Statutory Tax engines.
+- `lib/`: Utility functions, Prisma singleton, tax engines. The filing engines (GST returns, e-way, TDS, UAE/KSA/UK/AU returns) only prepare figures and files; they aren't connected to government systems and their screens are hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`).
   - `whatsapp-engine.ts`: Meta Graph API v20.0, E.164 phone normalizer, statutory templates.
   - `gst-returns-engine.ts`: India GSTR-1, GSTR-3B & 2B reconciliation.
-  - `eway-bill-engine.ts`: India E-Way Bill Rule 138 & NIC JSON schema.
+  - `eway-bill-engine.ts`: India e-way bill drafts and bulk-upload JSON (real numbers come from the NIC portal).
   - `tds-engine.ts`: India TDS/TCS calculation engine & Form 26Q compiler.
   - `uae-vat-engine.ts`: UAE VAT 201 7-Emirates return & FAF audit file.
   - `ksa-zatca-engine.ts`: KSA ZATCA Fatoora Phase 1 & 2 XML, TLV QR & Zakat.
@@ -35,6 +35,9 @@ Application source code including components, hooks, actions, and utilities.
   - `smtp-guard.ts`: Rejects private/internal SMTP hosts and non-mail ports.
   - `utils.ts`: `formatCurrency(amount, code)` global formatter.
   - `prisma.ts`: Prisma client singleton with `@prisma/adapter-pg`.
+  - `tenant-data.ts` / `tenant-data-plan.ts`: export a workspace as a ZIP and permanently delete a closed one, from the live catalog's tables and foreign keys.
+  - `workspace-closure.ts`: closure record and 30-day grace period.
+  - `marketing-email.ts` / `unsubscribe-token.ts`: opted-in marketing emails with signed unsubscribe links.
 
 ## 📐 Module Patterns (Standard)
 
@@ -67,5 +70,5 @@ export const dynamic = "force-dynamic";
 ```
 This prevents build-time `DATABASE_URL` errors during `npm run build`.
 
-## 🔥 Next Active Block
-P2 Integrations: Stripe / PayPal (`/settings` or `/finance`) — International multi-currency credit card checkout alongside domestic Razorpay.
+## 🔥 Next
+See "Open items" in `REMAINING_TASKS.md`.

@@ -10,6 +10,8 @@ import { sendSystemEmail } from "@/lib/system-email"
 import { adaptTaxAccounts } from "@/lib/default-accounts"
 import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
 import { toActionResult } from "@/lib/action-result"
+import { purgeTenantData, redactSecrets } from "@/lib/tenant-data"
+import { readClosure } from "@/lib/workspace-closure"
 // import { type Role } from "@prisma/client"
 import { createClient } from "../../../lib/supabase/server"
 import { revalidatePath } from "next/cache"
@@ -260,16 +262,59 @@ async function _extendTenantTrial(tenantId: string, days: number) {
 async function _toggleTenantStatus(tenantId: string, isActive: boolean) {
     await ensureSuperAdmin()
 
+    const current = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
+    if (!current) throw new Error("Tenant not found")
+    const closure = readClosure(current.settings)
+    if (isActive && closure?.status === "PURGED") {
+        throw new Error("This workspace's data was permanently deleted. It can't be reactivated.")
+    }
+    // Activating a workspace its owner closed reopens it
+    const reopening = isActive && closure?.status === "CLOSED"
+    const settings = { ...((current.settings || {}) as Record<string, unknown>) }
+    if (reopening) delete settings.closure
+
     const updated = await prisma.tenant.update({
         where: { id: tenantId },
-        data: { isActive }
+        data: { isActive, ...(reopening ? { settings: settings as never } : {}) }
     })
     
-    await logAdminAction(isActive ? "TENANT_ACTIVATE" : "TENANT_SUSPEND", tenantId, "TENANT")
+    await logAdminAction(reopening ? "TENANT_REOPEN" : isActive ? "TENANT_ACTIVATE" : "TENANT_SUSPEND", tenantId, "TENANT")
 
     revalidatePath('/admin/tenants')
     revalidatePath(`/admin/tenants/${tenantId}`)
     return updated
+}
+
+/**
+ * Permanently deletes a closed workspace's data and logins (see purgeTenantData).
+ * Only for an inactive workspace, after typing its name. Before the closure
+ * grace period ends (or for a workspace that was only suspended), the admin
+ * must confirm the owner asked for immediate deletion.
+ */
+async function _purgeTenant(tenantId: string, confirmName: string, ownerAskedNow = false) {
+    await ensureSuperAdmin()
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, isActive: true, settings: true } })
+    if (!tenant) throw new Error("Tenant not found")
+    if (tenant.isActive) throw new Error("Suspend or close the workspace before deleting its data.")
+    if ((confirmName || "").trim().toLowerCase() !== tenant.name.trim().toLowerCase()) {
+        throw new Error("Type the workspace name exactly to confirm.")
+    }
+    const closure = readClosure(tenant.settings)
+    if (closure?.status === "PURGED") throw new Error("This workspace's data was already deleted.")
+    const graceOver = closure?.status === "CLOSED" && new Date(closure.purgeAfter) <= new Date()
+    if (!graceOver && !ownerAskedNow) {
+        throw new Error(
+            closure
+                ? `The 30-day reopening period runs until ${closure.purgeAfter.slice(0, 10)}. Tick "owner asked for immediate deletion" to delete now.`
+                : `This workspace wasn't closed by its owner. Tick "owner asked for immediate deletion" only if they did.`
+        )
+    }
+
+    const result = await purgeTenantData(tenantId)
+    await logAdminAction("TENANT_PURGE", tenantId, "TENANT", { ...result, ownerAskedNow, tenantName: tenant.name })
+    revalidatePath('/admin/tenants')
+    revalidatePath(`/admin/tenants/${tenantId}`)
+    return result
 }
 
 /**
@@ -326,6 +371,8 @@ export async function getTenantById(tenantId: string) {
 
         return {
             ...tenant,
+            // Never send stored credentials (WhatsApp, gateways, SMTP…) to the browser
+            settings: redactSecrets(tenant.settings),
             totalRevenue: Number(revenueAgg._sum.total || 0),
             auditLogs
         }
@@ -511,7 +558,20 @@ async function _updateTenantDetails(
     if (data.currencyCode !== undefined) updatePayload.currencyCode = data.currencyCode
     if (data.countryCode !== undefined) updatePayload.countryCode = data.countryCode
     if (data.billingRegion !== undefined) updatePayload.billingRegion = data.billingRegion
-    if (data.isActive !== undefined) updatePayload.isActive = data.isActive
+    if (data.isActive !== undefined) {
+        updatePayload.isActive = data.isActive
+        // Same rules as Activate: a purged workspace stays off, a closed one is reopened
+        if (data.isActive) {
+            const current = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true, isActive: true } })
+            const closure = readClosure(current?.settings)
+            if (closure?.status === "PURGED") throw new Error("This workspace's data was permanently deleted. It can't be reactivated.")
+            if (closure?.status === "CLOSED" && !current?.isActive) {
+                const settings = { ...((current?.settings || {}) as Record<string, unknown>) }
+                delete settings.closure
+                updatePayload.settings = settings
+            }
+        }
+    }
     if (data.isTrial !== undefined) updatePayload.isTrial = data.isTrial
     if (data.trialEndsAt !== undefined) {
         updatePayload.trialEndsAt = data.trialEndsAt ? new Date(data.trialEndsAt) : null
@@ -1473,6 +1533,10 @@ export async function extendTenantTrial(...args: Parameters<typeof _extendTenant
 
 export async function toggleTenantStatus(...args: Parameters<typeof _toggleTenantStatus>) {
     return toActionResult(() => _toggleTenantStatus(...args))
+}
+
+export async function purgeTenant(...args: Parameters<typeof _purgeTenant>) {
+    return toActionResult(() => _purgeTenant(...args))
 }
 
 export async function createTenant(...args: Parameters<typeof _createTenant>) {

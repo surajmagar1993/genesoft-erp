@@ -32,7 +32,8 @@ const prismaClientSingleton = () => {
     throw new Error("Misconfigured database connection. Please check your .env files.")
   }
   
-  const pool = new Pool({ connectionString })
+  // PG_POOL_MAX is for the integration tests (one-connection test database); unset in production
+  const pool = new Pool({ connectionString, ...(process.env.PG_POOL_MAX ? { max: Number(process.env.PG_POOL_MAX) } : {}) })
   const adapter = new PrismaPg(pool)
   
   return new PrismaClient({ adapter })

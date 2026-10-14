@@ -2,6 +2,7 @@
 
 import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
+import { readClosure } from "@/lib/workspace-closure"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 
@@ -53,10 +54,13 @@ const getTenantContext = cache(async (): Promise<{ tenantId: string; role: strin
   if (role !== "SUPER_ADMIN") {
     const tenant = await prisma.tenant.findUnique({
       where: { id: profile.tenant_id },
-      select: { isActive: true },
+      select: { isActive: true, settings: true },
     })
     if (tenant && !tenant.isActive) {
       await supabase.auth.signOut()
+      if (readClosure(tenant.settings)) {
+        redirect("/login?error=This+workspace+is+closed.+Contact+support+if+you+want+it+reopened.")
+      }
       redirect("/login?error=This+workspace+has+been+suspended.+Please+contact+support.")
     }
   }

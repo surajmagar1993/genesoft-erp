@@ -44,9 +44,12 @@ import {
 import { generateSaaSInvoice } from "@/app/actions/saas/subscription"
 import { formatSaaSInvoiceReceiptHtml, PlanTier, BillingCycle } from "@/lib/saas-subscription-engine"
 import { Printer, PlusCircle } from "lucide-react"
+import { readClosure } from "@/lib/workspace-closure"
+import { TenantClosureCard } from "./TenantClosureCard"
 
 export function TenantDetailClient({ tenant }: { tenant: any }) {
     const router = useRouter()
+    const closure = readClosure(tenant.settings)
     const [activeTab, setActiveTab] = useState<"overview" | "users" | "records" | "audit">("overview")
     const [isLoading, setIsLoading] = useState(false)
     const [isEditOpen, setIsEditOpen] = useState(false)
@@ -76,7 +79,15 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
     const [isReceiptOpen, setIsReceiptOpen] = useState(false)
 
     const subMeta = (tenant.settings as any)?.subscription || {}
-    const saasInvoices: any[] = Array.isArray(subMeta.invoices) ? subMeta.invoices : []
+    // Stored receipts use issueDate/tier/taxPercent/totalAmount (SaaSPlatformInvoice); add the names this page shows
+    const saasInvoices: any[] = (Array.isArray(subMeta.invoices) ? subMeta.invoices : []).map((inv: any) => ({
+        ...inv,
+        id: inv.id ?? inv.invoiceNumber,
+        date: inv.issueDate ?? inv.date,
+        plan: inv.tier ?? inv.plan,
+        taxRate: inv.taxPercent ?? inv.taxRate,
+        total: inv.totalAmount ?? inv.total,
+    }))
 
     const handleIssueInvoice = async () => {
         try {
@@ -194,7 +205,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                             <div className="flex items-center gap-2">
                                 <h1 className="text-2xl font-bold tracking-tight">{tenant.name}</h1>
                                 <Badge variant={tenant.isActive ? "default" : "destructive"} className="text-[10px] font-bold">
-                                    {tenant.isActive ? "Active" : "Suspended"}
+                                    {tenant.isActive ? "Active" : closure?.status === "PURGED" ? "Data deleted" : closure ? "Closed" : "Suspended"}
                                 </Badge>
                                 <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5">
                                     {tenant.plan}
@@ -254,6 +265,8 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                     </Button>
                 </div>
             </div>
+
+            {!tenant.isActive && <TenantClosureCard tenantId={tenant.id} tenantName={tenant.name} closure={closure} />}
 
             {/* KPI Metric Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

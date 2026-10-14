@@ -2,7 +2,7 @@ import Link from "next/link"
 import { appUrl } from "@/lib/app-url"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards, Zap, Users } from "lucide-react"
+import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards, Zap, Users, Database } from "lucide-react"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
 import { getTenantPaymentGateways } from "@/app/actions/finance/gateways"
 import CompanyProfileTab from "./company-profile-tab"
@@ -10,6 +10,7 @@ import TaxConfigClient from "./tax-config-client"
 import BillingTab from "./billing-tab"
 import PaymentGatewaysTab from "./payment-gateways-tab"
 import TeamTab from "./team-tab"
+import DataAccountTab from "./data-account-tab"
 import { getTenantRole } from "@/lib/get-tenant-id"
 import { getTeamMembers } from "@/app/actions/settings/team"
 import { getBillingPricing } from "@/app/actions/saas/subscription"
@@ -17,7 +18,7 @@ import { getEmailPreferences } from "@/app/actions/settings/email-preferences"
 import { EmailPreferencesCard } from "./email-preferences-card"
 import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
 
-const SETTINGS_TABS = ["organization", "taxation", "account", "gateways", "billing", "team"]
+const SETTINGS_TABS = ["organization", "taxation", "account", "gateways", "billing", "team", "data"]
 
 export default async function SettingsPage({
     searchParams,
@@ -64,7 +65,7 @@ export default async function SettingsPage({
                 </div>
             )}
 
-            <Tabs defaultValue={initialTab === "team" && !isAdmin ? "organization" : initialTab} className="space-y-4">
+            <Tabs defaultValue={(initialTab === "team" || initialTab === "data") && !isAdmin ? "organization" : initialTab} className="space-y-4">
                 <TabsList className="bg-muted/50 p-1">
                     <TabsTrigger value="organization" className="flex items-center gap-2">
                         <Building2 className="h-4 w-4" /> Organization & Branding
@@ -84,6 +85,11 @@ export default async function SettingsPage({
                     {isAdmin && (
                         <TabsTrigger value="team" className="flex items-center gap-2">
                             <Users className="h-4 w-4" /> Team & Roles
+                        </TabsTrigger>
+                    )}
+                    {isAdmin && (
+                        <TabsTrigger value="data" className="flex items-center gap-2">
+                            <Database className="h-4 w-4" /> Data & Account
                         </TabsTrigger>
                     )}
                 </TabsList>
@@ -153,6 +159,13 @@ export default async function SettingsPage({
                 {isAdmin && (
                     <TabsContent value="team">
                         <TeamTab initialMembers={teamMembers} />
+                    </TabsContent>
+                )}
+
+                {/* Export and closing the workspace (workspace admins only) */}
+                {isAdmin && (
+                    <TabsContent value="data">
+                        <DataAccountTab workspaceName={settings?.name || ""} />
                     </TabsContent>
                 )}
             </Tabs>

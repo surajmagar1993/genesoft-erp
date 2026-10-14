@@ -1,4 +1,4 @@
-> **Last Updated:** 2026-09-12 | **Active Block:** P2 Integrations: WhatsApp Business API Live ✅ | Next: Stripe / PayPal 🔜
+> **Last Updated:** 2026-10-14 | **Status:** testing on genesoftdev.vercel.app, not live yet | Open work: `REMAINING_TASKS.md` → "Open items"
 
 ## 🎯 Project Overview
 Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Prisma, and Supabase.
@@ -29,7 +29,7 @@ Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Pri
 - `app/src/app/admin/`: SaaS Super Admin Command Center.
 - `app/src/app/actions/saas/`: Platform-level server actions (stats, charts, health).
 
-## 🔐 Security Rules (2026-10-13)
+## 🔐 Security Rules (current, 2026-10-14)
 - **Tenant isolation is in code, not RLS.** Prisma bypasses Supabase RLS. Every query that takes an id from the client must include the caller's `tenantId` (`findFirst({ where: { id, tenantId } })`, `updateMany`/`deleteMany` with `{ id, tenantId }` and a `count` check). Also verify any *referenced* ids (contact, account, product, warehouse, price list…) belong to the tenant before using them.
 - **Pick the tenant helper by role** (`src/lib/get-tenant-id.ts`): `getTenantId()` for reads and self-service (any role), `getTenantWriterId()` for creating/editing records (USER+, blocks VIEWER), `getTenantManagerId()` for deletes, voids, approvals, finance controls, pricing, credit notes, HR and payroll (MANAGER+), `getTenantAdminId()` for workspace settings and credentials (ADMIN+). Deactivated users (`profiles.is_active = false`) are signed out.
 - **Stored credentials are encrypted.** Use `sealSecret()` when saving and `openSecret()` when using tenant secrets (`src/lib/secret-box.ts`, key from `ENCRYPTION_KEY`). Show them with `maskSecret()`; never return them to the client.
@@ -47,7 +47,8 @@ Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Pri
 - **Countries & tax:** every document follows the business's country (`resolveTaxRegime` in `src/lib/tax-jurisdiction.ts`, server side via `getTenantTaxContext` in `src/lib/tenant-tax.ts`; client via `useTaxRegime`). India = CGST+SGST/IGST, others = one VAT/GST/sales-tax line (`supplyType "single"`, InvoiceItem `vatRate/vatAmount`), KSA adds the ZATCA phase-1 QR. Never assume India, INR, `en-IN`, 18% or Maharashtra. Recompute tax on the server; never trust browser totals.
 - **Filing modules hidden:** GST returns, TDS, e-way, VAT 201, ZATCA returns, MTD, BAS, 1099 are behind `NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES` (`src/lib/features.ts`). Basic tax + Tax Summary are always on.
 - **Go-live / mobile:** see `GO_LIVE_CHECKLIST.md`. Put reusable business logic in `src/lib` so a future REST API for the mobile app can share it.
-- **Tests:** `npm test` (Vitest, `src/**/*.test.ts`).
+- **Tests:** `npm test` = unit tests (`src/**/*.test.ts`); `npm run test:integration` = whole flows (`src/**/*.int.test.ts`: sign-up, invoice → payment → ledger, plan checkout, export/close/purge) against a throwaway in-memory Postgres (PGlite, `src/test/integration/`), never the shared database. `npm run test:all` runs both. Add an integration test when you change a money or data flow.
+- **Workspace data:** Settings → Data & Account lets a workspace admin export everything (`/api/settings/export`, `src/lib/tenant-data.ts`) and close the workspace (`closeWorkspace`, 30-day grace in `src/lib/workspace-closure.ts`). The super admin reopens it with Activate, or deletes it permanently on the tenant page (`purgeTenant` → `purgeTenantData`, one transaction; keeps the tenant row's Genesoft receipts). Both find the tenant's tables from the live Postgres catalog, so a new table with `tenant_id` (or a foreign key to one) is included automatically.
 - **Simulated features** (label them as such in the UI until real): e-way bill numbers are drafts (real ones come from the NIC portal), live Stripe/PayPal invoice checkout isn't wired, portal online payment is off (`PORTAL_ONLINE_PAYMENTS_ENABLED`), workflow "update status" actions only run in the simulator, platform 2FA / session timeout / rate limits are saved but not enforced, web forms have no CAPTCHA.
 
 ## 📝 Design Patterns
@@ -57,7 +58,8 @@ Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Pri
 - **Placeholders**: Professional instructional text only — NO hardcoded examples.
 - **Dynamic Routes**: All API routes accessing the DB use `export const dynamic = "force-dynamic"`.
 
-## ✅ Last Session Summary (2026-09-10)
+## 🗂 Build history (September 2026, as written then)
+> Kept for reference. These notes were written when the modules were first built and several overstate them: the government-filing modules (GST returns, e-way bills, TDS, VAT 201, ZATCA phase 2, MTD, BAS) are hidden and not connected to any government system; starter/demo seeders no longer run in real workspaces; Stripe/PayPal invoice checkout isn't live; "Resend fallback"/simulated sends were removed. The Security Rules above describe the code as it is now.
 - Implemented full SaaS Super Admin Tenant Management CRUD:
   - Created `/admin/tenants/new` manual onboarding & provisioning with automatic Chart of Accounts (39 accounts) seed.
   - Created `/admin/tenants/[id]` 360° Tenant Profile (KPI cards, Organization details, Team Members roster, Business records breakdown, and Super Admin audit trail).
@@ -175,8 +177,8 @@ Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Pri
   - In-place WhatsApp modal dispatch from the invoice action toolbar (`/sales/invoices/[id]`).
   - Verified with 12 standalone test suites, `tsc --noEmit` (0 errors), `npm run build` (clean build), and `graphify update .` (1943 nodes, 6395 edges).
 
-## 🔜 Next Active Block
-P2 Integrations: Stripe / PayPal (`/settings` or `/finance`) — International multi-currency credit card checkout alongside domestic Razorpay.
+## 🔜 Next
+See "Open items" in `REMAINING_TASKS.md` and `GO_LIVE_CHECKLIST.md`.
 
 ---
 *This file follows the Hierarchical Agent Memory pattern.*
