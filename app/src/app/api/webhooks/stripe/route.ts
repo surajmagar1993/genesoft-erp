@@ -1,4 +1,5 @@
 import { stripe } from "@/lib/stripe"
+import { postToLedger } from "@/lib/ledger"
 import { prisma } from "@/lib/prisma"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
@@ -60,14 +61,14 @@ export async function POST(req: Request) {
         : null
 
       if (invoice && !alreadyRecorded) {
-        await prisma.payment.create({
+        const payment = await prisma.payment.create({
           data: {
             tenantId: invoice.tenantId,
             invoiceId: invoice.id,
             contactId: invoice.contactId,
             amount: amount,
             paymentDate: new Date(),
-            paymentMethod: "CREDIT_CARD",
+            paymentMethod: "STRIPE",
             type: "INBOUND",
             reference,
             notes: `Stripe online checkout completed (${session.id})`,
@@ -85,6 +86,7 @@ export async function POST(req: Request) {
           where: { id: invoice.id },
           data: { status: isPaid ? "PAID" : "PARTIALLY_PAID" },
         })
+        await postToLedger(invoice.tenantId, { kind: "payment", id: payment.id })
       }
 
       await prisma.processedStripeEvent.create({

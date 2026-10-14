@@ -174,7 +174,7 @@ These are marked done above but are simulated or not enforced. The UI now says s
 ---
 
 ## 📋 Open items (review 2026-10-14)
-Done on 2026-10-14: built-in error monitoring (System Logs + email alerts, no Sentry); marketing emails with unsubscribe links; workspace data export + close workspace + super admin permanent delete; customer ledger no longer assumes INR (UAE/UK/… balances were converted from INR by mistake); payments moved to Prisma with tenant checks; integration test suite.
+Done on 2026-10-14: general ledger (all documents post double-entry journals; trial balance, balance sheet, account ledger, opening balances, rebuild); P&L fixed (expenses, payroll, credit notes were missing); built-in error monitoring (System Logs + email alerts, no Sentry); marketing emails with unsubscribe links; workspace data export + close workspace + super admin permanent delete; customer ledger no longer assumes INR (UAE/UK/… balances were converted from INR by mistake); payments moved to Prisma with tenant checks; integration test suite.
 
 **Deferred until go-live (decided by the owner):**
 - [ ] Rotate the credentials in old git history (repo is public): Supabase DB password, Resend key, Razorpay secrets, super admin password. See `GO_LIVE_CHECKLIST.md`.
@@ -193,6 +193,10 @@ Done on 2026-10-14: built-in error monitoring (System Logs + email alerts, no Se
 - [ ] Workflow "update status" actions; CRM email open tracking; web form CAPTCHA.
 - [ ] REST API (`/api/v1`) for the planned mobile app; then integrations (Tally/QuickBooks, Shopify/WooCommerce, Zapier, Google Workspace, Microsoft 365, Twilio SMS), white-labelling, withholding tax.
 - [ ] Government filing APIs (GSP/NIC/FTA/ZATCA/HMRC/ATO) before turning the filing modules on.
+
+**Accounting (left):**
+- [ ] Existing businesses: run Finance → General Ledger → "Rebuild ledger" once to post documents created before 2026-10-14.
+- [ ] Period lock / year-end close; fixed assets & depreciation; accruals; stock as an inventory asset (purchases of stock go straight to COGS today); customer/supplier opening balances per contact; TDS on bills in the ledger; employer PF/ESI cost in payroll; bank feeds; Tally/QuickBooks/Xero export.
 
 **Engineering:**
 - [ ] Prisma CLI dependencies carry 14 audit warnings (hono, lodash, mysql2… from `prisma dev` tooling, not the running app); fixed only in Prisma 8 (still a release candidate). Upgrade when 8 is stable.

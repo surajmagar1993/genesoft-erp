@@ -291,7 +291,7 @@ export async function recordOnlineInvoicePayment(params: {
             return { success: false, error: "Invoice not found or unauthorized" }
         }
 
-        const paymentMethod = params.gateway === "STRIPE" ? "CREDIT_CARD" : "WALLET"
+        const paymentMethod = params.gateway === "STRIPE" ? "STRIPE" : "PAYPAL"
 
         // Use standard createPayment to trigger ledger credit & status recalculation atomically
         const result = await createPayment({

@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { postToLedger } from "@/lib/ledger"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
@@ -516,7 +517,8 @@ export async function convertChallanToInvoice(challanId: string) {
         })
 
         return { success: true, invoice }
-    }).then((res: any) => {
+    }).then(async (res: any) => {
+        await postToLedger(tenantId, { kind: "invoice", id: res.invoice.id })
         revalidatePath("/sales/delivery-challans")
         revalidatePath("/sales/invoices")
         return res

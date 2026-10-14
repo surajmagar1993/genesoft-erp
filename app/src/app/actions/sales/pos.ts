@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { postToLedger } from "@/lib/ledger"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantTaxContext, invoiceItemTaxColumns, productTaxRate } from "@/lib/tenant-tax"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -274,7 +275,7 @@ export async function createPOSSale(
       OTHER: "OTHER",
     }
 
-    await prisma.payment.create({
+    const posPayment = await prisma.payment.create({
       data: {
         tenantId,
         invoiceId: invoice.id,
@@ -298,6 +299,9 @@ export async function createPOSSale(
         },
       })
     }
+
+    await postToLedger(tenantId, { kind: "invoice", id: invoice.id })
+    await postToLedger(tenantId, { kind: "payment", id: posPayment.id })
 
     revalidatePath("/sales/invoices")
     revalidatePath("/sales/pos")

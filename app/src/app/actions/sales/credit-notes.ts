@@ -5,6 +5,7 @@ import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
+import { CREDIT_APPLICATION_PREFIX, postToLedger } from "@/lib/ledger"
 import {
     CreditNoteStatus,
     CreditNoteReason,
@@ -626,7 +627,7 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
         await recordTransaction({
             contactId: input.contactId,
             type: "CREDIT_NOTE",
-            amount: total,
+            amount: -Math.abs(total), // the customer owes less
             referenceId: newCreditNote.id,
             description: `Credit Note #${newCreditNote.creditNoteNumber}`,
             date: newCreditNote.issueDate,
@@ -634,6 +635,8 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
     } catch {
         // Continue if optional ledger recording hook encounters non-critical sync discrepancy
     }
+
+    await postToLedger(tenantId, { kind: "creditNote", id: newCreditNote.id })
 
     revalidatePath("/sales/credit-notes")
     revalidatePath("/finance/receivable")
@@ -658,13 +661,14 @@ export async function applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
 
     const currentRemaining = Number(creditNote.remainingBalance)
     if (amount > currentRemaining) {
-        throw new Error(`Amount cannot exceed available credit balance (₹${currentRemaining})`)
+        throw new Error(`Amount cannot exceed the available credit balance (${creditNote.currencyCode} ${currentRemaining})`)
     }
 
     const invoice = await prisma.invoice.findUnique({
         where: { id: invoiceId, tenantId }
     })
     if (!invoice) throw new Error("Invoice not found")
+    if (invoice.contactId !== creditNote.contactId) throw new Error("This credit note belongs to a different customer")
 
     const newAllocated = Number(creditNote.allocatedAmount) + amount
     const newRemaining = currentRemaining - amount
@@ -682,14 +686,18 @@ export async function applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
         })
 
         // Record payment towards invoice from credit memo
+        // Settles the invoice from the customer's credit: no money moves, so no ledger journal (see CREDIT_APPLICATION_PREFIX)
         await tx.payment.create({
             data: {
                 tenantId,
                 invoiceId,
+                contactId: invoice.contactId,
                 amount,
+                type: "INBOUND",
                 paymentDate: new Date(),
-                paymentMethod: "CREDIT_NOTE",
-                reference: creditNote.creditNoteNumber,
+                paymentMethod: "OTHER",
+                currencyCode: invoice.currencyCode,
+                reference: `${CREDIT_APPLICATION_PREFIX}${creditNote.creditNoteNumber}`,
                 notes: `Applied Credit Note #${creditNote.creditNoteNumber}`,
             }
         })
@@ -738,7 +746,7 @@ export async function recordCreditNoteRefund(input: RecordCreditNoteRefundInput)
 
     const currentRemaining = Number(creditNote.remainingBalance)
     if (amount > currentRemaining) {
-        throw new Error(`Refund amount cannot exceed open credit balance (₹${currentRemaining})`)
+        throw new Error(`Refund amount cannot exceed the open credit balance (${creditNote.currencyCode} ${currentRemaining})`)
     }
 
     const newAllocated = Number(creditNote.allocatedAmount) + amount
@@ -786,6 +794,8 @@ export async function recordCreditNoteRefund(input: RecordCreditNoteRefundInput)
         // Handled silently
     }
 
+    await postToLedger(tenantId, { kind: "creditNoteRefund", id: refund.id })
+
     revalidatePath("/sales/credit-notes")
     return refund
 }
@@ -814,6 +824,21 @@ export async function voidCreditNote(creditNoteId: string) {
             remainingBalance: 0,
         }
     })
+    await postToLedger(tenantId, { kind: "creditNote", id: creditNoteId })
+    // Undo the credit on the customer's statement
+    try {
+        await recordTransaction({
+            contactId: creditNote.contactId,
+            type: "CREDIT_NOTE",
+            amount: Math.abs(Number(creditNote.total)),
+            currencyCode: creditNote.currencyCode,
+            referenceId: creditNote.id,
+            description: `Credit Note #${creditNote.creditNoteNumber} voided`,
+            date: new Date(),
+        })
+    } catch (err) {
+        console.error("Customer ledger update failed when voiding credit note:", err)
+    }
 
     revalidatePath("/sales/credit-notes")
     return { success: true }

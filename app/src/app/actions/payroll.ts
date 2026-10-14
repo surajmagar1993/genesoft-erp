@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { postToLedger } from "@/lib/ledger"
 import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { getTenantManagerId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
@@ -616,6 +617,7 @@ export async function approvePayRun(payRunId: string) {
         }
     })
 
+    await postToLedger(tenantId, { kind: "payrollRun", id: payRunId })
     revalidatePath("/hr")
     return { success: true, run: updated }
 }
@@ -661,6 +663,7 @@ export async function processPayRun(
         })
     })
 
+    await postToLedger(tenantId, { kind: "payrollRun", id: payRunId })
     revalidatePath("/hr")
     return { success: true }
 }

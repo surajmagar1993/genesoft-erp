@@ -246,7 +246,7 @@ export function simulateOnlinePayment(params: {
         transactionId: simTxId,
         amount: params.amount,
         currency: params.currency.toUpperCase(),
-        paymentMethod: params.gateway === "STRIPE" ? "CREDIT_CARD" : "WALLET",
+        paymentMethod: params.gateway === "STRIPE" ? "STRIPE" : "PAYPAL",
         status: "COMPLETED",
         simulated: true,
         timestamp: new Date().toISOString(),

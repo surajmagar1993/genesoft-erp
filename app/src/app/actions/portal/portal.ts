@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { postToLedger } from "@/lib/ledger"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { PORTAL_ONLINE_PAYMENTS_ENABLED } from "./portal-types"
 import type {
@@ -558,14 +559,14 @@ export async function payPortalInvoice(
         : `PAYPAL_SIM_PORTAL_${Date.now()}_${Math.floor(Math.random() * 10000)}`
 
     // 1. Create Payment record
-    await prisma.payment.create({
+    const payment = await prisma.payment.create({
       data: {
         tenantId: contact.tenantId,
         invoiceId: invoice.id,
         contactId: contact.id,
         amount: balanceDue,
         paymentDate: new Date(),
-        paymentMethod: gateway === "STRIPE" ? "CREDIT_CARD" : "WALLET",
+        paymentMethod: gateway === "STRIPE" ? "STRIPE" : "PAYPAL",
         type: "INBOUND",
         reference: `${gateway}:${simTxId}`,
         notes: `Online portal checkout settled via ${gateway}`,
@@ -578,6 +579,7 @@ export async function payPortalInvoice(
       where: { id: invoice.id },
       data: { status: "PAID" },
     })
+    await postToLedger(contact.tenantId, { kind: "payment", id: payment.id })
 
     // 3. Credit contact balance
     await prisma.contact.update({

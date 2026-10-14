@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { postToLedger } from "@/lib/ledger"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { getTenantTaxContext, invoiceItemTaxColumns } from "@/lib/tenant-tax"
 import {
@@ -164,5 +165,6 @@ if (!profile) return { error: "Recurring profile not found" }
         invoiceNumber: result.invoiceNumber,
     }, result.id)
 
+    await postToLedger(tenantId, { kind: "invoice", id: result.id })
     return { invoice: { id: result.id, invoiceNumber: result.invoiceNumber } }
 }

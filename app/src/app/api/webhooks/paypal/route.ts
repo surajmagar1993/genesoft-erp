@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma"
+import { postToLedger } from "@/lib/ledger"
 import { openSecret } from "@/lib/secret-box"
 import { NextResponse } from "next/server"
 
@@ -99,14 +100,14 @@ export async function POST(req: Request) {
                     })
 
                     if (!existing) {
-                        await prisma.payment.create({
+                        const payment = await prisma.payment.create({
                             data: {
                                 tenantId: invoice.tenantId,
                                 invoiceId: invoice.id,
                                 contactId: invoice.contactId,
                                 amount: amount,
                                 paymentDate: new Date(),
-                                paymentMethod: "WALLET",
+                                paymentMethod: "PAYPAL",
                                 type: "INBOUND",
                                 reference: `PAYPAL:${captureId}`,
                                 notes: `PayPal online checkout completed (${captureId})`,
@@ -124,6 +125,7 @@ export async function POST(req: Request) {
                             where: { id: invoice.id },
                             data: { status: isPaid ? "PAID" : "PARTIALLY_PAID" },
                         })
+                        await postToLedger(invoice.tenantId, { kind: "payment", id: payment.id })
                     }
                 }
             }

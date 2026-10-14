@@ -56,6 +56,7 @@ import {
     UserCheck,
     Award,
     Zap,
+    BookOpen,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -142,6 +143,7 @@ const navigation = [
         label: "Finance",
         items: [
             { name: "Chart of Accounts", href: "/finance/accounts", icon: Landmark },
+            { name: "General Ledger", href: "/finance/ledger", icon: BookOpen },
             { name: "Expenses & Ledger", href: "/finance/expenses", icon: ReceiptText },
             { name: "Bank Reconciliation", href: "/finance/bank-reconciliation", icon: Scale },
             { name: "Budgets & Variance", href: "/finance/budgets", icon: Target },

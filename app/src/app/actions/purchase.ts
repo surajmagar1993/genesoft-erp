@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { postToLedger } from "@/lib/ledger"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
@@ -649,6 +650,8 @@ export async function convertPOToBill(data: string | {
 
         return bill
     })
+
+    await postToLedger(tenantId, { kind: "bill", id: result.id })
 
     revalidatePath("/purchase")
     revalidatePath("/finance/bills")

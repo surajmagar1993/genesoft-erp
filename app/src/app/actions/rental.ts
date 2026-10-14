@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { postToLedger } from "@/lib/ledger"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
@@ -1140,6 +1141,8 @@ export async function convertAgreementToInvoice(agreementId: string) {
 
         return inv
     })
+
+    await postToLedger(tenantId, { kind: "invoice", id: newInvoice.id })
 
     revalidatePath("/sales/rental")
     revalidatePath("/sales/invoices")

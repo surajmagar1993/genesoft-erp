@@ -12,6 +12,7 @@ import { computeInvoiceGstSummary } from "@/lib/gst-engine"
 import { cleanTaxRate, getTenantTaxContext, invoiceItemTaxColumns, supplyTypeFor } from "@/lib/tenant-tax"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
+import { postToLedger } from "@/lib/ledger"
 
 /* ── Types ── */
 export type InvoiceStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "CANCELLED"
@@ -390,6 +391,8 @@ export async function createInvoice(
       invoiceNumber: invoice.invoiceNumber,
     }, invoice.id)
 
+    await postToLedger(tenantId, { kind: "invoice", id: invoice.id })
+
     revalidatePath("/sales/invoices")
     return { id: invoice.id, error: null }
   } catch (error: any) {
@@ -538,6 +541,8 @@ export async function updateInvoice(
       }
     }
 
+    await postToLedger(tenantId, { kind: "invoice", id: payload.id })
+
     revalidatePath("/sales/invoices")
     revalidatePath(`/sales/invoices/${payload.id}`)
     revalidatePath(`/sales/invoices/${payload.id}/edit`)
@@ -608,6 +613,8 @@ export async function convertProformaToInvoice(
       }
     }
 
+    await postToLedger(tenantId, { kind: "invoice", id: proformaId })
+
     revalidatePath("/sales/invoices")
     revalidatePath(`/sales/invoices/${proformaId}`)
     return { success: true, newInvoiceNumber }
@@ -622,6 +629,12 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
   const tenantId = await getTenantManagerId()
 
   try {
+    // Only this business's invoice (checked before anything is deleted)
+    const owned = await prisma.invoice.findFirst({ where: { id, tenantId }, select: { id: true } })
+    if (!owned) return { error: "Invoice not found" }
+    // Its payments are deleted with it (cascade); their journals are voided below
+    const paymentIds: string[] = (await prisma.payment.findMany({ where: { invoiceId: id, tenantId }, select: { id: true } })).map((p: { id: string }) => p.id)
+
     // ─── LEDGER INTEGRATION CLEANUP ───
     const entry = await prisma.ledgerEntry.findFirst({
       where: { referenceId: id, tenantId },
@@ -645,6 +658,9 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
     await prisma.invoice.delete({
       where: { id, tenantId },
     })
+
+    await postToLedger(tenantId, { kind: "invoice", id })
+    for (const paymentId of paymentIds) await postToLedger(tenantId, { kind: "payment", id: paymentId })
 
     revalidatePath("/sales/invoices")
     return { error: null }
@@ -738,9 +754,10 @@ export async function sendInvoiceEmail(
 
   // Update status in Prisma
   await prisma.invoice.updateMany({
-    where: { id, tenantId },
+    where: { id, tenantId, status: "DRAFT" },
     data: { status: "SENT" as any },
   })
+  await postToLedger(tenantId, { kind: "invoice", id })
 
   revalidatePath("/sales/invoices")
   revalidatePath(`/sales/invoices/${id}`)

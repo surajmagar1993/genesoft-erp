@@ -8,6 +8,7 @@ import { assertTenantRefs } from "@/lib/tenant-refs"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 import { recordTransaction } from "@/app/actions/crm/ledger"
+import { postToLedger } from "@/lib/ledger"
 
 export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "CREDIT_CARD" | "DEBIT_CARD" | "UPI" | "CHEQUE" | "STRIPE" | "PAYPAL" | "OTHER"
 
@@ -138,6 +139,8 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<{ id
     return { id: null, error: "Failed to record the payment" }
   }
 
+  await postToLedger(tenantId, { kind: "payment", id: paymentId })
+
   // Ledger: a payment received lowers what the customer owes
   if (type === "INBOUND" && payload.contact_id) {
     try {
@@ -203,6 +206,7 @@ export async function deletePayment(id: string): Promise<{ error: string | null 
     console.error("deletePayment error:", error)
     return { error: "Failed to delete the payment" }
   }
+  await postToLedger(tenantId, { kind: "payment", id })
 
   if (p.invoiceId) {
     await syncInvoiceStatus(p.invoiceId)

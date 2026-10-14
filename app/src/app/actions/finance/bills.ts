@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { postToLedger } from "@/lib/ledger"
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
@@ -202,6 +203,8 @@ export async function createBill(data: BillData) {
     }
   }
 
+  await postToLedger(tenantId, { kind: "bill", id: bill.id })
+
   revalidatePath("/finance/bills")
   revalidatePath("/finance/payable")
   return bill
@@ -281,6 +284,8 @@ export async function updateBill(id: string, data: Partial<BillData>) {
     }
   }
 
+  await postToLedger(tenantId, { kind: "bill", id })
+
   revalidatePath("/finance/bills")
   revalidatePath(`/finance/bills/${id}`)
   revalidatePath("/finance/payable")
@@ -348,6 +353,8 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
   try {
     const supabase = await createClient()
     const tenantId = await getTenantManagerId()
+    // Its payments are deleted with it (cascade); their journals are voided after
+    const paymentIds: string[] = (await prisma.payment.findMany({ where: { billId: id, tenantId }, select: { id: true } })).map((p: { id: string }) => p.id)
 
     const { error } = await supabase
       .from("bills")
@@ -382,6 +389,9 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
         console.error("Ledger cleanup failed for bill:", ledgerError)
     }
 
+    await postToLedger(tenantId, { kind: "bill", id })
+    for (const paymentId of paymentIds) await postToLedger(tenantId, { kind: "payment", id: paymentId })
+
     revalidatePath("/finance/bills")
     revalidatePath("/finance/payable")
     return { error: null }
@@ -406,6 +416,7 @@ export async function updateBillStatus(id: string, status: BillStatus) {
   if (error) {
     throw new Error("Failed to update bill status")
   }
+  await postToLedger(tenantId, { kind: "bill", id })
 
   revalidatePath("/finance/bills")
   revalidatePath(`/finance/bills/${id}`)
