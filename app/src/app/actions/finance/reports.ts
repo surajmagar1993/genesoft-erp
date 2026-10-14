@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { convertAmount } from "@/lib/exchange-rates"
 import { prisma } from "@/lib/prisma"
+import { computeMonthlyProfitAndLoss, computeProfitAndLoss } from "@/lib/profit-and-loss"
 
 /* ─────────────────────────────────────────
    Types
@@ -12,13 +13,17 @@ import { prisma } from "@/lib/prisma"
 export interface PnlReport {
   period: { start: string; end: string }
   revenue: {
-    sales: number
+    sales: number        // invoices + debit notes, before tax
+    creditNotes: number  // credit notes, before tax (subtracted)
     other: number
     total: number
   }
   expenses: {
-    cogs: number        // bills / vendor invoices
-    operating: number   // estimated from bills
+    cogs: number         // bill lines for stock products
+    bills: number        // other bill lines
+    expenses: number     // approved / paid expenses (Finance → Expenses)
+    payroll: number      // gross pay of approved payroll runs
+    operating: number    // bills + expenses + payroll
     total: number
   }
   grossProfit: number
@@ -58,91 +63,15 @@ export async function getPnlReport(
   startDate: string,
   endDate: string
 ): Promise<PnlReport> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
-
-  // Fetch Tenant Base Currency
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: tenantId },
-    select: { currencyCode: true }
-  })
-  if (!tenant) throw new Error("Tenant not found")
-  const baseCurrency = tenant.currencyCode
-
-  // Revenue: from invoices (SENT, PARTIALLY_PAID, PAID) in period
-  const { data: invoices } = await supabase
-    .from("invoices")
-    .select("subtotal, total, currency_code")
-    .eq("tenant_id", tenantId)
-    .in("status", ["SENT", "PARTIALLY_PAID", "PAID"])
-    .gte("invoice_date", startDate)
-    .lte("invoice_date", endDate)
-
-  let salesRevenue = 0
-  for (const inv of invoices ?? []) {
-    const rawAmount = Number(inv.subtotal ?? inv.total ?? 0)
-    const normalized = inv.currency_code === baseCurrency
-      ? rawAmount 
-      : (await convertAmount(rawAmount, inv.currency_code, baseCurrency)).toNumber()
-    salesRevenue += normalized
-  }
-
-  // 2. Fetch all bills in period WITH items and products
-  const { data: billsWithItems } = await supabase
-    .from("bills")
-    .select(`
-      id,
-      currency_code,
-      bill_items (
-        line_total,
-        product_id,
-        products (type)
-      )
-    `)
-    .eq("tenant_id", tenantId)
-    .in("status", ["OPEN", "PARTIALLY_PAID", "PAID"])
-    .gte("bill_date", startDate)
-    .lte("bill_date", endDate)
-
-  let cogs = 0
-  let operating = 0
-
-  for (const bill of billsWithItems ?? []) {
-    const billCurrency = bill.currency_code || "INR"
-    for (const item of bill.bill_items as any[]) {
-      const rawAmount = Number(item.line_total || 0)
-      const normalized = billCurrency === baseCurrency
-        ? rawAmount
-        : (await convertAmount(rawAmount, billCurrency, baseCurrency)).toNumber()
-
-      if (item.products?.type === "PRODUCT") {
-        cogs += normalized
-      } else {
-        operating += normalized
-      }
-    }
-  }
-
-  const totalBillExpenses = cogs + operating
-  const grossProfit = salesRevenue - cogs
-  const netProfit = grossProfit - operating
-  const profitMargin = salesRevenue > 0 ? (netProfit / salesRevenue) * 100 : 0
-
+  const pnl = await computeProfitAndLoss(tenantId, startDate, endDate)
   return {
     period: { start: startDate, end: endDate },
-    revenue: {
-      sales: parseFloat(salesRevenue.toFixed(2)),
-      other: 0,
-      total: parseFloat(salesRevenue.toFixed(2)),
-    },
-    expenses: {
-      cogs: parseFloat(cogs.toFixed(2)),
-      operating: parseFloat(operating.toFixed(2)),
-      total: parseFloat(totalBillExpenses.toFixed(2)),
-    },
-    grossProfit: parseFloat(grossProfit.toFixed(2)),
-    netProfit: parseFloat(netProfit.toFixed(2)),
-    profitMargin: parseFloat(profitMargin.toFixed(1)),
+    revenue: { ...pnl.revenue, other: 0 },
+    expenses: pnl.expenses,
+    grossProfit: pnl.grossProfit,
+    netProfit: pnl.netProfit,
+    profitMargin: pnl.profitMargin,
   }
 }
 
@@ -151,70 +80,16 @@ export async function getPnlReport(
 ───────────────────────────────────────── */
 
 export async function getMonthlyRevenue(year: number): Promise<MonthlyRevenue[]> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
-
-  const startDate = `${year}-01-01`
-  const endDate = `${year}-12-31`
-
-  // Fetch Tenant Base Currency
-  const tenant = await prisma.tenant.findUnique({
-    where: { id: tenantId },
-    select: { currencyCode: true }
-  })
-  if (!tenant) throw new Error("Tenant not found")
-  const baseCurrency = tenant.currencyCode
-
-  const { data: invoices } = await supabase
-    .from("invoices")
-    .select("subtotal, total, invoice_date, currency_code")
-    .eq("tenant_id", tenantId)
-    .in("status", ["SENT", "PARTIALLY_PAID", "PAID"])
-    .gte("invoice_date", startDate)
-    .lte("invoice_date", endDate)
-
-  const { data: bills } = await supabase
-    .from("bills")
-    .select("subtotal, total, bill_date, currency_code")
-    .eq("tenant_id", tenantId)
-    .in("status", ["OPEN", "PARTIALLY_PAID", "PAID"])
-    .gte("bill_date", startDate)
-    .lte("bill_date", endDate)
-
-  const result: MonthlyRevenue[] = []
-  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
-  
-  for (let idx = 0; idx < 12; idx++) {
-    const month = monthNames[idx]
-    const monthNum = idx + 1
-    const monthStr = String(monthNum).padStart(2, "0")
-
-    let revenue = 0
-    const monthlyInvoices = (invoices ?? []).filter(inv => inv.invoice_date?.startsWith(`${year}-${monthStr}`))
-    for (const inv of monthlyInvoices) {
-      const raw = Number(inv.subtotal ?? inv.total ?? 0)
-      const normalized = inv.currency_code === baseCurrency ? raw : (await convertAmount(raw, inv.currency_code, baseCurrency)).toNumber()
-      revenue += normalized
-    }
-
-    let expenses = 0
-    const monthlyBills = (bills ?? []).filter(b => b.bill_date?.startsWith(`${year}-${monthStr}`))
-    for (const b of monthlyBills) {
-      const raw = Number(b.subtotal ?? b.total ?? 0)
-      const normalized = (b.currency_code || "INR") === baseCurrency ? raw : (await convertAmount(raw, b.currency_code || "INR", baseCurrency)).toNumber()
-      expenses += normalized
-    }
-
-    result.push({
-      month,
-      year,
-      revenue: parseFloat(revenue.toFixed(2)),
-      expenses: parseFloat(expenses.toFixed(2)),
-      profit: parseFloat((revenue - expenses).toFixed(2)),
-    })
-  }
-
-  return result
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  const months = await computeMonthlyProfitAndLoss(tenantId, year)
+  return months.map((m, idx) => ({
+    month: monthNames[idx],
+    year,
+    revenue: m.revenue.total,
+    expenses: m.expenses.total,
+    profit: m.netProfit,
+  }))
 }
 
 /* ─────────────────────────────────────────

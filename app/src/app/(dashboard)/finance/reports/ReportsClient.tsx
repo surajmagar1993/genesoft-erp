@@ -92,12 +92,15 @@ export default function ReportsClient({
 
   /* ── P&L rows ── */
   const pnlRows = [
-    { label: "Sales Revenue", value: pnl.revenue.sales, type: "revenue" },
-    { label: "Other Income", value: pnl.revenue.other, type: "revenue" },
+    { label: "Sales (before tax)", value: pnl.revenue.sales, type: "revenue" },
+    { label: "Less: Credit Notes", value: -pnl.revenue.creditNotes, type: "expense" },
     { label: "Total Revenue", value: pnl.revenue.total, type: "total", bold: true },
-    { label: "Cost of Goods Sold (COGS)", value: -pnl.expenses.cogs, type: "expense" },
+    { label: "Cost of Goods Sold (stock purchases)", value: -pnl.expenses.cogs, type: "expense" },
     { label: "Gross Profit", value: pnl.grossProfit, type: "gross", bold: true },
-    { label: "Operating Expenses", value: -pnl.expenses.operating, type: "expense" },
+    { label: "Bills (services & other)", value: -pnl.expenses.bills, type: "expense" },
+    { label: "Expenses", value: -pnl.expenses.expenses, type: "expense" },
+    { label: "Payroll (gross pay)", value: -pnl.expenses.payroll, type: "expense" },
+    { label: "Total Operating Expenses", value: -pnl.expenses.operating, type: "total", bold: true },
     { label: "Net Profit / (Loss)", value: pnl.netProfit, type: "net", bold: true, highlight: true },
   ]
 
