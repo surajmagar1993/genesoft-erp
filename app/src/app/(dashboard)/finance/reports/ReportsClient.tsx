@@ -1,4 +1,5 @@
 "use client"
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { COMPLIANCE_MODULES_ENABLED } from "@/lib/features"
 
 import { useState, useMemo, useTransition, useEffect } from "react"
@@ -29,8 +30,6 @@ import type {
 } from "@/app/actions/finance/reports"
 
 /* ── Formatters ── */
-const fmt = (n: number) =>
-  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n)
 
 const pct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`
 
@@ -57,6 +56,9 @@ interface ReportsClientProps {
 export default function ReportsClient({
   pnl, monthly, cashFlow, topContacts, selectedYear, selectedQuarter
 }: ReportsClientProps) {
+  // Money in the business's own currency
+  const { formatMoney } = useTaxRegime()
+  const fmt = (n: number) => formatMoney(n)
   const router = useRouter()
   const [, startTransition] = useTransition()
 

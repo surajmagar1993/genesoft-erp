@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -47,6 +48,8 @@ interface Props {
 }
 
 export default function CompanyDetailClient({ company, contacts, deals, metrics }: Props) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [isDeleting, setIsDeleting] = useState(false)
@@ -309,7 +312,7 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
                     <Calendar className="h-4 w-4" /> Created Date
                   </span>
                   <span className="font-medium">
-                    {new Date(company.created_at).toLocaleDateString("en-IN", {
+                    {new Date(company.created_at).toLocaleDateString(appLocale, {
                       day: "2-digit",
                       month: "short",
                       year: "numeric"
@@ -465,7 +468,7 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                             {deal.expected_close
-                              ? new Date(deal.expected_close).toLocaleDateString("en-IN", {
+                              ? new Date(deal.expected_close).toLocaleDateString(appLocale, {
                                   day: "2-digit",
                                   month: "short",
                                   year: "numeric"

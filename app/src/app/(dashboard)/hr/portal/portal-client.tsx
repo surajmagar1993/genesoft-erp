@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import React, { useState, useEffect, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -62,6 +63,8 @@ interface PortalClientProps {
 }
 
 export function PortalClient({ initialData }: PortalClientProps) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
     const router = useRouter()
     const [data, setData] = useState<EmployeePortalData>(initialData)
     const [activeTab, setActiveTab] = useState("attendance")
@@ -74,8 +77,8 @@ export function PortalClient({ initialData }: PortalClientProps) {
     useEffect(() => {
         const updateClock = () => {
             const now = new Date()
-            setCurrentTime(now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }))
-            setCurrentDateString(now.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }))
+            setCurrentTime(now.toLocaleTimeString(appLocale, { hour: "2-digit", minute: "2-digit", second: "2-digit" }))
+            setCurrentDateString(now.toLocaleDateString(appLocale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }))
         }
         updateClock()
         const interval = setInterval(updateClock, 1000)
@@ -306,7 +309,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                             <DollarSign className="h-3.5 w-3.5 text-amber-500" /> Last Take-Home
                         </CardDescription>
                         <CardTitle className="text-2xl font-bold font-mono text-foreground">
-                            {payslips[0] ? `₹${payslips[0].netSalary.toLocaleString("en-IN")}` : "—"}
+                            {payslips[0] ? `${formatMoney(Number(payslips[0].netSalary))}` : "—"}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 pt-0 text-[11px] text-muted-foreground">
@@ -693,13 +696,13 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                                         {format(new Date(slip.periodYear, slip.periodMonth - 1, 1), "MMMM yyyy")}
                                                     </td>
                                                     <td className="py-2.5 px-4 text-right font-mono">
-                                                        ₹{slip.totalGross.toLocaleString("en-IN")}
+                                                        {formatMoney(Number(slip.totalGross))}
                                                     </td>
                                                     <td className="py-2.5 px-4 text-right font-mono text-rose-600">
-                                                        - ₹{slip.totalDeductions.toLocaleString("en-IN")}
+                                                        - {formatMoney(Number(slip.totalDeductions))}
                                                     </td>
                                                     <td className="py-2.5 px-4 text-right font-mono font-bold text-foreground">
-                                                        ₹{slip.netSalary.toLocaleString("en-IN")}
+                                                        {formatMoney(Number(slip.netSalary))}
                                                     </td>
                                                     <td className="py-2.5 px-4 text-center">
                                                         <Badge variant={slip.status === "PAID" ? "default" : "outline"} className="text-[10px]">
@@ -964,19 +967,19 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                     <div className="space-y-1.5 text-xs">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Basic Salary</span>
-                                            <span className="font-mono font-medium">₹{selectedPayslip.basicSalary.toLocaleString("en-IN")}</span>
+                                            <span className="font-mono font-medium">{formatMoney(Number(selectedPayslip.basicSalary))}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">House Rent (HRA)</span>
-                                            <span className="font-mono font-medium">₹{selectedPayslip.hra.toLocaleString("en-IN")}</span>
+                                            <span className="font-mono font-medium">{formatMoney(Number(selectedPayslip.hra))}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Special Allowance</span>
-                                            <span className="font-mono font-medium">₹{selectedPayslip.specialAllowance.toLocaleString("en-IN")}</span>
+                                            <span className="font-mono font-medium">{formatMoney(Number(selectedPayslip.specialAllowance))}</span>
                                         </div>
                                         <div className="pt-2 border-t flex justify-between font-bold text-emerald-700 dark:text-emerald-400">
                                             <span>Total Gross</span>
-                                            <span className="font-mono">₹{selectedPayslip.totalGross.toLocaleString("en-IN")}</span>
+                                            <span className="font-mono">{formatMoney(Number(selectedPayslip.totalGross))}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -989,23 +992,23 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                     <div className="space-y-1.5 text-xs">
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Provident Fund (PF)</span>
-                                            <span className="font-mono font-medium">₹{selectedPayslip.pfEmployee.toLocaleString("en-IN")}</span>
+                                            <span className="font-mono font-medium">{formatMoney(Number(selectedPayslip.pfEmployee))}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Employee ESI</span>
-                                            <span className="font-mono font-medium">₹{selectedPayslip.esiEmployee.toLocaleString("en-IN")}</span>
+                                            <span className="font-mono font-medium">{formatMoney(Number(selectedPayslip.esiEmployee))}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Professional Tax</span>
-                                            <span className="font-mono font-medium">₹{selectedPayslip.professionalTax.toLocaleString("en-IN")}</span>
+                                            <span className="font-mono font-medium">{formatMoney(Number(selectedPayslip.professionalTax))}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Income Tax (TDS)</span>
-                                            <span className="font-mono font-medium">₹{selectedPayslip.tdsDeduction.toLocaleString("en-IN")}</span>
+                                            <span className="font-mono font-medium">{formatMoney(Number(selectedPayslip.tdsDeduction))}</span>
                                         </div>
                                         <div className="pt-2 border-t flex justify-between font-bold text-rose-700 dark:text-rose-400">
                                             <span>Total Deductions</span>
-                                            <span className="font-mono">₹{selectedPayslip.totalDeductions.toLocaleString("en-IN")}</span>
+                                            <span className="font-mono">{formatMoney(Number(selectedPayslip.totalDeductions))}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1015,7 +1018,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                             <div className="p-4 rounded-lg bg-primary/10 border border-primary/30 flex justify-between items-baseline">
                                 <span className="font-bold text-sm text-foreground uppercase tracking-wider">Net Salary Payable</span>
                                 <span className="text-2xl font-black font-mono text-primary">
-                                    ₹{selectedPayslip.netSalary.toLocaleString("en-IN")}
+                                    {formatMoney(Number(selectedPayslip.netSalary))}
                                 </span>
                             </div>
 

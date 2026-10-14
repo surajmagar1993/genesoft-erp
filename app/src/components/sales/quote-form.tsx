@@ -1,4 +1,5 @@
 "use client"
+import { getCurrencySymbol } from "@/lib/utils"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 
 import { useState, useEffect } from "react"
@@ -130,7 +131,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
         form.discountType === "PERCENT" ? subtotal * (form.discount / 100) : form.discount
     const grandTotal = subtotal + totalTax - discountAmount
 
-    const { formatMoney: formatCurrency, taxLabel, defaultRate } = useTaxRegime()
+    const { formatMoney: formatCurrency, taxLabel, defaultRate, regime } = useTaxRegime()
 
     const handleSave = () => {
         if (!form.customerName.trim()) {
@@ -405,7 +406,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
                                                 className="cursor-pointer px-3 py-1.5 text-xs"
                                                 onClick={() => update("discountType", dt)}
                                             >
-                                                {dt === "PERCENT" ? "%" : "₹"}
+                                                {dt === "PERCENT" ? "%" : getCurrencySymbol(regime?.currency || "INR")}
                                             </Badge>
                                         ))}
                                     </div>

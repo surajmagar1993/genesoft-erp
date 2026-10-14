@@ -1,3 +1,6 @@
+import { formatCurrency } from "@/lib/utils"
+import { prisma } from "@/lib/prisma"
+import { getTenantId } from "@/lib/get-tenant-id"
 import {
   Users,
   Target,
@@ -17,6 +20,8 @@ async function getCRMStats() {
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+  const tenantId = await getTenantId();
+  const currency = (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } }))?.currencyCode || "INR";
 
   const [
     { count: contactsCount },
@@ -48,6 +53,7 @@ async function getCRMStats() {
     deals: dealsCount ?? 0,
     companies: companiesCount ?? 0,
     recentLeads: recentLeads ?? [],
+    currency,
     recentDeals: recentDeals ?? [],
   };
 }
@@ -210,7 +216,7 @@ export default async function CRMPage() {
                     <div className="flex items-center justify-between py-2 border-b border-white/5 hover:bg-white/5 px-2 rounded transition-colors cursor-pointer">
                       <div>
                         <p className="text-white text-sm font-medium">{lead.contact_name ? `${lead.title} · ${lead.contact_name}` : lead.title}</p>
-                        <p className="text-white/40 text-xs">{new Date(lead.created_at).toLocaleDateString("en-IN")}</p>
+                        <p className="text-white/40 text-xs">{new Date(lead.created_at).toLocaleDateString(undefined)}</p>
                       </div>
                       <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 capitalize">
                         {lead.status ?? "new"}
@@ -250,7 +256,7 @@ export default async function CRMPage() {
                         <p className="text-white/40 text-xs capitalize">{deal.stage ?? "—"}</p>
                       </div>
                       <span className="text-xs font-semibold text-green-400">
-                        {deal.value ? `₹${Number(deal.value).toLocaleString("en-IN")}` : "—"}
+                        {deal.value ? formatCurrency(Number(deal.value), stats.currency) : "—"}
                       </span>
                     </div>
                   </Link>

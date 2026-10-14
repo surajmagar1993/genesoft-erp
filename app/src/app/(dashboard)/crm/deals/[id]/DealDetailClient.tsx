@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -63,6 +64,8 @@ interface Props {
 }
 
 export default function DealDetailClient({ deal: initialDeal, contact, company, initialTasks, initialLogs }: Props) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
   const router = useRouter()
   const [deal, setDeal] = useState<Deal>(initialDeal)
   const [isPending, startTransition] = useTransition()
@@ -279,7 +282,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Expected Close</p>
                 <p className="text-xl font-bold mt-1">
                   {deal.expected_close
-                    ? new Date(deal.expected_close).toLocaleDateString("en-IN", {
+                    ? new Date(deal.expected_close).toLocaleDateString(appLocale, {
                         day: "2-digit",
                         month: "short",
                         year: "numeric"
@@ -339,7 +342,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
                       <p className="text-xs text-muted-foreground">Expected Target Date</p>
                       <p className="font-medium mt-0.5">
                         {deal.expected_close
-                          ? new Date(deal.expected_close).toLocaleDateString("en-IN", {
+                          ? new Date(deal.expected_close).toLocaleDateString(appLocale, {
                               day: "2-digit",
                               month: "short",
                               year: "numeric"

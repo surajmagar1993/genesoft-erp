@@ -24,7 +24,7 @@ import EntityCommunications from "@/components/crm/EntityCommunications"
 import { formatCurrency } from "@/lib/utils"
 
 function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString("en-IN", {
+    return new Date(iso).toLocaleDateString(undefined, {
         day: "2-digit",
         month: "short",
         year: "numeric",

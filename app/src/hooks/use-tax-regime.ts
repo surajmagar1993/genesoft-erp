@@ -22,9 +22,12 @@ export function useTaxRegime() {
         cached.then(setRegime).catch(() => {})
     }, [])
 
-    const currency = regime?.currency || "INR"
+    const currency = regime?.currency || ""
+    // Until the business's currency has loaded, show a plain number (never a guessed ₹)
     const formatMoney = (amount: number) =>
-        new Intl.NumberFormat(regime?.locale || localeForCurrency(currency), { style: "currency", currency }).format(amount)
+        currency
+            ? new Intl.NumberFormat(regime?.locale || localeForCurrency(currency), { style: "currency", currency }).format(amount)
+            : new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount)
 
     return { regime, formatMoney, taxLabel: regime?.taxLabel || "Tax", rates: regime?.standardRates || [0], defaultRate: regime?.defaultRate ?? 0 }
 }

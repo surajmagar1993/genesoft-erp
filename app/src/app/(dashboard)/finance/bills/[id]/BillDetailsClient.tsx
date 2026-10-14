@@ -1,4 +1,5 @@
 "use client"
+import { localeForCurrency } from "@/lib/utils"
 import { COMPLIANCE_MODULES_ENABLED } from "@/lib/features"
 
 import { useState, useTransition, useMemo } from "react"
@@ -33,11 +34,11 @@ import { createPayment, deletePayment, CreatePaymentPayload, PaymentMethod } fro
 import { RequireRole } from "@/components/auth/role-context"
 
 const formatCurrency = (amount: number, currency: string = "INR") =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(amount)
+    new Intl.NumberFormat(localeForCurrency(currency), { style: "currency", currency }).format(amount)
 
 const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—"
-    return new Date(dateStr).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    return new Date(dateStr).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
 }
 
 interface Props {

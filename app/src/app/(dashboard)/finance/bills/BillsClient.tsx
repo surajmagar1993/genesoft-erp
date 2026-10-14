@@ -1,5 +1,6 @@
 "use client"
 
+import { localeForCurrency } from "@/lib/utils"
 import { useState } from "react"
 import { 
   Table, 
@@ -70,7 +71,7 @@ export default function BillsClient({ bills, total }: BillsClientProps) {
   }
 
   const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("en-IN", {
+    return new Intl.NumberFormat(localeForCurrency(currency || "INR"), {
       style: "currency",
       currency: currency || "INR",
     }).format(amount)

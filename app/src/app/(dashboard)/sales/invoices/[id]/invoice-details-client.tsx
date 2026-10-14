@@ -1,4 +1,5 @@
 "use client"
+import { localeForCurrency } from "@/lib/utils"
 import { COMPLIANCE_MODULES_ENABLED } from "@/lib/features"
 
 import { useState, useTransition, useMemo } from "react"
@@ -39,11 +40,11 @@ import { INVOICE_TEMPLATES } from "@/components/invoices/templates/invoice-templ
 import { RequireRole } from "@/components/auth/role-context"
 
 const formatCurrency = (amount: number, currency: string = "INR") =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency }).format(amount)
+    new Intl.NumberFormat(localeForCurrency(currency), { style: "currency", currency }).format(amount)
 
 const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—"
-    return new Date(dateStr).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    return new Date(dateStr).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
 }
 
 function calcInvoiceTotal(inv: InvoiceDB) {
@@ -330,7 +331,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
             </div>
 
             {/* Rule 138 E-Way Bill Requirement Notice */}
-            {COMPLIANCE_MODULES_ENABLED && invoice.type === "TAX_INVOICE" && totalInvoiceAmount >= 50000 && !ewayBillNo && (
+            {COMPLIANCE_MODULES_ENABLED && invoice.currency_code === "INR" && invoice.type === "TAX_INVOICE" && totalInvoiceAmount >= 50000 && !ewayBillNo && (
                 <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-amber-800 dark:text-amber-300">
                     <div className="flex items-center gap-2">
                         <Truck className="h-4 w-4 text-amber-600 shrink-0" />

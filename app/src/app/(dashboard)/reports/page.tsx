@@ -1,3 +1,4 @@
+import { getCurrencySymbol } from "@/lib/utils"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -25,7 +26,7 @@ export default async function DashboardPage() {
         getDashboardTrends()
     ])
 
-    const currencySymbol = settings?.currency_code === "INR" ? "₹" : "$"
+    const currencySymbol = getCurrencySymbol(settings?.currency_code || "INR")
 
     const statsConfig = [
         {

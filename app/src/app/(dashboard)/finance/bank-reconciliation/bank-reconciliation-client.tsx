@@ -1,5 +1,6 @@
 "use client"
 
+import { localeForCurrency } from "@/lib/utils"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -129,7 +130,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
 
     // Helper: format currency
     const formatCurrency = (val: number, currency: string = "INR") => {
-        return new Intl.NumberFormat("en-IN", {
+        return new Intl.NumberFormat(localeForCurrency(currency || "INR"), {
             style: "currency",
             currency: currency || "INR",
             maximumFractionDigits: 2,
@@ -620,7 +621,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                             }`}
                         >
                             {data.kpis.isBalanced
-                                ? "₹0.00 (Balanced)"
+                                ? `${formatCurrency(0, activeAccount?.currencyCode)} (Balanced)`
                                 : formatCurrency(Math.abs(data.kpis.difference), activeAccount?.currencyCode)}
                         </div>
                         <div className="flex items-center justify-between mt-1">

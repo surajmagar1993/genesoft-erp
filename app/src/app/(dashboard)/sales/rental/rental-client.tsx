@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -79,6 +80,8 @@ interface RentalClientProps {
 }
 
 export function RentalClient({ initialData }: RentalClientProps) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [data, setData] = useState<RentalOverviewData>(initialData)
@@ -569,7 +572,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                     <CardContent>
                         <div className="text-2xl font-bold">{data.stats.activeAgreements} Active</div>
                         <p className="text-xs text-muted-foreground mt-1">
-                            Contract Value: <span className="font-semibold text-foreground">₹{data.stats.totalContractValue.toLocaleString("en-IN")}</span>
+                            Contract Value: <span className="font-semibold text-foreground">{formatMoney(Number(data.stats.totalContractValue))}</span>
                         </p>
                         <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-2">
                             <TrendingUp className="h-3 w-3 text-emerald-500" />
@@ -584,7 +587,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                         <ShieldCheck className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₹{data.stats.totalDepositHeld.toLocaleString("en-IN")}</div>
+                        <div className="text-2xl font-bold">{formatMoney(Number(data.stats.totalDepositHeld))}</div>
                         <p className="text-xs text-muted-foreground mt-1">
                             Held in escrow against damage & overdue risk
                         </p>
@@ -601,7 +604,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                         <ShieldAlert className="h-4 w-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₹{data.stats.totalDamageFeesCollected.toLocaleString("en-IN")}</div>
+                        <div className="text-2xl font-bold">{formatMoney(Number(data.stats.totalDamageFeesCollected))}</div>
                         <p className="text-xs text-muted-foreground mt-1">
                             Collected fees across {data.returns.length} return inspection(s)
                         </p>
@@ -722,11 +725,11 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="font-semibold">
-                                                    ₹{ag.totalRentalAmount.toLocaleString("en-IN")}
+                                                    {formatMoney(Number(ag.totalRentalAmount))}
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex flex-col text-xs">
-                                                        <span>₹{ag.securityDeposit.toLocaleString("en-IN")}</span>
+                                                        <span>{formatMoney(Number(ag.securityDeposit))}</span>
                                                         <Badge variant="outline" className="text-[10px] w-fit">
                                                             {ag.depositStatus.replace("_", " ")}
                                                         </Badge>
@@ -875,14 +878,14 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                     {asset.warehouseName || "Main Depot"}
                                                 </TableCell>
                                                 <TableCell className="font-semibold">
-                                                    ₹{asset.dailyRate.toLocaleString("en-IN")}/day
+                                                    {formatMoney(Number(asset.dailyRate))}/day
                                                 </TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">
-                                                    <div>W: {asset.weeklyRate ? `₹${asset.weeklyRate.toLocaleString("en-IN")}` : "—"}</div>
-                                                    <div>M: {asset.monthlyRate ? `₹${asset.monthlyRate.toLocaleString("en-IN")}` : "—"}</div>
+                                                    <div>W: {asset.weeklyRate ? `${formatMoney(Number(asset.weeklyRate))}` : "—"}</div>
+                                                    <div>M: {asset.monthlyRate ? `${formatMoney(Number(asset.monthlyRate))}` : "—"}</div>
                                                 </TableCell>
                                                 <TableCell className="text-xs font-medium">
-                                                    ₹{asset.securityDeposit.toLocaleString("en-IN")}
+                                                    {formatMoney(Number(asset.securityDeposit))}
                                                 </TableCell>
                                                 <TableCell>
                                                     {getConditionBadge(asset.condition)}
@@ -1055,13 +1058,13 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex flex-col text-xs">
-                                                        {r.damageFee > 0 && <span className="text-destructive">Damage: ₹{r.damageFee.toLocaleString("en-IN")}</span>}
-                                                        {r.lateFee > 0 && <span className="text-amber-600">Late: ₹{r.lateFee.toLocaleString("en-IN")}</span>}
+                                                        {r.damageFee > 0 && <span className="text-destructive">Damage: {formatMoney(Number(r.damageFee))}</span>}
+                                                        {r.lateFee > 0 && <span className="text-amber-600">Late: {formatMoney(Number(r.lateFee))}</span>}
                                                         {r.damageFee === 0 && r.lateFee === 0 && <span className="text-muted-foreground">None</span>}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="font-semibold text-xs text-emerald-600">
-                                                    ₹{r.depositRefunded.toLocaleString("en-IN")}
+                                                    {formatMoney(Number(r.depositRefunded))}
                                                 </TableCell>
                                                 <TableCell className="text-right text-xs text-muted-foreground">
                                                     {r.inspectedBy || "System Admin"}
@@ -1125,7 +1128,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                         .filter(a => a.status === RentalAssetStatus.AVAILABLE)
                                         .map(a => (
                                             <SelectItem key={a.id} value={a.id}>
-                                                {a.assetCode} — {a.name} (₹{a.dailyRate.toLocaleString("en-IN")}/day, Dep: ₹{a.securityDeposit.toLocaleString("en-IN")})
+                                                {a.assetCode} — {a.name} ({formatMoney(Number(a.dailyRate))}/day, Dep: {formatMoney(Number(a.securityDeposit))})
                                             </SelectItem>
                                         ))}
                                 </SelectContent>
@@ -1186,11 +1189,11 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                     </div>
                                     <div>
                                         <span className="text-xs text-muted-foreground block">Total Rent:</span>
-                                        <span className="font-bold text-primary">₹{estimatedAgreementTotal.toLocaleString("en-IN")}</span>
+                                        <span className="font-bold text-primary">{formatMoney(Number(estimatedAgreementTotal))}</span>
                                     </div>
                                     <div>
                                         <span className="text-xs text-muted-foreground block">Deposit Required:</span>
-                                        <span className="font-semibold text-purple-600">₹{selectedAssetForNewAgreement.securityDeposit.toLocaleString("en-IN")}</span>
+                                        <span className="font-semibold text-purple-600">{formatMoney(Number(selectedAssetForNewAgreement.securityDeposit))}</span>
                                     </div>
                                 </div>
                             </div>
@@ -1282,16 +1285,16 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="space-y-1.5">
-                                <Label>Daily Rate (₹) *</Label>
+                                <Label>Daily Rate *</Label>
                                 <Input
                                     type="number"
-                                    placeholder="₹ / day"
+                                    placeholder="Daily rate"
                                     value={newAsset.dailyRate || ""}
                                     onChange={e => setNewAsset(prev => ({ ...prev, dailyRate: Number(e.target.value) }))}
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label>Weekly Rate (₹)</Label>
+                                <Label>Weekly Rate</Label>
                                 <Input
                                     type="number"
                                     placeholder="Optional"
@@ -1300,7 +1303,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                 />
                             </div>
                             <div className="space-y-1.5">
-                                <Label>Monthly Rate (₹)</Label>
+                                <Label>Monthly Rate</Label>
                                 <Input
                                     type="number"
                                     placeholder="Optional"
@@ -1312,10 +1315,10 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div className="space-y-1.5">
-                                <Label>Security Deposit (₹)</Label>
+                                <Label>Security Deposit</Label>
                                 <Input
                                     type="number"
-                                    placeholder="₹ Deposit"
+                                    placeholder="Deposit amount"
                                     value={newAsset.securityDeposit || ""}
                                     onChange={e => setNewAsset(prev => ({ ...prev, securityDeposit: Number(e.target.value) }))}
                                 />
@@ -1383,7 +1386,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                     Agreement #{selectedAgreementForReturn.agreementNumber} — {selectedAgreementForReturn.contactName}
                                 </div>
                                 <div className="text-muted-foreground">
-                                    Total Security Deposit Held: <span className="font-semibold text-purple-600">₹{selectedAgreementForReturn.securityDeposit.toLocaleString("en-IN")}</span>
+                                    Total Security Deposit Held: <span className="font-semibold text-purple-600">{formatMoney(Number(selectedAgreementForReturn.securityDeposit))}</span>
                                 </div>
                             </div>
 
@@ -1448,7 +1451,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div className="space-y-1.5">
-                                    <Label>Damage Fee (₹)</Label>
+                                    <Label>Damage Fee</Label>
                                     <Input
                                         type="number"
                                         value={returnForm.damageFee || ""}
@@ -1463,7 +1466,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label>Late Return Fee (₹)</Label>
+                                    <Label>Late Return Fee</Label>
                                     <Input
                                         type="number"
                                         value={returnForm.lateFee || ""}
@@ -1478,7 +1481,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label>Deposit Refund (₹)</Label>
+                                    <Label>Deposit Refund</Label>
                                     <Input
                                         type="number"
                                         value={returnForm.depositRefunded || ""}
@@ -1552,7 +1555,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
-                                    <Label>Daily Rate (₹)</Label>
+                                    <Label>Daily Rate</Label>
                                     <Input
                                         type="number"
                                         value={selectedAssetForEdit.dailyRate}
@@ -1560,7 +1563,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label>Security Deposit (₹)</Label>
+                                    <Label>Security Deposit</Label>
                                     <Input
                                         type="number"
                                         value={selectedAssetForEdit.securityDeposit}

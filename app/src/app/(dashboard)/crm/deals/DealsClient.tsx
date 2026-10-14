@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -34,7 +35,7 @@ const stageProbability: Record<DealStage, number> = {
     PROSPECTING: 20, QUALIFICATION: 40, PROPOSAL: 60, NEGOTIATION: 80, CLOSED_WON: 100, CLOSED_LOST: 0,
 }
 
-const formatCurrency = (v: number) => `₹${v.toLocaleString("en-IN")}`
+
 
 interface Props {
     initialDeals: Deal[]
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export default function DealsClient({ initialDeals, total }: Props) {
+    const { formatMoney: formatCurrency } = useTaxRegime()
     const router = useRouter()
     const pathname = usePathname()
     const searchParams = useSearchParams()
@@ -303,7 +305,7 @@ export default function DealsClient({ initialDeals, total }: Props) {
                                                     <span className="font-bold text-sm text-primary">{formatCurrency(deal.value)}</span>
                                                     <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                                         <Calendar className="h-3 w-3" />
-                                                        {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : "—"}
+                                                        {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}
                                                     </div>
                                                 </div>
                                                 <div className="w-full bg-secondary h-1.5 rounded-full mt-3 overflow-hidden">

@@ -1,5 +1,6 @@
 "use client"
 
+import { localeForCurrency } from "@/lib/utils"
 import { useState, useEffect, useCallback } from "react"
 import {
   getPortalDashboard,
@@ -109,7 +110,7 @@ function IconPlus({ className = "" }: { className?: string }) {
 // ────────────────────────────────────────────
 
 function formatCurrency(amount: number, code: string = "INR") {
-  return new Intl.NumberFormat("en-IN", {
+  return new Intl.NumberFormat(localeForCurrency(code), {
     style: "currency",
     currency: code,
     minimumFractionDigits: 2,
@@ -117,7 +118,7 @@ function formatCurrency(amount: number, code: string = "INR") {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
+  return new Date(iso).toLocaleDateString(undefined, {
     day: "2-digit",
     month: "short",
     year: "numeric",

@@ -1,5 +1,6 @@
 "use server"
 
+import { localeForCurrency } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
 import { appUrl } from "@/lib/app-url"
 import { getTenantAdminId, getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -353,8 +354,8 @@ export async function sendInvoiceViaWhatsApp(params: {
             return { success: false, error: "No contact phone number provided for this customer" }
         }
 
-        const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("en-IN", { dateStyle: "medium" }) : "Due upon receipt"
         const currency = invoice.currency_code || tenant?.currencyCode || "INR"
+        const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString(localeForCurrency(currency), { dateStyle: "medium" }) : "Due upon receipt"
         const totalFormatted = `${currency} ${Number(invoice.total_amount).toFixed(2)}`
 
         const portalBase = appUrl()

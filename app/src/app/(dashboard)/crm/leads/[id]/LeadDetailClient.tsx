@@ -258,12 +258,6 @@ export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Pr
                 <div className="mt-6 space-y-4">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground flex items-center gap-2">
-                       <DollarSign className="h-4 w-4" /> Est. Deal Value
-                    </span>
-                    <span className="font-bold text-emerald-600">₹{lead.estimated_value?.toLocaleString() || "0"}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-2">
                        <Calendar className="h-4 w-4" /> Created On
                     </span>
                     <span className="font-medium text-muted-foreground">{new Date(lead.created_at).toLocaleDateString()}</span>

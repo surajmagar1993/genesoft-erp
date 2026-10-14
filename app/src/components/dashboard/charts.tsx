@@ -19,7 +19,7 @@ interface ChartProps {
     currencySymbol?: string
 }
 
-export function RevenueChart({ data, currencySymbol = "₹" }: ChartProps) {
+export function RevenueChart({ data, currencySymbol = "" }: ChartProps) {
     return (
         <Card className="shadow-sm border-none ring-1 ring-slate-200 dark:ring-slate-800">
             <CardHeader>

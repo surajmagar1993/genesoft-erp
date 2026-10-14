@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -63,6 +64,8 @@ interface RecurringInvoicesClientProps {
 }
 
 export default function RecurringInvoicesClient({ initialData }: RecurringInvoicesClientProps) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
@@ -111,7 +114,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
 
     // Helper: format currency
     const formatCurrency = (val: number, currency: string = "INR") => {
-        return new Intl.NumberFormat("en-IN", {
+        return new Intl.NumberFormat(appLocale, {
             style: "currency",
             currency: currency || "INR",
             maximumFractionDigits: 2,
@@ -1206,7 +1209,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                         </div>
 
                                         <div className="col-span-2 space-y-1">
-                                            <span className="text-[10px] text-muted-foreground block">Unit Price (₹)</span>
+                                            <span className="text-[10px] text-muted-foreground block">Unit Price</span>
                                             <Input
                                                 type="number"
                                                 step="0.01"

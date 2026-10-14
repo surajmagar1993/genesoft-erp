@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import {
     ExpenseRecord,
@@ -96,6 +97,8 @@ export default function ExpensesClient({
     vendors,
     employees,
 }: ExpensesClientProps) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
     const [isPending, startTransition] = useTransition()
 
     // Data State
@@ -176,14 +179,8 @@ export default function ExpensesClient({
 
     const [formError, setFormError] = useState<string | null>(null)
 
-    // Helper: Format Currency
-    const formatINR = (val: number) => {
-        return new Intl.NumberFormat("en-IN", {
-            style: "currency",
-            currency: "INR",
-            maximumFractionDigits: 2,
-        }).format(val)
-    }
+    // Money in the business's own currency
+    const formatINR = (val: number) => formatMoney(val)
 
     // Helper: Filtered Expenses
     const filteredExpenses = useMemo(() => {
@@ -336,7 +333,7 @@ export default function ExpensesClient({
         setFormError(null)
 
         if (!isJeBalanced) {
-            setFormError(`Debits (₹${jeTotalDebit.toFixed(2)}) must equal Credits (₹${jeTotalCredit.toFixed(2)})!`)
+            setFormError(`Debits (${formatMoney(Number(jeTotalDebit))}) must equal Credits (${formatMoney(Number(jeTotalCredit))})!`)
             return
         }
 
@@ -611,7 +608,7 @@ export default function ExpensesClient({
                                         <th className="py-3.5 px-4">Expense Details</th>
                                         <th className="py-3.5 px-4">Payee / Vendor</th>
                                         <th className="py-3.5 px-4">Accounts & Method</th>
-                                        <th className="py-3.5 px-4 text-right">Amount (₹)</th>
+                                        <th className="py-3.5 px-4 text-right">Amount</th>
                                         <th className="py-3.5 px-4 text-center">Status</th>
                                         <th className="py-3.5 px-4 text-right">Actions</th>
                                     </tr>
@@ -635,7 +632,7 @@ export default function ExpensesClient({
                                                     )}
                                                 </td>
                                                 <td className="py-3.5 px-4 text-muted-foreground text-xs whitespace-nowrap">
-                                                    {new Date(exp.expenseDate).toLocaleDateString("en-IN", {
+                                                    {new Date(exp.expenseDate).toLocaleDateString(appLocale, {
                                                         day: "2-digit",
                                                         month: "short",
                                                         year: "numeric",
@@ -802,8 +799,8 @@ export default function ExpensesClient({
                                         <th className="py-3.5 px-4">Date</th>
                                         <th className="py-3.5 px-4">Source & Ref</th>
                                         <th className="py-3.5 px-4">Narration / Memo</th>
-                                        <th className="py-3.5 px-4 text-right">Debit (₹)</th>
-                                        <th className="py-3.5 px-4 text-right">Credit (₹)</th>
+                                        <th className="py-3.5 px-4 text-right">Debit</th>
+                                        <th className="py-3.5 px-4 text-right">Credit</th>
                                         <th className="py-3.5 px-4 text-center">Status</th>
                                         <th className="py-3.5 px-4 text-right">Actions</th>
                                     </tr>
@@ -822,7 +819,7 @@ export default function ExpensesClient({
                                                     {je.entryNumber}
                                                 </td>
                                                 <td className="py-3.5 px-4 text-muted-foreground text-xs whitespace-nowrap">
-                                                    {new Date(je.date).toLocaleDateString("en-IN", {
+                                                    {new Date(je.date).toLocaleDateString(appLocale, {
                                                         day: "2-digit",
                                                         month: "short",
                                                         year: "numeric",
@@ -951,9 +948,9 @@ export default function ExpensesClient({
                                                     <th className="py-2.5 px-3">Date</th>
                                                     <th className="py-2.5 px-3">Voucher Ref</th>
                                                     <th className="py-2.5 px-3">Description / Narration</th>
-                                                    <th className="py-2.5 px-3 text-right">Debit (₹)</th>
-                                                    <th className="py-2.5 px-3 text-right">Credit (₹)</th>
-                                                    <th className="py-2.5 px-3 text-right">Running Balance (₹)</th>
+                                                    <th className="py-2.5 px-3 text-right">Debit</th>
+                                                    <th className="py-2.5 px-3 text-right">Credit</th>
+                                                    <th className="py-2.5 px-3 text-right">Running Balance</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-border/60">
@@ -967,7 +964,7 @@ export default function ExpensesClient({
                                                     accountLedgerLines.map((line, idx) => (
                                                         <tr key={idx} className="hover:bg-muted/20">
                                                             <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                                                                {new Date(line.date).toLocaleDateString("en-IN", {
+                                                                {new Date(line.date).toLocaleDateString(appLocale, {
                                                                     day: "2-digit",
                                                                     month: "short",
                                                                     year: "numeric",
@@ -1205,7 +1202,7 @@ export default function ExpensesClient({
 
                             <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-foreground">
-                                    Net Amount (₹, ex-tax) *
+                                    Net Amount (before tax) *
                                 </label>
                                 <Input
                                     type="number"
@@ -1455,8 +1452,8 @@ export default function ExpensesClient({
                                         <tr>
                                             <th className="py-2 px-3 text-left">Account</th>
                                             <th className="py-2 px-3 text-left">Memo</th>
-                                            <th className="py-2 px-3 text-right w-28">Debit (₹)</th>
-                                            <th className="py-2 px-3 text-right w-28">Credit (₹)</th>
+                                            <th className="py-2 px-3 text-right w-28">Debit</th>
+                                            <th className="py-2 px-3 text-right w-28">Credit</th>
                                             <th className="py-2 px-2 text-center w-8"></th>
                                         </tr>
                                     </thead>
@@ -1547,10 +1544,10 @@ export default function ExpensesClient({
                                                 Totals:
                                             </td>
                                             <td className="py-2.5 px-3 text-right font-mono text-emerald-600">
-                                                ₹{jeTotalDebit.toFixed(2)}
+                                                {formatMoney(Number(jeTotalDebit))}
                                             </td>
                                             <td className="py-2.5 px-3 text-right font-mono text-indigo-600">
-                                                ₹{jeTotalCredit.toFixed(2)}
+                                                {formatMoney(Number(jeTotalCredit))}
                                             </td>
                                             <td></td>
                                         </tr>
@@ -1564,12 +1561,12 @@ export default function ExpensesClient({
                                 {isJeBalanced ? (
                                     <span className="text-emerald-600 font-semibold flex items-center gap-1">
                                         <CheckCircle2 className="h-4 w-4" />
-                                        Balanced Entry (₹{jeTotalDebit.toFixed(2)} = ₹{jeTotalCredit.toFixed(2)})
+                                        Balanced Entry ({formatMoney(Number(jeTotalDebit))} = {formatMoney(Number(jeTotalCredit))})
                                     </span>
                                 ) : (
                                     <span className="text-destructive font-semibold flex items-center gap-1">
                                         <XCircle className="h-4 w-4" />
-                                        Unbalanced: Difference of ₹{jeDifference.toFixed(2)}
+                                        Unbalanced: Difference of {formatMoney(Number(jeDifference))}
                                     </span>
                                 )}
                             </div>
@@ -1720,8 +1717,8 @@ export default function ExpensesClient({
                                         <tr>
                                             <th className="p-2.5">Account</th>
                                             <th className="p-2.5">Line Memo</th>
-                                            <th className="p-2.5 text-right">Debit (₹)</th>
-                                            <th className="p-2.5 text-right">Credit (₹)</th>
+                                            <th className="p-2.5 text-right">Debit</th>
+                                            <th className="p-2.5 text-right">Credit</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/60">

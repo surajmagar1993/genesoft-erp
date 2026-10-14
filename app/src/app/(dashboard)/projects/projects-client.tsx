@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -93,6 +94,8 @@ interface ProjectsClientProps {
 }
 
 export function ProjectsClient({ initialData }: ProjectsClientProps) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [data, setData] = useState<ProjectsOverviewData>(initialData)
@@ -746,7 +749,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-foreground">
-                            ₹{data.telemetry.totalBudget.toLocaleString("en-IN", { maximumFractionDigits: 0 })}
+                            {formatMoney(Number(data.telemetry.totalBudget))}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                             Across active client contracts
@@ -1061,7 +1064,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right font-mono text-xs font-medium">
-                                                {p.budget ? `₹${p.budget.toLocaleString("en-IN")}` : "—"}
+                                                {p.budget ? `${formatMoney(Number(p.budget))}` : "—"}
                                             </TableCell>
                                             <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                                                 <RequireRole min="MANAGER"><Button
@@ -1242,7 +1245,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right font-mono text-xs font-semibold">
-                                                {m.hourlyRate ? `₹${m.hourlyRate.toFixed(2)}/hr` : "—"}
+                                                {m.hourlyRate ? `${formatMoney(Number(m.hourlyRate))}/hr` : "—"}
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground">
                                                 {format(new Date(m.joinedAt), "dd MMM yyyy")}

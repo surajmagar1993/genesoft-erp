@@ -1,5 +1,7 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
+import { localeForCurrency } from "@/lib/utils"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
@@ -64,10 +66,10 @@ const TYPE_CONFIG: Record<AccountType, { label: string; color: string; icon: Rea
   EXPENSE: { label: "Expense", color: "bg-amber-50 text-amber-700 border-amber-200", icon: <Landmark className="h-3.5 w-3.5" /> },
 }
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-IN", {
+function formatCurrency(amount: number, currency: string) {
+  return new Intl.NumberFormat(localeForCurrency(currency), {
     style: "currency",
-    currency: "INR",
+    currency,
     minimumFractionDigits: 2,
   }).format(amount)
 }
@@ -77,6 +79,8 @@ interface Props {
 }
 
 export default function AccountsClient({ initialAccounts }: Props) {
+  // Totals are in the business's currency
+  const baseCurrency = useTaxRegime().regime?.currency || initialAccounts.find((a) => a.currency_code)?.currency_code || "INR"
   const router = useRouter()
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts)
   const [searchQuery, setSearchQuery] = useState("")
@@ -178,7 +182,7 @@ export default function AccountsClient({ initialAccounts }: Props) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
-                  <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{formatCurrency(stat.value)}</p>
+                  <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{formatCurrency(stat.value, baseCurrency)}</p>
                 </div>
                 <div className={`h-10 w-10 rounded-lg ${stat.bg} flex items-center justify-center`}>
                   {stat.icon}
@@ -302,7 +306,7 @@ export default function AccountsClient({ initialAccounts }: Props) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
-                        {!account.is_group && formatCurrency(Number(account.balance))}
+                        {!account.is_group && formatCurrency(Number(account.balance), account.currency_code || baseCurrency)}
                       </TableCell>
                       <TableCell>
                         <Badge variant={account.is_active ? "default" : "secondary"} className="text-[10px] h-5">

@@ -1,5 +1,6 @@
 "use client"
 
+import { localeForCurrency } from "@/lib/utils"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Search, Plus, Pencil, Trash2, FileText, Send, CheckCircle2, XCircle, Clock, MoreHorizontal, Download, Eye, Loader2, Receipt, Palette } from "lucide-react"
@@ -41,12 +42,12 @@ const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | 
     CANCELLED: { label: "Cancelled", variant: "destructive", icon: XCircle },
 }
 
-const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
+const formatCurrency = (amount: number, currency = "INR") =>
+    new Intl.NumberFormat(localeForCurrency(currency), { style: "currency", currency }).format(amount)
 
 const formatDate = (dateStr: string) => {
     if (!dateStr) return "—"
-    return new Date(dateStr).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+    return new Date(dateStr).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
 }
 
 interface Props {
@@ -257,7 +258,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-sm font-medium text-slate-600 dark:text-slate-400">{formatDate(inv.invoice_date)}</TableCell>
-                                            <TableCell className="text-right font-black text-slate-900 dark:text-slate-50">{formatCurrency(totalAmount)}</TableCell>
+                                            <TableCell className="text-right font-black text-slate-900 dark:text-slate-50">{formatCurrency(totalAmount, inv.currency_code || "INR")}</TableCell>
                                             <TableCell>
                                                 <Badge variant={cfg.variant as any} className="flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full ring-1 ring-inset shadow-sm">
                                                     <StatusIcon className="h-3 w-3" />

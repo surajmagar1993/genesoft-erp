@@ -1,5 +1,6 @@
 "use client"
 
+import { getCurrencySymbol } from "@/lib/utils"
 import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Plus, Trash2, AlertCircle, ShieldCheck } from "lucide-react"
@@ -876,7 +877,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                         className="cursor-pointer px-3 py-1.5 text-xs"
                         onClick={() => update("discountType", dt)}
                       >
-                        {dt === "PERCENT" ? "%" : "₹"}
+                        {dt === "PERCENT" ? "%" : getCurrencySymbol(regime.currency)}
                       </Badge>
                     ))}
                   </div>

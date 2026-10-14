@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -80,6 +81,8 @@ interface NewCreditNoteItemState {
 }
 
 export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [data, setData] = useState<CreditNotesOverviewData>(initialData)
@@ -291,7 +294,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
             return
         }
         if (applyForm.amount <= 0 || applyForm.amount > selectedCreditNote.remainingBalance) {
-            toast.error(`Amount must be between 1 and ₹${selectedCreditNote.remainingBalance.toLocaleString("en-IN")}`)
+            toast.error(`Amount must be between 1 and ${formatMoney(Number(selectedCreditNote.remainingBalance))}`)
             return
         }
 
@@ -327,7 +330,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
     const handleProcessRefund = () => {
         if (!selectedCreditNote) return
         if (refundForm.amount <= 0 || refundForm.amount > selectedCreditNote.remainingBalance) {
-            toast.error(`Refund amount must be between 1 and ₹${selectedCreditNote.remainingBalance.toLocaleString("en-IN")}`)
+            toast.error(`Refund amount must be between 1 and ${formatMoney(Number(selectedCreditNote.remainingBalance))}`)
             return
         }
 
@@ -442,7 +445,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                         <TrendingDown className="h-4 w-4 text-destructive" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₹{data.stats.totalCreditValue.toLocaleString("en-IN")}</div>
+                        <div className="text-2xl font-bold">{formatMoney(Number(data.stats.totalCreditValue))}</div>
                         <p className="text-xs text-muted-foreground mt-1">
                             Cumulative credit adjustment issued to customers
                         </p>
@@ -456,7 +459,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold text-emerald-600">
-                            ₹{data.stats.openBalance.toLocaleString("en-IN")}
+                            {formatMoney(Number(data.stats.openBalance))}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
                             Eligible to apply against upcoming customer invoices
@@ -470,7 +473,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                         <RotateCcw className="h-4 w-4 text-purple-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">₹{data.stats.totalRefunded.toLocaleString("en-IN")}</div>
+                        <div className="text-2xl font-bold">{formatMoney(Number(data.stats.totalRefunded))}</div>
                         <p className="text-xs text-muted-foreground mt-1">
                             Total direct cash/bank payouts across {data.refunds.length} transaction(s)
                         </p>
@@ -590,10 +593,10 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                     {getReasonBadge(cn.reason)}
                                                 </TableCell>
                                                 <TableCell className="font-semibold">
-                                                    ₹{cn.total.toLocaleString("en-IN")}
+                                                    {formatMoney(Number(cn.total))}
                                                 </TableCell>
                                                 <TableCell className="font-semibold text-emerald-600">
-                                                    ₹{cn.remainingBalance.toLocaleString("en-IN")}
+                                                    {formatMoney(Number(cn.remainingBalance))}
                                                 </TableCell>
                                                 <TableCell>
                                                     {getStatusBadge(cn.status)}
@@ -692,10 +695,10 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                     {getReasonBadge(cn.reason)}
                                                 </TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">
-                                                    ₹{cn.total.toLocaleString("en-IN")}
+                                                    {formatMoney(Number(cn.total))}
                                                 </TableCell>
                                                 <TableCell className="font-bold text-emerald-600">
-                                                    ₹{cn.remainingBalance.toLocaleString("en-IN")}
+                                                    {formatMoney(Number(cn.remainingBalance))}
                                                 </TableCell>
                                                 <TableCell className="text-right">
                                                     <div className="flex items-center justify-end gap-1.5">
@@ -780,7 +783,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                     {r.notes || "—"}
                                                 </TableCell>
                                                 <TableCell className="text-right font-semibold text-purple-600">
-                                                    ₹{r.amount.toLocaleString("en-IN")}
+                                                    {formatMoney(Number(r.amount))}
                                                 </TableCell>
                                             </TableRow>
                                         ))
@@ -840,7 +843,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                     <SelectContent>
                                         {newNoteCustomerInvoices.map(inv => (
                                             <SelectItem key={inv.id} value={inv.id}>
-                                                {inv.invoiceNumber} (Total: ₹{inv.total.toLocaleString("en-IN")})
+                                                {inv.invoiceNumber} (Total: {formatMoney(Number(inv.total))})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -922,7 +925,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                         <SelectItem value="custom">Custom / Service Item</SelectItem>
                                                         {data.availableProducts.map(p => (
                                                             <SelectItem key={p.id} value={p.id}>
-                                                                {p.name} (₹{p.unitPrice})
+                                                                {p.name} ({formatMoney(Number(p.unitPrice))})
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
@@ -961,7 +964,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                 />
                                             </div>
                                             <div className="space-y-1">
-                                                <Label className="text-xs">Unit Rate (₹)</Label>
+                                                <Label className="text-xs">Unit Rate</Label>
                                                 <Input
                                                     type="number"
                                                     className="h-8 text-xs"
@@ -1029,12 +1032,12 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                         {/* Financial summary */}
                         <div className="rounded-xl border bg-muted/40 p-3 flex justify-between items-center text-xs">
                             <div className="space-y-0.5">
-                                <div>Subtotal: ₹{newNoteTotals.subtotal.toLocaleString("en-IN")}</div>
-                                <div>GST Tax: ₹{newNoteTotals.tax.toLocaleString("en-IN")}</div>
+                                <div>Subtotal: {formatMoney(Number(newNoteTotals.subtotal))}</div>
+                                <div>GST Tax: {formatMoney(Number(newNoteTotals.tax))}</div>
                             </div>
                             <div className="text-right">
                                 <span className="text-muted-foreground block">Total Credit Memo Value:</span>
-                                <span className="text-lg font-bold text-primary">₹{newNoteTotals.total.toLocaleString("en-IN")}</span>
+                                <span className="text-lg font-bold text-primary">{formatMoney(Number(newNoteTotals.total))}</span>
                             </div>
                         </div>
 
@@ -1082,7 +1085,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                     Customer: {selectedCreditNote.contactName}
                                 </div>
                                 <div className="text-muted-foreground">
-                                    Available Credit Balance: <span className="font-bold text-emerald-600">₹{selectedCreditNote.remainingBalance.toLocaleString("en-IN")}</span>
+                                    Available Credit Balance: <span className="font-bold text-emerald-600">{formatMoney(Number(selectedCreditNote.remainingBalance))}</span>
                                 </div>
                             </div>
 
@@ -1102,7 +1105,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                     <SelectContent>
                                         {customerOpenInvoices.map(inv => (
                                             <SelectItem key={inv.id} value={inv.id}>
-                                                {inv.invoiceNumber} — Total ₹{inv.total.toLocaleString("en-IN")} ({inv.status})
+                                                {inv.invoiceNumber} — Total {formatMoney(Number(inv.total))} ({inv.status})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -1115,7 +1118,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label>Amount to Apply (₹) *</Label>
+                                <Label>Amount to Apply *</Label>
                                 <Input
                                     type="number"
                                     value={applyForm.amount || ""}
@@ -1157,13 +1160,13 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                     Customer: {selectedCreditNote.contactName}
                                 </div>
                                 <div className="text-muted-foreground">
-                                    Available Credit Balance: <span className="font-bold text-emerald-600">₹{selectedCreditNote.remainingBalance.toLocaleString("en-IN")}</span>
+                                    Available Credit Balance: <span className="font-bold text-emerald-600">{formatMoney(Number(selectedCreditNote.remainingBalance))}</span>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
-                                    <Label>Refund Amount (₹) *</Label>
+                                    <Label>Refund Amount *</Label>
                                     <Input
                                         type="number"
                                         value={refundForm.amount || ""}

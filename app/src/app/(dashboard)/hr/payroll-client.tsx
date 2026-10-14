@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -81,6 +82,8 @@ const MONTH_NAMES = [
 ]
 
 export function PayrollClient({ initialData }: { initialData: PayrollOverviewData }) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [activeTab, setActiveTab] = useState<"payruns" | "slips" | "structures">("payruns")
@@ -735,7 +738,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                         {struct.specialAllowancePct}%
                                                     </TableCell>
                                                     <TableCell className="text-center font-mono text-muted-foreground">
-                                                        ₹{struct.conveyanceMonthly} / ₹{struct.medicalMonthly}
+                                                        {formatMoney(Number(struct.conveyanceMonthly))} / {formatMoney(Number(struct.medicalMonthly))}
                                                     </TableCell>
                                                     <TableCell className="text-center font-mono">
                                                         {struct.pfEmployeeRate}%
@@ -744,7 +747,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                         {struct.esiEmployeeRate}%
                                                     </TableCell>
                                                     <TableCell className="text-center font-mono">
-                                                        ₹{struct.professionalTax}
+                                                        {formatMoney(Number(struct.professionalTax))}
                                                     </TableCell>
                                                     <TableCell className="text-center">
                                                         <Badge variant="secondary" className="font-mono text-[11px]">

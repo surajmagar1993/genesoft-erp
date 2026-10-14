@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -90,6 +91,8 @@ interface BatchSerialTabProps {
 }
 
 export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
@@ -1505,7 +1508,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                 </span>
                                                 {traceResult.batch.costPrice != null && (
                                                     <span className="text-[11px] text-muted-foreground">
-                                                        Unit Cost: ₹{traceResult.batch.costPrice.toFixed(2)}
+                                                        Unit Cost: {formatMoney(Number(traceResult.batch.costPrice))}
                                                     </span>
                                                 )}
                                             </div>
@@ -1720,7 +1723,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold">Unit Cost Price (₹)</Label>
+                                <Label className="text-xs font-semibold">Unit Cost Price</Label>
                                 <Input
                                     type="number"
                                     min="0"

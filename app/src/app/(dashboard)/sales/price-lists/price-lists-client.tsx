@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import {
     PriceListRecord,
@@ -73,6 +74,8 @@ export default function PriceListsClient({
     customers,
     initialMatrixData,
 }: PriceListsClientProps) {
+    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const appLocale = moneyRegime?.locale
     const [isPending, startTransition] = useTransition()
 
     // Data State
@@ -153,7 +156,7 @@ export default function PriceListsClient({
 
     // Format Currency Helper
     const formatINR = (val: number) => {
-        return new Intl.NumberFormat("en-IN", {
+        return new Intl.NumberFormat(appLocale, {
             style: "currency",
             currency: "INR",
             maximumFractionDigits: 2,
@@ -1136,7 +1139,7 @@ export default function PriceListsClient({
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-semibold text-foreground">
-                                        Fixed Custom Price (₹)
+                                        Fixed Custom Price
                                     </label>
                                     <Input
                                         type="number"
