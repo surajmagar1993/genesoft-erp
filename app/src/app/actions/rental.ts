@@ -1,6 +1,7 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { recordContactTransaction } from "@/lib/contact-ledger"
@@ -465,18 +466,9 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
     // Auto-seed if empty
     if (isDemoSeedEnabled()) await autoSeedRentalIfEmpty(tenantId)
 
-    // Check and update overdue agreements automatically
+    // Overdue = active past its end date. Shown here without writing (a page view must not
+    // change data); the daily job saves the OVERDUE status (markOverdueRentals).
     const now = new Date()
-    await prisma.rentalAgreement.updateMany({
-        where: {
-            tenantId,
-            status: RentalStatus.ACTIVE,
-            endDate: { lt: now }
-        },
-        data: {
-            status: RentalStatus.OVERDUE
-        }
-    })
 
     // Fetch assets
     const rawAssets = await prisma.rentalAsset.findMany({
@@ -554,7 +546,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
         totalRentalAmount: Number(ag.totalRentalAmount),
         securityDeposit: Number(ag.securityDeposit),
         depositStatus: ag.depositStatus,
-        status: ag.status,
+        status: ag.status === RentalStatus.ACTIVE && new Date(ag.endDate) < now ? RentalStatus.OVERDUE : ag.status,
         invoiceId: ag.invoiceId,
         invoiceNumber: ag.invoiceId ? invoiceMap.get(ag.invoiceId) || null : null,
         terms: ag.terms,
@@ -696,8 +688,7 @@ export async function createRentalAsset(input: CreateRentalAssetInput) {
     // Generate asset code if not supplied
     let assetCode = input.assetCode?.trim()
     if (!assetCode) {
-        const count = await prisma.rentalAsset.count({ where: { tenantId } })
-        assetCode = `AST-${String(count + 1).padStart(3, "0")}`
+        assetCode = await nextSequence(prisma, "rentalAsset", tenantId, `AST-`, 3)
     }
 
     const newAsset = await prisma.rentalAsset.create({
@@ -810,9 +801,8 @@ export async function createRentalAgreement(input: CreateRentalAgreementInput) {
     const diffDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)))
 
     // Generate agreement number
-    const count = await prisma.rentalAgreement.count({ where: { tenantId } })
     const currentYear = new Date().getFullYear()
-    const agreementNumber = `RNT-${currentYear}-${String(count + 1).padStart(4, "0")}`
+    const agreementNumber = await nextSequence(prisma, "rentalAgreement", tenantId, `RNT-${currentYear}-`, 4)
 
     // Fetch assets to verify availability and rates
     const assetIds = input.items.map(i => i.assetId)

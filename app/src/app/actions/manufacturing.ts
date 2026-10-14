@@ -1,6 +1,7 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -331,9 +332,8 @@ export async function createBOM(input: {
     const ownProducts = await prisma.product.count({ where: { tenantId, id: { in: productIds } } })
     if (ownProducts !== productIds.length) throw new Error("Product not found")
 
-    const count = await prisma.billOfMaterials.count({ where: { tenantId } })
     const currentYear = new Date().getFullYear()
-    const bomNumber = `BOM-${currentYear}-${String(count + 1).padStart(3, "0")}`
+    const bomNumber = await nextSequence(prisma, "bom", tenantId, `BOM-${currentYear}-`, 3)
 
     const laborCost = input.laborCost || 0
     const overheadCost = input.overheadCost || 0
@@ -415,8 +415,7 @@ export async function createWorkOrder(input: {
     const tenantId = await getTenantWriterId()
     const now = new Date()
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
-    const count = await prisma.workOrder.count({ where: { tenantId } })
-    const orderNumber = `WO-${yearMonth}-${String(count + 1).padStart(3, "0")}`
+    const orderNumber = await nextSequence(prisma, "workOrder", tenantId, `WO-${yearMonth}-`, 3)
 
     const bom = await prisma.billOfMaterials.findUnique({
         where: { id: input.bomId, tenantId },
@@ -693,8 +692,7 @@ export async function recordQualityInspection(workOrderId: string, input: {
     const tenantId = await getTenantWriterId()
     const now = new Date()
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
-    const count = await prisma.qualityInspection.count({ where: { tenantId } })
-    const inspectionNumber = `QC-${yearMonth}-${String(count + 1).padStart(3, "0")}`
+    const inspectionNumber = await nextSequence(prisma, "qualityInspection", tenantId, `QC-${yearMonth}-`, 3)
 
     let status: QCStatus = "PASSED"
     if (input.failedQuantity > 0 && input.passedQuantity > 0) {

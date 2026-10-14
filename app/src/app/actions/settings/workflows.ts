@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { nextSequence } from "@/lib/sequence"
 import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import type {
@@ -107,10 +108,7 @@ export async function createWorkflowRule(input: {
     try {
         const tenantId = await getTenantAdminId()
 
-        const count = await prisma.workflowRule.count({
-            where: { tenantId }
-        })
-        const code = `WF-${String(count + 1).padStart(4, "0")}`
+        const code = await nextSequence(prisma, "workflowRule", tenantId, `WF-`, 4)
 
         const created = await prisma.workflowRule.create({
             data: {

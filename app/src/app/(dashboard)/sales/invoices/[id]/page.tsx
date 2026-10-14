@@ -1,3 +1,4 @@
+import { isUuid } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { getInvoiceById } from "@/app/actions/sales/invoices"
 import { getPaymentsByInvoice } from "@/app/actions/finance/payments"
@@ -9,6 +10,7 @@ interface Props {
 
 export default async function InvoiceDetailsPage({ params }: Props) {
     const { id } = await params
+    if (!isUuid(id)) notFound()
     const invoice = await getInvoiceById(id)
     if (!invoice) notFound()
 

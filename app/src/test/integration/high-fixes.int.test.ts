@@ -74,7 +74,7 @@ describe("H4 payroll", () => {
     it("deducts marked absences and only this month's part of a leave crossing month-end", async () => {
         const { tenant, user } = await createTestTenant()
         actAs(user)
-        const emp = await prisma.employee.create({ data: { tenantId: tenant.id, employeeNumber: "EMP-1", firstName: "Asha", displayName: "Asha Rao", email: `asha-${uid()}@example.test`, basicSalary: 30000, status: "ACTIVE" } as never })
+        const emp = await prisma.employee.create({ data: { tenantId: tenant.id, employeeNumber: "EMP-1", firstName: "Asha", displayName: "Asha Rao", email: `asha-${uid()}@example.test`, basicSalary: 30000, status: "ACTIVE", joiningDate: new Date(2025, 0, 1) } as never })
         // Unpaid leave 30 Aug – 2 Sep (4 days): 2 of them are in September
         await prisma.leave.create({ data: { tenantId: tenant.id, employeeId: emp.id, type: "UNPAID", status: "APPROVED", startDate: new Date(2026, 7, 30), endDate: new Date(2026, 8, 2), days: 4, reason: "Family" } as never })
         const att = (day: number, status: string) => prisma.attendance.create({ data: { tenantId: tenant.id, employeeId: emp.id, date: new Date(2026, 8, day, 12), status } as never })
@@ -94,7 +94,7 @@ describe("H4 payroll", () => {
     it("refuses to invent a salary", async () => {
         const { tenant, user } = await createTestTenant()
         actAs(user)
-        await prisma.employee.create({ data: { tenantId: tenant.id, employeeNumber: "EMP-2", firstName: "No", displayName: "No Salary", email: `no-${uid()}@example.test`, status: "ACTIVE" } as never })
+        await prisma.employee.create({ data: { tenantId: tenant.id, employeeNumber: "EMP-2", firstName: "No", displayName: "No Salary", email: `no-${uid()}@example.test`, status: "ACTIVE", joiningDate: new Date(2025, 0, 1) } as never })
         await expect(generatePayRun(9, 2026, "2026-09-30")).rejects.toThrow(/Set a monthly salary for No Salary/)
     })
 })

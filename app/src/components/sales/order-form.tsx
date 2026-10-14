@@ -1,6 +1,7 @@
 "use client"
 import { getCurrencySymbol } from "@/lib/utils"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
+import { getNextOrderNumber } from "@/app/actions/sales/orders"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -97,11 +98,8 @@ export function OrderForm({ initialData, onSave }: OrderFormProps) {
  
     useEffect(() => {
         if (!initialData && !form.orderNumber) {
-            // Generate temporary business ID on client-side mount only
-            setForm(prev => ({ 
-                ...prev, 
-                orderNumber: `ORD-${Date.now().toString().slice(-6)}` 
-            }))
+            // Next number in the business's order series
+            getNextOrderNumber().then((orderNumber) => setForm(prev => (prev.orderNumber ? prev : { ...prev, orderNumber }))).catch(() => {})
         }
     }, [initialData])
 

@@ -5,6 +5,7 @@ import { runWorkflowEvent } from "@/lib/workflow-engine"
 import { syncImapMailbox } from "@/lib/imap-sync"
 import { generateInvoiceFromProfile } from "@/lib/recurring-runner"
 import { pruneSystemLogs, reportError } from "@/lib/error-reporting"
+import { markOverdueRentals } from "@/lib/rental-overdue"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300 // seconds; Vercel caps this per plan
@@ -135,6 +136,14 @@ export async function GET(req: Request) {
         }
     }
 
+    // Rentals past their end date
+    let rentalsOverdue = 0
+    try {
+        rentalsOverdue = await markOverdueRentals(now)
+    } catch (err) {
+        console.error("Marking overdue rentals failed:", err)
+    }
+
     // Keep System Logs to the retention period (SYSTEM_LOG_RETENTION_DAYS, default 30)
     let logsPruned = 0
     try {
@@ -143,5 +152,5 @@ export async function GET(req: Request) {
         console.error("System log pruning failed:", err)
     }
 
-    return NextResponse.json({ ok: true, checked: fired, recurringGenerated, recurringFailed, mailSynced, mailFailed, logsPruned })
+    return NextResponse.json({ ok: true, checked: fired, recurringGenerated, recurringFailed, mailSynced, mailFailed, logsPruned, rentalsOverdue })
 }

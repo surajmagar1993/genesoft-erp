@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { recordContactTransaction } from "@/lib/contact-ledger"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -321,6 +322,17 @@ export async function deleteContact(id: string): Promise<{ error: string | null 
   try {
     const tenantId = await getTenantManagerId()
 
+    // Customers/suppliers with business records can't be deleted (the records keep them)
+    const [invoices, bills, payments] = await Promise.all([
+      prisma.invoice.count({ where: { tenantId, contactId: id } }),
+      prisma.bill.count({ where: { tenantId, contactId: id } }),
+      prisma.payment.count({ where: { tenantId, contactId: id } }),
+    ])
+    if (invoices + bills + payments > 0) {
+      const what = [invoices && `${invoices} invoice(s)`, bills && `${bills} bill(s)`, payments && `${payments} payment(s)`].filter(Boolean).join(", ")
+      return { error: `This contact has ${what}, so it can't be deleted. Mark it inactive instead.` }
+    }
+
     await prisma.contact.delete({
       where: {
         id,
@@ -332,6 +344,7 @@ export async function deleteContact(id: string): Promise<{ error: string | null 
     return { error: null }
   } catch (err: any) {
     console.error("deleteContact failed:", err)
+    if (err?.code === "P2003") return { error: "This contact is still used by other records (deals, quotes, orders…), so it can't be deleted. Mark it inactive instead." }
     return { error: err.message || "Failed to delete contact" }
   }
 }
@@ -343,30 +356,53 @@ export async function exportContacts(limit: number = 1000): Promise<Contact[]> {
 
 export async function importContacts(
   contacts: any[]
-): Promise<{ error: string | null; count: number }> {
+): Promise<{ error: string | null; count: number; skipped?: number }> {
   try {
     const tenantId = await getTenantWriterId()
+    if (!Array.isArray(contacts) || contacts.length === 0) return { error: "The file has no contacts", count: 0 }
+    if (contacts.length > 5000) return { error: "Import up to 5,000 contacts at a time", count: 0 }
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
 
-    const createdRecords = await prisma.$transaction(
-      contacts.map((c) =>
-        prisma.contact.create({
-          data: {
-            tenantId,
-            displayName: c.display_name || c.displayName || "Imported Contact",
-            type: c.type || "INDIVIDUAL",
-            email: c.email || null,
-            phone: c.phone || null,
-            customerGroup: c.customer_group || "retail",
-            currencyCode: c.currency_code || "INR",
-            balance: parseFloat(c.balance) || 0,
-            isActive: c.is_active !== undefined ? c.is_active : true,
-          },
-        })
-      )
+    // Skip people already in the CRM (same email) and repeats within the file
+    const existing = new Set(
+      (await prisma.contact.findMany({ where: { tenantId, email: { not: null } }, select: { email: true } }))
+        .map((c: { email: string | null }) => (c.email || "").toLowerCase())
     )
+    const rows: { data: Record<string, unknown>; balance: number }[] = []
+    let skipped = 0
+    for (const [i, c] of contacts.entries()) {
+      const email = String(c.email || "").trim().toLowerCase() || null
+      if (email && existing.has(email)) { skipped++; continue }
+      if (email) existing.add(email)
+      const type = String(c.type || "INDIVIDUAL").toUpperCase()
+      if (type !== "INDIVIDUAL" && type !== "COMPANY") return { error: `Row ${i + 1}: type must be INDIVIDUAL or COMPANY`, count: 0 }
+      const balance = Number(c.balance || 0)
+      if (!Number.isFinite(balance)) return { error: `Row ${i + 1}: balance isn't a number`, count: 0 }
+      rows.push({
+        balance,
+        data: {
+          tenantId,
+          displayName: String(c.display_name || c.displayName || c.name || email || "Imported Contact").trim(),
+          type,
+          email,
+          phone: c.phone ? String(c.phone) : null,
+          customerGroup: c.customer_group || "retail",
+          currencyCode: String(c.currency_code || tenant?.currencyCode || "INR").toUpperCase(),
+          isActive: c.is_active === undefined || c.is_active === "" ? true : c.is_active === true || c.is_active === "true",
+        },
+      })
+    }
+
+    const created = await prisma.$transaction(rows.map((r) => prisma.contact.create({ data: r.data as never, select: { id: true } })))
+    // An imported balance becomes an opening entry on the customer's statement (not a bare number)
+    for (const [i, r] of rows.entries()) {
+      if (r.balance !== 0) {
+        await recordContactTransaction(tenantId, { contactId: created[i].id, type: "OPENING_BALANCE", amount: r.balance, description: "Opening balance (import)" })
+      }
+    }
 
     revalidatePath("/crm/contacts")
-    return { error: null, count: createdRecords.length }
+    return { error: null, count: created.length, skipped }
   } catch (err: any) {
     console.error("importContacts error:", err)
     return { error: err.message || "Failed to import contacts", count: 0 }

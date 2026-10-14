@@ -1,3 +1,4 @@
+import { isUuid } from "@/lib/utils"
 import { getProductById } from "@/app/actions/sales/products"
 import { notFound } from "next/navigation"
 import { EditProductClient } from "./edit-client"
@@ -12,6 +13,7 @@ interface EditProductPageProps {
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
     const { id } = await params
+    if (!isUuid(id)) notFound()
     const product = await getProductById(id)
 
     if (!product) {

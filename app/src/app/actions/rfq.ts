@@ -1,6 +1,7 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
@@ -379,10 +380,7 @@ export async function createRfq(input: CreateRfqInput) {
     }
 
     const year = new Date().getFullYear()
-    const rfqCount = await prisma.requestForQuotation.count({
-        where: { tenantId }
-    })
-    const rfqNumber = `RFQ-${year}-${String(rfqCount + 1).padStart(4, "0")}`
+    const rfqNumber = await nextSequence(prisma, "rfq", tenantId, `RFQ-${year}-`, 4)
 
     const rfq = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const createdRfq = await tx.requestForQuotation.create({
@@ -616,10 +614,7 @@ export async function awardVendorQuote(rfqId: string, quoteId: string) {
     }
 
     const year = new Date().getFullYear()
-    const poCount = await prisma.purchaseOrder.count({
-        where: { tenantId }
-    })
-    const orderNumber = `PO-${year}-${String(poCount + 1).padStart(4, "0")}`
+    const orderNumber = await nextSequence(prisma, "purchaseOrder", tenantId, `PO-${year}-`, 4)
 
     const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Mark winning quote as ACCEPTED, others as REJECTED

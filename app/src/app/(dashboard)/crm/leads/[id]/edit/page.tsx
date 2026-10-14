@@ -1,9 +1,11 @@
+import { isUuid } from "@/lib/utils"
 import { createClient } from "@/lib/supabase/server"
 import { LeadForm, defaultLeadForm, type LeadFormData } from "@/components/crm/lead-form"
 import { notFound } from "next/navigation"
 
 export default async function EditLeadPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
+    if (!isUuid(id)) notFound()
     const supabase = await createClient()
     const { data, error } = await supabase
         .from("leads")

@@ -1,3 +1,4 @@
+import { isUuid } from "@/lib/utils"
 import { getBill, getVendors, getProducts } from "@/app/actions/finance/bills"
 import { BillForm } from "@/components/finance/bill-form"
 import { notFound } from "next/navigation"
@@ -13,6 +14,7 @@ interface Props {
 
 export default async function EditBillPage({ params }: Props) {
   const { id } = await params
+  if (!isUuid(id)) notFound()
   const [bill, vendorsRes, productsRes] = await Promise.all([
     getBill(id),
     getVendors(),

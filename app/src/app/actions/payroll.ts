@@ -465,6 +465,8 @@ export async function generatePayRun(
         const monthlyCtc = Number(emp.basicSalary)
 
         // Attendance & Leave calculations
+        // Not yet joined in this month: not on this pay run
+        if (emp.joiningDate && new Date(emp.joiningDate) > new Date(periodYear, periodMonth - 1, daysInMonth, 23, 59, 59)) continue
         const attendances = emp.attendances
         const approvedLeaves = emp.leaves
 
@@ -512,6 +514,12 @@ export async function generatePayRun(
             else if (att.status === "HALF_DAY") absentDays += 0.5
         })
         unpaidLeaveDays += absentDays
+
+        // Joined during this month: the days before joining aren't paid
+        const joined = emp.joiningDate ? new Date(emp.joiningDate) : null
+        if (joined && joined > monthStart && joined <= monthEnd) {
+            unpaidLeaveDays += Math.floor((new Date(joined.getFullYear(), joined.getMonth(), joined.getDate()).getTime() - monthStart.getTime()) / DAY_MS)
+        }
 
         // Working days count
         const workingDays = daysInMonth

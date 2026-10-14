@@ -1,6 +1,7 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -303,10 +304,7 @@ export async function createJobOpening(input: CreateJobOpeningInput) {
     const tenantId = await getTenantWriterId()
 
     const currentYear = new Date().getFullYear()
-    const count = await prisma.jobOpening.count({
-        where: { tenantId }
-    })
-    const jobCode = `JOB-${currentYear}-${String(count + 1).padStart(3, "0")}`
+    const jobCode = await nextSequence(prisma, "jobOpening", tenantId, `JOB-${currentYear}-`, 3)
 
     const opening = await prisma.jobOpening.create({
         data: {
@@ -372,10 +370,7 @@ export async function createApplicant(input: CreateApplicantInput) {
     const tenantId = await getTenantWriterId()
 
     const currentYear = new Date().getFullYear()
-    const count = await prisma.jobApplicant.count({
-        where: { tenantId }
-    })
-    const applicantNumber = `APP-${currentYear}-${String(count + 1).padStart(4, "0")}`
+    const applicantNumber = await nextSequence(prisma, "jobApplicant", tenantId, `APP-${currentYear}-`, 4)
 
     const applicant = await prisma.jobApplicant.create({
         data: {
@@ -553,10 +548,7 @@ export async function hireApplicant(applicantId: string, employeeData: HireAppli
 
         // Generate unique employee number e.g. EMP-YYYY-XXXX
         const currentYear = new Date().getFullYear()
-        const count = await tx.employee.count({
-            where: { tenantId }
-        })
-        const employeeNumber = `EMP-${currentYear}-${String(count + 1).padStart(4, "0")}`
+        const employeeNumber = await nextSequence(tx, "employee", tenantId, `EMP-${currentYear}-`, 4)
 
         const displayName = employeeData.lastName
             ? `${employeeData.firstName.trim()} ${employeeData.lastName.trim()}`

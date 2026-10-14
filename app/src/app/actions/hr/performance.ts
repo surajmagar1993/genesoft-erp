@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { nextSequence } from "@/lib/sequence"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
@@ -385,8 +386,7 @@ export async function createAppraisalCycle(input: {
 }): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantManagerId()
-        const count = await prisma.appraisalCycle.count({ where: { tenantId } })
-        const cycleCode = `CYC-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`
+        const cycleCode = await nextSequence(prisma, "appraisalCycle", tenantId, `CYC-${new Date().getFullYear()}-`, 3)
 
         await prisma.appraisalCycle.create({
             data: {
@@ -452,8 +452,7 @@ export async function createPerformanceReview(input: {
             return { success: false, error: "A performance review already exists for this employee in this cycle" }
         }
 
-        const count = await prisma.performanceReview.count({ where: { tenantId } })
-        const reviewCode = `REV-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`
+        const reviewCode = await nextSequence(prisma, "performanceReview", tenantId, `REV-${new Date().getFullYear()}-`, 3)
 
         // Auto-assign employee's reporting manager if reviewer not specified
         let reviewerId = input.reviewerId
@@ -576,8 +575,7 @@ export async function createEmployeeGoal(input: {
 }): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantWriterId()
-        const count = await prisma.employeeGoal.count({ where: { tenantId } })
-        const goalCode = `GOL-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`
+        const goalCode = await nextSequence(prisma, "employeeGoal", tenantId, `GOL-${new Date().getFullYear()}-`, 3)
 
         await prisma.employeeGoal.create({
             data: {
@@ -658,8 +656,7 @@ export async function createTrainingProgram(input: {
 }): Promise<{ success: boolean; error?: string }> {
     try {
         const tenantId = await getTenantManagerId()
-        const count = await prisma.trainingProgram.count({ where: { tenantId } })
-        const programCode = `TRN-${new Date().getFullYear()}-${String(count + 1).padStart(3, "0")}`
+        const programCode = await nextSequence(prisma, "trainingProgram", tenantId, `TRN-${new Date().getFullYear()}-`, 3)
 
         await prisma.trainingProgram.create({
             data: {

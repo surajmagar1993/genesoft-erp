@@ -1,6 +1,7 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -406,8 +407,7 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
 
         // Generate profile code: REC-YYYY-XXXX
         const year = new Date().getFullYear()
-        const count = await prisma.recurringProfile.count({ where: { tenantId } })
-        const profileNumber = `REC-${year}-${String(count + 1).padStart(4, "0")}`
+        const profileNumber = await nextSequence(prisma, "recurringProfile", tenantId, `REC-${year}-`, 4)
 
         // Calculate item totals & taxes
         let subtotal = 0

@@ -1,6 +1,8 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { tenantTimeZone, zonedDateTime } from "@/lib/timezone"
+import { nextSequence } from "@/lib/sequence"
 import { assertCanActForEmployee, fireLeaveRequested } from "@/lib/employee-access"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
@@ -421,8 +423,7 @@ export async function createEmployee(data: CreateEmployeeInput) {
     if (existing) throw new Error(`An employee with email ${data.email} already exists`)
 
     // Sequential EMP-XXXX
-    const count = await prisma.employee.count({ where: { tenantId } })
-    const employeeNumber = `EMP-${String(count + 1).padStart(4, "0")}`
+    const employeeNumber = await nextSequence(prisma, "employee", tenantId, `EMP-`, 4)
 
     const displayName = data.lastName?.trim()
         ? `${data.firstName.trim()} ${data.lastName.trim()}`
@@ -590,11 +591,13 @@ export async function recordAttendance(data: {
     let checkOutDate: Date | null = null
     let workingHours: number | null = null
 
+    // Times are typed in the business's local time
+    const tz = data.checkIn || data.checkOut ? await tenantTimeZone(tenantId) : "UTC"
     if (data.checkIn) {
-        checkInDate = new Date(`${data.date}T${data.checkIn}`)
+        checkInDate = zonedDateTime(data.date, data.checkIn, tz)
     }
     if (data.checkOut) {
-        checkOutDate = new Date(`${data.date}T${data.checkOut}`)
+        checkOutDate = zonedDateTime(data.date, data.checkOut, tz)
     }
     if (checkInDate && checkOutDate) {
         const diffMs = checkOutDate.getTime() - checkInDate.getTime()

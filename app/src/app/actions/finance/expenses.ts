@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { nextSequence } from "@/lib/sequence"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
@@ -670,9 +671,8 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
         const expenseDate = data.expenseDate ? new Date(data.expenseDate) : new Date()
 
         // Generate sequential expense number
-        const count = await prisma.expense.count({ where: { tenantId } })
         const year = new Date().getFullYear()
-        const expenseNumber = `EXP-${year}-${String(count + 1).padStart(4, "0")}`
+        const expenseNumber = await nextSequence(prisma, "expense", tenantId, `EXP-${year}-`, 4)
 
         let journalEntryId: string | null = null
 
@@ -684,8 +684,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
                 (status === ExpenseStatus.PAID || status === ExpenseStatus.APPROVED) &&
                 data.paymentAccountId
             ) {
-                const jeCount = await tx.journalEntry.count({ where: { tenantId } })
-                const entryNumber = `JE-${year}-${String(jeCount + 1).padStart(4, "0")}`
+                const entryNumber = await nextSequence(tx, "journalEntry", tenantId, `JE-${year}-`, 4)
 
                 const linesToCreate: any[] = [
                     {
@@ -833,9 +832,8 @@ export async function updateExpenseStatus(
                 !journalEntryId &&
                 expense.paymentAccountId
             ) {
-                const count = await tx.journalEntry.count({ where: { tenantId } })
                 const year = new Date().getFullYear()
-                const entryNumber = `JE-${year}-${String(count + 1).padStart(4, "0")}`
+                const entryNumber = await nextSequence(tx, "journalEntry", tenantId, `JE-${year}-`, 4)
 
                 const linesToCreate: any[] = [
                     {
@@ -982,9 +980,8 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
             return { error: "Account not found" }
         }
 
-        const count = await prisma.journalEntry.count({ where: { tenantId } })
         const year = new Date().getFullYear()
-        const entryNumber = `JE-${year}-${String(count + 1).padStart(4, "0")}`
+        const entryNumber = await nextSequence(prisma, "journalEntry", tenantId, `JE-${year}-`, 4)
         const entryDate = data.date ? new Date(data.date) : new Date()
 
         await prisma.$transaction(async (tx: Prisma.TransactionClient) => {

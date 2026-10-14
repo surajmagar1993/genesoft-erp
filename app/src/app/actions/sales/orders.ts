@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { stamped } from "@/lib/db-row"
+import { nextSequence } from "@/lib/sequence"
 import { buildInvoiceLines, contactPlaceOfSupply } from "@/lib/invoice-lines"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 
@@ -334,7 +335,7 @@ export async function convertQuoteToOrder(quoteId: string): Promise<{ orderId: s
   }))
 
   const payload: CreateOrderPayload = {
-    order_number: `ORD-${Date.now()}`, // Temporary sequential ID - would ideally be sequence-based
+    order_number: await nextSequence(prisma, "salesOrder", tenantId, `SO-${new Date().getFullYear()}-`),
     customer_name: quote.customer_name,
     customer_email: quote.customer_email,
     order_date: new Date().toISOString().split("T")[0],
@@ -431,4 +432,10 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceI
   } catch (err) {
     return { invoiceId: null, error: err instanceof Error ? err.message : "Couldn't create the invoice" }
   }
+}
+
+/** The next sales order number (SO-2026-0001…) for the new-order form. */
+export async function getNextOrderNumber(): Promise<string> {
+  const tenantId = await getTenantId()
+  return nextSequence(prisma, "salesOrder", tenantId, `SO-${new Date().getFullYear()}-`)
 }

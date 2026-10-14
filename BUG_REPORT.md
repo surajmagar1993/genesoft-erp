@@ -14,6 +14,8 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 | 14 Oct 2026 | **M9** | No hardcoded ₹ / Indian number format in the app screens: money uses the business's currency (`useTaxRegime().formatMoney`, plain number until it loads) or the document's own currency (`localeForCurrency`); dates use the viewer's locale; discount toggles, chart and Reports page use the right symbol; the India-only e-way notice shows only for INR invoices; the always-₹0 lead "estimated value" row was removed. Remaining ₹ is legitimate (INR pricing page, platform revenue, the INR option in currency pickers). |
 | 14 Oct 2026 | **M1**, **N8** | The Prisma client is now typed everywhere (`src/lib/prisma.ts`) and all `(prisma as any)` / `tx: any` casts (56) are gone, so `tsc` checks every database call. That surfaced N8 and a payslip bug (company email/currency read from fields that don't exist). Covered by `typed-prisma-fixes.int.test.ts`. |
 | 14 Oct 2026 | **M11, M13** | PF is worked out on basic up to the PF wage ceiling (₹15,000 by default, set on HR → Payroll → Salary Structures; 0 = full basic); the employer's PF/ESI is posted to the ledger (Employer PF & ESI expense / payroll liabilities) and counted in the P&L, which agree (`src/lib/payroll-rules.ts`). Projects: "Create invoice" on the Timesheet tab bills unbilled billable hours at each member's project rate (or a default rate), or a fixed fee (default: budget not yet invoiced), as a draft invoice; billed hours are marked so they're never invoiced twice. Covered by `payroll-rules.int.test.ts`, `project-billing.int.test.ts`. |
+| 15 Oct 2026 | **L1–L11, L13, L14** | Document numbers continue after the highest number used (`src/lib/sequence.ts`, 28 places, incl. quote→order `SO-2026-0001` and the new quote/order forms) instead of count + 1. Record pages reject malformed IDs before querying and show the not-found screen (L3, L14; the status stays 200 because the dashboard streams its loading screen, see L5). Deleting a contact with invoices/bills/payments says why it can't. Contact import skips duplicate emails, validates rows, uses the business currency and posts balances as opening entries. Bank auto-match ignores cash payments and other currencies, needs references of 4+ characters, and leaves amount-only matches for the user when more than one record fits. Budget actuals come from the general ledger (expenses, bills, payroll). Payroll leaves out people who join after the month and doesn't pay the days before a mid-month joining date. Attendance times are read in the business's time zone (`src/lib/timezone.ts`). The Rentals page no longer writes on view; the daily cron marks overdue rentals. Covered by `low-fixes.int.test.ts`, `timezone.test.ts`. |
+| 15 Oct 2026 | **M17** | `tenants.gstin` and `companies` added to `schema.prisma` to match the live database (no database change). Every model now matches the live columns exactly. |
 
 **N1 🔴 (found while fixing) Most records saved through the Supabase client couldn't be saved at all.** In the live database `updated_at` is NOT NULL with no default on 59 tables and there are no triggers, so every Supabase insert that didn't send `updated_at` failed: **products, quotes, sales orders, bills (and bill items, which also sent a non-existent `tenant_id` and no `id`), CRM tasks, communication-log entries, new accounts and the default chart-of-accounts seed.** Confirmed with inserts inside rolled-back transactions on the live DB (fails without `updated_at`, succeeds with it). Fixed with `stamped()` (`src/lib/db-row.ts`) on every such insert; bill items now get an id and no tenant_id.
 
@@ -101,15 +103,15 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 - `src/app/actions/crm/companies.ts:234`: a company's deals are filtered by `deals.company`, which doesn't exist, so a company page never shows its deals.
 - Verified: live API, both columns do not exist.
 
-**L1 ⚪ Contact import issues**
+**✅ Fixed · L1 ⚪ Contact import issues**
 - Where: `src/app/actions/crm/contacts.ts:361`.
 - The imported `balance` goes straight into `contacts.balance`, with no customer-ledger or general-ledger entry.
 - An invalid `type` value fails the whole import with a raw database message.
 - Currency defaults to INR, and there's no duplicate check.
 
-**L2 ⚪** Deleting a customer who has invoices fails with a raw foreign-key error.
+**✅ Fixed · L2 ⚪** Deleting a customer who has invoices fails with a raw foreign-key error.
 
-**L3 ⚪** Opening `/crm/contacts/<not-a-uuid>` throws unhandled database errors in the ledger, tasks and communication-log queries. Each one now also sends an error-alert email.
+**✅ Fixed · L3 ⚪** Opening `/crm/contacts/<not-a-uuid>` throws unhandled database errors in the ledger, tasks and communication-log queries. Each one now also sends an error-alert email.
 
 ### 🛒 Sales & invoicing
 
@@ -139,9 +141,9 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 
 **✅ Fixed · M7 🟡 Customer credit limits are never enforced.** The limit is stored, but invoices, orders and POS never check it. The checklist says "basic enforcement".
 
-**L4 ⚪** Quote → order numbers the order `ORD-<timestamp>` (`orders.ts:326`) instead of the normal sequence.
+**✅ Fixed · L4 ⚪** Quote → order numbers the order `ORD-<timestamp>` (`orders.ts:326`) instead of the normal sequence.
 
-**L5 ⚪** Pages for a missing record (for example `/sales/invoices/<unknown id>`) return HTTP 200 with a "not found" message instead of 404.
+**✅ Partly · L5 ⚪** (The not-found screen now shows for every missing or malformed record. The HTTP status stays 200: `(dashboard)/loading.tsx` streams the page before the record is looked up, and the page is behind login and marked noindex. A 404 status would mean removing the loading screen.) Pages for a missing record (for example `/sales/invoices/<unknown id>`) return HTTP 200 with a "not found" message instead of 404.
 
 ### 💳 Credit notes & refunds
 
@@ -171,11 +173,11 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 
 **✅ Fixed · M8 🟡** The new-account form lets you type a `balance` straight into the account (`NewAccountForm.tsx:41`), with no journal entry. Chart of Accounts then disagrees with the ledger reports. Opening balances belong in General Ledger → Opening Balances.
 
-**L6 ⚪ Bank reconciliation auto-match** (`bank-reconciliation.ts:843`)
+**✅ Fixed · L6 ⚪ Bank reconciliation auto-match** (`bank-reconciliation.ts:843`)
 - It considers payments from **all** bank accounts, not just the statement's account.
 - The "same amount within 14 days" rule can pair the wrong transactions when amounts repeat.
 
-**L7 ⚪** Budget "actuals" come from Expenses only (`budgets.ts:152`). Bills and payroll aren't counted, so variance looks better than it is.
+**✅ Fixed · L7 ⚪** Budget "actuals" come from Expenses only (`budgets.ts:152`). Bills and payroll aren't counted, so variance looks better than it is.
 
 (Fixed today: the P&L ignored expenses, payroll and credit notes; the customer ledger assumed INR; there was no double-entry general ledger.)
 
@@ -216,11 +218,11 @@ There are also 104 `|| "INR"`-style fallbacks. A UAE or UK business sees ₹ in 
 - Weekends and holidays count as leave days.
 - A manager can approve their own leave.
 
-**L8 ⚪** No pay proration for employees who join or leave mid-month.
+**✅ Fixed · L8 ⚪** No pay proration for employees who join or leave mid-month.
 
-**L9 ⚪** Attendance times are built as `new Date("<date>T<time>")` on the server, which runs in UTC on Vercel (`hr.ts:594`). An IST 09:30 check-in is stored as 09:30 UTC (15:00 IST). Check how the UI shows it.
+**✅ Fixed · L9 ⚪** Attendance times are built as `new Date("<date>T<time>")` on the server, which runs in UTC on Vercel (`hr.ts:594`). An IST 09:30 check-in is stored as 09:30 UTC (15:00 IST). Check how the UI shows it.
 
-**L10 ⚪** Hiring numbers employees `EMP-<year>-<count+1>` (`recruitment.ts:558`); see L13.
+**✅ Fixed · L10 ⚪** Hiring numbers employees `EMP-<year>-<count+1>` (`recruitment.ts:558`); see L13.
 
 ### 📁 Projects
 
@@ -235,7 +237,7 @@ There are also 104 `|| "INR"`-style fallbacks. A UAE or UK business sees ₹ in 
 - The refunded deposit isn't validated, so it can be negative or more than the deposit.
 - Deposits never reach the ledger.
 
-**L11 ⚪** Opening the Rentals page (a read) also writes "overdue" status updates (`rental.ts:464`), even for read-only users.
+**✅ Fixed · L11 ⚪** Opening the Rentals page (a read) also writes "overdue" status updates (`rental.ts:464`), even for read-only users.
 
 ### 🔧 Manufacturing
 
@@ -263,13 +265,13 @@ There are also 104 `|| "INR"`-style fallbacks. A UAE or UK business sees ₹ in 
 
 **✅ Fixed · M1 🟡 Database calls aren't type-checked.** `src/lib/prisma.ts:28` returns `PrismaClient` or an untyped placeholder, so `prisma` is effectively `any` throughout the app. That's why `tsc` passed while C4, C5, H1, H2 and H6 were writing fields that don't exist. Making the client typed would surface these at build time.
 
-**M17 🟡 Schema drift.** The live database has two columns Prisma doesn't know about (`tenants.gstin`, `leads.contact_name`). Separately, Supabase-client code uses names that match neither (C1–C3, M3). Pick one data-access path per table, ideally Prisma, and keep `schema.prisma` matching the live database.
+**✅ Fixed · M17 🟡 Schema drift.** (`tenants.gstin` and the `companies` table are now in `schema.prisma`; `leads.contact_name` was added with C1. A column-by-column comparison of every Prisma model with the live database finds no differences either way. The Supabase-client calls remain (about 100, all checked against real columns by the integration fake); moving them all to Prisma is a refactor, not a bug fix.) The live database has two columns Prisma doesn't know about (`tenants.gstin`, `leads.contact_name`). Separately, Supabase-client code uses names that match neither (C1–C3, M3). Pick one data-access path per table, ideally Prisma, and keep `schema.prisma` matching the live database.
 
-**L12 ⚪ Read-only check.** Every write action has a role check, except the ones that are public by design (web form submit, contact form, unsubscribe).
+**✅ No issue · L12 ⚪ Read-only check.** Every write action has a role check, except the ones that are public by design (web form submit, contact form, unsubscribe).
 
-**L13 ⚪ Fragile numbering.** 28 places number documents as `count + 1` (`EMP-`, `JE-`, expenses, some invoices). Deleted records or two saves at the same moment produce duplicates, which fail the unique constraint.
+**✅ Fixed · L13 ⚪ Fragile numbering.** 28 places number documents as `count + 1` (`EMP-`, `JE-`, expenses, some invoices). Deleted records or two saves at the same moment produce duplicates, which fail the unique constraint.
 
-**L14 ⚪** Opening `/sales/invoices/recurring/edit` is treated as editing an invoice whose ID is "recurring" (renders "not found" with 200).
+**✅ Fixed · L14 ⚪** Opening `/sales/invoices/recurring/edit` is treated as editing an invoice whose ID is "recurring" (renders "not found" with 200).
 
 ---
 

@@ -8,7 +8,7 @@ import { actAs, createTestTenant } from "./helpers"
 const uid = () => Math.random().toString(36).slice(2, 8)
 
 async function oneEmployee(tenantId: string) {
-    return prisma.employee.create({ data: { tenantId, employeeNumber: `E-${uid()}`, firstName: "Ravi", displayName: "Ravi", email: `r-${uid()}@example.test`, basicSalary: 60000, status: "ACTIVE" } as never })
+    return prisma.employee.create({ data: { tenantId, employeeNumber: `E-${uid()}`, firstName: "Ravi", displayName: "Ravi", email: `r-${uid()}@example.test`, basicSalary: 60000, status: "ACTIVE", joiningDate: new Date(2025, 0, 1) } as never })
 }
 
 describe("PF wage ceiling and employer contributions", () => {

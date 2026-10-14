@@ -1,6 +1,7 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { recordContactTransaction } from "@/lib/contact-ledger"
@@ -334,10 +335,7 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderInput) {
 
     // Generate consecutive PO number: PO-YYYY-XXXX
     const currentYear = new Date().getFullYear()
-    const count = await prisma.purchaseOrder.count({
-        where: { tenantId }
-    })
-    const orderNumber = `PO-${currentYear}-${String(count + 1).padStart(4, "0")}`
+    const orderNumber = await nextSequence(prisma, "purchaseOrder", tenantId, `PO-${currentYear}-`, 4)
 
     let subtotal = 0
     let totalTax = 0

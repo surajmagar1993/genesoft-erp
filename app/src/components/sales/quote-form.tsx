@@ -1,6 +1,7 @@
 "use client"
 import { getCurrencySymbol } from "@/lib/utils"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
+import { getNextQuoteNumber } from "@/app/actions/sales/quotes"
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -96,10 +97,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
     useEffect(() => {
         if (!initialData && !form.quoteNumber) {
             // Generate temporary business ID on client-side mount only
-            setForm(prev => ({ 
-                ...prev, 
-                quoteNumber: `QTN-${Date.now().toString().slice(-6)}` 
-            }))
+            getNextQuoteNumber().then((quoteNumber) => setForm(prev => (prev.quoteNumber ? prev : { ...prev, quoteNumber }))).catch(() => {})
         }
     }, [initialData])
 

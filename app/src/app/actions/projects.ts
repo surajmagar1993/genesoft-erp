@@ -1,6 +1,7 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { nextSequence } from "@/lib/sequence"
 import { buildInvoiceLines, contactPlaceOfSupply, type InvoiceLineInput } from "@/lib/invoice-lines"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { prisma } from "@/lib/prisma"
@@ -819,8 +820,7 @@ export async function createProject(input: CreateProjectInput): Promise<{ succes
         await assertTenantRefs(tenantId, { contact: input.clientId, employee: input.managerId })
 
         // Auto-generate project code
-        const count = await prisma.project.count({ where: { tenantId } })
-        const projectCode = `PRJ-${String(count + 1).padStart(4, "0")}`
+        const projectCode = await nextSequence(prisma, "project", tenantId, `PRJ-`, 4)
 
         const project = await prisma.project.create({
             data: {
@@ -919,8 +919,7 @@ export async function createProjectTask(input: CreateProjectTaskInput): Promise<
     try {
         const tenantId = await getTenantWriterId()
 
-        const taskCount = await prisma.projectTask.count({ where: { tenantId } })
-        const taskCode = `TSK-${String(taskCount + 1001).padStart(4, "0")}`
+        const taskCode = await nextSequence(prisma, "projectTask", tenantId, `TSK-`, 4)
 
         const task = await prisma.projectTask.create({
             data: {

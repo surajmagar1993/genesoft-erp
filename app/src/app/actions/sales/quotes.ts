@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { stamped } from "@/lib/db-row"
+import { nextSequence } from "@/lib/sequence"
 
 /** Documents are always in the business's own currency (never a browser-sent or "INR" default). */
 async function tenantCurrency(tenantId: string): Promise<string> {
@@ -305,4 +306,10 @@ export async function deleteQuote(id: string): Promise<{ error: string | null }>
 
   revalidatePath("/sales/quotes")
   return { error: null }
+}
+
+/** The next quote number (QT-2026-0001…) for the new-quote form. */
+export async function getNextQuoteNumber(): Promise<string> {
+  const tenantId = await getTenantId()
+  return nextSequence(prisma, "quote", tenantId, `QT-${new Date().getFullYear()}-`)
 }

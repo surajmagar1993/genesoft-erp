@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { nextSequence } from "@/lib/sequence"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
@@ -496,9 +497,8 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
     if (!input.items || input.items.length === 0) throw new Error("At least one line item is required")
 
     // Sequential credit note number
-    const count = await prisma.creditNote.count({ where: { tenantId } })
     const currentYear = new Date().getFullYear()
-    const creditNoteNumber = `CN-${currentYear}-${String(count + 1).padStart(4, "0")}`
+    const creditNoteNumber = await nextSequence(prisma, "creditNote", tenantId, `CN-${currentYear}-`, 4)
 
     let subtotal = 0
     let taxAmount = 0

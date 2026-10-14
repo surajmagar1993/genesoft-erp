@@ -1,3 +1,4 @@
+import { isUuid } from "@/lib/utils"
 import { getDealWithRelations } from "@/app/actions/crm/deals"
 import { getTasks } from "@/app/actions/crm/tasks"
 import { getCommunicationLogs } from "@/app/actions/crm/communications"
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic"
 
 export default async function DealDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
   const resolvedParams = await params
+  if (!isUuid(resolvedParams.id)) notFound()
   const [dealData, tasks, logs] = await Promise.all([
     getDealWithRelations(resolvedParams.id),
     getTasks(1, 50, { deal_id: resolvedParams.id }),

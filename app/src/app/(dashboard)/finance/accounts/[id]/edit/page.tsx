@@ -1,3 +1,4 @@
+import { isUuid } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { getAccountById, getAccounts } from "@/app/actions/finance/accounts"
 import EditAccountForm from "./EditAccountForm"
@@ -6,6 +7,7 @@ export const dynamic = "force-dynamic"
 
 export default async function EditAccountPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  if (!isUuid(id)) notFound()
   const [account, allAccounts] = await Promise.all([
     getAccountById(id),
     getAccounts(),

@@ -1,6 +1,7 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
@@ -782,6 +783,23 @@ export async function importBankStatement(data: ImportBankStatementInput): Promi
 // SMART AUTO-MATCH RULE ENGINE
 // ============================================
 
+const DAY_MS = 1000 * 3600 * 24
+/** A reference counts only if it's long enough to mean something (avoids "1" matching everything). */
+const usableRef = (r: string | null | undefined) => {
+    const v = (r || "").toLowerCase().trim()
+    return v.length >= 4 ? v : ""
+}
+/**
+ * Auto-match guard: a match found only by "same amount within 14 days" is
+ * kept only when exactly one record fits; otherwise it's left for the user.
+ */
+/** The bank line names this record's reference (in its reference or narration). */
+const refMatches = (ref: string, bRef: string, bDesc: string) => !!ref && ((!!bRef && (bRef.includes(ref) || ref.includes(bRef))) || bDesc.includes(ref))
+
+function ambiguousAmountMatch<T>(candidates: T[], bAmount: number, bDate: Date, amountOf: (x: T) => number, dateOf: (x: T) => Date): boolean {
+    return candidates.filter((x) => Math.abs(amountOf(x) - bAmount) < 0.01 && Math.abs((bDate.getTime() - dateOf(x).getTime()) / DAY_MS) <= 14).length > 1
+}
+
 export async function autoMatchTransactions(bankAccountId: string): Promise<{
     success?: boolean
     matchedCount?: number
@@ -805,8 +823,10 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
         }
 
         // Fetch candidate payments
+        // Cash never passes through the bank; other currencies can't match this account
+        const account = await prisma.bankAccount.findFirst({ where: { id: bankAccountId, tenantId }, select: { currencyCode: true } })
         const systemPayments = await prisma.payment.findMany({
-            where: { tenantId },
+            where: { tenantId, paymentMethod: { not: "CASH" }, ...(account?.currencyCode ? { currencyCode: account.currencyCode } : {}) },
             include: { bankTransactions: true },
         })
 
@@ -820,16 +840,16 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
 
         for (const bTxn of unmatchedBankTxns) {
             const bAmount = Number(bTxn.amount)
-            const bRef = bTxn.reference?.toLowerCase().trim()
-            const bDesc = bTxn.description?.toLowerCase().trim()
+            const bRef = usableRef(bTxn.reference)
+            const bDesc = (bTxn.description || "").toLowerCase().trim()
 
             if (bTxn.type === BankTransactionType.DEPOSIT) {
                 // Look for matching inbound payment
-                const matchingPayment = systemPayments.find((p: any) => {
+                let matchingPayment = systemPayments.find((p: any) => {
                     if (p.bankTransactions.length > 0) return false // already matched
                     if (p.type !== "INBOUND") return false
                     const pAmount = Number(p.amount)
-                    const pRef = p.reference?.toLowerCase().trim()
+                    const pRef = usableRef(p.reference)
 
                     // Match rule 1: exact reference match
                     if (bRef && pRef && (bRef.includes(pRef) || pRef.includes(bRef))) {
@@ -847,6 +867,11 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                     )
                     return Math.abs(pAmount - bAmount) < 0.01 && daysDiff <= 14
                 })
+                // Only "same amount within 14 days"? Keep it only if nothing else fits
+                if (matchingPayment && !refMatches(usableRef(matchingPayment.reference), bRef, bDesc) && ambiguousAmountMatch(
+                    (systemPayments as any[]).filter((x) => x.bankTransactions.length === 0 && x.type === "INBOUND"),
+                    bAmount, bTxn.transactionDate, (x) => Number(x.amount), (x) => x.paymentDate
+                )) matchingPayment = undefined
 
                 if (matchingPayment) {
                     await prisma.bankTransaction.update({
@@ -866,10 +891,10 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
             } else if (bTxn.type === BankTransactionType.WITHDRAWAL) {
                 // Look for matching outbound payment or expense
                 // 1. Try expenses first
-                const matchingExpense = systemExpenses.find((e: any) => {
+                let matchingExpense = systemExpenses.find((e: any) => {
                     if (e.bankTransactions.length > 0) return false
                     const eAmount = Number(e.totalAmount)
-                    const eRef = e.paymentReference?.toLowerCase().trim()
+                    const eRef = usableRef(e.paymentReference)
                     const eNum = e.expenseNumber?.toLowerCase().trim()
 
                     // Match rule 1: reference or expenseNumber in narration
@@ -883,6 +908,11 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                     )
                     return Math.abs(eAmount - bAmount) < 0.01 && daysDiff <= 14
                 })
+                // Only "same amount within 14 days"? Keep it only if nothing else fits
+                if (matchingExpense && !refMatches(usableRef(matchingExpense.paymentReference) || String(matchingExpense.expenseNumber || "").toLowerCase(), "", bDesc) && ambiguousAmountMatch(
+                    (systemExpenses as any[]).filter((x) => x.bankTransactions.length === 0),
+                    bAmount, bTxn.transactionDate, (x) => Number(x.totalAmount), (x) => x.expenseDate
+                )) matchingExpense = undefined
 
                 if (matchingExpense) {
                     await prisma.bankTransaction.update({
@@ -901,11 +931,11 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                 }
 
                 // 2. Try outbound bill payments
-                const matchingOutboundPayment = systemPayments.find((p: any) => {
+                let matchingOutboundPayment = systemPayments.find((p: any) => {
                     if (p.bankTransactions.length > 0) return false
                     if (p.type !== "OUTBOUND") return false
                     const pAmount = Number(p.amount)
-                    const pRef = p.reference?.toLowerCase().trim()
+                    const pRef = usableRef(p.reference)
 
                     if (bRef && pRef && (bRef.includes(pRef) || pRef.includes(bRef))) {
                         return Math.abs(pAmount - bAmount) < 0.01
@@ -916,6 +946,11 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                     )
                     return Math.abs(pAmount - bAmount) < 0.01 && daysDiff <= 14
                 })
+                // Only "same amount within 14 days"? Keep it only if nothing else fits
+                if (matchingOutboundPayment && !refMatches(usableRef(matchingOutboundPayment.reference), bRef, bDesc) && ambiguousAmountMatch(
+                    (systemPayments as any[]).filter((x) => x.bankTransactions.length === 0 && x.type === "OUTBOUND"),
+                    bAmount, bTxn.transactionDate, (x) => Number(x.amount), (x) => x.paymentDate
+                )) matchingOutboundPayment = undefined
 
                 if (matchingOutboundPayment) {
                     await prisma.bankTransaction.update({
@@ -1060,8 +1095,7 @@ export async function createQuickExpenseAndReconcile(
         if (!(await isTenantAccount(tenantId, payload.accountId))) return { error: "Expense account not found" }
 
         const year = new Date().getFullYear()
-        const count = await prisma.expense.count({ where: { tenantId } })
-        const expenseNumber = `EXP-${year}-${String(count + 1).padStart(4, "0")}`
+        const expenseNumber = await nextSequence(prisma, "expense", tenantId, `EXP-${year}-`, 4)
 
         const expenseDate = payload.expenseDate ? new Date(payload.expenseDate) : bTxn.transactionDate
         const amount = Number(payload.amount || bTxn.amount)
@@ -1072,8 +1106,7 @@ export async function createQuickExpenseAndReconcile(
             let journalEntryId: string | null = null
 
             if (paymentAccountId) {
-                const jeCount = await tx.journalEntry.count({ where: { tenantId } })
-                const entryNumber = `JE-${year}-${String(jeCount + 1).padStart(4, "0")}`
+                const entryNumber = await nextSequence(tx, "journalEntry", tenantId, `JE-${year}-`, 4)
 
                 const journal = await tx.journalEntry.create({
                     data: {

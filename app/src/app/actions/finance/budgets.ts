@@ -104,6 +104,23 @@ const STANDARD_EXPENSE_CATEGORIES = [
  * Retrieves the comprehensive Budgeting Overview, including telemetry, all budget plans with real-time actuals,
  * active departments, and Chart of Accounts expense accounts.
  */
+/**
+ * Actual spend per account from the general ledger (posted journal lines,
+ * net of tax): expenses, bills and payroll all post there.
+ */
+async function ledgerSpendByAccount(tenantId: string, start: Date, end: Date, accountIds: string[]): Promise<Map<string, number>> {
+    const out = new Map<string, number>()
+    if (accountIds.length === 0) return out
+    const rows: { account_id: string; net: number }[] = await prisma.$queryRaw`
+        select l.account_id::text as account_id, coalesce(sum(l.debit - l.credit), 0)::float8 as net
+        from journal_entry_lines l join journal_entries j on j.id = l.journal_entry_id
+        where l.tenant_id = ${tenantId}::uuid and j.status = 'POSTED' and j.date >= ${start} and j.date <= ${end}
+          and l.account_id = any(${accountIds}::uuid[])
+        group by l.account_id`
+    for (const r of rows) out.set(r.account_id, Math.round(r.net * 100) / 100)
+    return out
+}
+
 export async function getBudgetsOverview(filters?: {
     fiscalYear?: string
     departmentId?: string
@@ -150,43 +167,25 @@ export async function getBudgetsOverview(filters?: {
         })
     ])
 
-    // 2. Aggregate actual expenses for each budget within its date window
-    // Fetch all non-draft/non-void expenses for the tenant
-    const allExpenses = await prisma.expense.findMany({
-        where: {
-            tenantId,
-            status: { notIn: ["DRAFT", "REJECTED", "VOID"] }
-        },
-        select: {
-            id: true,
-            accountId: true,
-            amount: true,
-            totalAmount: true,
-            expenseDate: true
-        }
-    })
-
     let totalAllocatedBudget = 0
     let totalActualSpend = 0
     let activeBudgetsCount = 0
     let warningBudgetsCount = 0
     let criticalBudgetsCount = 0
 
+    // 2. Actual spend per budget, from the general ledger
+    const spendByBudget = new Map<string, Map<string, number>>()
+    for (const b of rawBudgets as { id: string; startDate: Date; endDate: Date; items: { accountId: string }[] }[]) {
+        spendByBudget.set(b.id, await ledgerSpendByAccount(tenantId, new Date(b.startDate), new Date(b.endDate), [...new Set(b.items.map((i) => i.accountId))]))
+    }
+
     const budgets: BudgetSummary[] = rawBudgets.map((b: any) => {
         const budgetStart = new Date(b.startDate)
         const budgetEnd = new Date(b.endDate)
 
-        // Filter expenses falling within this budget's timeframe
-        const periodExpenses = allExpenses.filter((e: any) => {
-            const expDate = new Date(e.expenseDate)
-            return expDate >= budgetStart && expDate <= budgetEnd
-        })
-
-        // Sum actuals for the accounts budgeted in this plan
-        const budgetedAccountIds = new Set(b.items.map((i: any) => i.accountId))
-        const planActualAmount = periodExpenses
-            .filter((e: any) => budgetedAccountIds.has(e.accountId))
-            .reduce((sum: number, e: any) => sum + Number(e.totalAmount || e.amount || 0), 0)
+        // Actuals for the budgeted accounts in this plan's window (from the ledger)
+        const spend = spendByBudget.get(b.id) || new Map<string, number>()
+        const planActualAmount = (b.items as { accountId: string }[]).reduce((sum, i) => sum + (spend.get(i.accountId) || 0), 0)
 
         const totalBudgeted = Number(b.totalBudgetedAmount || 0)
         const variance = totalBudgeted - planActualAmount
@@ -305,13 +304,8 @@ export async function getBudgetDetail(id: string): Promise<BudgetDetailData | nu
         take: 50
     })
 
-    // Map expense sums by accountId
-    const expensesByAccount = new Map<string, number>()
-    for (const exp of relevantExpenses) {
-        const amt = Number(exp.totalAmount || exp.amount || 0)
-        const current = expensesByAccount.get(exp.accountId) || 0
-        expensesByAccount.set(exp.accountId, current + amt)
-    }
+    // Actuals per account from the general ledger (the list above is only the latest 50, for display)
+    const expensesByAccount = await ledgerSpendByAccount(tenantId, budgetStart, budgetEnd, [...new Set((rawBudget.items as { accountId: string }[]).map((i) => i.accountId))])
 
     let planTotalActual = 0
 

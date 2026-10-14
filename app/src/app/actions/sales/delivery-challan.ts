@@ -1,6 +1,7 @@
 "use server"
 
 import type { Prisma } from "@prisma/client"
+import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { postInvoiceStock } from "@/lib/stock"
@@ -355,10 +356,7 @@ export async function createDeliveryChallan(input: CreateDeliveryChallanInput) {
     }
 
     const currentYear = new Date().getFullYear()
-    const count = await prisma.deliveryChallan.count({
-        where: { tenantId }
-    })
-    const challanNumber = `DC-${currentYear}-${String(count + 1).padStart(4, "0")}`
+    const challanNumber = await nextSequence(prisma, "deliveryChallan", tenantId, `DC-${currentYear}-`, 4)
 
     let totalQuantity = 0
     let taxableAmount = 0
