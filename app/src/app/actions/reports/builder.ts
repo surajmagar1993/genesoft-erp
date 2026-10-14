@@ -96,24 +96,25 @@ export async function runCustomReportQuery(config: ReportConfig): Promise<Report
         case "INVENTORY": {
             const products = await prisma.product.findMany({
                 where: { tenantId },
-                include: { category: { select: { name: true } } },
+                select: { sku: true, name: true, category: true, stockQty: true, unitPrice: true, warehouseStocks: { select: { reorderPoint: true } } },
                 orderBy: { name: "asc" },
                 take: 500
             })
-            rawData = products.map((p: any) => {
-                const stock = Number(p.stock || 0)
+            rawData = products.map((p: { sku: string | null; name: string; category: string | null; stockQty: unknown; unitPrice: unknown; warehouseStocks: { reorderPoint: unknown }[] }) => {
+                const stock = Number(p.stockQty || 0)
                 const unitPrice = Number(p.unitPrice || 0)
-                const costPrice = Number(p.costPrice || unitPrice * 0.7)
+                // Same reorder rule as Inventory: the lowest reorder point across warehouses (default 10)
+                const reorderLevel = p.warehouseStocks.length ? Math.min(...p.warehouseStocks.map((w) => Number(w.reorderPoint))) : 10
                 return {
                     sku: p.sku,
                     name: p.name,
-                    category: p.category?.name || "Uncategorized",
+                    category: p.category || "Uncategorized",
                     stock,
                     unitPrice,
-                    costPrice,
-                    stockValue: Math.round(stock * costPrice * 100) / 100,
-                    reorderLevel: Number(p.reorderLevel || 10),
-                    status: stock <= 0 ? "OUT_OF_STOCK" : stock <= (p.reorderLevel || 10) ? "LOW_STOCK" : "IN_STOCK"
+                    costPrice: null, // purchase cost isn't tracked per product
+                    stockValue: Math.round(stock * unitPrice * 100) / 100,
+                    reorderLevel,
+                    status: stock <= 0 ? "OUT_OF_STOCK" : stock <= reorderLevel ? "LOW_STOCK" : "IN_STOCK"
                 }
             })
             break
@@ -122,38 +123,41 @@ export async function runCustomReportQuery(config: ReportConfig): Promise<Report
         case "BILLS": {
             const bills = await prisma.bill.findMany({
                 where: { tenantId },
-                include: { contact: { select: { displayName: true } } },
-                orderBy: { issueDate: "desc" },
+                include: { contact: { select: { displayName: true } }, payments: { select: { amount: true } } },
+                orderBy: { billDate: "desc" },
                 take: 500
             })
-            rawData = bills.map((b: any) => ({
-                billNumber: b.billNumber,
-                vendorName: b.contact?.displayName || "Standard Vendor",
-                status: b.status,
-                issueDate: b.issueDate ? b.issueDate.toISOString().slice(0, 10) : "",
-                dueDate: b.dueDate ? b.dueDate.toISOString().slice(0, 10) : "",
-                subtotal: Number(b.subtotal || 0),
-                taxTotal: Number(b.taxTotal || 0),
-                total: Number(b.total || 0),
-                balanceDue: Number(b.balanceDue !== null ? b.balanceDue : b.total || 0)
-            }))
+            rawData = bills.map((b: { billNumber: string; contact: { displayName: string } | null; status: string; billDate: Date; dueDate: Date | null; subtotal: unknown; taxAmount: unknown; total: unknown; payments: { amount: unknown }[] }) => {
+                const paid = b.payments.reduce((sum, pay) => sum + Number(pay.amount || 0), 0)
+                return {
+                    billNumber: b.billNumber,
+                    vendorName: b.contact?.displayName || "",
+                    status: b.status,
+                    issueDate: b.billDate.toISOString().slice(0, 10),
+                    dueDate: b.dueDate ? b.dueDate.toISOString().slice(0, 10) : "",
+                    subtotal: Number(b.subtotal || 0),
+                    taxTotal: Number(b.taxAmount || 0),
+                    total: Number(b.total || 0),
+                    balanceDue: Math.round((Number(b.total || 0) - paid) * 100) / 100
+                }
+            })
             break
         }
 
         case "EXPENSES": {
             const expenses = await prisma.expense.findMany({
                 where: { tenantId },
-                orderBy: { date: "desc" },
+                orderBy: { expenseDate: "desc" },
                 take: 500
             })
-            rawData = expenses.map((e: any) => ({
+            rawData = expenses.map((e: { expenseNumber: string; category: string; vendorName: string | null; title: string; totalAmount: unknown; amount: unknown; paymentMethod: string | null; expenseDate: Date; status: string }) => ({
                 expenseNumber: e.expenseNumber,
                 category: e.category,
-                payee: e.payee || "General Expense",
-                amount: Number(e.amount || 0),
-                paymentMethod: e.paymentMethod || "BANK",
-                date: e.date ? e.date.toISOString().slice(0, 10) : "",
-                taxDeductible: Boolean(e.taxDeductible),
+                payee: e.vendorName || e.title,
+                amount: Number(e.totalAmount ?? e.amount ?? 0),
+                paymentMethod: e.paymentMethod || "",
+                date: e.expenseDate.toISOString().slice(0, 10),
+                taxDeductible: null, // not recorded on expenses
                 status: e.status
             }))
             break

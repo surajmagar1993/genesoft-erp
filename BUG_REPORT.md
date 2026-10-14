@@ -8,8 +8,11 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 | Date | Fixed | Notes |
 |---|---|---|
 | 14 Oct 2026 | **C1, C2, C3, C4, C5**, **M3**, **M6**, **N1** | Leads/deals moved to Prisma (email/phone on the linked contact; search fixed); products map `unit_price` ↔ live `"unitPrice"`; rental and challan invoices built with the business's tax rules and real invoice-line fields; one invoice-number series for every flow (`src/lib/invoice-number.ts`); rental/challan/recurring invoices now reach the customer statement. Covered by `critical-fixes.int.test.ts` and `supabase-writes.int.test.ts`. |
+| 14 Oct 2026 | **H1, H2, H4, H5, H6**, **H3 (POS)**, **M10**, **N2** | PO→bill records the bill properly (supplier statement, ledger, no double conversion); credit-note restock writes a valid stock movement; payroll deducts absences marked in attendance and splits leaves across months; finished work orders are final (atomic claim on completion); report builder datasets use real fields (no invented cost price or reorder level); POS sales take goods out of product and default-warehouse stock (`src/lib/stock.ts`). Covered by `high-fixes.int.test.ts`. **Still open from H3:** invoices from the form (need the product picker, M5) and delivery challans don't move stock yet. |
 
 **N1 🔴 (found while fixing) Most records saved through the Supabase client couldn't be saved at all.** In the live database `updated_at` is NOT NULL with no default on 59 tables and there are no triggers, so every Supabase insert that didn't send `updated_at` failed: **products, quotes, sales orders, bills (and bill items, which also sent a non-existent `tenant_id` and no `id`), CRM tasks, communication-log entries, new accounts and the default chart-of-accounts seed.** Confirmed with inserts inside rolled-back transactions on the live DB (fails without `updated_at`, succeeds with it). Fixed with `stamped()` (`src/lib/db-row.ts`) on every such insert; bill items now get an id and no tenant_id.
+
+**N2 🟠 (found while fixing) Payroll invented a ₹35,000 salary** for any employee without one (`payroll.ts`: `emp.basicSalary ? … : 35000`). Fixed: the pay run stops and names the employees who need a salary.
 
 ---
 
@@ -125,7 +128,7 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 
 ### 💳 Credit notes & refunds
 
-**H2 🟠 Credit notes with "restock inventory" always fail**
+**✅ Fixed · H2 🟠 Credit notes with "restock inventory" always fail**
 - Where: `src/app/actions/sales/credit-notes.ts:616`.
 - Problem: the stock movement is written with `notes` and `reference`, but the model's fields are `reason` and `referenceNo`. The whole credit-note transaction rolls back.
 - Verified: against the Prisma schema.
@@ -134,7 +137,7 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 
 ### 📦 Purchase & procurement
 
-**H1 🟠 Purchase order → bill always fails**
+**✅ Fixed · H1 🟠 Purchase order → bill always fails**
 - Where: `src/app/actions/purchase.ts:643`.
 - Problem: inside the transaction, a ledger entry is written with type `"CREDIT"` (not an allowed value) and with `balanceAfter` and `referenceType` (fields that don't exist).
 - Also: the supplier balance is increased (+), while `createBill` records bills as negative (−).
@@ -142,7 +145,7 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 
 ### 🏭 Inventory & warehouse
 
-**H3 🟠 Selling never reduces stock**
+**⚠️ Partly fixed (POS) · H3 🟠 Selling never reduces stock**
 - No sales path in the app reduces stock or writes a stock movement: invoices (lines don't even store the product), POS (only reads `stockQty`), delivery challans and rentals all leave it untouched.
 - Stock only changes through manual adjustments, transfers, receiving goods and manufacturing.
 - Impact: stock levels, low-stock alerts, stock valuation and the STOCK_LOW workflow are all wrong for any business that sells.
@@ -179,11 +182,11 @@ There are also 104 `|| "INR"`-style fallbacks. A UAE or UK business sees ₹ in 
 
 ### 👥 HR, payroll & recruitment
 
-**H4 🟠 Absent employees are paid in full**
+**✅ Fixed · H4 🟠 Absent employees are paid in full**
 - Where: `src/app/actions/payroll.ts:468`.
 - Problem: `generatePayRun` calculates days present from attendance and then never uses the figure. Only approved **unpaid leave** reduces pay.
 
-**M10 🟡 Leave crossing month-end is deducted twice.** A leave overlapping two months counts its full length in **both** months (`payroll.ts:472`).
+**✅ Fixed · M10 🟡 Leave crossing month-end is deducted twice.** A leave overlapping two months counts its full length in **both** months (`payroll.ts:472`).
 
 **M11 🟡 PF and employer costs** (`payroll.ts:497`)
 - PF is 12% of the full basic salary with no ₹15,000 wage ceiling.
@@ -219,7 +222,7 @@ There are also 104 `|| "INR"`-style fallbacks. A UAE or UK business sees ₹ in 
 
 ### 🔧 Manufacturing
 
-**H5 🟠 Completing a work order twice moves stock twice**
+**✅ Fixed · H5 🟠 Completing a work order twice moves stock twice**
 - Where: `src/app/actions/manufacturing.ts:506`.
 - Problem: there's no status check. Marking a work order Completed again (a double-click, or Completed → anything → Completed) consumes the raw materials and adds the finished goods a second time. Any status can change to any other.
 
@@ -229,7 +232,7 @@ There are also 104 `|| "INR"`-style fallbacks. A UAE or UK business sees ₹ in 
 
 ### 📈 Reports & analytics
 
-**H6 🟠 Three of the six Custom Report Builder datasets crash every time**
+**✅ Fixed · H6 🟠 Three of the six Custom Report Builder datasets crash every time**
 - **Inventory** (`builder.ts:99`): uses `include: { category }`, but `Product.category` is plain text. It also reads `p.stock` (the field is `stockQty`), **invents** a cost price as 70% of the selling price, and assumes a reorder level of 10.
 - **Bills** (`builder.ts:126`): orders by `issueDate`, which bills don't have.
 - **Expenses** (`builder.ts:146`): uses `date`, which expenses don't have.

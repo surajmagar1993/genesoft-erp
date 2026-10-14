@@ -420,6 +420,12 @@ export async function generatePayRun(
     if (employees.length === 0) {
         throw new Error("No active employees found to generate payroll.")
     }
+    // Never invent a salary: everyone on the run needs one
+    const missingSalary = employees.filter((e: { basicSalary: unknown }) => !(Number(e.basicSalary) > 0))
+    if (missingSalary.length > 0) {
+        const names = missingSalary.slice(0, 5).map((e: { displayName: string }) => e.displayName).join(", ")
+        throw new Error(`Set a monthly salary for ${names}${missingSalary.length > 5 ? ` and ${missingSalary.length - 5} more` : ""} before running payroll.`)
+    }
 
     // Default corporate structure fallback if employee doesn't have one assigned
     let defaultStructure = await prisma.salaryStructure.findFirst({
@@ -449,7 +455,7 @@ export async function generatePayRun(
         const structure = emp.salaryStructure || defaultStructure
 
         // Monthly compensation CTC (default to ₹35,000 if not specified on employee)
-        const monthlyCtc = emp.basicSalary ? Number(emp.basicSalary) : 35000
+        const monthlyCtc = Number(emp.basicSalary)
 
         // Attendance & Leave calculations
         const attendances = emp.attendances
@@ -468,14 +474,37 @@ export async function generatePayRun(
             presentDays = actualPresent
         }
 
+        // Leave days that fall in this month (a leave crossing month-end is split between the months)
+        const DAY_MS = 86_400_000
+        const monthStart = new Date(periodYear, periodMonth - 1, 1)
+        const monthEnd = new Date(periodYear, periodMonth - 1, daysInMonth, 23, 59, 59)
+        const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+        const leaveDays = new Set<string>()
         approvedLeaves.forEach((lv: any) => {
-            const days = Number(lv.days) || 1
+            const total = Number(lv.days) || 1
+            const start = new Date(lv.startDate)
+            const end = new Date(lv.endDate)
+            const span = Math.max(1, Math.round((end.getTime() - start.getTime()) / DAY_MS) + 1)
+            const from = start > monthStart ? start : monthStart
+            const to = end < monthEnd ? end : monthEnd
+            const overlap = Math.max(0, Math.floor((to.getTime() - from.getTime()) / DAY_MS) + 1)
+            for (let d = new Date(from); d <= to; d = new Date(d.getTime() + DAY_MS)) leaveDays.add(dayKey(d))
+            const days = Math.round(total * Math.min(1, overlap / span) * 2) / 2
             if (lv.type === "UNPAID") {
                 unpaidLeaveDays += days
             } else {
                 paidLeaveDays += days
             }
         })
+
+        // Absences marked in attendance (not covered by an approved leave) are unpaid days
+        let absentDays = 0
+        attendances.forEach((att: { date: Date; status: string }) => {
+            if (leaveDays.has(dayKey(new Date(att.date)))) return
+            if (att.status === "ABSENT") absentDays += 1
+            else if (att.status === "HALF_DAY") absentDays += 0.5
+        })
+        unpaidLeaveDays += absentDays
 
         // Working days count
         const workingDays = daysInMonth

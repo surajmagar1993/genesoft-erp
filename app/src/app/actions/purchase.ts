@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
+import { recordContactTransaction } from "@/lib/contact-ledger"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
@@ -584,6 +585,10 @@ export async function convertPOToBill(data: string | {
     const billNumber = customBillNumber || `BILL-${currentYear}-${po.orderNumber.replace(/^PO-\d+-?/, "")}`
 
     const result = await prisma.$transaction(async (tx: any) => {
+        // Re-check inside the transaction so a double click can't create two bills
+        const fresh = await tx.purchaseOrder.findFirst({ where: { id: po.id, tenantId }, select: { billId: true } })
+        if (fresh?.billId) throw new Error("A vendor bill is already linked to this Purchase Order")
+
         // 1. Create vendor Bill in Accounts Payable
         const bill = await tx.bill.create({
             data: {
@@ -620,38 +625,24 @@ export async function convertPOToBill(data: string | {
             data: { billId: bill.id }
         })
 
-        // 3. Update Vendor Balance (Payable increases)
-        const vendor = await tx.contact.findUnique({
-            where: { id: po.vendorId },
-            select: { balance: true }
-        })
-        const currentBalance = vendor ? Number(vendor.balance) : 0
-        const newBalance = currentBalance + Number(po.total)
-
-        await tx.contact.update({
-            where: { id: po.vendorId },
-            data: { balance: newBalance }
-        })
-
-        // 4. Create LedgerEntry for Accounts Payable credit
-        await tx.ledgerEntry.create({
-            data: {
-                tenantId,
-                contactId: po.vendorId,
-                type: "CREDIT",
-                amount: po.total,
-                balanceAfter: newBalance,
-                referenceType: "BILL",
-                referenceId: bill.id,
-                description: `Bill ${bill.billNumber} for purchase order ${po.orderNumber}`,
-                currencyCode: po.currencyCode
-            }
-        })
-
         return bill
     })
 
     await postToLedger(tenantId, { kind: "bill", id: result.id })
+    // Supplier statement: same convention as createBill (we owe the supplier → negative)
+    try {
+        await recordContactTransaction(tenantId, {
+            contactId: po.vendorId,
+            type: "INVOICE",
+            amount: -Math.abs(Number(po.total)),
+            currencyCode: po.currencyCode,
+            referenceId: result.id,
+            description: `Bill ${result.billNumber} for purchase order ${po.orderNumber}`,
+            date: result.billDate,
+        })
+    } catch (err) {
+        console.error("Supplier ledger entry failed for PO bill:", err)
+    }
 
     revalidatePath("/purchase")
     revalidatePath("/finance/bills")

@@ -612,8 +612,10 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
                         productId: item.productId,
                         type: StockMovementType.RETURN,
                         quantity: item.quantity,
-                        reference: cn.creditNoteNumber,
-                        notes: `Customer return via Credit Note #${cn.creditNoteNumber}`,
+                        previousQty: existingStock ? Number(existingStock.quantity) : 0,
+                        newQty: (existingStock ? Number(existingStock.quantity) : 0) + Number(item.quantity),
+                        referenceNo: cn.creditNoteNumber,
+                        reason: `Customer return via Credit Note #${cn.creditNoteNumber}`,
                     }
                 })
             }

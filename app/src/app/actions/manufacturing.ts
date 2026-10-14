@@ -502,6 +502,17 @@ export async function updateWorkOrderStatus(
 
     if (!order) throw new Error("Work Order not found")
 
+    // Completed and cancelled orders are final: completing again would consume and produce stock twice
+    const FINAL: WorkOrderStatus[] = ["COMPLETED", "CANCELLED"]
+    const ALL: WorkOrderStatus[] = ["PLANNED", "CONFIRMED", "IN_PROGRESS", "QUALITY_CHECK", "COMPLETED", "CANCELLED"]
+    if (!ALL.includes(newStatus)) throw new Error("Invalid work order status")
+    if (FINAL.includes(order.status as WorkOrderStatus)) {
+        throw new Error(`This work order is already ${String(order.status).toLowerCase()} and can't be changed.`)
+    }
+    if ((producedQuantity !== undefined && !(Number(producedQuantity) >= 0)) || (scrapQuantity !== undefined && !(Number(scrapQuantity) >= 0))) {
+        throw new Error("Produced and scrap quantities can't be negative")
+    }
+
     // If marking as completed, execute inventory consumption & addition
     if (newStatus === "COMPLETED") {
         const finalProduced = producedQuantity !== undefined ? producedQuantity : Number(order.plannedQuantity)
@@ -510,6 +521,13 @@ export async function updateWorkOrderStatus(
         const bomQty = Number(order.bom.quantity) || 1
 
         await prisma.$transaction(async (tx: any) => {
+            // Claim the order first: if another request completed it a moment ago, stop here
+            const claimed = await tx.workOrder.updateMany({
+                where: { id: workOrderId, tenantId, status: { notIn: FINAL } },
+                data: { status: "COMPLETED" },
+            })
+            if (claimed.count === 0) throw new Error("This work order was already completed.")
+
             // 1. Consume Raw Materials from Source Warehouse
             for (const item of order.bom.items) {
                 const itemQtyPerBatch = Number(item.quantity)
@@ -629,9 +647,9 @@ export async function updateWorkOrderStatus(
             })
         })
     } else {
-        // Standard status update
-        await prisma.workOrder.update({
-            where: { id: workOrderId },
+        // Standard status update (only while the order isn't final)
+        const updated = await prisma.workOrder.updateMany({
+            where: { id: workOrderId, tenantId, status: { notIn: FINAL } },
             data: {
                 status: newStatus,
                 ...(producedQuantity !== undefined ? { producedQuantity } : {}),
@@ -639,6 +657,7 @@ export async function updateWorkOrderStatus(
                 ...(notes ? { notes } : {})
             }
         })
+        if (updated.count === 0) throw new Error("This work order can't be changed any more.")
     }
 
     revalidatePath("/manufacturing")

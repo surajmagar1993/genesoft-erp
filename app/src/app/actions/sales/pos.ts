@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
+import { deductStockForSale } from "@/lib/stock"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantTaxContext, invoiceItemTaxColumns, productTaxRate } from "@/lib/tenant-tax"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -302,6 +303,9 @@ export async function createPOSSale(
 
     await postToLedger(tenantId, { kind: "invoice", id: invoice.id })
     await postToLedger(tenantId, { kind: "payment", id: posPayment.id })
+
+    // Sold goods leave stock
+    await deductStockForSale(prisma, tenantId, lines.map((l) => ({ productId: l.item.productId, quantity: l.qty })), invoiceNumber)
 
     revalidatePath("/sales/invoices")
     revalidatePath("/sales/pos")

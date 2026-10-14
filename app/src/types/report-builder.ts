@@ -94,8 +94,8 @@ export const DATASET_DEFINITIONS: Record<DatasetType, DatasetMeta> = {
             { key: "category", label: "Category", type: "string", aggregatable: false },
             { key: "stock", label: "Stock Quantity", type: "number", aggregatable: true },
             { key: "unitPrice", label: "Selling Price", type: "number", aggregatable: true },
-            { key: "costPrice", label: "Cost Price", type: "number", aggregatable: true },
-            { key: "stockValue", label: "Asset Value", type: "number", aggregatable: true },
+            { key: "costPrice", label: "Cost Price (not tracked)", type: "number", aggregatable: true },
+            { key: "stockValue", label: "Stock Value (selling price)", type: "number", aggregatable: true },
             { key: "reorderLevel", label: "Reorder Point", type: "number", aggregatable: false },
             { key: "status", label: "Stock Status", type: "string", aggregatable: false }
         ]
