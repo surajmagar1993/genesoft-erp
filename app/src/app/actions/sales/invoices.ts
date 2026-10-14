@@ -13,6 +13,7 @@ import { cleanTaxRate, getTenantTaxContext, invoiceItemTaxColumns, supplyTypeFor
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
 import { postToLedger } from "@/lib/ledger"
+import { postInvoiceStock } from "@/lib/stock"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 
 /* ── Types ── */
@@ -23,6 +24,7 @@ export type InvoiceTemplateId = "MODERN" | "CLASSIC" | "MINIMALIST" | "COMPACT" 
 export interface InvoiceLineItemDB {
   id: string
   invoice_id: string
+  product_id?: string | null
   product_name: string
   description: string
   qty: number
@@ -208,6 +210,8 @@ export interface CreateInvoicePayload {
   tax_exemption_reason?: string
   tax_exemption_certificate?: string
   line_items: Array<{
+    /** Catalog product (goods leave stock when the invoice is issued) */
+    product_id?: string | null
     product_name: string
     description: string
     qty: number
@@ -223,6 +227,23 @@ export interface CreateInvoicePayload {
   }>
 }
 
+
+/** An invoice line keeps one text field: "Product — details" (the mapper splits it back). */
+function lineDescription(li: { product_name?: string; description?: string }): string {
+  const name = (li.product_name || "").trim()
+  const details = (li.description || "").trim()
+  if (name && details && details !== name) return `${name} — ${details}`
+  return name || details || "Item"
+}
+
+/** Every catalog product on the lines must belong to this business. */
+async function assertLineProducts(tenantId: string, lines: { product_id?: string | null }[]) {
+  const ids = [...new Set(lines.map((l) => l.product_id).filter(Boolean))] as string[]
+  if (ids.length && (await prisma.product.count({ where: { tenantId, id: { in: ids } } })) !== ids.length) {
+    throw new Error("Product not found")
+  }
+}
+
 export async function createInvoice(
   payload: CreateInvoicePayload
 ): Promise<{ id: string | null; error: string | null }> {
@@ -232,6 +253,7 @@ export async function createInvoice(
     if (payload.contact_id && !(await prisma.contact.count({ where: { id: payload.contact_id, tenantId } }))) {
       return { id: null, error: "Customer not found" }
     }
+    await assertLineProducts(tenantId, payload.line_items)
 
     const isProforma = payload.type === "PROFORMA"
     const finalType: InvoiceTypeEnum = isProforma ? "PROFORMA" : "TAX_INVOICE"
@@ -319,7 +341,8 @@ export async function createInvoice(
         items: {
           create: payload.line_items.map((li) => {
             return {
-              description: li.description || li.product_name || "Item",
+              productId: li.product_id || null,
+              description: lineDescription(li),
               hsnSacCode: li.hsn_sac || null,
               quantity: li.qty,
               unitPrice: li.unit_price,
@@ -355,6 +378,7 @@ export async function createInvoice(
     }, invoice.id)
 
     await postToLedger(tenantId, { kind: "invoice", id: invoice.id })
+    await postInvoiceStock(tenantId, { invoiceId: invoice.id })
 
     revalidatePath("/sales/invoices")
     return { id: invoice.id, error: null }
@@ -375,6 +399,7 @@ export async function updateInvoice(
   const tenantId = await getTenantWriterId()
 
   try {
+    await assertLineProducts(tenantId, payload.line_items)
     const isProforma = payload.type === "PROFORMA"
     const finalType: InvoiceTypeEnum = isProforma ? "PROFORMA" : "TAX_INVOICE"
 
@@ -447,7 +472,8 @@ export async function updateInvoice(
           items: {
             create: payload.line_items.map((li) => {
               return {
-                description: li.description || li.product_name || "Item",
+                productId: li.product_id || null,
+                description: lineDescription(li),
                 hsnSacCode: li.hsn_sac || null,
                 quantity: li.qty,
                 unitPrice: li.unit_price,
@@ -505,6 +531,7 @@ export async function updateInvoice(
     }
 
     await postToLedger(tenantId, { kind: "invoice", id: payload.id })
+    await postInvoiceStock(tenantId, { invoiceId: payload.id })
 
     revalidatePath("/sales/invoices")
     revalidatePath(`/sales/invoices/${payload.id}`)
@@ -577,6 +604,7 @@ export async function convertProformaToInvoice(
     }
 
     await postToLedger(tenantId, { kind: "invoice", id: proformaId })
+    await postInvoiceStock(tenantId, { invoiceId: proformaId })
 
     revalidatePath("/sales/invoices")
     revalidatePath(`/sales/invoices/${proformaId}`)
@@ -593,7 +621,7 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
 
   try {
     // Only this business's invoice (checked before anything is deleted)
-    const owned = await prisma.invoice.findFirst({ where: { id, tenantId }, select: { id: true } })
+    const owned = await prisma.invoice.findFirst({ where: { id, tenantId }, select: { id: true, invoiceNumber: true } })
     if (!owned) return { error: "Invoice not found" }
     // Its payments are deleted with it (cascade); their journals are voided below
     const paymentIds: string[] = (await prisma.payment.findMany({ where: { invoiceId: id, tenantId }, select: { id: true } })).map((p: { id: string }) => p.id)
@@ -624,6 +652,7 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
 
     await postToLedger(tenantId, { kind: "invoice", id })
     for (const paymentId of paymentIds) await postToLedger(tenantId, { kind: "payment", id: paymentId })
+    await postInvoiceStock(tenantId, { invoiceNumber: owned.invoiceNumber })
 
     revalidatePath("/sales/invoices")
     return { error: null }
@@ -721,6 +750,7 @@ export async function sendInvoiceEmail(
     data: { status: "SENT" as any },
   })
   await postToLedger(tenantId, { kind: "invoice", id })
+  await postInvoiceStock(tenantId, { invoiceId: id })
 
   revalidatePath("/sales/invoices")
   revalidatePath(`/sales/invoices/${id}`)

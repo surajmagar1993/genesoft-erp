@@ -5,6 +5,7 @@ import "./globals.css";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import NextTopLoader from "nextjs-toploader";
+import { Toaster } from "sonner";
 
 export const dynamic = "force-dynamic";
 
@@ -59,6 +60,8 @@ export default function RootLayout({
           <TooltipProvider>
             {children}
           </TooltipProvider>
+          {/* Shows every toast() message (success/error) across the app */}
+          <Toaster richColors closeButton position="top-right" theme="system" />
         </ThemeProvider>
       </body>
     </html>

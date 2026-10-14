@@ -6,6 +6,8 @@ import { InvoiceForm, InvoiceFormData, type InvoiceTaxRegime } from "@/component
 import { getInvoiceTaxRegime } from "@/app/actions/sales/tax"
 import { updateInvoice, InvoiceDB } from "@/app/actions/sales/invoices"
 import { getContacts } from "@/app/actions/crm/contacts"
+import { getProductsForDocuments, type DocumentProduct } from "@/app/actions/sales/products"
+import { toast } from "sonner"
 import { computeLineItemGst, getSupplyTypeForRegime, GstRate } from "@/lib/gst-engine"
 
 interface Props {
@@ -17,6 +19,8 @@ export default function EditInvoiceClient({ invoice }: Props) {
     const [regime, setRegime] = useState<InvoiceTaxRegime | null>(null)
     useEffect(() => { getInvoiceTaxRegime().then(setRegime) }, [])
     const [contacts, setContacts] = useState<any[]>([])
+    const [products, setProducts] = useState<DocumentProduct[]>([])
+    useEffect(() => { getProductsForDocuments().then(setProducts).catch(() => setProducts([])) }, [])
 
     useEffect(() => {
         getContacts(1, 100).then((res) => setContacts(res.data))
@@ -52,6 +56,7 @@ export default function EditInvoiceClient({ invoice }: Props) {
         taxExemptionCertificate: invoice.tax_exemption_certificate ?? "",
         lineItems: (invoice.invoice_line_items ?? []).map((li) => ({
             id: li.id,
+            productId: li.product_id ?? null,
             productName: li.product_name,
             description: li.description,
             qty: li.qty,
@@ -96,6 +101,7 @@ export default function EditInvoiceClient({ invoice }: Props) {
                 const effectiveRate = data.isTaxExempt ? 0 : li.gstRate
                 const gst = computeLineItemGst(li.qty, li.unitPrice, effectiveRate, supplyType)
                 return {
+                    product_id: li.productId || null,
                     product_name: li.productName,
                     description: li.description,
                     qty: li.qty,
@@ -112,10 +118,12 @@ export default function EditInvoiceClient({ invoice }: Props) {
             }),
         })
 
-        if (!error) {
-            router.push("/sales/invoices")
+        if (error) {
+            toast.error(error)
+            return
         }
+        router.push("/sales/invoices")
     }
 
-    return regime ? <InvoiceForm initialData={initialData} onSave={handleSave} contacts={contacts} regime={regime} /> : <div className="p-8 text-sm text-muted-foreground">Loading…</div>
+    return regime ? <InvoiceForm initialData={initialData} products={products} onSave={handleSave} contacts={contacts} regime={regime} /> : <div className="p-8 text-sm text-muted-foreground">Loading…</div>
 }

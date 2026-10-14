@@ -77,11 +77,16 @@ export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB
     tax_exemption_certificate: (inv as any).taxExemptionCertificate || null,
     created_at: inv.createdAt ? new Date(inv.createdAt).toISOString() : new Date().toISOString(),
     updated_at: inv.updatedAt ? new Date(inv.updatedAt).toISOString() : new Date().toISOString(),
-    invoice_line_items: (inv.items || []).map((li: any) => ({
+    invoice_line_items: (inv.items || []).map((li: any) => {
+      // Lines are stored as "Product — details" (see lineDescription in invoices.ts)
+      const text = String(li.description || "Item")
+      const sep = text.indexOf(" — ")
+      return {
       id: li.id,
       invoice_id: li.invoiceId,
-      product_name: li.description || "Item",
-      description: li.description || "",
+      product_id: li.productId ?? null,
+      product_name: sep > 0 ? text.slice(0, sep) : text,
+      description: sep > 0 ? text.slice(sep + 3) : "",
       qty: Number(li.quantity),
       unit_price: Number(li.unitPrice),
       tax_percent:
@@ -99,7 +104,7 @@ export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB
       vat_percent: Number(li.vatRate || 0),
       vat_amount: Number(li.vatAmount || 0),
       tenant_id: inv.tenantId,
-    })),
+    }}),
     tenants: inv.tenant
       ? {
           id: inv.tenant.id,

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
+import { postInvoiceStock } from "@/lib/stock"
 import { recordContactTransaction } from "@/lib/contact-ledger"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { buildInvoiceLines, contactPlaceOfSupply } from "@/lib/invoice-lines"
@@ -517,6 +518,7 @@ export async function convertChallanToInvoice(challanId: string) {
         return { success: true, invoice }
     }).then(async (res: any) => {
         await postToLedger(tenantId, { kind: "invoice", id: res.invoice.id })
+        await postInvoiceStock(tenantId, { invoiceId: res.invoice.id })
         try {
             await recordContactTransaction(tenantId, { contactId: challan.contactId!, type: "INVOICE", amount: built.total, currencyCode: built.currencyCode, referenceId: res.invoice.id, description: `Invoice ${invoiceNumber} (challan ${challan.challanNumber})`, date: res.invoice.invoiceDate })
         } catch (err) {

@@ -8,9 +8,16 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 | Date | Fixed | Notes |
 |---|---|---|
 | 14 Oct 2026 | **C1, C2, C3, C4, C5**, **M3**, **M6**, **N1** | Leads/deals moved to Prisma (email/phone on the linked contact; search fixed); products map `unit_price` ↔ live `"unitPrice"`; rental and challan invoices built with the business's tax rules and real invoice-line fields; one invoice-number series for every flow (`src/lib/invoice-number.ts`); rental/challan/recurring invoices now reach the customer statement. Covered by `critical-fixes.int.test.ts` and `supabase-writes.int.test.ts`. |
-| 14 Oct 2026 | **H1, H2, H4, H5, H6**, **H3 (POS)**, **M10**, **N2** | PO→bill records the bill properly (supplier statement, ledger, no double conversion); credit-note restock writes a valid stock movement; payroll deducts absences marked in attendance and splits leaves across months; finished work orders are final (atomic claim on completion); report builder datasets use real fields (no invented cost price or reorder level); POS sales take goods out of product and default-warehouse stock (`src/lib/stock.ts`). Covered by `high-fixes.int.test.ts`. **Still open from H3:** invoices from the form (need the product picker, M5) and delivery challans don't move stock yet. |
+| 14 Oct 2026 | **H1, H2, H4, H5, H6**, **H3 (POS)**, **M10**, **N2** | PO→bill records the bill properly (supplier statement, ledger, no double conversion); credit-note restock writes a valid stock movement; payroll deducts absences marked in attendance and splits leaves across months; finished work orders are final (atomic claim on completion); report builder datasets use real fields (no invented cost price or reorder level); POS sales take goods out of product and default-warehouse stock (`src/lib/stock.ts`). Covered by `high-fixes.int.test.ts`. |
+| 14 Oct 2026 | **H3 (rest)**, **M5**, **M2**, **N3, N4, N5** | Invoice lines have a catalog product picker (fills name, price, HSN/SAC, tax rate) and remember the product; issued invoices take goods out of stock and editing/cancelling/deleting puts them back (`syncInvoiceStock`, matched by invoice number so POS isn't double-counted); delivery-challan and recurring invoices too. Converted leads keep the person's name (via C1). Covered by `invoice-stock.int.test.ts`. |
 
 **N1 🔴 (found while fixing) Most records saved through the Supabase client couldn't be saved at all.** In the live database `updated_at` is NOT NULL with no default on 59 tables and there are no triggers, so every Supabase insert that didn't send `updated_at` failed: **products, quotes, sales orders, bills (and bill items, which also sent a non-existent `tenant_id` and no `id`), CRM tasks, communication-log entries, new accounts and the default chart-of-accounts seed.** Confirmed with inserts inside rolled-back transactions on the live DB (fails without `updated_at`, succeeds with it). Fixed with `stamped()` (`src/lib/db-row.ts`) on every such insert; bill items now get an id and no tenant_id.
+
+**N3 🟠 (found while fixing) No toast message has ever been shown.** 76 screens call `toast()` for success/error messages but no `<Toaster />` was mounted, so users never saw "saved", "failed" or permission messages. Fixed in `src/app/layout.tsx`.
+
+**N4 🟡 (found while fixing) Invoice lines lost the product name** when details were also typed (`description || product_name`). Lines now store "Product — details" and the mapper splits them back.
+
+**N5 🟡 (found while fixing) Saving an invoice failed silently**: the new/edit invoice pages only navigated on success and showed nothing on error. They now show the error.
 
 **N2 🟠 (found while fixing) Payroll invented a ₹35,000 salary** for any employee without one (`payroll.ts`: `emp.basicSalary ? … : 35000`). Fixed: the pay run stops and names the employees who need a salary.
 
@@ -75,7 +82,7 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 - Verified: live API, all three columns do not exist. Fixo has 0 deals.
 - Fix: pick or create a contact and send `contact_id`; rename `expected_close` to `expected_close_date`; drop `company`, or link it through the contact.
 
-**M2 🟡 Converting a lead loses the person's name and value**
+**✅ Fixed · M2 🟡 Converting a lead loses the person's name and value**
 - Where: `src/app/actions/crm/leads.ts:178`.
 - Problem: conversion reads the lead with Prisma, but the name lives in `leads.contact_name`, a live column missing from `schema.prisma`. The new contact is always "New Contact from Lead" with no email or phone. The deal value is always 0.
 
@@ -109,7 +116,7 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 
 **M4 🟡 Sales orders can't become invoices.** Quote → order exists (`orders.ts`), but nothing converts an order to an invoice, so the order is a dead end.
 
-**M5 🟡 No product picker on invoices, quotes or orders.** You type product names freehand, so documents never link to products. That means:
+**✅ Fixed · M5 🟡 No product picker on invoices, quotes or orders.** You type product names freehand, so documents never link to products. That means:
 - no stock movement (see H3);
 - no product-level sales reports;
 - prices and tax groups aren't pulled from the catalog;
@@ -145,7 +152,7 @@ This report lists the bugs found. **Fix status** is tracked in the next section.
 
 ### 🏭 Inventory & warehouse
 
-**⚠️ Partly fixed (POS) · H3 🟠 Selling never reduces stock**
+**✅ Fixed · H3 🟠 Selling never reduces stock**
 - No sales path in the app reduces stock or writes a stock movement: invoices (lines don't even store the product), POS (only reads `stockQty`), delivery challans and rentals all leave it untouched.
 - Stock only changes through manual adjustments, transfers, receiving goods and manufacturing.
 - Impact: stock levels, low-stock alerts, stock valuation and the STOCK_LOW workflow are all wrong for any business that sells.

@@ -29,10 +29,13 @@ import {
   isValidGstin,
   TAX_EXEMPTION_REASONS,
 } from "@/lib/gst-engine"
+import type { DocumentProduct } from "@/app/actions/sales/products"
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 export interface InvoiceLineItem {
   id: string
+  /** Catalog product: its goods leave stock when the invoice is issued */
+  productId?: string | null
   productName: string
   description: string
   qty: number
@@ -167,11 +170,13 @@ interface InvoiceFormProps {
   initialData?: InvoiceFormData | null
   nextInvoiceNumber?: string
   contacts?: any[]
+  /** Catalog for the line picker (getProductsForDocuments) */
+  products?: DocumentProduct[]
   onSave: (data: InvoiceFormData) => void
   regime?: InvoiceTaxRegime
 }
 
-export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave, regime = INDIA_REGIME }: InvoiceFormProps) {
+export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products = [], onSave, regime = INDIA_REGIME }: InvoiceFormProps) {
   const router = useRouter()
   const isIndia = regime.mode === "IN_GST"
   const taxLabel = regime.taxLabel
@@ -214,6 +219,20 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave, 
   const addLineItem = () => {
     const newItem: InvoiceLineItem = { ...emptyLineItem, gstRate: regime.defaultRate as GstRate, id: Date.now().toString() }
     update("lineItems", [...form.lineItems, newItem])
+  }
+
+  /** Fill a line from the catalog (or unlink it when productId is empty) */
+  const pickProduct = (id: string, productId: string) => {
+    const p = products.find((x) => x.id === productId)
+    update(
+      "lineItems",
+      form.lineItems.map((li) => {
+        if (li.id !== id) return li
+        if (!p) return { ...li, productId: null }
+        const rate = (regime.standardRates.includes(p.taxRate) ? p.taxRate : regime.defaultRate) as GstRate
+        return { ...li, productId: p.id, productName: p.name, unitPrice: p.unitPrice, hsnSac: p.hsnSacCode || li.hsnSac, gstRate: rate }
+      })
+    )
   }
 
   const updateLineItem = (id: string, field: keyof InvoiceLineItem, value: any) => {
@@ -669,6 +688,27 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, onSave, 
                       key={item.id}
                       className="rounded-md border p-3 space-y-2"
                     >
+                      {products.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <label htmlFor={`product-${item.id}`} className="text-muted-foreground">Catalog</label>
+                          <select
+                            id={`product-${item.id}`}
+                            value={item.productId ?? ""}
+                            onChange={(e) => pickProduct(item.id, e.target.value)}
+                            className="h-8 rounded-md border bg-background px-2 text-sm max-w-xs"
+                          >
+                            <option value="">Not from catalog (free text)</option>
+                            {products.map((p) => (
+                              <option key={p.id} value={p.id}>
+                                {p.name}{p.type === "PRODUCT" ? ` · ${p.stockQty} ${p.unit} in stock` : " · service"}
+                              </option>
+                            ))}
+                          </select>
+                          {item.productId && products.find((p) => p.id === item.productId)?.type === "PRODUCT" && (
+                            <span className="text-muted-foreground">Leaves stock when the invoice is issued</span>
+                          )}
+                        </div>
+                      )}
                       {/* Row 1: main inputs */}
                       <div className="grid grid-cols-[1.8fr_1.2fr_0.7fr_0.7fr_1fr_0.6fr_1.2fr_auto] gap-2 items-center">
                         <Input

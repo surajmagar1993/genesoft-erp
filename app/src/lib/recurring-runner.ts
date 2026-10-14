@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
+import { postInvoiceStock } from "@/lib/stock"
 import { recordContactTransaction } from "@/lib/contact-ledger"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
@@ -167,6 +168,7 @@ if (!profile) return { error: "Recurring profile not found" }
     }, result.id)
 
     await postToLedger(tenantId, { kind: "invoice", id: result.id })
+    await postInvoiceStock(tenantId, { invoiceId: result.id })
     // Customer statement (drafts aren't owed yet)
     if (result.status !== "DRAFT") {
         try {

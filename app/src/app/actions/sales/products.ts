@@ -5,6 +5,7 @@ import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-te
 import { revalidatePath } from "next/cache"
 import { stamped } from "@/lib/db-row"
 import { prisma } from "@/lib/prisma"
+import { getTenantTaxContext, productTaxRate } from "@/lib/tenant-tax"
 
 /* ── Types ── */
 export type ProductType = "PRODUCT" | "SERVICE"
@@ -276,4 +277,38 @@ export async function importProducts(
 
   revalidatePath("/sales/products")
   return { error: null, count: data?.length || 0 }
+}
+
+/* ── For document forms (invoice line picker) ── */
+export interface DocumentProduct {
+  id: string
+  name: string
+  type: ProductType
+  unitPrice: number
+  hsnSacCode: string
+  /** Tax rate from the product's tax group, else the business's standard rate */
+  taxRate: number
+  unit: string
+  stockQty: number
+}
+
+export async function getProductsForDocuments(): Promise<DocumentProduct[]> {
+  const tenantId = await getTenantId()
+  const defaultRate = (await getTenantTaxContext(tenantId)).regime.defaultRate
+  const rows = await prisma.product.findMany({
+    where: { tenantId, isActive: true },
+    select: { id: true, name: true, type: true, unitPrice: true, hsnSacCode: true, unit: true, stockQty: true, taxGroup: { select: { taxRates: { select: { name: true, rate: true, isActive: true } } } } },
+    orderBy: { name: "asc" },
+    take: 1000,
+  })
+  return rows.map((p: { id: string; name: string; type: ProductType; unitPrice: unknown; hsnSacCode: string | null; unit: string | null; stockQty: unknown; taxGroup: never }) => ({
+    id: p.id,
+    name: p.name,
+    type: p.type,
+    unitPrice: Number(p.unitPrice || 0),
+    hsnSacCode: p.hsnSacCode || "",
+    taxRate: productTaxRate(p.taxGroup, defaultRate),
+    unit: p.unit || "",
+    stockQty: Number(p.stockQty || 0),
+  }))
 }

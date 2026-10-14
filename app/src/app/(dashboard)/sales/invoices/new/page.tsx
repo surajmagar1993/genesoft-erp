@@ -6,6 +6,8 @@ import { InvoiceForm, InvoiceFormData, type InvoiceTaxRegime } from "@/component
 import { getInvoiceTaxRegime } from "@/app/actions/sales/tax"
 import { createInvoice, getNextInvoiceNumber } from "@/app/actions/sales/invoices"
 import { getContacts } from "@/app/actions/crm/contacts"
+import { getProductsForDocuments, type DocumentProduct } from "@/app/actions/sales/products"
+import { toast } from "sonner"
 import { computeLineItemGst, getSupplyTypeForRegime } from "@/lib/gst-engine"
 
 export default function NewInvoicePage() {
@@ -18,6 +20,8 @@ function NewInvoiceFormWrapper() {
     useEffect(() => { getInvoiceTaxRegime().then(setRegime) }, [])
     const [nextInvoiceNum, setNextInvoiceNum] = useState<string>("")
     const [contacts, setContacts] = useState<any[]>([])
+    const [products, setProducts] = useState<DocumentProduct[]>([])
+    useEffect(() => { getProductsForDocuments().then(setProducts).catch(() => setProducts([])) }, [])
 
     useEffect(() => {
         getNextInvoiceNumber().then(setNextInvoiceNum)
@@ -62,6 +66,7 @@ function NewInvoiceFormWrapper() {
                 const effectiveRate = data.isTaxExempt ? 0 : li.gstRate
                 const gst = computeLineItemGst(li.qty, li.unitPrice, effectiveRate, supplyType)
                 return {
+                    product_id: li.productId || null,
                     product_name: li.productName,
                     description: li.description,
                     qty: li.qty,
@@ -78,10 +83,12 @@ function NewInvoiceFormWrapper() {
             }),
         })
 
-        if (!error) {
-            router.push("/sales/invoices")
+        if (error) {
+            toast.error(error)
+            return
         }
+        router.push("/sales/invoices")
     }
 
-    return regime ? <InvoiceForm onSave={handleSave} nextInvoiceNumber={nextInvoiceNum} contacts={contacts} regime={regime} /> : <div className="p-8 text-sm text-muted-foreground">Loading…</div>
+    return regime ? <InvoiceForm products={products} onSave={handleSave} nextInvoiceNumber={nextInvoiceNum} contacts={contacts} regime={regime} /> : <div className="p-8 text-sm text-muted-foreground">Loading…</div>
 }
