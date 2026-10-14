@@ -4,6 +4,15 @@ import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { stamped } from "@/lib/db-row"
+import { buildInvoiceLines, contactPlaceOfSupply } from "@/lib/invoice-lines"
+import { nextInvoiceNumber } from "@/lib/invoice-number"
+
+/** Documents are always in the business's own currency (never a browser-sent or "INR" default). */
+async function tenantCurrency(tenantId: string): Promise<string> {
+  const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
+  return t?.currencyCode || "INR"
+}
+import { prisma } from "@/lib/prisma"
 
 /* ── Types ── */
 export type SalesOrderStatus = "DRAFT" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED"
@@ -160,7 +169,7 @@ export async function createOrder(
       tax_amount: taxAmount,
       total: grandTotal,
       tenant_id: tenantId,
-      currency_code: headerFields.currency_code || "INR",
+      currency_code: await tenantCurrency(tenantId),
       expected_date: headerFields.expected_date || null,
       quote_id: headerFields.quote_id || null,
     }))
@@ -232,6 +241,7 @@ export async function updateOrder(
     .from("sales_orders")
     .update({
       ...headerFields,
+      currency_code: await tenantCurrency(tenantId),
       subtotal,
       tax_amount: taxAmount,
       total: grandTotal,
@@ -336,7 +346,7 @@ export async function convertQuoteToOrder(quoteId: string): Promise<{ orderId: s
     terms_and_conditions: quote.terms_and_conditions,
     contact_id: quote.contact_id,
     quote_id: quote.id,
-    currency_code: quote.currency_code || "INR",
+    currency_code: quote.currency_code || (await tenantCurrency(tenantId)),
     line_items,
   }
 
@@ -355,4 +365,68 @@ export async function convertQuoteToOrder(quoteId: string): Promise<{ orderId: s
   }
 
   return { orderId: result.id, error: result.error }
+}
+
+/**
+ * Turns a sales order into a DRAFT invoice (tax from the business's rules,
+ * the normal invoice number) for review; it reaches the ledger and stock
+ * when it is sent. An order can be invoiced once.
+ */
+export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceId: string | null; error: string | null }> {
+  const tenantId = await getTenantWriterId()
+  try {
+    const order = await prisma.salesOrder.findFirst({
+      where: { id: orderId, tenantId },
+      include: { items: true, contact: { select: { displayName: true, email: true, gstin: true, billingAddress: true } } },
+    })
+    if (!order) return { invoiceId: null, error: "Sales order not found" }
+    if (order.status === "CANCELLED") return { invoiceId: null, error: "This order is cancelled" }
+    const already = await prisma.invoice.findFirst({ where: { tenantId, billTo: { path: ["salesOrderId"], equals: order.id } }, select: { invoiceNumber: true } })
+    if (already) return { invoiceId: null, error: `Already invoiced as ${already.invoiceNumber}` }
+
+    const built = await buildInvoiceLines(
+      tenantId,
+      (order.items as { productName: string; description: string | null; qty: unknown; unitPrice: unknown; taxPercent: unknown }[]).map((li) => ({
+        description: li.description?.trim() ? `${li.productName} — ${li.description}` : li.productName,
+        quantity: Number(li.qty),
+        unitPrice: Number(li.unitPrice),
+        taxRate: Number(li.taxPercent ?? 0),
+      })),
+      contactPlaceOfSupply(order.contact)
+    )
+    const discount = order.discountType === "PERCENT" ? Math.round(built.subtotal * Number(order.discount || 0)) / 100 : Number(order.discount || 0)
+    const invoice = await prisma.invoice.create({
+      data: {
+        tenantId,
+        contactId: order.contactId,
+        invoiceNumber: await nextInvoiceNumber(tenantId),
+        type: "TAX_INVOICE",
+        status: "DRAFT",
+        invoiceDate: new Date(),
+        billTo: {
+          name: order.contact?.displayName || order.customerName,
+          email: order.contact?.email || order.customerEmail || "",
+          gstin: order.contact?.gstin || null,
+          address: order.contact?.billingAddress || null,
+          reference: order.orderNumber,
+          salesOrderId: order.id,
+        },
+        placeOfSupply: contactPlaceOfSupply(order.contact),
+        subtotal: built.subtotal,
+        taxAmount: built.taxAmount,
+        discount,
+        total: Math.round((built.total - discount) * 100) / 100,
+        currencyCode: built.currencyCode,
+        notes: order.notes || `From sales order ${order.orderNumber}`,
+        terms: order.termsAndConditions || null,
+        items: { create: built.items },
+      },
+      select: { id: true },
+    })
+    revalidatePath("/sales/invoices")
+    revalidatePath("/sales/orders")
+    return { invoiceId: invoice.id, error: null }
+  } catch (err) {
+    return { invoiceId: null, error: err instanceof Error ? err.message : "Couldn't create the invoice" }
+  }
 }

@@ -74,7 +74,8 @@ export async function createAccount(
 
   const { error } = await supabase
     .from("accounts")
-    .insert([stamped({ ...formData, tenant_id: tenantId })])
+    // The balance only changes through journal entries (General Ledger)
+    .insert([stamped({ ...formData, balance: 0, tenant_id: tenantId })])
 
   if (error) return { error: error.message }
   revalidatePath("/finance/accounts")
@@ -91,7 +92,8 @@ export async function updateAccount(
 
   const { error } = await supabase
     .from("accounts")
-    .update(formData)
+    // The balance only changes through journal entries (General Ledger)
+    .update((({ balance: _ignored, ...rest }) => rest)(formData as Record<string, unknown> & { balance?: unknown }))
     .eq("id", id)
     .eq("tenant_id", tenantId)
 

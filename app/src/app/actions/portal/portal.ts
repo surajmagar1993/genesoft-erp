@@ -30,12 +30,14 @@ async function resolveContact(token: string) {
           email: true,
           phone: true,
           website: true,
+          isActive: true,
         },
       },
     },
   })
 
-  if (!contact || !contact.portalEnabled) {
+  // A suspended or closed business's portal is off too
+  if (!contact || !contact.portalEnabled || !contact.tenant.isActive) {
     return null
   }
 

@@ -7,8 +7,10 @@ import { FormFieldConfig, WebFormType, WebFormStatus } from "@/app/actions/crm/f
 // Form links use the short code; the UUID id is also accepted, but only when the value is a valid UUID (Postgres rejects anything else)
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
+/** Only forms of active businesses are public (suspended/closed ones show "not found"). */
 function formLookup(code: string) {
-    return UUID_PATTERN.test(code) ? { OR: [{ code }, { id: code }] } : { code }
+    const match = UUID_PATTERN.test(code) ? { OR: [{ code }, { id: code }] } : { code }
+    return { ...match, tenant: { isActive: true } }
 }
 
 interface PublicFormPageProps {

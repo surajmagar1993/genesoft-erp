@@ -17,11 +17,12 @@ export async function generateMetadata({
     where: { portalToken: token },
     select: {
       displayName: true,
-      tenant: { select: { name: true } },
+      portalEnabled: true,
+      tenant: { select: { name: true, isActive: true } },
     },
   })
 
-  if (!contact) {
+  if (!contact || !contact.portalEnabled || !contact.tenant.isActive) {
     return { title: "Portal Not Found" }
   }
 
@@ -39,11 +40,12 @@ export default async function PortalPage({ params }: PortalPageProps) {
     select: {
       portalEnabled: true,
       displayName: true,
-      tenant: { select: { name: true, logoUrl: true } },
+      tenant: { select: { name: true, logoUrl: true, isActive: true } },
     },
   })
 
-  if (!contact || !contact.portalEnabled) {
+  // A suspended or closed business's portal is off too
+  if (!contact || !contact.portalEnabled || !contact.tenant.isActive) {
     notFound()
   }
 

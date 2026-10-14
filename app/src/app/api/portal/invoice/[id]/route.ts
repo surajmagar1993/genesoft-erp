@@ -30,10 +30,10 @@ export async function GET(
   // Resolve contact from token
   const contact = await prisma.contact.findUnique({
     where: { portalToken: token },
-    select: { id: true, portalEnabled: true, tenantId: true },
+    select: { id: true, portalEnabled: true, tenantId: true, tenant: { select: { isActive: true } } },
   })
 
-  if (!contact || !contact.portalEnabled) {
+  if (!contact || !contact.portalEnabled || !contact.tenant.isActive) {
     return NextResponse.json(
       { error: "Invalid or disabled portal access" },
       { status: 403 }

@@ -944,14 +944,28 @@ export async function processRentalReturn(input: ProcessRentalReturnInput) {
         include: { items: true }
     })
     if (!agreement) throw new Error("Agreement not found")
+    if (agreement.status === RentalStatus.RETURNED || agreement.status === RentalStatus.CANCELLED) {
+        throw new Error(`This agreement is already ${agreement.status.toLowerCase()}.`)
+    }
+    if (!agreement.items.some((i: { assetId: string }) => i.assetId === input.assetId)) {
+        throw new Error("This asset isn't on the agreement")
+    }
+    if (await prisma.rentalReturn.count({ where: { tenantId, agreementId: agreement.id, assetId: input.assetId } })) {
+        throw new Error("This asset has already been returned")
+    }
 
     const returnDate = new Date(input.returnDate || new Date())
-    const damageFee = input.damageFee || 0
-    const lateFee = input.lateFee || 0
+    if (Number.isNaN(returnDate.getTime())) throw new Error("Choose a valid return date")
+    const damageFee = Number(input.damageFee || 0)
+    const lateFee = Number(input.lateFee || 0)
+    if (!(damageFee >= 0) || !(lateFee >= 0)) throw new Error("Fees can't be negative")
     const totalDeposit = Number(agreement.securityDeposit)
     const depositRefunded = input.depositRefunded !== undefined
-        ? input.depositRefunded
+        ? Number(input.depositRefunded)
         : Math.max(0, totalDeposit - (damageFee + lateFee))
+    if (!(depositRefunded >= 0) || depositRefunded > totalDeposit) {
+        throw new Error(`Deposit refunded must be between 0 and the deposit held (${totalDeposit})`)
+    }
 
     // Determine deposit status
     let depositStatus = agreement.depositStatus

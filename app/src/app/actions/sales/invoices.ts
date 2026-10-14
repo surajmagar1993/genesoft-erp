@@ -228,6 +228,25 @@ export interface CreateInvoicePayload {
 }
 
 
+
+const LIVE_FOR_CREDIT = ["SENT", "VIEWED", "PARTIALLY_PAID", "PAID", "OVERDUE"]
+
+/**
+ * Customer credit limit: an issued invoice may not take the customer's
+ * outstanding balance above their limit (no limit = no check). Drafts and
+ * proformas aren't checked. `increase` is what this save adds to the balance.
+ */
+async function assertCreditLimit(tenantId: string, contactId: string | null | undefined, increase: number) {
+  if (!contactId || !(increase > 0)) return
+  const c = await prisma.contact.findFirst({ where: { id: contactId, tenantId }, select: { creditLimit: true, balance: true, displayName: true, currencyCode: true } })
+  const limit = Number(c?.creditLimit || 0)
+  if (!c || !(limit > 0)) return
+  const after = Number(c.balance || 0) + increase
+  if (after > limit + 0.005) {
+    throw new Error(`This would take ${c.displayName}'s balance to ${after.toFixed(2)}, over their credit limit of ${limit.toFixed(2)}. Record a payment or raise the limit first.`)
+  }
+}
+
 /** An invoice line keeps one text field: "Product — details" (the mapper splits it back). */
 function lineDescription(li: { product_name?: string; description?: string }): string {
   const name = (li.product_name || "").trim()
@@ -314,6 +333,10 @@ export async function createInvoice(
     }
 
     // Insert Invoice and Line Items atomically
+    if (!isProforma && LIVE_FOR_CREDIT.includes(payload.status)) {
+      await assertCreditLimit(tenantId, payload.contact_id, summary.grandTotal)
+    }
+
     const invoice = await prisma.invoice.create({
       data: {
         tenantId,
@@ -438,6 +461,14 @@ export async function updateInvoice(
       signatoryDesignation: payload.signatory_designation || "Authorized Signatory",
       supplierGstin: payload.supplier_gstin,
       supplierState: payload.supplier_state,
+    }
+
+    // Credit limit: only the increase over what this invoice already added to the balance
+    const before = await prisma.invoice.findFirst({ where: { id: payload.id, tenantId }, select: { total: true, status: true, type: true, contactId: true } })
+    if (!before) return { error: "Invoice not found" }
+    if (!isProforma && LIVE_FOR_CREDIT.includes(payload.status)) {
+      const already = before.type !== "PROFORMA" && LIVE_FOR_CREDIT.includes(before.status) && before.contactId === payload.contact_id ? Number(before.total) : 0
+      await assertCreditLimit(tenantId, payload.contact_id, summary.grandTotal - already)
     }
 
     // Atomic update of header and line items

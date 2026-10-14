@@ -132,8 +132,9 @@ export default function EditAccountForm({ account, parentAccounts }: Props) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="balance">Balance</Label>
-                <Input id="balance" type="number" step="0.01" value={form.balance} onChange={e => setForm(f => ({ ...f, balance: parseFloat(e.target.value) || 0 }))} />
+                <Label>Balance</Label>
+                <p className="text-sm font-medium tabular-nums">{form.balance}</p>
+                <p className="text-xs text-muted-foreground">From journal entries; change it with a journal or Opening Balances.</p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="currency">Currency</Label>

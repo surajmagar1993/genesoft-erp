@@ -520,6 +520,19 @@ export async function updateWorkOrderStatus(
         const totalUnitsBatch = finalProduced + finalScrap
         const bomQty = Number(order.bom.quantity) || 1
 
+        // Enough raw material in the source warehouse? (stock must not go negative)
+        const shortages: string[] = []
+        for (const item of order.bom.items) {
+            const need = Math.round((Number(item.quantity) * (1 + Number(item.scrapPercentage) / 100) * (totalUnitsBatch / bomQty)) * 10000) / 10000
+            const stock = await prisma.warehouseStock.findFirst({ where: { tenantId, warehouseId: order.sourceWarehouseId, productId: item.productId }, select: { quantity: true } })
+            const have = stock ? Number(stock.quantity) : 0
+            if (have < need) {
+                const product = await prisma.product.findFirst({ where: { id: item.productId, tenantId }, select: { name: true } })
+                shortages.push(`${product?.name ?? "item"} (need ${need}, have ${have})`)
+            }
+        }
+        if (shortages.length) throw new Error(`Not enough raw material in the source warehouse: ${shortages.join("; ")}`)
+
         await prisma.$transaction(async (tx: any) => {
             // Claim the order first: if another request completed it a moment ago, stop here
             const claimed = await tx.workOrder.updateMany({

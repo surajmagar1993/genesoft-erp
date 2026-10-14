@@ -2,17 +2,30 @@
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, FileText, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { OrderForm, OrderFormData } from "@/components/sales/order-form"
-import { getOrderById, updateOrder } from "@/app/actions/sales/orders"
+import { convertOrderToInvoice, getOrderById, updateOrder } from "@/app/actions/sales/orders"
 
 export default function EditOrderPage({ params }: { params: Promise<{ id: string }> }) {
     const { id: orderId } = use(params)
     const router = useRouter()
     const [initialData, setInitialData] = useState<OrderFormData | null>(null)
     const [loading, setLoading] = useState(true)
+    const [invoicing, setInvoicing] = useState(false)
+
+    const handleCreateInvoice = async () => {
+        setInvoicing(true)
+        const { invoiceId, error } = await convertOrderToInvoice(orderId)
+        setInvoicing(false)
+        if (error || !invoiceId) {
+            toast.error(error || "Couldn't create the invoice")
+            return
+        }
+        toast.success("Draft invoice created from this order. Review and send it.")
+        router.push(`/sales/invoices/${invoiceId}/edit`)
+    }
 
     useEffect(() => {
         const fetchOrder = async () => {
@@ -69,7 +82,7 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
             terms_and_conditions: rest.termsAndConditions,
             contact_id: rest.contactId,
             quote_id: rest.quoteId,
-            currency_code: "INR", // TODO: Get from form or settings
+            currency_code: "", // set on the server from the business's currency
             line_items: rest.lineItems.map(li => ({
                 product_name: li.productName,
                 description: li.description,
@@ -96,5 +109,15 @@ export default function EditOrderPage({ params }: { params: Promise<{ id: string
         )
     }
 
-    return <OrderForm initialData={initialData} onSave={handleSave} />
+    return (
+        <div className="space-y-4">
+            <div className="flex justify-end">
+                <Button variant="outline" onClick={handleCreateInvoice} disabled={invoicing}>
+                    {invoicing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                    Create invoice
+                </Button>
+            </div>
+            <OrderForm initialData={initialData} onSave={handleSave} />
+        </div>
+    )
 }

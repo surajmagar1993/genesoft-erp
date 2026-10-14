@@ -156,14 +156,11 @@ export default function NewAccountForm({ parentAccounts }: Props) {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="balance">Opening Balance</Label>
-                <Input
-                  id="balance"
-                  type="number"
-                  step="0.01"
-                  value={form.balance}
-                  onChange={e => setForm(f => ({ ...f, balance: parseFloat(e.target.value) || 0 }))}
-                />
+                <Label>Opening balance</Label>
+                <p className="text-sm text-muted-foreground">
+                  Balances come from journal entries. Set a starting balance in{" "}
+                  <a href="/finance/ledger" className="underline">General Ledger → Opening Balances</a>.
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="currency">Currency</Label>

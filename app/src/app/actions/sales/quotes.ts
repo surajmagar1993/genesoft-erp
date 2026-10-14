@@ -5,6 +5,13 @@ import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-te
 import { revalidatePath } from "next/cache"
 import { stamped } from "@/lib/db-row"
 
+/** Documents are always in the business's own currency (never a browser-sent or "INR" default). */
+async function tenantCurrency(tenantId: string): Promise<string> {
+  const t = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
+  return t?.currencyCode || "INR"
+}
+import { prisma } from "@/lib/prisma"
+
 /* ── Types ── */
 export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED"
 
@@ -159,7 +166,7 @@ export async function createQuote(
       tax_amount: taxAmount,
       total: grandTotal,
       tenant_id: tenantId,
-      currency_code: headerFields.currency_code || "INR",
+      currency_code: await tenantCurrency(tenantId),
       valid_until: headerFields.valid_until || null,
     }))
     .select("id")
@@ -230,6 +237,7 @@ export async function updateQuote(
     .from("quotes")
     .update({
       ...headerFields,
+      currency_code: await tenantCurrency(tenantId),
       subtotal,
       tax_amount: taxAmount,
       total: grandTotal,

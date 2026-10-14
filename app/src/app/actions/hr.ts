@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { assertCanActForEmployee, fireLeaveRequested } from "@/lib/employee-access"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
-import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { getTenantRole, getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
@@ -658,7 +658,17 @@ export async function submitLeaveRequest(data: {
     const start = new Date(data.startDate)
     const end = new Date(data.endDate)
 
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) throw new Error("Choose valid dates")
     if (end < start) throw new Error("End date cannot be before start date")
+
+    // No overlapping requests for the same person
+    const overlapping = await prisma.leave.findFirst({
+        where: { tenantId, employeeId: data.employeeId, status: { in: ["PENDING", "APPROVED"] }, startDate: { lte: end }, endDate: { gte: start } },
+        select: { startDate: true, endDate: true },
+    })
+    if (overlapping) {
+        throw new Error(`There's already a leave request from ${overlapping.startDate.toISOString().slice(0, 10)} to ${overlapping.endDate.toISOString().slice(0, 10)}`)
+    }
 
     const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
 
@@ -694,12 +704,19 @@ export async function updateLeaveStatus(data: {
     const { data: { user } } = await supabase.auth.getUser()
 
     const leave = await prisma.leave.findFirst({
-        where: { id: data.leaveId, tenantId }
+        where: { id: data.leaveId, tenantId },
+        include: { employee: { select: { userId: true } } },
     })
     if (!leave) throw new Error("Leave request not found")
+    if (!["APPROVED", "REJECTED", "CANCELLED", "PENDING"].includes(data.status)) throw new Error("Invalid leave status")
+    // Managers can't approve or reject their own leave (an admin can)
+    if (user && leave.employee?.userId === user.id) {
+        const role = await getTenantRole()
+        if (role !== "ADMIN" && role !== "SUPER_ADMIN") throw new Error("Ask another manager or an admin to decide on your own leave")
+    }
 
     const updated = await prisma.leave.update({
-        where: { id: data.leaveId },
+        where: { id: data.leaveId, tenantId },
         data: {
             status: data.status,
             approvedById: user?.id || null,

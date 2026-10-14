@@ -159,8 +159,13 @@ export async function createWebForm(data: CreateWebFormInput): Promise<{
         }
 
         const year = new Date().getFullYear()
-        const count = await prisma.webForm.count({ where: { tenantId } })
-        const code = `FORM-${year}-${String(count + 1).padStart(4, "0")}`
+        // Codes are unique across all businesses (they're the public link), so not a per-business count
+        let code = ""
+        for (let attempt = 0; attempt < 5 && !code; attempt++) {
+            const candidate = `FORM-${year}-${crypto.randomUUID().replace(/-/g, "").slice(0, 8).toUpperCase()}`
+            if (!(await prisma.webForm.count({ where: { code: candidate } }))) code = candidate
+        }
+        if (!code) throw new Error("Couldn't create a form link, please try again")
 
         const created = await prisma.webForm.create({
             data: {
@@ -312,6 +317,11 @@ export async function submitPublicForm(payload: SubmitPublicFormPayload): Promis
 
         if (!form) {
             return { success: false, message: "Form not found", error: "Invalid form identifier" }
+        }
+        // A suspended or closed business doesn't take submissions
+        const owner = await prisma.tenant.findUnique({ where: { id: form.tenantId }, select: { isActive: true } })
+        if (!owner?.isActive) {
+            return { success: false, message: "This form is currently closed to new submissions.", error: "Form unavailable" }
         }
 
         if (form.status !== "ACTIVE") {

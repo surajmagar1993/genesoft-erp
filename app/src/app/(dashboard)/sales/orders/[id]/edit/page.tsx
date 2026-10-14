@@ -69,7 +69,7 @@ export default function EditOrderPage() {
             terms_and_conditions: rest.termsAndConditions,
             contact_id: rest.contactId,
             quote_id: rest.quoteId,
-            currency_code: "INR",
+            currency_code: "", // set on the server from the business's currency
             line_items: rest.lineItems.map(li => ({
                 product_name: li.productName,
                 description: li.description,
