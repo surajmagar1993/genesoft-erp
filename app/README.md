@@ -103,6 +103,8 @@ Create `.env.local` in `app/` (never commit it). Variables the code reads:
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Optional | Platform Stripe billing for regions whose Admin → Pricing gateway is STRIPE. Stripe prices are created and kept in sync automatically (lookup keys `genesoft_<plan>_<cycle>_<currency>`); no price ids to configure. |
 | `CRON_SECRET` | Recommended | Protects the daily job at `/api/cron/workflows` (scheduled in `vercel.json`): overdue-invoice / bill-due workflow rules, due recurring invoices and IMAP inbox sync. Vercel sends it automatically; without it the job refuses to run. |
 | `MARKETING_UNSUBSCRIBE_SECRET` | Optional | Signs the unsubscribe links in marketing emails (Admin → Marketing Emails). Falls back to `ENCRYPTION_KEY`, then `CRON_SECRET`. Changing whichever one is used breaks the links in emails already sent, so set this once and keep it. |
+| `ERROR_ALERT_EMAIL` | Optional | Where new-error alerts go (default: the platform email, hello@). Every server error is also kept in Admin → System Logs. |
+| `SYSTEM_LOG_RETENTION_DAYS` | Optional | How long System Logs are kept (default 30); the daily job deletes older ones. |
 | `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Optional | Platform-wide Meta webhook verify token (tenants also get their own). |
 | `ENCRYPTION_KEY` | Recommended | Encrypts stored tenant credentials (gateway keys, WhatsApp tokens, SMTP passwords). Any long random string, e.g. `openssl rand -base64 32`. Changing it makes stored secrets unreadable. |
 | `PLATFORM_GSTIN` | Optional | Genesoft's own GSTIN, printed on platform subscription receipts. Unset = no tax ID printed. `PLATFORM_LEGAL_NAME`, `PLATFORM_EMAIL`, `PLATFORM_PHONE` override the defaults in `src/lib/constants/platform.ts`. |

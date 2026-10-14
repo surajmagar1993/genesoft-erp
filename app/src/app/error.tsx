@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import Link from "next/link"
 import { AlertTriangle, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { reportClientError } from "@/lib/report-client-error"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function Error({
@@ -15,6 +16,7 @@ export default function Error({
 }) {
     useEffect(() => {
         console.error(error)
+        reportClientError(error)
     }, [error])
 
     return (

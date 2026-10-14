@@ -130,13 +130,19 @@ export default async function SystemLogsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="max-w-[400px]">
-                                                <p className="text-[11px] leading-relaxed text-foreground/90 group-hover:underline">
+                                                <p className="text-[11px] leading-relaxed text-foreground/90 whitespace-pre-wrap break-words">
                                                     {log.message}
                                                 </p>
                                                 {log.path && (
                                                     <span className="text-[9px] text-muted-foreground opacity-60">
                                                         at: {log.path}
                                                     </span>
+                                                )}
+                                                {log.stack && (
+                                                    <details className="mt-1">
+                                                        <summary className="cursor-pointer text-[10px] text-muted-foreground">Stack trace</summary>
+                                                        <pre className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded bg-muted p-2 text-[10px]">{log.stack}</pre>
+                                                    </details>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right pr-6 text-xs text-muted-foreground tabular-nums">

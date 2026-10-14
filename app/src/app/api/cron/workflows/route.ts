@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { runWorkflowEvent } from "@/lib/workflow-engine"
 import { syncImapMailbox } from "@/lib/imap-sync"
 import { generateInvoiceFromProfile } from "@/lib/recurring-runner"
+import { pruneSystemLogs, reportError } from "@/lib/error-reporting"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300 // seconds; Vercel caps this per plan
@@ -109,6 +110,13 @@ export async function GET(req: Request) {
         } catch (err) {
             recurringFailed++
             console.error(`Recurring profile ${profile.id} failed:`, err instanceof Error ? err.message : err)
+            await reportError({
+                source: "server",
+                kind: "cron",
+                path: "/api/cron/workflows (recurring invoice)",
+                message: `Recurring invoice failed for profile ${profile.id}: ${err instanceof Error ? err.message : String(err)}`,
+                stack: err instanceof Error ? err.stack : undefined,
+            })
         }
     }
 
@@ -127,5 +135,13 @@ export async function GET(req: Request) {
         }
     }
 
-    return NextResponse.json({ ok: true, checked: fired, recurringGenerated, recurringFailed, mailSynced, mailFailed })
+    // Keep System Logs to the retention period (SYSTEM_LOG_RETENTION_DAYS, default 30)
+    let logsPruned = 0
+    try {
+        logsPruned = await pruneSystemLogs()
+    } catch (err) {
+        console.error("System log pruning failed:", err)
+    }
+
+    return NextResponse.json({ ok: true, checked: fired, recurringGenerated, recurringFailed, mailSynced, mailFailed, logsPruned })
 }

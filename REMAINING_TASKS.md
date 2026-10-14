@@ -174,7 +174,7 @@ These are marked done above but are simulated or not enforced. The UI now says s
 ---
 
 ## 📋 Open items (review 2026-10-14)
-Done on 2026-10-14: marketing emails with unsubscribe links; workspace data export + close workspace + super admin permanent delete; customer ledger no longer assumes INR (UAE/UK/… balances were converted from INR by mistake); payments moved to Prisma with tenant checks; integration test suite.
+Done on 2026-10-14: built-in error monitoring (System Logs + email alerts, no Sentry); marketing emails with unsubscribe links; workspace data export + close workspace + super admin permanent delete; customer ledger no longer assumes INR (UAE/UK/… balances were converted from INR by mistake); payments moved to Prisma with tenant checks; integration test suite.
 
 **Deferred until go-live (decided by the owner):**
 - [ ] Rotate the credentials in old git history (repo is public): Supabase DB password, Resend key, Razorpay secrets, super admin password. See `GO_LIVE_CHECKLIST.md`.
@@ -182,9 +182,8 @@ Done on 2026-10-14: marketing emails with unsubscribe links; workspace data expo
 - [ ] Renew genesoftinfotech.com (expires 2026-12-05, auto-renew off).
 
 **Needs a key or account from the owner:**
-- [ ] Live payments: Razorpay live keys; Stripe keys + webhook (Stripe not configured at all, so non-INR regions can't pay).
+- [ ] Live payments (deferred until go-live by the owner): Razorpay live keys; Stripe keys + webhook (Stripe not configured at all, so non-INR regions can't pay).
 - [ ] `SUPABASE_SERVICE_ROLE_KEY`: needed for inviting team members and for super admin "create tenant" to make a login.
-- [ ] Error monitoring (e.g. Sentry).
 - [ ] `PLATFORM_GSTIN` for Genesoft's own subscription receipts.
 - [ ] Legal review of Privacy, Terms and Refund pages.
 
