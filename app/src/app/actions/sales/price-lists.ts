@@ -659,7 +659,7 @@ export async function createPriceList(data: CreatePriceListInput): Promise<{
             return { error: `Price list with code "${cleanCode}" already exists` }
         }
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             if (data.isDefault) {
                 // Unmark existing default
                 await tx.priceList.updateMany({
@@ -713,7 +713,7 @@ export async function updatePriceList(
 
         if (!existing) return { error: "Price List not found" }
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             if (data.isDefault) {
                 await tx.priceList.updateMany({
                     where: { tenantId, isDefault: true },

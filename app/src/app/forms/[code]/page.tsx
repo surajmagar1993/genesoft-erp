@@ -54,7 +54,7 @@ export default async function PublicFormPage({ params }: PublicFormPageProps) {
         description: rawForm.description,
         type: rawForm.type as WebFormType,
         status: rawForm.status as WebFormStatus,
-        fields: (rawForm.fields as FormFieldConfig[]) || [],
+        fields: (rawForm.fields as unknown as FormFieldConfig[]) || [],
         submitButtonText: rawForm.submitButtonText,
         successMessage: rawForm.successMessage,
         redirectUrl: rawForm.redirectUrl,

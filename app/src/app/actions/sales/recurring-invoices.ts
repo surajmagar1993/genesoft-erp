@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -571,7 +572,7 @@ export async function deleteRecurringProfile(id: string): Promise<{ success?: bo
         const owned = await prisma.recurringProfile.count({ where: { id, tenantId } })
         if (!owned) return { error: "Recurring profile not found" }
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // Unlink created invoices
             await tx.invoice.updateMany({
                 where: { recurringProfileId: id, tenantId },

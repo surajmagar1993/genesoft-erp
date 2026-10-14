@@ -301,13 +301,13 @@ export async function getProductsForDocuments(): Promise<DocumentProduct[]> {
     orderBy: { name: "asc" },
     take: 1000,
   })
-  return rows.map((p: { id: string; name: string; type: ProductType; unitPrice: unknown; hsnSacCode: string | null; unit: string | null; stockQty: unknown; taxGroup: never }) => ({
+  return rows.map((p) => ({
     id: p.id,
     name: p.name,
     type: p.type,
     unitPrice: Number(p.unitPrice || 0),
     hsnSacCode: p.hsnSacCode || "",
-    taxRate: productTaxRate(p.taxGroup, defaultRate),
+    taxRate: productTaxRate(p.taxGroup as never, defaultRate),
     unit: p.unit || "",
     stockQty: Number(p.stockQty || 0),
   }))

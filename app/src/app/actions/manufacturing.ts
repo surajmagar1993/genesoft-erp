@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -533,7 +534,7 @@ export async function updateWorkOrderStatus(
         }
         if (shortages.length) throw new Error(`Not enough raw material in the source warehouse: ${shortages.join("; ")}`)
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // Claim the order first: if another request completed it a moment ago, stop here
             const claimed = await tx.workOrder.updateMany({
                 where: { id: workOrderId, tenantId, status: { notIn: FINAL } },

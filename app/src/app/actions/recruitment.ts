@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -536,7 +537,7 @@ export interface HireApplicantInput {
 export async function hireApplicant(applicantId: string, employeeData: HireApplicantInput) {
     const tenantId = await getTenantManagerId()
 
-    return await prisma.$transaction(async (tx: any) => {
+    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const applicant = await tx.jobApplicant.findUnique({
             where: { id: applicantId, tenantId },
             include: { jobOpening: true }

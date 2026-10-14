@@ -27,7 +27,7 @@ export async function recordContactTransaction(tenantId: string, payload: Record
 
   const transactionAmount = new Prisma.Decimal(amount)
 
-  return await (prisma as any).$transaction(async (tx: any) => {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // 1. Fetch Tenant and Contact to get base currency and current balance
     const tenant = await tx.tenant.findUnique({
       where: { id: tenantId },
@@ -54,7 +54,7 @@ export async function recordContactTransaction(tenantId: string, payload: Record
     const newBalance = new Prisma.Decimal(contact.balance).add(amountInBaseCurrency)
 
     // 3. Create Ledger Entry (Saving original currency)
-    const entry = await (tx as any).ledgerEntry.create({
+    const entry = await tx.ledgerEntry.create({
       data: {
         tenantId,
         contactId,

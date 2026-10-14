@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs as assertRefs } from "@/lib/tenant-refs"
@@ -347,7 +348,7 @@ export async function createBatch(data: {
         status = BatchStatus.EXPIRED
     }
 
-    const batch = await prisma.$transaction(async (tx: any) => {
+    const batch = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const created = await tx.productBatch.create({
             data: {
                 tenantId,
@@ -491,7 +492,7 @@ export async function adjustBatchQty(id: string, deltaQty: number, reason: strin
         throw new Error(`Cannot reduce batch stock by ${Math.abs(deltaQty)}. Current quantity is ${prevQty}.`)
     }
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         let newStatus = batch.status
         if (newQty === 0 && batch.status === BatchStatus.ACTIVE) {
             newStatus = BatchStatus.DEPLETED

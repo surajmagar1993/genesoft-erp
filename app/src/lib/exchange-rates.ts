@@ -14,7 +14,7 @@ export async function getExchangeRate(fromCurrency: string, toCurrency: string):
   const cacheThreshold = new Date(now.getTime() - CACHE_DURATION_HOURS * 60 * 60 * 1000)
 
   // 1. Check Cache
-  const cached = await (prisma as any).exchangeRateCache.findUnique({
+  const cached = await prisma.exchangeRateCache.findUnique({
     where: {
       fromCurrency_toCurrency: {
         fromCurrency,
@@ -41,7 +41,7 @@ export async function getExchangeRate(fromCurrency: string, toCurrency: string):
     const rate = data.rates[toCurrency]
 
     // 3. Update Cache
-    await (prisma as any).exchangeRateCache.upsert({
+    await prisma.exchangeRateCache.upsert({
       where: {
         fromCurrency_toCurrency: {
           fromCurrency,

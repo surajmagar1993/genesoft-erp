@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -1146,7 +1147,7 @@ export async function logProjectTime(input: LogTimeInput): Promise<{ success: bo
         const tenantId = await getTenantWriterId()
         await assertTenantRefs(tenantId, { project: input.projectId, projectTask: input.taskId, employee: input.employeeId })
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             await tx.projectTimeEntry.create({
                 data: {
                     tenantId,
@@ -1196,7 +1197,7 @@ export async function deleteProjectTime(id: string): Promise<{ success: boolean;
 
         if (!entry) return { success: false, error: "Time entry not found" }
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             await tx.projectTimeEntry.delete({
                 where: { id, tenantId }
             })

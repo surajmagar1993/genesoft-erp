@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
@@ -726,7 +727,7 @@ export async function importBankStatement(data: ImportBankStatementInput): Promi
         const ownsAccount = await prisma.bankAccount.count({ where: { id: data.bankAccountId, tenantId } })
         if (!ownsAccount) return { error: "Bank account not found" }
 
-        const result = await prisma.$transaction(async (tx: any) => {
+        const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             const statement = await tx.bankStatement.create({
                 data: {
                     tenantId,
@@ -1067,7 +1068,7 @@ export async function createQuickExpenseAndReconcile(
         const paymentAccountId = bTxn.bankAccount?.chartOfAccountId || null
 
         // Atomic transaction creating expense, balanced journal entry, and linking bank transaction
-        const result = await prisma.$transaction(async (tx: any) => {
+        const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             let journalEntryId: string | null = null
 
             if (paymentAccountId) {
@@ -1193,7 +1194,7 @@ export async function finalizeReconciliation(statementId: string): Promise<{
         }
 
         // Lock all matched lines to RECONCILED and mark statement RECONCILED
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             await tx.bankTransaction.updateMany({
                 where: {
                     statementId,

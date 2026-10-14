@@ -1,5 +1,6 @@
 'use server'
 
+import type { Prisma } from "@prisma/client"
 import { revalidatePath } from 'next/cache'
 import { appUrl } from "@/lib/app-url"
 import { redirect } from 'next/navigation'
@@ -123,7 +124,7 @@ export async function register(formData: FormData) {
     const [firstName, ...lastNameParts] = fullName.split(' ')
     const lastName = lastNameParts.join(' ') || ''
 
-    await (prisma as any).$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const tenant = await tx.tenant.create({
         data: {
           name: company,

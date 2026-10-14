@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { postInvoiceStock } from "@/lib/stock"
@@ -462,7 +463,8 @@ export async function convertChallanToInvoice(challanId: string) {
     }
 
     // Tax follows the business's country; place of supply from the challan, else the customer
-    const placeOfSupply = challan.placeOfSupply || contactPlaceOfSupply(challan.contact)
+    const contact = challan.contact
+    const placeOfSupply = challan.placeOfSupply || contactPlaceOfSupply(contact)
     const built = await buildInvoiceLines(tenantId, (challan.items as { productId: string | null; productName: string; description: string | null; hsnCode: string | null; quantity: unknown; unitPrice: unknown; taxRate: unknown }[]).map((item) => ({
         productId: item.productId,
         description: item.description?.trim() ? `${item.productName} — ${item.description}` : item.productName,
@@ -473,7 +475,7 @@ export async function convertChallanToInvoice(challanId: string) {
     })), placeOfSupply)
     const invoiceNumber = await nextInvoiceNumber(tenantId)
 
-    return await prisma.$transaction(async (tx: any) => {
+    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Re-check inside the transaction so two clicks can't create two invoices
         const fresh = await tx.deliveryChallan.findFirst({ where: { id: challanId, tenantId }, select: { convertedInvoiceId: true } })
         if (fresh?.convertedInvoiceId) throw new Error("This delivery challan has already been converted into an invoice.")
@@ -482,18 +484,18 @@ export async function convertChallanToInvoice(challanId: string) {
         const invoice = await tx.invoice.create({
             data: {
                 tenantId,
-                contactId: challan.contactId,
+                contactId: contact.id,
                 invoiceNumber,
                 type: InvoiceType.TAX_INVOICE,
                 status: InvoiceStatus.SENT,
                 invoiceDate: new Date(),
                 billTo: {
-                    name: challan.contact.displayName,
-                    email: challan.contact.email || "",
-                    gstin: challan.contact.gstin || null,
-                    address: challan.contact.billingAddress || null,
+                    name: contact.displayName,
+                    email: contact.email || "",
+                    gstin: contact.gstin || null,
+                    address: contact.billingAddress || null,
                 },
-                shipTo: challan.deliveryAddress || challan.contact.shippingAddress || {},
+                shipTo: (challan.deliveryAddress || contact.shippingAddress || {}) as never,
                 placeOfSupply,
                 subtotal: built.subtotal,
                 taxAmount: built.taxAmount,

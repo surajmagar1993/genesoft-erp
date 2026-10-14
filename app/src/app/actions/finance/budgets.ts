@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
@@ -439,7 +440,7 @@ export async function createBudget(data: {
         0
     )
 
-    const budget = await prisma.$transaction(async (tx: any) => {
+    const budget = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const createdBudget = await tx.budget.create({
             data: {
                 tenantId,
@@ -513,7 +514,7 @@ export async function updateBudget(
         throw new Error("Cannot modify a closed budget plan.")
     }
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         let totalBudgetedAmount = Number(existing.totalBudgetedAmount)
 
         if (data.items) {

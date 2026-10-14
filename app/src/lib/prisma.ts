@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Pool } from "pg"
 
-const prismaClientSingleton = () => {
+const prismaClientSingleton = (): PrismaClient => {
   const connectionString = process.env.DATABASE_URL
   
   if (!connectionString) {
@@ -25,7 +25,8 @@ const prismaClientSingleton = () => {
         });
       };
 
-      return createRecursiveProxy();
+      // Typed as PrismaClient so database calls are type-checked everywhere
+      return createRecursiveProxy() as PrismaClient;
     }
     
     console.error("❌ [Prisma] DATABASE_URL is missing in environment variables.")

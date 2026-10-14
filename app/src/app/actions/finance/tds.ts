@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
@@ -418,9 +419,9 @@ export async function recordTdsDeduction(input: {
       data: {
         settings: {
           ...(typeof tenant?.settings === "object" && tenant?.settings !== null ? tenant.settings : {}),
-          tdsDeductions: deductions,
-          tdsChallans: challans,
-          tdsProfile: profile,
+          tdsDeductions: deductions as unknown as Prisma.InputJsonValue,
+          tdsChallans: challans as unknown as Prisma.InputJsonValue,
+          tdsProfile: profile as unknown as Prisma.InputJsonValue,
         },
       },
     })
@@ -538,9 +539,9 @@ export async function recordTdsChallan(input: {
       data: {
         settings: {
           ...(typeof tenant?.settings === "object" && tenant?.settings !== null ? tenant.settings : {}),
-          tdsDeductions: updatedDeductions,
-          tdsChallans: challans,
-          tdsProfile: profile,
+          tdsDeductions: updatedDeductions as unknown as Prisma.InputJsonValue,
+          tdsChallans: challans as unknown as Prisma.InputJsonValue,
+          tdsProfile: profile as unknown as Prisma.InputJsonValue,
         },
       },
     })
@@ -599,9 +600,9 @@ export async function updateTdsProfile(
       data: {
         settings: {
           ...(typeof tenant?.settings === "object" && tenant?.settings !== null ? tenant.settings : {}),
-          tdsDeductions: deductions,
-          tdsChallans: challans,
-          tdsProfile: updatedProfile,
+          tdsDeductions: deductions as unknown as Prisma.InputJsonValue,
+          tdsChallans: challans as unknown as Prisma.InputJsonValue,
+          tdsProfile: updatedProfile as unknown as Prisma.InputJsonValue,
         },
       },
     })

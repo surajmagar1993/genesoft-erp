@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantAdminId, getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -472,7 +473,7 @@ export async function updateInvoice(
     }
 
     // Atomic update of header and line items
-    await (prisma as any).$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. Delete existing line items
       await tx.invoiceItem.deleteMany({
         where: { invoiceId: payload.id },
@@ -535,7 +536,7 @@ export async function updateInvoice(
         if (entry) {
           const delta = newTotal - Number(entry.amount)
           if (delta !== 0) {
-            await (prisma as any).$transaction(async (tx: any) => {
+            await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
               await tx.contact.update({
                 where: { id: entry.contactId, tenantId },
                 data: { balance: { increment: delta } },
@@ -663,7 +664,7 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
     })
 
     if (entry) {
-      await (prisma as any).$transaction(async (tx: any) => {
+      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         await tx.contact.update({
           where: { id: entry.contactId },
           data: { balance: { decrement: entry.amount } },

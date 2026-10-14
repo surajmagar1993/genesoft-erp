@@ -298,7 +298,7 @@ export async function updateBill(id: string, data: Partial<BillData>) {
     try {
         const newTotal = -Math.abs(data.total || 0)
         
-        const entry = await (prisma as any).ledgerEntry.findFirst({
+        const entry = await prisma.ledgerEntry.findFirst({
             where: { referenceId: id, tenantId }
         })
 
@@ -377,7 +377,7 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
         })
         
         if (entry) {
-            await (prisma as any).$transaction(async (tx: any) => {
+            await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
                 // Adjust balance: CurrentBalance - EntryAmount
                 // Since Bill amount was negative, decrementing it will increase the balance back.
                 await tx.contact.update({

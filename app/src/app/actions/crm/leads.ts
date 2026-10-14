@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
@@ -247,7 +248,7 @@ export async function deleteLead(id: string): Promise<{ error: string | null }> 
 export async function convertLeadToDeal(leadId: string) {
   const tenantId = await getTenantWriterId()
 
-  return await (prisma as any).$transaction(async (tx: any) => {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // 1. Fetch lead
     const lead = await tx.lead.findUnique({
       where: { id: leadId, tenantId },

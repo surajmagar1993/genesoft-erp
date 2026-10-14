@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
@@ -383,7 +384,7 @@ export async function createRfq(input: CreateRfqInput) {
     })
     const rfqNumber = `RFQ-${year}-${String(rfqCount + 1).padStart(4, "0")}`
 
-    const rfq = await prisma.$transaction(async (tx: any) => {
+    const rfq = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const createdRfq = await tx.requestForQuotation.create({
             data: {
                 tenantId,
@@ -523,7 +524,7 @@ export async function recordVendorQuote(input: RecordVendorQuoteInput) {
     let calculatedSubtotal = 0
     let calculatedTax = 0
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Delete previous items for this quote and reinsert fresh
         await tx.rfqVendorQuoteItem.deleteMany({
             where: { quoteId: quote.id }
@@ -620,7 +621,7 @@ export async function awardVendorQuote(rfqId: string, quoteId: string) {
     })
     const orderNumber = `PO-${year}-${String(poCount + 1).padStart(4, "0")}`
 
-    const result = await prisma.$transaction(async (tx: any) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Mark winning quote as ACCEPTED, others as REJECTED
         for (const v of rfq.vendors) {
             const isWinner = v.id === quoteId

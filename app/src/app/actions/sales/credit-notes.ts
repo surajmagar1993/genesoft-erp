@@ -530,7 +530,7 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
 
     const total = subtotal + taxAmount
 
-    const newCreditNote = await prisma.$transaction(async (tx: any) => {
+    const newCreditNote = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Create CreditNote
         const cn = await tx.creditNote.create({
             data: {
@@ -676,7 +676,7 @@ export async function applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
     const newRemaining = currentRemaining - amount
     const newStatus = newRemaining === 0 ? CreditNoteStatus.APPLIED : CreditNoteStatus.ISSUED
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Update credit note
         await tx.creditNote.update({
             where: { id: creditNoteId, tenantId },
@@ -755,7 +755,7 @@ export async function recordCreditNoteRefund(input: RecordCreditNoteRefundInput)
     const newRemaining = currentRemaining - amount
     const newStatus = newRemaining === 0 ? CreditNoteStatus.REFUNDED : CreditNoteStatus.ISSUED
 
-    const refund = await prisma.$transaction(async (tx: any) => {
+    const refund = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Create refund record
         const r = await tx.creditNoteRefund.create({
             data: {

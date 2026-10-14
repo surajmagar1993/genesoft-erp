@@ -52,7 +52,7 @@ export async function getCustomerLedger(contactId: string): Promise<CustomerLedg
   const tenantId = await getTenantId()
 
   const [dbEntries, tenant] = await Promise.all([
-    (prisma as any).ledgerEntry.findMany({
+    prisma.ledgerEntry.findMany({
       where: { contactId, tenantId },
       orderBy: { date: "desc" }
     }),

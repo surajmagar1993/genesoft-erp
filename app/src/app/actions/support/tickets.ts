@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -49,7 +50,7 @@ export async function createTicket(subject: string, message: string, priority: T
 
   if (!user) throw new Error("Unauthorized")
 
-  const ticket = await (prisma as any).$transaction(async (tx: any) => {
+  const ticket = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // 1. Create ticket
     const newTicket = await tx.supportTicket.create({
       data: {

@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { recordContactTransaction } from "@/lib/contact-ledger"
@@ -444,7 +445,7 @@ export async function receiveGoods(data: {
     if (!targetWarehouseId) throw new Error("Receiving warehouse is required")
 
     // Transactional Goods Receipt Intake
-    const txResult = await prisma.$transaction(async (tx: any) => {
+    const txResult = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         let allItemsFullyReceived = true
 
         for (const itemInput of data.receivedItems) {
@@ -584,7 +585,7 @@ export async function convertPOToBill(data: string | {
     const currentYear = new Date().getFullYear()
     const billNumber = customBillNumber || `BILL-${currentYear}-${po.orderNumber.replace(/^PO-\d+-?/, "")}`
 
-    const result = await prisma.$transaction(async (tx: any) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Re-check inside the transaction so a double click can't create two bills
         const fresh = await tx.purchaseOrder.findFirst({ where: { id: po.id, tenantId }, select: { billId: true } })
         if (fresh?.billId) throw new Error("A vendor bill is already linked to this Purchase Order")

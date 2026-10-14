@@ -677,7 +677,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
         let journalEntryId: string | null = null
 
         // Interactive transaction
-        const result = await prisma.$transaction(async (tx: any) => {
+        const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // If PAID or APPROVED and autoPostJournal is true, post a balanced Journal Entry
             if (
                 data.autoPostJournal !== false &&
@@ -824,7 +824,7 @@ export async function updateExpenseStatus(
 
         if (!expense) return { error: "Expense voucher not found" }
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             let journalEntryId = expense.journalEntryId
 
             // If transitioning to PAID and had no journal voucher, auto-create one
@@ -987,7 +987,7 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
         const entryNumber = `JE-${year}-${String(count + 1).padStart(4, "0")}`
         const entryDate = data.date ? new Date(data.date) : new Date()
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             const je = await tx.journalEntry.create({
                 data: {
                     tenantId,
@@ -1067,7 +1067,7 @@ export async function voidExpense(id: string): Promise<{ success?: boolean; erro
         if (!expense) return { error: "Expense voucher not found" }
         if (expense.status === ExpenseStatus.VOID) return { error: "Expense is already voided" }
 
-        await prisma.$transaction(async (tx: any) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // Void linked journal entry and reverse balances
             if (expense.journalEntry && expense.journalEntry.status === JournalStatus.POSTED) {
                 await tx.journalEntry.update({

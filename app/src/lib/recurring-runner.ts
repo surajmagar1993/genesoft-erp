@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { postInvoiceStock } from "@/lib/stock"
@@ -84,7 +85,7 @@ if (!profile) return { error: "Recurring profile not found" }
     }
 
     const taxCtx = await getTenantTaxContext(tenantId)
-    const result = await prisma.$transaction(async (tx: any) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Create Invoice
         const invoice = await tx.invoice.create({
             data: {

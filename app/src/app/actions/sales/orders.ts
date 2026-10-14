@@ -381,6 +381,8 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceI
     })
     if (!order) return { invoiceId: null, error: "Sales order not found" }
     if (order.status === "CANCELLED") return { invoiceId: null, error: "This order is cancelled" }
+    if (!order.contactId) return { invoiceId: null, error: "Choose a customer on the order first" }
+    const contactId = order.contactId
     const already = await prisma.invoice.findFirst({ where: { tenantId, billTo: { path: ["salesOrderId"], equals: order.id } }, select: { invoiceNumber: true } })
     if (already) return { invoiceId: null, error: `Already invoiced as ${already.invoiceNumber}` }
 
@@ -398,7 +400,7 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceI
     const invoice = await prisma.invoice.create({
       data: {
         tenantId,
-        contactId: order.contactId,
+        contactId,
         invoiceNumber: await nextInvoiceNumber(tenantId),
         type: "TAX_INVOICE",
         status: "DRAFT",

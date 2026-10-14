@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -455,7 +456,7 @@ export async function generateEwayBill(payload: {
       settings: {
         ...currentSettings,
         ewayBills: updatedBills,
-      },
+      } as unknown as Prisma.InputJsonValue,
     },
   })
 
@@ -555,7 +556,7 @@ export async function updateEwayBillVehicle(
       settings: {
         ...currentSettings,
         ewayBills: currentBills,
-      },
+      } as unknown as Prisma.InputJsonValue,
     },
   })
 
@@ -618,7 +619,7 @@ export async function cancelEwayBill(
       settings: {
         ...currentSettings,
         ewayBills: currentBills,
-      },
+      } as unknown as Prisma.InputJsonValue,
     },
   })
 
@@ -745,7 +746,7 @@ export async function saveTransporter(
       settings: {
         ...currentSettings,
         ewayTransporters: updatedList,
-      },
+      } as unknown as Prisma.InputJsonValue,
     },
   })
 

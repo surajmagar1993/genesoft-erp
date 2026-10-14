@@ -196,7 +196,7 @@ export async function createWebForm(data: CreateWebFormInput): Promise<{
                 ...created,
                 type: created.type as WebFormType,
                 status: created.status as WebFormStatus,
-                fields: (created.fields as FormFieldConfig[]) || [],
+                fields: (created.fields as unknown as FormFieldConfig[]) || [],
                 createdAt: created.createdAt.toISOString(),
                 updatedAt: created.updatedAt.toISOString(),
             },

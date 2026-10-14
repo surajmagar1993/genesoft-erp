@@ -338,7 +338,7 @@ export async function sendInvoiceViaWhatsApp(params: {
         if (!tenantId) return { success: false, error: "Unauthorized" }
 
         const invoice = await prisma.invoice.findFirst({
-            where: { id: params.invoiceId, tenant_id: tenantId },
+            where: { id: params.invoiceId, tenantId },
             include: { contact: true },
         })
 
@@ -354,9 +354,9 @@ export async function sendInvoiceViaWhatsApp(params: {
             return { success: false, error: "No contact phone number provided for this customer" }
         }
 
-        const currency = invoice.currency_code || tenant?.currencyCode || "INR"
-        const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString(localeForCurrency(currency), { dateStyle: "medium" }) : "Due upon receipt"
-        const totalFormatted = `${currency} ${Number(invoice.total_amount).toFixed(2)}`
+        const currency = invoice.currencyCode || tenant?.currencyCode || "INR"
+        const dueDate = invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString(localeForCurrency(currency), { dateStyle: "medium" }) : "Due upon receipt"
+        const totalFormatted = new Intl.NumberFormat(localeForCurrency(currency), { style: "currency", currency }).format(Number(invoice.total))
 
         const portalBase = appUrl()
         // Only customers with portal access have a working link; otherwise leave it out
@@ -364,17 +364,18 @@ export async function sendInvoiceViaWhatsApp(params: {
 
         // Calculate days overdue if past due date
         let daysOverdue = "0"
-        if (invoice.due_date) {
-            const diffMs = Date.now() - new Date(invoice.due_date).getTime()
+        if (invoice.dueDate) {
+            const diffMs = Date.now() - new Date(invoice.dueDate).getTime()
             daysOverdue = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24))).toString()
         }
 
+        const customerName = String((invoice.billTo as { name?: string } | null)?.name || invoice.contact?.displayName || "")
         const templateKey = params.templateKey || "INVOICE_DISPATCH"
         const variables = {
-            customer_name: invoice.customer_name || invoice.contact?.name || "Valued Customer",
-            invoice_number: invoice.invoice_number,
+            customer_name: customerName || "Valued Customer",
+            invoice_number: invoice.invoiceNumber,
             amount: totalFormatted,
-            company_name: tenant?.name || "Genesoft ERP",
+            company_name: tenant?.name || "",
             due_date: dueDate,
             payment_link: paymentLink,
             days_overdue: daysOverdue,
@@ -382,8 +383,8 @@ export async function sendInvoiceViaWhatsApp(params: {
 
         return await sendWhatsAppMessage({
             recipientPhone: phone,
-            contactId: invoice.contact_id || undefined,
-            contactName: invoice.customer_name,
+            contactId: invoice.contactId || undefined,
+            contactName: customerName,
             templateKey,
             variables,
         })

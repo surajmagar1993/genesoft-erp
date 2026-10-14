@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { openSecret } from "@/lib/secret-box"
 import { checkSmtpTarget } from "@/lib/smtp-guard"
@@ -121,7 +122,7 @@ export async function deliverTenantEmail(tenantId: string, data: SendEmailInput)
         const now = new Date()
         const threadId = data.threadId || `thread_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
 
-        const createdMessage = await prisma.$transaction(async (tx: any) => {
+        const createdMessage = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             const msg = await tx.emailMessage.create({
                 data: {
                     tenantId,

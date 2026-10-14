@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { recordContactTransaction } from "@/lib/contact-ledger"
@@ -852,7 +853,7 @@ export async function createRentalAgreement(input: CreateRentalAgreementInput) {
     })
 
     // Create agreement & items in a transaction
-    const agreement = await prisma.$transaction(async (tx: any) => {
+    const agreement = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const ag = await tx.rentalAgreement.create({
             data: {
                 tenantId,
@@ -910,7 +911,7 @@ export async function updateRentalAgreementStatus(id: string, status: RentalStat
     })
     if (!agreement) throw new Error("Agreement not found")
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         await tx.rentalAgreement.update({
             where: { id, tenantId },
             data: { status }
@@ -983,7 +984,7 @@ export async function processRentalReturn(input: ProcessRentalReturnInput) {
         newAssetStatus = RentalAssetStatus.MAINTENANCE
     }
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Create return record
         await tx.rentalReturn.create({
             data: {
@@ -1110,7 +1111,7 @@ export async function convertAgreementToInvoice(agreementId: string) {
     ], placeOfSupply)
     const invoiceNumber = await nextInvoiceNumber(tenantId)
 
-    const newInvoice = await prisma.$transaction(async (tx: any) => {
+    const newInvoice = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const inv = await tx.invoice.create({
             data: {
                 tenantId,

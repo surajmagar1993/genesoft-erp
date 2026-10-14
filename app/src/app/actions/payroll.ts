@@ -1,5 +1,6 @@
 "use server"
 
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { getTenantTaxContext } from "@/lib/tenant-tax"
@@ -576,7 +577,7 @@ export async function generatePayRun(
     }
 
     // Execute in transaction
-    const result = await prisma.$transaction(async (tx: any) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // If a draft exists, remove its old payslips
         if (existing && existing.status === "DRAFT") {
             await tx.payslip.deleteMany({
@@ -668,7 +669,7 @@ export async function processPayRun(
 
     if (!run) throw new Error("Payroll run not found")
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Update run
         await tx.payrollRun.update({
             where: { id: payRunId },
@@ -710,7 +711,7 @@ export async function deletePayRun(payRunId: string) {
     if (!run) throw new Error("Payroll run not found")
     if (run.status !== "DRAFT") throw new Error("Only draft pay runs can be deleted")
 
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         await tx.payslip.deleteMany({
             where: { payrollRunId: payRunId }
         })
@@ -773,8 +774,8 @@ export async function getPayslipDetails(payslipId: string) {
         },
         company: {
             name: tenant?.name || "",
-            email: tenant?.billingEmail || "",
-            currency: tenant?.currency || "INR"
+            email: tenant?.email || "",
+            currency: tenant?.currencyCode || "INR"
         }
     }
 }
