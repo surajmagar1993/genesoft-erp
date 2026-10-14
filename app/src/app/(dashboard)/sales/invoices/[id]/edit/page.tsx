@@ -1,4 +1,4 @@
-import { isUuid } from "@/lib/utils"
+import { isRecordId } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { getInvoiceById } from "@/app/actions/sales/invoices"
 import EditInvoiceClient from "./edit-invoice-client"
@@ -9,7 +9,7 @@ interface Props {
 
 export default async function EditInvoicePage({ params }: Props) {
     const { id } = await params
-    if (!isUuid(id)) notFound()
+    if (!isRecordId(id)) notFound()
     const invoice = await getInvoiceById(id)
 
     if (!invoice) notFound()

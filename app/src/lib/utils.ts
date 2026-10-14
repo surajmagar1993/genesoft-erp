@@ -35,3 +35,12 @@ export function getCurrencySymbol(currencyCode: string = "INR") {
 export function isUuid(value: unknown): value is string {
   return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
 }
+
+/**
+ * True for a UUID or a cuid ("cmu1sq24v000004kzulz8skbn"). Invoices, payments,
+ * support tickets and a few other tables use cuid ids (see schema.prisma), so
+ * pages for those records must use this, not isUuid.
+ */
+export function isRecordId(value: unknown): value is string {
+  return isUuid(value) || (typeof value === "string" && /^c[a-z0-9]{20,31}$/.test(value))
+}

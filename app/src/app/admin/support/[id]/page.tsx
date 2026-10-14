@@ -1,4 +1,4 @@
-import { isUuid } from "@/lib/utils"
+import { isRecordId } from "@/lib/utils"
 import { getSupportTicket, getTicketMessages } from "@/app/actions/saas/admin"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,7 @@ import { AdminChatView } from "@/components/admin/support/admin-chat-view"
 
 export default async function TicketDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    if (!isUuid(id)) notFound()
+    if (!isRecordId(id)) notFound()
     const ticketId = id
     
     const ticket = await getSupportTicket(ticketId)
