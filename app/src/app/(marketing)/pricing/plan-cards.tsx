@@ -17,7 +17,11 @@ export interface PricedPlan {
 
 export function PlanCards({ plans, currency, locale }: { plans: PricedPlan[]; currency: string; locale: string }) {
     const [cycle, setCycle] = useState<"MONTHLY" | "ANNUAL">("MONTHLY")
-    const money = (n: number) => new Intl.NumberFormat(locale, { style: "currency", currency, maximumFractionDigits: 0 }).format(n)
+    const money = (n: number) =>
+        // Australian prices say AUD$ (en-AU alone prints "$", easy to mistake for US dollars)
+        currency === "AUD"
+            ? `AUD$${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(n)}`
+            : new Intl.NumberFormat(locale, { style: "currency", currency, maximumFractionDigits: 0 }).format(n)
 
     return (
         <div>

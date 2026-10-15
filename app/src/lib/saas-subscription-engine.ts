@@ -287,7 +287,7 @@ export const REGIONAL_PRICING_CATALOG: Record<string, RegionalPricing> = {
     },
     AUD: {
         currency: "AUD",
-        symbol: "A$",
+        symbol: "AUD$", // never plain "$", so it can't be mistaken for US dollars
         monthly: {
             FREE: 0,
             BASIC: 29,
