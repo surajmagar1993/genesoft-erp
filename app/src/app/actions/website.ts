@@ -184,6 +184,7 @@ async function _savePageDraft(key: string, values: Record<string, string>) {
         update: { draft: json(draft), updatedBy: admin.id },
         create: { key, draft: json(draft), updatedBy: admin.id },
     })
+    await logAdminAudit(admin, "WEBSITE_PAGE_DRAFT_SAVE", { id: key, type: "WEBSITE_PAGE" })
     return { saved: true as const }
 }
 export async function savePageDraft(key: string, values: Record<string, string>): Promise<ActionResult<{ saved: true }>> {
@@ -219,6 +220,7 @@ async function _restorePageVersion(versionId: string) {
     const v = await prisma.siteContentVersion.findUnique({ where: { id: versionId } })
     if (!v) throw new Error("Version not found")
     await prisma.siteContent.update({ where: { key: v.key }, data: { draft: json(v.data), updatedBy: admin.id } })
+    await logAdminAudit(admin, "WEBSITE_PAGE_VERSION_RESTORE", { id: v.key, type: "WEBSITE_PAGE" }, { versionId, versionPublishedAt: v.publishedAt.toISOString() })
     return { key: v.key }
 }
 export async function restorePageVersion(versionId: string): Promise<ActionResult<{ key: string }>> {
@@ -310,7 +312,7 @@ export async function deleteItem(id: string): Promise<ActionResult<{ deleted: tr
 }
 
 async function _moveItem(id: string, direction: "up" | "down") {
-    await requireSuperAdmin()
+    const admin = await requireSuperAdmin()
     const item = await prisma.siteItem.findUnique({ where: { id } })
     if (!item) throw new Error("Item not found")
     const siblings = await prisma.siteItem.findMany({ where: { kind: item.kind, status: { not: "archived" } }, orderBy: [{ sort: "asc" }, { createdAt: "asc" }], select: { id: true } })
@@ -319,6 +321,7 @@ async function _moveItem(id: string, direction: "up" | "down") {
     if (i < 0 || j < 0 || j >= siblings.length) return { moved: false }
     ;[siblings[i], siblings[j]] = [siblings[j], siblings[i]]
     await prisma.$transaction(siblings.map((s, n) => prisma.siteItem.update({ where: { id: s.id }, data: { sort: (n + 1) * 10 } })))
+    await logAdminAudit(admin, "WEBSITE_ITEM_MOVE", { id, type: "WEBSITE_ITEM" }, { kind: item.kind, direction })
     refreshSite()
     return { moved: true }
 }
@@ -355,11 +358,12 @@ export async function uploadMedia(formData: FormData): Promise<ActionResult<{ id
 }
 
 async function _updateMediaAlt(id: string, alt: string) {
-    await requireSuperAdmin()
+    const admin = await requireSuperAdmin()
     const a = alt.trim().slice(0, 200)
     if (!a) throw new Error("Alt text can't be empty.")
     const { count } = await prisma.siteMedia.updateMany({ where: { id, bucket: "site-media" }, data: { alt: a } })
     if (!count) throw new Error("Image not found")
+    await logAdminAudit(admin, "WEBSITE_MEDIA_UPDATE", { id, type: "WEBSITE_MEDIA" }, { alt: a })
     return { saved: true as const }
 }
 export async function updateMediaAlt(id: string, alt: string): Promise<ActionResult<{ saved: true }>> {
@@ -424,6 +428,8 @@ async function _updateLead(id: string, patch: { status?: string; notes?: string 
     if (patch.notes !== undefined) data.notes = patch.notes.trim().slice(0, 5000) || null
     const { count } = await prisma.siteLead.updateMany({ where: { id }, data: data as Prisma.SiteLeadUpdateManyMutationInput })
     if (!count) throw new Error("Lead not found")
+    // Leads hold visitors' personal details: record who changed them (not the note text)
+    await logAdminAudit(admin, "WEBSITE_LEAD_UPDATE", { id, type: "WEBSITE_LEAD" }, { ...(patch.status !== undefined ? { status: patch.status } : {}), ...(patch.notes !== undefined ? { notesChanged: true } : {}) })
     return { saved: true as const }
 }
 export async function updateLead(id: string, patch: { status?: string; notes?: string }): Promise<ActionResult<{ saved: true }>> {

@@ -799,6 +799,8 @@ async function _replyToTicket(ticketId: string, content: string) {
         include: { tenant: { select: { name: true, email: true } } }
     })
 
+    await logAdminAction("SUPPORT_TICKET_REPLY", ticketId, "SUPPORT_TICKET", { status: "IN_PROGRESS" })
+
     // Email whoever opened the ticket (first tenant-side message), else the workspace email
     const opener = await prisma.supportMessage.findFirst({
         where: { ticketId, isFromAdmin: false },
