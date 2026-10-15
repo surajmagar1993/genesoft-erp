@@ -204,12 +204,16 @@ Content is written from facts only. Anything not yet supplied stays hidden; ther
 | **Numbers** | Stats such as projects and clients, each with a "confirmed" tick |
 | **Careers** | Job posts (draft, open or closed) and received applications with CVs |
 | **Leads inbox** | Contact messages and IT rental quote requests: status (new, contacted, won, lost), notes, reply by email |
+| **Team** | People on the About page: photo, name, role, order, shown/hidden (section hidden while empty) |
+| **Social links** | LinkedIn, Instagram, Facebook, YouTube, X…: link, order, shown/hidden (footer and Contact) |
+| **Media library** | Upload once, use anywhere; compressed on upload; light/dark versions; alt text required; shows where each image is used |
+| **Legal pages** | Terms, Privacy, Refund, Delivery, Cookie, DPA and **IT Rental Terms**, edited section by section; "last updated" set on publish; version history. Always shows "Genesoft Infotech Private Limited". IT Rental Terms stays a draft until the rules are set. |
 
 Every save is recorded in **Admin Audit**. Pages have **Draft → Preview → Publish**, so changes can be checked before visitors see them.
 
 ### 7.3 Where the content is stored
 
-- **Database:** new tables, prefixed `site_` (settings, pages, services, rental_items, portfolio, clients, testimonials, stats, jobs, job_applications, leads). This needs a **database change on the shared Supabase project**, done with a reviewed SQL file in the repo's existing way (`app/*.sql`), **only after owner approval**.
+- **Database:** new tables, prefixed `site_` (settings, social_links, pages, page_versions, services, rental_items, portfolio, clients, testimonials, stats, team, media, legal_pages, jobs, job_applications, leads). This needs a **database change on the shared Supabase project**, done with a reviewed SQL file in the repo's existing way (`app/*.sql`), **only after owner approval**.
 - **Images and CVs:** need file storage. Options:
   - **Supabase Storage**, in the same project. On the free plan the 1 GB limit is shared.
   - **Vercel Blob**, a separate small cost.
@@ -291,7 +295,9 @@ Each phase is committed and shown on genesoftdev before the next starts. Nothing
 
 Everything else in the old question list is answered in §2.
 
-1. **Google Maps link and social media links:** enter them in Super Admin → Website → Site settings once it's built, or send them to me.
+Each item below has its own editor in Super Admin → Website, so you can add or change it yourself at any time (design map artboards 13 and 15).
+
+1. **Google Maps link and social media links:** Site settings and Social links.
 2. **Proof items:** client logos (with permission), testimonials (with permission), portfolio projects and true numbers. These sections stay hidden until confirmed.
 3. **Photos:** office, team and project screenshots. Until then the design uses no stock photos.
 4. **Office hours:** the actual times, entered in Site settings.
