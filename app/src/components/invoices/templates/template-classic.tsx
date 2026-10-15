@@ -9,6 +9,7 @@ export function TemplateClassic({ invoice }: TemplateProps) {
         gstSummary,
         hsnSummary,
         companyName,
+        companyLogo,
         companyGstin,
         companyAddress,
         companyPhone,
@@ -27,6 +28,8 @@ export function TemplateClassic({ invoice }: TemplateProps) {
         <div className="bg-white text-slate-900 font-serif p-8 max-w-4xl mx-auto rounded shadow-xs border-2 border-slate-800 print:border-2 print:shadow-none print:p-0 print:max-w-none">
             {/* Header / Letterhead */}
             <div className="text-center pb-4 border-b-2 border-slate-800">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {companyLogo && <img src={companyLogo} alt={companyName} className="mb-2 h-14 max-w-[200px] object-contain" />}
                 <h1 className="text-2xl font-bold tracking-wide uppercase text-slate-900">{companyName}</h1>
                 <p className="text-xs text-slate-600 mt-1 font-sans">{companyAddress}</p>
                 <div className="flex justify-center gap-4 text-xs font-sans text-slate-700 mt-1">

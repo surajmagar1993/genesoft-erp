@@ -3,6 +3,7 @@
  * @react-pdf/renderer — GST-compliant Indian Tax Invoice.
  * Renders both intra-state (CGST+SGST) and inter-state (IGST) invoices.
  */
+import { isOwnStorageUrl } from "@/lib/storage"
 import {
   Document,
   Page,
@@ -44,6 +45,7 @@ const s = StyleSheet.create({
     paddingBottom: 12,
     borderBottom: `1.5 solid ${colors.primary}`,
   },
+  logo: { maxHeight: 48, maxWidth: 160, objectFit: "contain", marginBottom: 6 },
   companyName: { fontSize: 16, fontFamily: "Helvetica-Bold", color: colors.primary },
   companyAddress: { fontSize: 7.5, color: colors.muted, marginTop: 2 },
   companyGstin: { fontSize: 7.5, color: colors.muted },
@@ -441,6 +443,10 @@ export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoicePr
   } catch(e) {}
 
   const supplierName = tenant?.name || COMPANY.name
+  // Only logos in our own storage (or an embedded PNG/JPEG) are drawn: the renderer fetches the
+  // address, so it must never be one a user typed in
+  const rawLogo = tenant?.logo_url || ""
+  const logoSrc = /^data:image\/(png|jpe?g);base64,/.test(rawLogo) || isOwnStorageUrl(rawLogo, "tenant-logos") ? rawLogo : null
   const supplierAddress = addressObj.street || COMPANY.address
   const supplierGstin = invoice.supplier_gstin || COMPANY.gstin
   const supplierState = invoice.supplier_state || COMPANY.state
@@ -492,6 +498,10 @@ export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoicePr
         {/* ── Header ── */}
         <View style={[s.headerRow, { borderBottomColor: palette.primary }]}>
           <View>
+            {logoSrc ? (
+              // eslint-disable-next-line jsx-a11y/alt-text
+              <Image src={logoSrc} style={s.logo} />
+            ) : null}
             <Text style={[s.companyName, { color: palette.primary }]}>{supplierName}</Text>
             {supplierAddress ? <Text style={s.companyAddress}>{supplierAddress}</Text> : null}
             {supplierGstin ? <Text style={s.companyGstin}>{taxIdLabel}: {supplierGstin}</Text> : null}

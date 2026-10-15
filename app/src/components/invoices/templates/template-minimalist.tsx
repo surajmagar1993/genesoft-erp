@@ -8,6 +8,7 @@ export function TemplateMinimalist({ invoice }: TemplateProps) {
         items,
         gstSummary,
         companyName,
+        companyLogo,
         companyGstin,
         companyAddress,
         companyEmail,
@@ -35,6 +36,8 @@ export function TemplateMinimalist({ invoice }: TemplateProps) {
                 </div>
 
                 <div className="text-right">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {companyLogo && <img src={companyLogo} alt={companyName} className="mb-2 h-10 max-w-[160px] object-contain" />}
                     <h2 className="text-base font-semibold text-zinc-900 tracking-tight">{companyName}</h2>
                     <p className="text-xs text-zinc-400 mt-0.5">{companyAddress}</p>
                     {companyGstin && (

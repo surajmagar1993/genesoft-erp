@@ -57,4 +57,18 @@ describe("invoices by country", () => {
         expect(other.currencyCode).toBe("SGD")
         expect(computeLineItemGst(1, 100, 9, "single")).toMatchObject({ vatAmount: 9, cgstAmount: 0, igstAmount: 0, lineTotal: 109 })
     })
+
+    it("draws the business logo when it is in our storage, and ignores outside addresses", async () => {
+        const logo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWN4Xy/1HxkzkC4AAGEXKHFX160TAAAAAElFTkSuQmCC"
+        const withLogo = mapPrismaInvoiceToDB({ ...prismaInvoice("IN", "INR", { gstin: "29ABCDE1234F1Z5" }, { cgstRate: 9, sgstRate: 9, cgstAmount: 90, sgstAmount: 90, tax: 180 }), tenant: { id: "t1", name: "Seller Co", countryCode: "IN", settings: {}, logoUrl: logo } } as never)
+        const plain = mapPrismaInvoiceToDB(prismaInvoice("IN", "INR", { gstin: "29ABCDE1234F1Z5" }, { cgstRate: 9, sgstRate: 9, cgstAmount: 90, sgstAmount: 90, tax: 180 }))
+        const a = await renderInvoicePdf(withLogo)
+        const b = await renderInvoicePdf(plain)
+        expect(a.subarray(0, 4).toString()).toBe("%PDF")
+        expect(a.toString("latin1")).toContain("/Subtype /Image")
+        expect(b.toString("latin1")).not.toContain("/Subtype /Image")
+        // An address someone typed in is never fetched
+        const outside = mapPrismaInvoiceToDB({ ...prismaInvoice("IN", "INR", { gstin: "29ABCDE1234F1Z5" }, { cgstRate: 9, sgstRate: 9, cgstAmount: 90, sgstAmount: 90, tax: 180 }), tenant: { id: "t1", name: "Seller Co", countryCode: "IN", settings: {}, logoUrl: "http://169.254.169.254/latest" } } as never)
+        expect((await renderInvoicePdf(outside)).toString("latin1")).not.toContain("/Subtype /Image")
+    }, 30000)
 })

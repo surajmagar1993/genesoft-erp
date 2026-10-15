@@ -11,6 +11,7 @@ export function TemplateModern({ invoice }: TemplateProps) {
         gstSummary,
         hsnSummary,
         companyName,
+        companyLogo,
         companyGstin,
         companyAddress,
         companyPhone,
@@ -34,9 +35,14 @@ export function TemplateModern({ invoice }: TemplateProps) {
             <div className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-slate-200">
                 <div>
                     <div className="flex items-center gap-2">
-                        <div className="h-9 w-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-xs">
-                            {companyName.charAt(0)}
-                        </div>
+                        {companyLogo ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={companyLogo} alt={companyName} className="h-11 max-w-[160px] object-contain" />
+                        ) : (
+                            <div className="h-9 w-9 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-xs">
+                                {companyName.charAt(0)}
+                            </div>
+                        )}
                         <div>
                             <h1 className="text-xl font-bold text-slate-900 tracking-tight">{companyName}</h1>
                             <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">

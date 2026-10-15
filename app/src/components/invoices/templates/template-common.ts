@@ -65,6 +65,8 @@ export function getInvoiceSummary(invoice: InvoiceDB) {
             : COMPANY.address)
     const companyPhone = invoice.tenants?.phone || ""
     const companyEmail = invoice.tenants?.email || ""
+    // Uploaded in Settings → Organization & Branding (stored in our own storage)
+    const companyLogo = invoice.tenants?.logo_url || null
 
     return {
         items,
@@ -72,6 +74,7 @@ export function getInvoiceSummary(invoice: InvoiceDB) {
         hsnSummary,
         supplyType,
         companyName,
+        companyLogo,
         companyGstin,
         companyAddress,
         companyPhone,

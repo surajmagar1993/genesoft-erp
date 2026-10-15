@@ -10,6 +10,7 @@ export function TemplateCreative({ invoice }: TemplateProps) {
         gstSummary,
         hsnSummary,
         companyName,
+        companyLogo,
         companyGstin,
         companyAddress,
         companyEmail,
@@ -32,6 +33,8 @@ export function TemplateCreative({ invoice }: TemplateProps) {
                             <Sparkles className="h-3 w-3" />
                             {isProforma ? "Proforma Estimate" : "Official Invoice"}
                         </div>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {companyLogo && <img src={companyLogo} alt={companyName} className="mb-2 h-12 max-w-[180px] rounded bg-white p-1 object-contain" />}
                         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">{companyName}</h1>
                         <p className="text-xs text-purple-100/90 mt-1 max-w-sm">{companyAddress}</p>
                         {companyGstin && (

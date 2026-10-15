@@ -8,6 +8,7 @@ export function TemplateCompact({ invoice }: TemplateProps) {
         items,
         gstSummary,
         companyName,
+        companyLogo,
         companyGstin,
         companyAddress,
         companyPhone,
@@ -22,6 +23,8 @@ export function TemplateCompact({ invoice }: TemplateProps) {
         <div className="bg-white text-slate-900 font-mono text-xs p-6 max-w-md mx-auto border-2 border-dashed border-slate-300 rounded shadow-xs print:border-0 print:shadow-none print:p-0 print:max-w-none">
             {/* Top Store Header */}
             <div className="text-center pb-3 border-b-2 border-dashed border-slate-300 space-y-0.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {companyLogo && <img src={companyLogo} alt={companyName} className="mb-1.5 h-10 max-w-[160px] object-contain" />}
                 <h1 className="text-base font-bold uppercase tracking-wider text-slate-900">{companyName}</h1>
                 <p className="text-[10px] text-slate-600">{companyAddress}</p>
                 {companyPhone && <p className="text-[10px] text-slate-600">TEL: {companyPhone}</p>}

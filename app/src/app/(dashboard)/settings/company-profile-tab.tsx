@@ -12,7 +12,8 @@ import { Building2, Mail, Globe, Phone, MapPin, Upload, Trash2, Save, AlertCircl
 import { toast } from "sonner"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
-import { updateTenantSettings, TenantSettings, TenantAddress } from "@/app/actions/settings/tenant"
+import { updateTenantSettings, uploadTenantLogo, removeTenantLogo, TenantSettings, TenantAddress } from "@/app/actions/settings/tenant"
+import { unwrap } from "@/lib/action-result"
 
 interface CompanyProfileTabProps {
     initialSettings: TenantSettings | null
@@ -63,29 +64,48 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
     const [isSaving, setIsSaving] = useState(false)
     const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const [isUploading, setIsUploading] = useState(false)
+
+    // Uploads straight away to the business's folder in storage (PNG or JPG, up to 1 MB)
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
+        e.target.value = ""
         if (!file) return
-
-        if (!file.type.startsWith("image/")) {
-            toast.error("Please upload a valid image file (PNG, JPG, SVG, WebP).")
+        if (!["image/png", "image/jpeg"].includes(file.type)) {
+            toast.error("Upload a PNG or JPG image (these print on PDF invoices).")
             return
         }
-
-        if (file.size > 3 * 1024 * 1024) {
-            toast.error("Logo file size must be less than 3MB.")
+        if (file.size > 1024 * 1024) {
+            toast.error("The logo must be 1 MB or smaller.")
             return
         }
-
-        const reader = new FileReader()
-        reader.onload = (event) => {
-            const result = event.target?.result as string
-            if (result) {
-                setLogoUrl(result)
-                toast.success("Logo loaded! Click 'Save Changes' to apply.")
-            }
+        setIsUploading(true)
+        try {
+            const form = new FormData()
+            form.set("logo", file)
+            const { logoUrl: url } = unwrap(await uploadTenantLogo(form))
+            setLogoUrl(url)
+            toast.success("Logo uploaded. It now appears on your invoices and customer portal.")
+            router.refresh()
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Couldn't upload the logo")
+        } finally {
+            setIsUploading(false)
         }
-        reader.readAsDataURL(file)
+    }
+
+    const handleRemoveLogo = async () => {
+        setIsUploading(true)
+        try {
+            unwrap(await removeTenantLogo())
+            setLogoUrl("")
+            toast.success("Logo removed.")
+            router.refresh()
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Couldn't remove the logo")
+        } finally {
+            setIsUploading(false)
+        }
     }
 
     const handleSave = async () => {
@@ -104,7 +124,6 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                 email: email.trim() || null,
                 phone: phone.trim() || null,
                 website: website.trim() || null,
-                logo_url: logoUrl || null,
                 country_code: countryCode,
                 gstin: gstin.trim() || null,
                 ...(regime?.mode === "SINGLE" && (taxName.trim() || taxRates.trim())
@@ -387,66 +406,47 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                             <Building2 className="h-8 w-8 opacity-60" />
                                         </div>
                                         <p className="text-sm font-semibold">No logo configured</p>
-                                        <p className="text-xs text-muted-foreground mt-1">Upload an image file or provide a public URL</p>
+                                        <p className="text-xs text-muted-foreground mt-1">Upload a PNG or JPG image</p>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Upload and URL Controls */}
+                            {/* Upload controls */}
                             <div className="space-y-3">
-                                <div>
-                                    <Label className="text-xs font-medium mb-1.5 block">Upload Image File</Label>
-                                    <div className="flex items-center gap-2">
-                                        <input
-                                            type="file"
-                                            id="logoFileInput"
-                                            accept="image/png,image/jpeg,image/svg+xml,image/webp"
-                                            className="hidden"
-                                            onChange={handleFileUpload}
-                                        />
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="file"
+                                        id="logoFileInput"
+                                        accept="image/png,image/jpeg"
+                                        className="hidden"
+                                        onChange={handleFileUpload}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full gap-2 cursor-pointer"
+                                        disabled={isUploading}
+                                        onClick={() => document.getElementById("logoFileInput")?.click()}
+                                    >
+                                        <Upload className="h-4 w-4" /> {isUploading ? "Uploading…" : logoUrl ? "Replace logo" : "Upload logo"}
+                                    </Button>
+                                    {logoUrl && (
                                         <Button
                                             type="button"
-                                            variant="outline"
-                                            className="w-full gap-2 cursor-pointer"
-                                            onClick={() => document.getElementById("logoFileInput")?.click()}
+                                            variant="ghost"
+                                            size="icon"
+                                            disabled={isUploading}
+                                            className="text-destructive hover:bg-destructive/10"
+                                            onClick={handleRemoveLogo}
+                                            aria-label="Remove logo"
+                                            title="Remove logo"
                                         >
-                                            <Upload className="h-4 w-4" /> Choose Logo Image
+                                            <Trash2 className="h-4 w-4" />
                                         </Button>
-                                        {logoUrl && (
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                className="text-destructive hover:bg-destructive/10"
-                                                onClick={() => {
-                                                    setLogoUrl("")
-                                                    toast.info("Logo cleared. Click 'Save Profile' to commit.")
-                                                }}
-                                                title="Remove Logo"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        )}
-                                    </div>
+                                    )}
                                 </div>
-
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="logoUrlInput" className="text-xs font-medium">Or Paste Direct Image URL</Label>
-                                    <Input
-                                        id="logoUrlInput"
-                                        value={logoUrl.startsWith("data:") ? "(Uploaded local file)" : logoUrl}
-                                        onChange={(e) => {
-                                            if (!e.target.value.startsWith("(Uploaded")) {
-                                                setLogoUrl(e.target.value)
-                                            }
-                                        }}
-                                        placeholder="https://example.com/logo.png"
-                                        className="text-xs"
-                                    />
-                                </div>
-
                                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                                    💡 <strong>Tips:</strong> For best rendering on PDF quotes & invoices, use a transparent PNG or vector SVG with minimum 300px width.
+                                    PNG or JPG, up to 1 MB. A transparent PNG at least 300px wide prints best. Changes apply straight away.
                                 </p>
                             </div>
                         </CardContent>
