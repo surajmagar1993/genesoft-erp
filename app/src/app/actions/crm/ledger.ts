@@ -7,6 +7,9 @@ import { Prisma } from "@prisma/client"
 import { convertAmount } from "@/lib/exchange-rates"
 import { recordContactTransaction, type RecordTransactionPayload } from "@/lib/contact-ledger"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = ["crm", "sales", "finance"] as const
+
 export type LedgerEntryType = "INVOICE" | "PAYMENT" | "CREDIT_NOTE" | "REFUND" | "OPENING_BALANCE"
 
 export interface LedgerEntry {
@@ -39,7 +42,7 @@ export interface CustomerLedgerData {
  * Normalizes the amount to the tenant's base currency for balance tracking.
  */
 export async function recordTransaction(payload: RecordTransactionPayload) {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   const entry = await recordContactTransaction(tenantId, payload)
   revalidatePath(`/crm/contacts/${payload.contactId}`)
   return entry
@@ -49,7 +52,7 @@ export async function recordTransaction(payload: RecordTransactionPayload) {
  * Fetches the ledger history for a specific customer, structured for the UI.
  */
 export async function getCustomerLedger(contactId: string): Promise<CustomerLedgerData> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const [dbEntries, tenant] = await Promise.all([
     prisma.ledgerEntry.findMany({

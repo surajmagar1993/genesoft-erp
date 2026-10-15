@@ -20,6 +20,9 @@ import {
   validateUsEin,
 } from "@/lib/us-tax-engine"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 /**
  * State name to 2-letter uppercase postal code mapping helper
  */
@@ -90,7 +93,7 @@ export async function getUsTaxOverview(params?: {
   taxYear?: number
   quarter?: "Q1" | "Q2" | "Q3" | "Q4" | "ALL"
 }): Promise<UsTaxOverviewReport> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const now = new Date()
   const taxYear = params?.taxYear || now.getFullYear()
   const quarter = params?.quarter || "ALL"
@@ -291,7 +294,7 @@ export async function exportUsTaxCsv(params: {
   taxYear: number
   quarter?: "Q1" | "Q2" | "Q3" | "Q4" | "ALL"
 }): Promise<string> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
     select: { name: true },
@@ -303,7 +306,7 @@ export async function exportUsTaxCsv(params: {
 }
 
 export async function export1099FireCsvAction(params: { taxYear: number }): Promise<string> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
     select: { name: true, settings: true },
@@ -324,7 +327,7 @@ export async function saveExemptionCertificateAction(data: {
   expiryDate: string
   reason?: string
 }): Promise<{ success: boolean; message: string }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   await prisma.contact.update({
     where: {
@@ -348,7 +351,7 @@ export async function updateVendorW9Action(data: {
   vendorId: string
   ein: string
 }): Promise<{ success: boolean; message: string }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   const check = validateUsEin(data.ein)
 
   if (!check.isValid) {

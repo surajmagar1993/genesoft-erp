@@ -20,6 +20,9 @@ import {
     StockMovementType
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 export interface DeliveryChallanItemRecord {
     id: string
     challanId: string
@@ -126,7 +129,7 @@ export interface DeliveryChallansOverviewData {
  * Fetch Delivery Challans overview, records, and related lookup options
  */
 export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     const challansRaw = await prisma.deliveryChallan.findMany({
         where: { tenantId },
@@ -348,7 +351,7 @@ export interface CreateDeliveryChallanInput {
  * Create a new Delivery Challan (Rule 55) with sequential DC-YYYY-XXXX numbering
  */
 export async function createDeliveryChallan(input: CreateDeliveryChallanInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { contact: input.contactId, warehouse: input.sourceWarehouseId, salesOrder: input.salesOrderId, product: input.items.map((i) => i.productId) })
 
     if (!input.items || input.items.length === 0) {
@@ -433,7 +436,7 @@ export async function createDeliveryChallan(input: CreateDeliveryChallanInput) {
  * Update Delivery Challan lifecycle status (ISSUED, IN_TRANSIT, DELIVERED, RETURNED, CANCELLED)
  */
 export async function updateDeliveryChallanStatus(id: string, status: ChallanStatus) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     await prisma.deliveryChallan.update({
         where: { id, tenantId },
@@ -448,7 +451,7 @@ export async function updateDeliveryChallanStatus(id: string, status: ChallanSta
  * 1-Click Convert Delivery Challan into a Tax Invoice (Invoice model)
  */
 export async function convertChallanToInvoice(challanId: string) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const challan = await prisma.deliveryChallan.findUnique({
         where: { id: challanId, tenantId },

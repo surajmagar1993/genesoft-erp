@@ -16,6 +16,9 @@ import {
     PREBUILT_TEMPLATES
 } from "@/types/report-builder"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "reports" as const
+
 /**
  * Initialize Report Builder state
  */
@@ -23,7 +26,7 @@ export async function getReportBuilderInitData(): Promise<{
     datasets: DatasetMeta[]
     savedReports: SavedReportRecord[]
 }> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     // Fetch user-saved reports
     const dbReports = await prisma.customReport.findMany({
@@ -60,7 +63,7 @@ export async function getReportBuilderInitData(): Promise<{
  * Run dynamic custom report query
  */
 export async function runCustomReportQuery(config: ReportConfig): Promise<ReportQueryResult> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const datasetDef = DATASET_DEFINITIONS[config.dataset]
 
     if (!datasetDef) {
@@ -360,7 +363,7 @@ export async function saveCustomReport(input: {
     config: ReportConfig
 }): Promise<{ success: boolean; id?: string; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
 
         if (!input.name.trim()) {
             return { success: false, error: "Report name is required" }
@@ -403,7 +406,7 @@ export async function saveCustomReport(input: {
  */
 export async function deleteCustomReport(id: string): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
 
         if (id.startsWith("prebuilt-")) {
             return { success: false, error: "Cannot delete pre-built system templates" }

@@ -16,6 +16,9 @@ async function tenantCurrency(tenantId: string): Promise<string> {
 }
 import { prisma } from "@/lib/prisma"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 /* ── Types ── */
 export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED"
 
@@ -61,7 +64,7 @@ export async function getQuotes(
     filters?: { status?: QuoteStatus; search?: string }
 ) {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const q = filters?.search?.trim()
     const where: Prisma.QuoteWhereInput = {
       tenantId,
@@ -82,7 +85,7 @@ export async function getQuotes(
 /* ── Read One ── */
 export async function getQuoteById(id: string): Promise<QuoteDB | null> {
   if (!isUuid(id)) return null
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const row = await prisma.quote.findFirst({ where: { id, tenantId }, include: { items: true } })
   return row ? { ...toRow<QuoteDB>("Quote", row), quote_items: toRows<QuoteLineItemDB>("QuoteItem", row.items) } : null
 }
@@ -131,7 +134,7 @@ export async function createQuote(
   payload: CreateQuotePayload
 ): Promise<{ id: string | null; error: string | null }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const { header, items } = await quoteData(tenantId, payload)
     const quote = await prisma.quote.create({ data: { ...header, tenantId, items: { create: items } }, select: { id: true } })
     revalidatePath("/sales/quotes")
@@ -151,7 +154,7 @@ export async function updateQuote(
   payload: UpdateQuotePayload
 ): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const { id, ...fields } = payload
     const { header, items } = await quoteData(tenantId, fields)
 
@@ -175,7 +178,7 @@ export async function updateQuote(
 /* ── Delete ── */
 export async function deleteQuote(id: string): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     const { count } = await prisma.quote.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Quote not found" }
   } catch (err) {
@@ -190,6 +193,6 @@ export async function deleteQuote(id: string): Promise<{ error: string | null }>
 
 /** The next quote number (QT-2026-0001…) for the new-quote form. */
 export async function getNextQuoteNumber(): Promise<string> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   return nextSequence(prisma, "quote", tenantId, `QT-${new Date().getFullYear()}-`)
 }

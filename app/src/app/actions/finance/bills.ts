@@ -45,7 +45,7 @@ export interface BillData {
  */
 export async function getBills(page: number = 1, limit: number = 10) {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const [rows, total] = await Promise.all([
       prisma.bill.findMany({ where: { tenantId }, include: { items: true }, orderBy: { createdAt: "desc" }, skip: (page - 1) * limit, take: limit }),
       prisma.bill.count({ where: { tenantId } }),
@@ -60,7 +60,7 @@ export async function getBills(page: number = 1, limit: number = 10) {
 /* ── Read Single Bill ── */
 export async function getBill(id: string): Promise<PgRow | null> {
   if (!isUuid(id)) return null
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const b = await prisma.bill.findFirst({ where: { id, tenantId }, include: { items: true, contact: true, payments: true } })
   if (!b) return null
   return {
@@ -75,7 +75,7 @@ export async function getBill(id: string): Promise<PgRow | null> {
  * Fetch a single bill by ID with its items
  */
 export async function getBillById(id: string) {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const b = isUuid(id) ? await prisma.bill.findFirst({ where: { id, tenantId }, include: { items: true, contact: true } }) : null
   if (!b) throw new Error("Failed to fetch bill")
   return { ...toRow<PgRow>("Bill", b), contact: toRow("Contact", b.contact), items: toRows("BillItem", b.items) }
@@ -123,11 +123,14 @@ const billItemRows = (billId: string, lines: BillItem[]) =>
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { createNotification } from "@/app/actions/notifications"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 /**
  * Create a new vendor bill
  */
 export async function createBill(data: BillData) {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
     throw new Error("Vendor not found")
@@ -203,7 +206,7 @@ export async function createBill(data: BillData) {
  * Update an existing bill
  */
 export async function updateBill(id: string, data: Partial<BillData>) {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
     throw new Error("Vendor not found")
@@ -302,7 +305,7 @@ export async function updateBill(id: string, data: Partial<BillData>) {
  */
 export async function deleteBill(id: string): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     // Its payments are deleted with it (cascade); their journals are voided after
     const paymentIds: string[] = (await prisma.payment.findMany({ where: { billId: id, tenantId }, select: { id: true } })).map((p: { id: string }) => p.id)
 
@@ -346,7 +349,7 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
  * Update bill status manually
  */
 export async function updateBillStatus(id: string, status: BillStatus) {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
 
   const { count } = await prisma.bill.updateMany({ where: { id, tenantId }, data: { status } })
   if (count === 0) {
@@ -362,7 +365,7 @@ export async function updateBillStatus(id: string, status: BillStatus) {
  * Fetch vendors for the bill form
  */
 export async function getVendors(limit: number = 100) {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const where = { tenantId, isActive: true }
   const [rows, total] = await Promise.all([
     prisma.contact.findMany({ where, orderBy: { displayName: "asc" }, take: limit }),
@@ -375,7 +378,7 @@ export async function getVendors(limit: number = 100) {
  * Fetch products for the bill form
  */
 export async function getProducts(limit: number = 100) {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   // Prisma knows the live column mapping (the raw "unit_price" select failed on the live table)
   const where = { tenantId, isActive: true }

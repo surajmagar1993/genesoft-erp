@@ -13,6 +13,9 @@ import type {
   POSSaleResult,
 } from "./pos-types"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 // ────────────────────────────────────────────
 // Helpers
 // ────────────────────────────────────────────
@@ -27,7 +30,7 @@ function dec(v: unknown): number {
 // ────────────────────────────────────────────
 
 export async function getPOSProducts(): Promise<POSProductItem[]> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const defaultRate = (await getTenantTaxContext(tenantId)).regime.defaultRate
 
   const products = await prisma.product.findMany({
@@ -74,7 +77,7 @@ export async function getPOSProducts(): Promise<POSProductItem[]> {
 export async function searchPOSProducts(
   query: string
 ): Promise<POSProductItem[]> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const defaultRate = (await getTenantTaxContext(tenantId)).regime.defaultRate
 
   const products = await prisma.product.findMany({
@@ -135,7 +138,7 @@ export async function quickCreateWalkInContact(
   name: string,
   phone?: string
 ): Promise<{ id: string; displayName: string }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   const contact = await prisma.contact.create({
     data: {
@@ -160,7 +163,7 @@ export async function quickCreateWalkInContact(
 export async function createPOSSale(
   data: POSTransactionData
 ): Promise<POSSaleResult> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   try {
     // 1. Resolve or create contact
@@ -321,7 +324,7 @@ export async function createPOSSale(
 // ────────────────────────────────────────────
 
 export async function getActivePOSSession(): Promise<POSSessionRecord | null> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const session = await prisma.pOSSession.findFirst({
     where: { tenantId, status: "OPEN" },
@@ -348,7 +351,7 @@ export async function openPOSSession(
   openingCash: number,
   staffName: string
 ): Promise<POSSessionRecord> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   // Close any existing open sessions
   await prisma.pOSSession.updateMany({
@@ -386,7 +389,7 @@ export async function closePOSSession(
   success: boolean
   variance?: number
 }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   const session = await prisma.pOSSession.findFirst({
     where: { id: sessionId, tenantId },
@@ -416,7 +419,7 @@ export async function closePOSSession(
 // ────────────────────────────────────────────
 
 export async function searchPOSCustomers(query: string) {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const contacts = await prisma.contact.findMany({
     where: {

@@ -11,6 +11,9 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { PurchaseOrderStatus, StockMovementType } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "purchase" as const
+
 export interface PurchaseOrderItemRecord {
     id: string
     purchaseOrderId: string
@@ -106,7 +109,7 @@ export interface CreatePurchaseOrderInput {
  * and available reference data for PO creation.
  */
 export async function getPurchaseOverview(): Promise<PurchaseOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     // 1. Fetch Purchase Orders with relations
     const rawOrders = await prisma.purchaseOrder.findMany({
@@ -295,7 +298,7 @@ export async function createVendor(data: {
     state?: string
     countryCode?: string
 }) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const cleanDisplayName = data.displayName?.trim() || data.companyName?.trim()
     if (!cleanDisplayName) throw new Error("Supplier name is required")
@@ -327,7 +330,7 @@ export async function createVendor(data: {
  * Creates a new Purchase Order with calculated totals and line items.
  */
 export async function createPurchaseOrder(data: CreatePurchaseOrderInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { contact: data.vendorId, warehouse: data.warehouseId, product: data.items.map((i) => i.productId) })
 
     if (!data.vendorId) throw new Error("Vendor selection is required")
@@ -402,7 +405,7 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderInput) {
  * Updates the lifecycle status of a Purchase Order.
  */
 export async function updatePurchaseOrderStatus(id: string, status: PurchaseOrderStatus) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
 
     const existing = await prisma.purchaseOrder.findFirst({
         where: { id, tenantId }
@@ -428,7 +431,7 @@ export async function receiveGoods(data: {
     receivedItems: { itemId: string; quantity: number }[]
     notes?: string
 }) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const performedBy = user?.email || "Procurement Officer"
@@ -568,7 +571,7 @@ export async function convertPOToBill(data: string | {
     dueDate?: string
     billNumber?: string
 }) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const purchaseOrderId = typeof data === "string" ? data : data.purchaseOrderId
     const customDueDate = typeof data === "object" && data.dueDate ? new Date(data.dueDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     const customBillNumber = typeof data === "object" && data.billNumber ? data.billNumber.trim() : null

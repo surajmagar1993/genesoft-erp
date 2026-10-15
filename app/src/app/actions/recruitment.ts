@@ -14,6 +14,9 @@ import {
     EmployeeStatus
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "hr" as const
+
 export interface JobOpeningRecord {
     id: string
     jobCode: string
@@ -105,7 +108,7 @@ export interface RecruitmentOverviewData {
  * Fetch Recruitment & ATS overview telemetry, job openings, applicants, and interviews
  */
 export async function getRecruitmentOverview(): Promise<RecruitmentOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     const openings = await prisma.jobOpening.findMany({
         where: { tenantId },
@@ -301,7 +304,7 @@ export interface CreateJobOpeningInput {
  * Create a new Job Requisition with auto-generated JOB-YYYY-XXX code
  */
 export async function createJobOpening(input: CreateJobOpeningInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const currentYear = new Date().getFullYear()
     const jobCode = await nextSequence(prisma, "jobOpening", tenantId, `JOB-${currentYear}-`, 3)
@@ -335,7 +338,7 @@ export async function createJobOpening(input: CreateJobOpeningInput) {
  * Update Job Opening Status (PUBLISHED, ON_HOLD, CLOSED, DRAFT)
  */
 export async function updateJobOpeningStatus(id: string, status: JobStatus) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     await prisma.jobOpening.update({
         where: { id, tenantId },
@@ -367,7 +370,7 @@ export interface CreateApplicantInput {
  * Add a Candidate to a Job Opening with auto-generated APP-YYYY-XXXX number
  */
 export async function createApplicant(input: CreateApplicantInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const currentYear = new Date().getFullYear()
     const applicantNumber = await nextSequence(prisma, "jobApplicant", tenantId, `APP-${currentYear}-`, 4)
@@ -407,7 +410,7 @@ export async function updateApplicantStage(
     notes?: string,
     rejectionReason?: string
 ) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const updateData: {
         stage: ApplicantStage
@@ -448,7 +451,7 @@ export interface ScheduleInterviewInput {
  * Schedule an interview round and advance candidate stage if currently applied/screening
  */
 export async function scheduleInterview(input: ScheduleInterviewInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const applicant = await prisma.jobApplicant.findUnique({
         where: { id: input.applicantId, tenantId },
@@ -496,7 +499,7 @@ export async function recordInterviewFeedback(
     recommendation: InterviewRecommendation,
     status: InterviewStatus = InterviewStatus.COMPLETED
 ) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     await prisma.applicantInterview.update({
         where: { id, tenantId },
@@ -530,7 +533,7 @@ export interface HireApplicantInput {
  * 1-Click Hire: Convert Applicant into core HR Employee record atomically
  */
 export async function hireApplicant(applicantId: string, employeeData: HireApplicantInput) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
 
     return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const applicant = await tx.jobApplicant.findUnique({

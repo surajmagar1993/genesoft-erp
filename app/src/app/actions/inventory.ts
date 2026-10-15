@@ -7,6 +7,9 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { StockMovementType } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "inventory" as const
+
 export interface WarehouseItem {
     id: string
     name: string
@@ -136,7 +139,7 @@ async function ensureDefaultWarehouse(tenantId: string) {
  * SKU inventory levels, and recent audit movements.
  */
 export async function getInventoryOverview(): Promise<InventoryOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     await ensureDefaultWarehouse(tenantId)
 
     // 1. Fetch Warehouses
@@ -314,7 +317,7 @@ export async function createWarehouse(data: {
     contactPhone?: string
     isDefault?: boolean
 }) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     const cleanCode = data.code.trim().toUpperCase()
     const cleanName = data.name.trim()
 
@@ -369,7 +372,7 @@ export async function updateWarehouse(id: string, data: {
     isDefault?: boolean
     isActive?: boolean
 }) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     const cleanCode = data.code.trim().toUpperCase()
     const cleanName = data.name.trim()
 
@@ -425,7 +428,7 @@ export async function adjustStock(data: {
     reason?: string
     referenceNo?: string
 }) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const performedBy = user?.email || "Super Admin"
@@ -558,7 +561,7 @@ export async function transferStock(data: {
     reason?: string
     referenceNo?: string
 }) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     const performedBy = user?.email || "Super Admin"
@@ -678,7 +681,7 @@ export async function transferStock(data: {
 // ────────────────────────────────────────────
 
 export async function getProductByBarcode(code: string): Promise<{ product: any | null }> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const clean = code.trim()
     if (!clean) return { product: null }
 
@@ -839,7 +842,7 @@ export interface InventoryReportsResult {
 export async function getInventoryReportsData(
     timeRange: "30d" | "90d" | "365d" | "all" = "30d"
 ): Promise<InventoryReportsResult> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     try {
         const [products, warehouses, movements] = await Promise.all([

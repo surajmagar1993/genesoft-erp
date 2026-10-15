@@ -8,6 +8,9 @@ import { assertTenantRefs } from "@/lib/tenant-refs"
 import { isUuid } from "@/lib/utils"
 import type { Prisma } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT"
 
@@ -39,7 +42,7 @@ export async function getTasks(
   }
 ): Promise<{ data: Task[]; total: number }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     for (const id of [filters?.contact_id, filters?.lead_id, filters?.deal_id]) if (id && !isUuid(id)) return { data: [], total: 0 }
     const q = filters?.search?.trim()
     const where: Prisma.TaskWhereInput = {
@@ -63,7 +66,7 @@ export async function getTasks(
 
 export async function getTaskById(id: string): Promise<Task | null> {
   if (!isUuid(id)) return null
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const row = await prisma.task.findFirst({ where: { id, tenantId } })
   return row ? toRow<Task>("Task", row) : null
 }
@@ -72,7 +75,7 @@ export async function createTask(
   formData: Omit<Task, "id" | "created_at" | "updated_at" | "tenant_id">
 ): Promise<{ error: string | null, data?: Task }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const data = fromRow("Task", formData) as Omit<Prisma.TaskUncheckedCreateInput, "tenantId">
     await assertTenantRefs(tenantId, { contact: data.contactId, lead: data.leadId, deal: data.dealId })
     const row = await prisma.task.create({ data: { ...data, tenantId } })
@@ -93,7 +96,7 @@ export async function updateTask(
   formData: Partial<Omit<Task, "id" | "created_at" | "updated_at" | "tenant_id">>
 ): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const data = fromRow("Task", formData) as Prisma.TaskUncheckedUpdateManyInput
     await assertTenantRefs(tenantId, { contact: data.contactId as string | null, lead: data.leadId as string | null, deal: data.dealId as string | null })
     const { count } = await prisma.task.updateMany({ where: { id, tenantId }, data })
@@ -108,7 +111,7 @@ export async function updateTask(
 
 export async function deleteTask(id: string): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const { count } = await prisma.task.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Task not found" }
 

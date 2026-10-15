@@ -15,6 +15,9 @@ import {
   RawUkBill,
 } from "@/lib/uk-vat-engine"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export interface UkVatOverviewResult {
   year: number
   quarter: "Q1" | "Q2" | "Q3" | "Q4"
@@ -44,7 +47,7 @@ export async function getUkVatOverview(params?: {
   year?: number
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }): Promise<UkVatOverviewResult> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const now = new Date()
   const year = params?.year || now.getFullYear()

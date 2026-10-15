@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma"
 import { pick, toRow, toRows } from "@/lib/pg-row"
 import { getTenantId } from "@/lib/get-tenant-id"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export interface ReceivableSummary {
   totalOutstanding: number
   totalOverdue: number
@@ -28,7 +31,7 @@ export interface DebtorSummary {
  * Get global receivable metrics for the dashboard
  */
 export async function getReceivableSummary(): Promise<ReceivableSummary> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const now = new Date()
 
   // Fetch all non-paid invoices
@@ -100,7 +103,7 @@ export async function getReceivableSummary(): Promise<ReceivableSummary> {
  * Get top debtors grouped by customer
  */
 export async function getTopDebtors(limit = 10): Promise<DebtorSummary[]> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const now = new Date()
 
   // Fetch invoices with contact info

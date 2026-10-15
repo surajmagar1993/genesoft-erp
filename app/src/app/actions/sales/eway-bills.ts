@@ -23,6 +23,9 @@ import {
 } from "@/lib/eway-bill-engine"
 import { COMPANY } from "@/lib/constants/company"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface VehicleUpdateRecord {
@@ -171,7 +174,7 @@ export async function getEwayBillsOverview(
   filterStatus?: "ALL" | "ACTIVE" | "CANCELLED" | "EXPIRED",
   search?: string
 ): Promise<EwayOverviewData> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const [tenant, invoices] = await Promise.all([
     prisma.tenant.findUnique({
@@ -315,7 +318,7 @@ export async function generateEwayBill(payload: {
   vehicleType?: EwayVehicleTypeCode
   itemList: EwayItemPayload[]
 }): Promise<{ success: boolean; ewayBill?: EwayBillRecord; error?: string }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   // 1. Validation Checks
   if (!payload.docNo.trim()) {
@@ -507,7 +510,7 @@ export async function updateEwayBillVehicle(
     transDocNo?: string
   }
 ): Promise<{ success: boolean; error?: string }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   const vRes = validateVehicleNumber(payload.vehicleNo)
   if (!vRes.isValid) {
@@ -572,7 +575,7 @@ export async function cancelEwayBill(
   cancelReason: string,
   cancelRemark?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
 
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
@@ -641,7 +644,7 @@ export async function exportEwayBillNicJson(ids: string[]): Promise<{
   count?: number
   error?: string
 }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const tenant = await prisma.tenant.findUnique({
     where: { id: tenantId },
     select: { settings: true },
@@ -708,7 +711,7 @@ export async function exportEwayBillNicJson(ids: string[]): Promise<{
 export async function saveTransporter(
   transporter: Omit<TransporterRecord, "id"> & { id?: string }
 ): Promise<{ success: boolean; transporter?: TransporterRecord; error?: string }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   const tRes = validateTransporterId(transporter.gstin)
   if (!tRes.isValid) {

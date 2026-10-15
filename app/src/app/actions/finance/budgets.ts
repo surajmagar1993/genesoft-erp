@@ -7,6 +7,9 @@ import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import { BudgetPeriodType, BudgetStatus, AccountType } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export interface BudgetItemDetail {
     id: string
     budgetId: string
@@ -126,7 +129,7 @@ export async function getBudgetsOverview(filters?: {
     departmentId?: string
     status?: string
 }): Promise<BudgetsOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     // 1. Fetch departments and expense accounts for form pickers
     const [departments, expenseAccounts, rawBudgets] = await Promise.all([
@@ -261,7 +264,7 @@ export async function getBudgetsOverview(filters?: {
  * along with recent transactions matching the budget period.
  */
 export async function getBudgetDetail(id: string): Promise<BudgetDetailData | null> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     const rawBudget = await prisma.budget.findFirst({
         where: { id, tenantId },
@@ -415,7 +418,7 @@ export async function createBudget(data: {
         notes?: string | null
     }[]
 }) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     await assertTenantRefs(tenantId, { department: data.departmentId, account: data.items.map((i) => i.accountId) })
 
     if (!data.name?.trim()) throw new Error("Budget plan name is required.")
@@ -495,7 +498,7 @@ export async function updateBudget(
         }[]
     }
 ) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     await assertTenantRefs(tenantId, { department: data.departmentId, account: data.items?.map((i) => i.accountId) })
 
     const existing = await prisma.budget.findFirst({
@@ -566,7 +569,7 @@ export async function changeBudgetStatus(
     status: BudgetStatus,
     approverName?: string
 ) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
 
     const existing = await prisma.budget.findFirst({
         where: { id, tenantId }
@@ -594,7 +597,7 @@ export async function changeBudgetStatus(
  * Deletes a draft or closed budget plan.
  */
 export async function deleteBudget(id: string) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
 
     const existing = await prisma.budget.findFirst({
         where: { id, tenantId }

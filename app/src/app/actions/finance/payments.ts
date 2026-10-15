@@ -11,6 +11,9 @@ import { revalidatePath } from "next/cache"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { postToLedger } from "@/lib/ledger"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = ["finance", "sales"] as const
+
 export type PaymentMethod = "CASH" | "BANK_TRANSFER" | "CREDIT_CARD" | "DEBIT_CARD" | "UPI" | "CHEQUE" | "STRIPE" | "PAYPAL" | "OTHER"
 
 export interface PaymentDB {
@@ -52,7 +55,7 @@ export async function getPayments(
   page: number = 1, 
   limit: number = 10
 ): Promise<{ data: PaymentDB[]; total: number }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const offset = (page - 1) * limit
 
   try {
@@ -75,7 +78,7 @@ export async function getPayments(
 
 /* ── Read By Invoice ── */
 export async function getPaymentsByInvoice(invoiceId: string): Promise<PaymentDB[]> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   if (!isRecordId(invoiceId)) return []
   const rows = await prisma.payment.findMany({ where: { tenantId, invoiceId }, orderBy: { paymentDate: "desc" } })
@@ -86,7 +89,7 @@ export async function getPaymentsByInvoice(invoiceId: string): Promise<PaymentDB
 const PAYMENT_METHODS: PaymentMethod[] = ["CASH", "BANK_TRANSFER", "CREDIT_CARD", "DEBIT_CARD", "UPI", "CHEQUE", "STRIPE", "PAYPAL", "OTHER"]
 
 export async function createPayment(payload: CreatePaymentPayload): Promise<{ id: string | null; error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   try {
     await assertTenantRefs(tenantId, { invoice: payload.invoice_id, bill: payload.bill_id, contact: payload.contact_id })
   } catch (refError) {
@@ -181,7 +184,7 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<{ id
 
 /* ── Delete Payment ── */
 export async function deletePayment(id: string): Promise<{ error: string | null }> {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
 
   const p = await prisma.payment.findFirst({ where: { id, tenantId }, select: { invoiceId: true, billId: true } })
   if (!p) return { error: "Payment not found" }
@@ -227,7 +230,7 @@ function statusFromPayments(current: string, total: number, paid: number, unpaid
 
 /* ── Helper: Sync Invoice Status ── */
 export async function syncInvoiceStatus(invoiceId: string) {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   const invoice = await prisma.invoice.findFirst({ where: { id: invoiceId, tenantId }, select: { total: true, status: true } })
   if (!invoice) return
 
@@ -240,7 +243,7 @@ export async function syncInvoiceStatus(invoiceId: string) {
 
 /* ── Helper: Sync Bill Status ── */
 export async function syncBillStatus(billId: string) {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   const bill = await prisma.bill.findFirst({ where: { id: billId, tenantId }, select: { total: true, status: true } })
   if (!bill) return
 

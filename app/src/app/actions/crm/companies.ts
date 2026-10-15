@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma"
 import { fromRow, toRow, toRows } from "@/lib/pg-row"
 import { isUuid } from "@/lib/utils"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+
 export interface Company {
   id: string
   name: string
@@ -32,7 +35,7 @@ export async function getCompanies(
   search?: string
 ): Promise<{ data: Company[]; total: number }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const q = search?.trim()
     const where = {
       tenantId,
@@ -52,7 +55,7 @@ export async function getCompanies(
 export async function getCompanyById(id: string): Promise<Company | null> {
   try {
     if (!isUuid(id)) return null
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const row = await prisma.company.findFirst({ where: { id, tenantId } })
     return row ? toRow<Company>("Company", row) : null
   } catch {
@@ -66,7 +69,7 @@ export async function createCompany(
   formData: Omit<Company, "id" | "created_at" | "tenant_id">
 ): Promise<{ error: string | null; data?: Company }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     if (!tenantId) {
       return { error: "Authentication required or tenant not identified." }
@@ -109,7 +112,7 @@ export async function updateCompany(
   formData: Partial<Omit<Company, "id" | "created_at" | "tenant_id">>
 ): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     if (!tenantId) {
       return { error: "Authentication required or tenant not identified." }
@@ -134,7 +137,7 @@ export async function updateCompany(
 
 export async function deleteCompany(id: string): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     const { count } = await prisma.company.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Company not found" }
     revalidatePath("/crm/companies")
@@ -157,7 +160,7 @@ export interface CompanyRelationsData {
 }
 
 export async function getCompanyWithRelations(id: string): Promise<CompanyRelationsData> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const company = await getCompanyById(id)
 
   if (!company) {

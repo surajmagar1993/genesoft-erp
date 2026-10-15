@@ -18,6 +18,9 @@ import {
     Prisma,
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 /* ─────────────────────────────────────────
    Interfaces
 ───────────────────────────────────────── */
@@ -415,7 +418,7 @@ export async function getExpensesOverview(): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         // Auto-seed if empty
@@ -653,7 +656,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         await assertTenantRefs(tenantId, { contact: data.vendorId, employee: data.employeeId })
         if (!tenantId) return { error: "Authentication required" }
 
@@ -813,7 +816,7 @@ export async function updateExpenseStatus(
     isClaimSettled?: boolean
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const expense = await prisma.expense.findFirst({
@@ -946,7 +949,7 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
     error?: string
 }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         await assertTenantRefs(tenantId, { contact: data.lines.map((l) => l.contactId) })
         if (!tenantId) return { error: "Authentication required" }
 
@@ -1053,7 +1056,7 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
 
 export async function voidExpense(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const expense = await prisma.expense.findFirst({

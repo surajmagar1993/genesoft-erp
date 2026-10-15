@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { getTenantTaxContext } from "@/lib/tenant-tax"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export interface TaxRateRow {
     rate: number
     taxable: number
@@ -37,7 +40,7 @@ const round = (n: number) => Math.round(n * 100) / 100
  * the figure the business (or its accountant) uses to file.
  */
 export async function getTaxSummary(params: { from: string; to: string }): Promise<TaxSummaryReport> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const ctx = await getTenantTaxContext(tenantId)
 
     const from = new Date(`${params.from}T00:00:00`)

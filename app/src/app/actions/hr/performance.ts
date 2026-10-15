@@ -15,6 +15,9 @@ import {
     EnrollmentStatus,
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "hr" as const
+
 export interface AppraisalCycleRecord {
     id: string
     cycleCode: string
@@ -144,7 +147,7 @@ export interface PerformanceOverviewData {
  * Fetch all Performance Reviews & Training overview data
  */
 export async function getPerformanceOverview(): Promise<PerformanceOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     // 1. Fetch Appraisal Cycles
     const rawCycles = await prisma.appraisalCycle.findMany({
@@ -385,7 +388,7 @@ export async function createAppraisalCycle(input: {
     description?: string
 }): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         const cycleCode = await nextSequence(prisma, "appraisalCycle", tenantId, `CYC-${new Date().getFullYear()}-`, 3)
 
         await prisma.appraisalCycle.create({
@@ -417,7 +420,7 @@ export async function updateAppraisalCycleStatus(
     status: AppraisalCycleStatus
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         await prisma.appraisalCycle.update({
             where: { id, tenantId },
             data: { status }
@@ -441,7 +444,7 @@ export async function createPerformanceReview(input: {
     reviewerId?: string
 }): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
 
         // Check if review already exists for employee in this cycle
         const existing = await prisma.performanceReview.findFirst({
@@ -500,7 +503,7 @@ export async function submitReviewSelfEvaluation(input: {
     selfFeedback: string
 }): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
 
         await prisma.performanceReview.update({
             where: { id: input.reviewId, tenantId },
@@ -534,7 +537,7 @@ export async function submitReviewManagerEvaluation(input: {
     competencies?: Record<string, number>
 }): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
 
         await prisma.performanceReview.update({
             where: { id: input.reviewId, tenantId },
@@ -574,7 +577,7 @@ export async function createEmployeeGoal(input: {
     dueDate?: string
 }): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         const goalCode = await nextSequence(prisma, "employeeGoal", tenantId, `GOL-${new Date().getFullYear()}-`, 3)
 
         await prisma.employeeGoal.create({
@@ -612,7 +615,7 @@ export async function updateGoalProgress(
     status?: GoalStatus
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         const boundedProgress = Math.min(100, Math.max(0, progress))
 
         let targetStatus = status
@@ -655,7 +658,7 @@ export async function createTrainingProgram(input: {
     maxParticipants?: number
 }): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         const programCode = await nextSequence(prisma, "trainingProgram", tenantId, `TRN-${new Date().getFullYear()}-`, 3)
 
         await prisma.trainingProgram.create({
@@ -693,7 +696,7 @@ export async function updateTrainingProgramStatus(
     status: TrainingProgramStatus
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         await prisma.trainingProgram.update({
             where: { id, tenantId },
             data: { status }
@@ -716,7 +719,7 @@ export async function enrollEmployeeInTraining(
     employeeId: string
 ): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
 
         // Check if already enrolled
         const existing = await prisma.trainingEnrollment.findUnique({
@@ -784,7 +787,7 @@ export async function updateEnrollmentStatus(input: {
     certificateUrl?: string
 }): Promise<{ success: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
 
         await prisma.trainingEnrollment.update({
             where: { id: input.enrollmentId, tenantId },

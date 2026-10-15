@@ -12,7 +12,7 @@ import PaymentGatewaysTab from "./payment-gateways-tab"
 import TeamTab from "./team-tab"
 import DataAccountTab from "./data-account-tab"
 import { getTenantRole } from "@/lib/get-tenant-id"
-import { getTeamMembers } from "@/app/actions/settings/team"
+import { getPendingInvites, getTeamMembers } from "@/app/actions/settings/team"
 import { getBillingPricing } from "@/app/actions/saas/subscription"
 import { getEmailPreferences } from "@/app/actions/settings/email-preferences"
 import { EmailPreferencesCard } from "./email-preferences-card"
@@ -35,6 +35,7 @@ export default async function SettingsPage({
     const role = await getTenantRole()
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN"
     const teamMembers = isAdmin ? await getTeamMembers() : []
+    const teamInvites = isAdmin ? await getPendingInvites() : []
     const siteUrl = appUrl()
     const emailPrefs = await getEmailPreferences()
     const regime = resolveTaxRegime(settings?.country_code, null, settings?.currency_code)
@@ -84,7 +85,7 @@ export default async function SettingsPage({
                     </TabsTrigger>
                     {isAdmin && (
                         <TabsTrigger value="team" className="flex items-center gap-2">
-                            <Users className="h-4 w-4" /> Team & Roles
+                            <Users className="h-4 w-4" /> Team & Access
                         </TabsTrigger>
                     )}
                     {isAdmin && (
@@ -155,10 +156,10 @@ export default async function SettingsPage({
                     <BillingTab settings={settings as any} pricing={billingPricing} checkoutResult={checkoutResult} />
                 </TabsContent>
 
-                {/* Team & Roles (workspace admins only) */}
+                {/* Team & Access (workspace admins only) */}
                 {isAdmin && (
                     <TabsContent value="team">
-                        <TeamTab initialMembers={teamMembers} />
+                        <TeamTab initialMembers={teamMembers} invites={teamInvites} />
                     </TabsContent>
                 )}
 

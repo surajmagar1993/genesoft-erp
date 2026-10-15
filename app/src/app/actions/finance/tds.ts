@@ -18,6 +18,9 @@ import {
   getForm26QDueDate,
 } from "@/lib/tds-engine"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 // ── Types & Interfaces ────────────────────────────────────────────────────────
 
 export interface TdsDeductionRecord {
@@ -151,7 +154,7 @@ export async function getTdsOverview(
   requestedFy?: string,
   requestedQuarter?: IndianTaxQuarter
 ): Promise<TdsOverviewData> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const now = new Date()
   const currentFy = requestedFy || getIndianFinancialYear(now)
   const currentQuarter = requestedQuarter || getIndianTaxQuarter(now)
@@ -355,7 +358,7 @@ export async function recordTdsDeduction(input: {
   notes?: string
 }): Promise<{ success: boolean; deduction?: TdsDeductionRecord; error?: string }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { contact: input.contactId, bill: input.billId, payment: input.paymentId })
     const gross = Number(input.grossAmount)
     if (isNaN(gross) || gross <= 0) {
@@ -457,7 +460,7 @@ export async function recordTdsChallan(input: {
   notes?: string
 }): Promise<{ success: boolean; challan?: TdsChallanRecord; error?: string }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
 
     // Validate BSR code (7 digits)
     const bsrClean = input.bsrCode.trim()
@@ -561,7 +564,7 @@ export async function updateTdsProfile(
   profile: Partial<TdsProfile>
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
 
     // Validate TAN if provided
     if (profile.tan) {

@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { UserProfileEmail } from "@/components/auth/user-profile-email"
-import { createClient } from "@/lib/supabase/client"
 import { LogoutMenuItem } from '@/components/auth/logout-button'
 import { RoleProvider } from "@/components/auth/role-context"
+import { getMyAccess } from "@/lib/get-tenant-id"
+import { MODULES, isAdminRole, moduleForPath, type ModuleAccess } from "@/lib/access"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
@@ -189,12 +190,15 @@ const navigation = [
 ]
 
 interface AppSidebarProps {
+    /** Module access of a member (null for admins: everything) */
+    access: ModuleAccess | null
+    accessLoaded: boolean
     countryCode: string
     multiJurisdiction: boolean
     tenantName?: string
 }
 
-function AppSidebar({ countryCode, multiJurisdiction, tenantName }: AppSidebarProps) {
+function AppSidebar({ access, accessLoaded, countryCode, multiJurisdiction, tenantName }: AppSidebarProps) {
     const pathname = usePathname()
     const jurisdiction = getTaxJurisdiction(countryCode)
 
@@ -223,6 +227,17 @@ function AppSidebar({ countryCode, multiJurisdiction, tenantName }: AppSidebarPr
         }
         return group
     })
+        // Members see only the modules they have access to (hidden until access is known)
+        .map((group) => ({
+            ...group,
+            items: group.items.filter((item) => {
+                const module = moduleForPath(item.href)
+                if (!module) return true
+                if (!accessLoaded) return false
+                return !access || access[module] !== "NONE"
+            }),
+        }))
+        .filter((group) => group.items.length > 0)
 
     return (
         <Sidebar collapsible="icon" variant="sidebar">
@@ -394,6 +409,7 @@ export default function DashboardLayout({
     const [tenantName, setTenantName] = useState<string>("")
     const [bannerMessage, setBannerMessage] = useState<string | null>(null)
     const [role, setRole] = useState<string | null>(null)
+    const [access, setAccess] = useState<ModuleAccess | null>(null)
 
     useEffect(() => {
         let isMounted = true
@@ -427,33 +443,33 @@ export default function DashboardLayout({
     }, [])
 
     useEffect(() => {
-        const checkRole = async () => {
-            const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                const { data: userData } = await supabase
-                    .from('profiles')
-                    .select('role')
-                    .eq('id', user.id)
-                    .single()
-
-                setRole(userData?.role ?? null)
-
-                if (userData?.role === 'SUPER_ADMIN') {
-                    // Only redirect if not already on an admin page (should be safe due to layout structure)
-                    if (!pathname.startsWith('/admin') && !pathname.startsWith('/saas')) {
-                        window.location.href = '/admin/dashboard'
-                    }
+        let isMounted = true
+        getMyAccess()
+            .then(({ role, access }) => {
+                if (!isMounted) return
+                setRole(role)
+                setAccess(access)
+                if (role === 'SUPER_ADMIN' && !pathname.startsWith('/admin') && !pathname.startsWith('/saas')) {
+                    window.location.href = '/admin/dashboard'
                 }
-            }
+            })
+            .catch((err) => console.error("Error loading access:", err))
+        return () => {
+            isMounted = false
         }
-        checkRole()
     }, [pathname])
+
+    const currentModule = moduleForPath(pathname)
+    const viewOnlyModule = role && !isAdminRole(role) && access && currentModule && access[currentModule] === "VIEW"
+        ? MODULES.find((m) => m.key === currentModule)?.label
+        : null
 
     return (
         <SidebarProvider>
             <Script {...({ id: "razorpay-checkout", src: "https://checkout.razorpay.com/v1/checkout.js", strategy: "lazyOnload" } as any)} />
             <AppSidebar
+                access={role && isAdminRole(role) ? null : access}
+                accessLoaded={role !== null}
                 countryCode={tenantCountry}
                 multiJurisdiction={multiJurisdiction}
                 tenantName={tenantName}
@@ -476,13 +492,13 @@ export default function DashboardLayout({
                             </button>
                         </div>
                     )}
-                    {role === 'VIEWER' && (
+                    {viewOnlyModule && (
                         <div className="mb-4 p-3 rounded-lg bg-muted border text-muted-foreground text-xs font-medium flex items-center gap-2">
                             <Eye className="h-4 w-4 shrink-0" />
-                            <span>You have view-only access to this workspace. Ask a workspace admin if you need to make changes.</span>
+                            <span>You have view-only access to {viewOnlyModule}. Ask a workspace admin if you need to make changes.</span>
                         </div>
                     )}
-                    <RoleProvider role={role}>
+                    <RoleProvider role={role} access={access}>
                         {children}
                     </RoleProvider>
                 </div>

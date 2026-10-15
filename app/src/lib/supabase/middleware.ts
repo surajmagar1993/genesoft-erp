@@ -56,6 +56,7 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
         request.nextUrl.pathname === '/sitemap' ||
         request.nextUrl.pathname === '/refund-policy' ||
         request.nextUrl.pathname === '/unsubscribe' || // marketing email link, authorised by its signed token
+        request.nextUrl.pathname === '/join' || // team invitation link, authorised by its signed token
         request.nextUrl.pathname === '/maintenance' ||
         request.nextUrl.pathname === '/reset-password' || // needs the recovery session from /auth/confirm, shows its own message without one
         request.nextUrl.pathname.startsWith('/auth/') || // email link handler (/auth/confirm)

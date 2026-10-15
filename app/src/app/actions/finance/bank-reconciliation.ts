@@ -16,6 +16,9 @@ import {
     PaymentMethod,
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 // ============================================
 // TYPES & INTERFACES
 // ============================================
@@ -205,7 +208,7 @@ export interface QuickExpenseInput {
 export async function getBankReconciliationOverview(
     bankAccountId?: string
 ): Promise<BankReconciliationOverview> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     if (!tenantId) {
         throw new Error("Authentication required")
     }
@@ -558,7 +561,7 @@ export async function createBankAccount(data: CreateBankAccountInput): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.accountName?.trim()) return { error: "Account name is required" }
@@ -640,7 +643,7 @@ export async function updateBankAccount(
     data: Partial<CreateBankAccountInput>
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         if (data.isPrimary) {
@@ -683,7 +686,7 @@ export async function updateBankAccount(
 
 export async function deleteBankAccount(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         // Check if has locked reconciled statements
@@ -717,7 +720,7 @@ export async function importBankStatement(data: ImportBankStatementInput): Promi
     error?: string
 }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.bankAccountId) return { error: "Bank account is required" }
@@ -806,7 +809,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         // Find all unmatched bank transactions for account
@@ -987,7 +990,7 @@ export async function matchTransactionManual(
     recordId: string
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const dataToUpdate: any = {
@@ -1039,7 +1042,7 @@ export async function unmatchTransaction(transactionId: string): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const { count } = await prisma.bankTransaction.updateMany({
@@ -1080,7 +1083,7 @@ export async function createQuickExpenseAndReconcile(
     payload: QuickExpenseInput
 ): Promise<{ success?: boolean; expenseId?: string; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const bTxn = await prisma.bankTransaction.findFirst({
@@ -1206,7 +1209,7 @@ export async function finalizeReconciliation(statementId: string): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const statement = await prisma.bankStatement.findFirst({

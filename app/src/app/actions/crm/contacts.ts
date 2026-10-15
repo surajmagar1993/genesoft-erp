@@ -5,6 +5,11 @@ import { recordContactTransaction } from "@/lib/contact-ledger"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+/** Customers and vendors are picked on sales, finance and purchase documents too */
+const CONTACT_LOOKUP = ["crm", "sales", "finance", "purchase"] as const
+
 export interface Contact {
   id: string
   display_name: string
@@ -48,7 +53,7 @@ export async function getContacts(
   limit: number = 10,
   search?: string
 ): Promise<{ data: Contact[]; total: number }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(CONTACT_LOOKUP)
   const offset = (page - 1) * limit
 
   try {
@@ -118,7 +123,7 @@ export async function getContacts(
 }
 
 export async function getContactById(id: string): Promise<Contact | null> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(CONTACT_LOOKUP)
 
   try {
     const c = await prisma.contact.findFirst({
@@ -174,7 +179,7 @@ export async function createContact(
   formData: Omit<Contact, "id" | "created_at" | "tenant_id">
 ): Promise<{ error: string | null; id?: string }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     // Determine safe displayName
     let displayName = (formData.display_name || "").trim()
@@ -240,7 +245,7 @@ export async function updateContact(
   formData: Partial<Omit<Contact, "id" | "created_at" | "tenant_id">>
 ): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     let displayName = formData.display_name?.trim()
     if (displayName === "") {
@@ -301,7 +306,7 @@ export async function updateContact(
 
 export async function deleteContact(id: string): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
 
     // Customers/suppliers with business records can't be deleted (the records keep them)
     const [invoices, bills, payments] = await Promise.all([
@@ -339,7 +344,7 @@ export async function importContacts(
   contacts: any[]
 ): Promise<{ error: string | null; count: number; skipped?: number }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     if (!Array.isArray(contacts) || contacts.length === 0) return { error: "The file has no contacts", count: 0 }
     if (contacts.length > 5000) return { error: "Import up to 5,000 contacts at a time", count: 0 }
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })

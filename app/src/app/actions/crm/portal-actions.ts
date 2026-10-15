@@ -4,12 +4,15 @@ import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { randomBytes } from "crypto"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+
 // ────────────────────────────────────────────
 // Portal Access Management (Tenant-Side)
 // ────────────────────────────────────────────
 
 export async function togglePortalAccess(contactId: string) {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
 
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, tenantId },
@@ -37,7 +40,7 @@ export async function togglePortalAccess(contactId: string) {
 }
 
 export async function regeneratePortalToken(contactId: string) {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
 
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, tenantId },
@@ -58,7 +61,7 @@ export async function regeneratePortalToken(contactId: string) {
 }
 
 export async function getPortalStatus(contactId: string) {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, tenantId },
@@ -83,7 +86,7 @@ export async function getPortalStatus(contactId: string) {
 // ────────────────────────────────────────────
 
 export async function getPortalTicketsForTenant() {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const tickets = await prisma.portalTicket.findMany({
     where: { tenantId },
@@ -120,7 +123,7 @@ export async function replyToPortalTicket(
   message: string,
   staffName: string = "Support Team"
 ) {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   const ticket = await prisma.portalTicket.findFirst({
     where: { id: ticketId, tenantId },
@@ -152,7 +155,7 @@ export async function updatePortalTicketStatus(
   ticketId: string,
   status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED"
 ) {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   const ticket = await prisma.portalTicket.findFirst({
     where: { id: ticketId, tenantId },

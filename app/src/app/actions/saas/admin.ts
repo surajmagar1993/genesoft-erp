@@ -1,6 +1,9 @@
 "use server"
 
 import { prisma } from "../../../lib/prisma"
+import { readTeam } from "@/lib/team-settings"
+import type { Prisma } from "@prisma/client"
+import { isAdminRole, resolveAccess, summarizeAccess } from "@/lib/access"
 import { clearPlatformGateCache } from "@/lib/platform-security"
 import { stripe } from "@/lib/stripe"
 import { ensureStripePrice, type PaidPlan } from "@/lib/stripe-plans"
@@ -1219,60 +1222,109 @@ async function _updateGlobalSettings(data: {
 /**
  * Global User Directory (Cross-Tenant User Management)
  */
-export async function getGlobalUsers(params: {
+export interface PlatformTeamMember {
+    id: string
+    fullName: string | null
+    email: string
+    phone: string | null
+    role: string
+    isAdmin: boolean
+    accessSummary: string
+    isActive: boolean
+    createdAt: string
+}
+
+export interface PlatformTeam {
+    tenant: { id: string; name: string; plan: string; countryCode: string; isActive: boolean }
+    members: PlatformTeamMember[]
+    invites: { id: string; email: string; fullName: string; role: string; accessSummary: string; invitedByName: string; expiresAt: string; expired: boolean }[]
+}
+
+/**
+ * Every business with its users (role and module access as the business's
+ * admin set them) and pending invitations. Read-only here: only the
+ * business's own admin changes access; the Super Admin can suspend accounts.
+ */
+export async function getTenantTeams(params: {
     search?: string
+    /** ALL | PLATFORM (super admins) | ADMIN (business admins) | MEMBER (everyone else) */
     role?: string
     status?: string
-    page?: number
-    limit?: number
-} = {}) {
+    tenantId?: string
+} = {}): Promise<{ teams: PlatformTeam[]; totalUsers: number; totalTenants: number; tenantOptions: { id: string; name: string }[] }> {
     await ensureSuperAdmin()
-    const { search, role, status, page = 1, limit = 20 } = params
+    const { search, role = "ALL", status = "ALL", tenantId } = params
 
-    const where: any = {}
-
-    if (search && search.trim()) {
-        const query = search.trim()
-        where.OR = [
-            { fullName: { contains: query, mode: "insensitive" } },
-            { email: { contains: query, mode: "insensitive" } },
-            { phone: { contains: query, mode: "insensitive" } }
+    const userWhere: Prisma.UserWhereInput = {}
+    const q = search?.trim()
+    if (q) {
+        userWhere.OR = [
+            { fullName: { contains: q, mode: "insensitive" } },
+            { email: { contains: q, mode: "insensitive" } },
+            { phone: { contains: q, mode: "insensitive" } },
+            { tenant: { name: { contains: q, mode: "insensitive" } } },
         ]
     }
+    if (role === "PLATFORM") userWhere.role = "SUPER_ADMIN"
+    else if (role === "ADMIN") userWhere.role = "ADMIN"
+    else if (role === "MEMBER") userWhere.role = { in: ["MANAGER", "USER", "VIEWER"] }
+    if (status === "ACTIVE" || status === "INACTIVE") userWhere.isActive = status === "ACTIVE"
+    if (tenantId) userWhere.tenantId = tenantId
 
-    if (role && role !== "ALL") {
-        where.role = role as any
+    const [tenants, users] = await Promise.all([
+        prisma.tenant.findMany({
+            where: tenantId ? { id: tenantId } : {},
+            select: { id: true, name: true, plan: true, countryCode: true, isActive: true, settings: true },
+            orderBy: { name: "asc" },
+        }),
+        prisma.user.findMany({
+            where: userWhere,
+            select: { id: true, tenantId: true, fullName: true, email: true, phone: true, role: true, isActive: true, createdAt: true },
+            orderBy: [{ role: "asc" }, { createdAt: "asc" }],
+            take: 2000,
+        }),
+    ])
+
+    const filtering = !!q || role !== "ALL" || status !== "ALL"
+    const now = Date.now()
+    const teams: PlatformTeam[] = []
+    for (const t of tenants) {
+        const team = readTeam(t.settings)
+        const members = users
+            .filter((u) => u.tenantId === t.id)
+            .map((u) => ({
+                id: u.id,
+                fullName: u.fullName,
+                email: u.email,
+                phone: u.phone,
+                role: u.role,
+                isAdmin: isAdminRole(u.role),
+                accessSummary: summarizeAccess(u.role, resolveAccess(u.role, team.access[u.id])),
+                isActive: u.isActive,
+                createdAt: u.createdAt.toISOString(),
+            }))
+        const invites = filtering
+            ? []
+            : team.invites.map((i) => ({
+                  id: i.id,
+                  email: i.email,
+                  fullName: i.fullName,
+                  role: i.role,
+                  accessSummary: summarizeAccess(i.role === "ADMIN" ? "ADMIN" : "USER", i.access),
+                  invitedByName: i.invitedByName,
+                  expiresAt: i.expiresAt,
+                  expired: new Date(i.expiresAt).getTime() < now,
+              }))
+        // While filtering, show only businesses with a matching user
+        if (filtering && members.length === 0) continue
+        teams.push({ tenant: { id: t.id, name: t.name, plan: t.plan, countryCode: t.countryCode, isActive: t.isActive }, members, invites })
     }
 
-    if (status && status !== "ALL") {
-        where.isActive = status === "ACTIVE"
-    }
-
-    try {
-        const [users, totalCount] = await Promise.all([
-            prisma.user.findMany({
-                where,
-                include: {
-                    tenant: {
-                        select: {
-                            id: true,
-                            name: true,
-                            plan: true,
-                            countryCode: true
-                        }
-                    }
-                },
-                orderBy: { createdAt: "desc" },
-                skip: (page - 1) * limit,
-                take: limit
-            }),
-            prisma.user.count({ where })
-        ])
-
-        return { users, totalCount, page, limit }
-    } catch (error) {
-        console.error("getGlobalUsers error:", error)
-        return { users: [], totalCount: 0, page, limit }
+    return {
+        teams,
+        totalUsers: teams.reduce((n, t) => n + t.members.length, 0),
+        totalTenants: teams.length,
+        tenantOptions: tenants.map((t) => ({ id: t.id, name: t.name })),
     }
 }
 
@@ -1311,6 +1363,14 @@ async function _toggleUserStatus(userId: string, isActive: boolean) {
 async function _updateUserRole(userId: string, role: any) {
     const caller = await ensureSuperAdmin()
     if (!ROLES.includes(role)) throw new Error("Invalid role")
+    // A business's own admin decides its users' roles and access (Settings → Team);
+    // here only the platform's own team can be changed.
+    const [me, target] = await Promise.all([
+        prisma.user.findUnique({ where: { id: caller.id }, select: { tenantId: true } }),
+        prisma.user.findUnique({ where: { id: userId }, select: { tenantId: true } }),
+    ])
+    if (!target) throw new Error("User not found")
+    if (target.tenantId !== me?.tenantId) throw new Error("A business's admin manages its users' roles and access in Settings → Team.")
     await assertSafeUserChange(caller.id, userId, role !== "SUPER_ADMIN")
 
     const updated = await prisma.user.update({

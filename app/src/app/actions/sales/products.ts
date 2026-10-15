@@ -8,6 +8,9 @@ import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantTaxContext, productTaxRate } from "@/lib/tenant-tax"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 /* ── Types ── */
 export type ProductType = "PRODUCT" | "SERVICE"
 
@@ -78,7 +81,7 @@ export async function getProducts(
   limit: number = 10
 ): Promise<{ data: ProductDB[]; total: number }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const [rows, total] = await Promise.all([
       prisma.product.findMany({ where: { tenantId }, orderBy: { name: "asc" }, skip: (page - 1) * limit, take: limit }),
       prisma.product.count({ where: { tenantId } }),
@@ -93,7 +96,7 @@ export async function getProducts(
 /* ── Read One ── */
 export async function getProductById(id: string): Promise<ProductDB | null> {
   if (!isUuid(id)) return null
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const row = await prisma.product.findFirst({ where: { id, tenantId } })
   return row ? fromDbRow(toRow("Product", row)) : null
 }
@@ -121,7 +124,7 @@ export interface CreateProductPayload {
 export async function createProduct(
   payload: CreateProductPayload
 ): Promise<{ id: string | null; error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   try {
     const data = await productData(tenantId, payload as unknown as Record<string, unknown>)
@@ -142,7 +145,7 @@ export interface UpdateProductPayload extends CreateProductPayload {
 export async function updateProduct(
   payload: UpdateProductPayload
 ): Promise<{ error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   const { id, ...fields } = payload
 
   try {
@@ -162,7 +165,7 @@ export async function updateProduct(
 /* ── Delete ── */
 export async function deleteProduct(id: string): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     const { count } = await prisma.product.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Product not found" }
   } catch (err) {
@@ -177,7 +180,7 @@ export async function deleteProduct(id: string): Promise<{ error: string | null 
 
 /* ── Import / Export ── */
 export async function exportProducts(limit: number = 1000): Promise<ProductDB[]> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const rows = await prisma.product.findMany({ where: { tenantId }, orderBy: { name: "asc" }, take: limit })
   return rows.map((r) => fromDbRow(toRow("Product", r)))
 }
@@ -185,7 +188,7 @@ export async function exportProducts(limit: number = 1000): Promise<ProductDB[]>
 export async function importProducts(
   products: any[]
 ): Promise<{ error: string | null; count: number }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
   let insertData: Record<string, unknown>[]
@@ -242,7 +245,7 @@ export interface DocumentProduct {
 }
 
 export async function getProductsForDocuments(): Promise<DocumentProduct[]> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const defaultRate = (await getTenantTaxContext(tenantId)).regime.defaultRate
   const rows = await prisma.product.findMany({
     where: { tenantId, isActive: true },

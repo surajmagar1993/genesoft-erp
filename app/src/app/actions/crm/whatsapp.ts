@@ -19,6 +19,9 @@ import {
     normalizeE164Phone,
 } from "@/lib/whatsapp-engine"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+
 // The old hardcoded default token was public; anyone still holding it gets a fresh one on save
 const LEGACY_VERIFY_TOKEN = "genesoft_wa_verify_token"
 
@@ -27,7 +30,7 @@ const LEGACY_VERIFY_TOKEN = "genesoft_wa_verify_token"
  */
 export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantId(MODULE)
         if (!tenantId) {
             return { mode: "SIMULATION", defaultCountryCode: "91" }
         }
@@ -223,7 +226,7 @@ export async function sendWhatsAppMessage(payload: {
     customText?: string
 }) {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         await assertTenantRefs(tenantId, { contact: payload.contactId })
         if (!tenantId) return { success: false, error: "Unauthorized" }
 
@@ -334,7 +337,7 @@ export async function sendInvoiceViaWhatsApp(params: {
     customNote?: string
 }) {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(["sales", "crm"])
         if (!tenantId) return { success: false, error: "Unauthorized" }
 
         const invoice = await prisma.invoice.findFirst({
@@ -402,7 +405,7 @@ export async function getWhatsAppChatHistory(contactId?: string): Promise<{
     totalCount: number
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantId(MODULE)
         if (!tenantId) return { messages: [], totalCount: 0 }
 
         const tenant = await prisma.tenant.findUnique({

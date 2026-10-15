@@ -6,6 +6,9 @@ import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+
 export type DealStage =
   | "PROSPECTING"
   | "QUALIFICATION"
@@ -66,7 +69,7 @@ export async function getDeals(
     limit: number = 10,
     filters?: { stage?: DealStage; search?: string }
 ): Promise<{ data: Deal[]; total: number }> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const search = filters?.search?.trim()
   const where = {
     tenantId,
@@ -94,7 +97,7 @@ export async function getDeals(
 }
 
 export async function getDealById(id: string): Promise<Deal | null> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   if (!UUID_RE.test(id)) return null
   const row = await prisma.deal.findFirst({ where: { id, tenantId }, select: DEAL_SELECT })
   return row ? toDeal(row as DealRow) : null
@@ -155,7 +158,7 @@ function cleanDealFields(input: DealInput) {
 export async function createDeal(
   formData: Omit<Deal, "id" | "created_at" | "tenant_id">
 ): Promise<{ error: string | null; id?: string }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   try {
     const data = cleanDealFields(formData)
     if (!data.title) throw new Error("Deal title is required")
@@ -176,7 +179,7 @@ export async function updateDeal(
   id: string,
   formData: DealInput
 ): Promise<{ error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   let before: { stage: DealStage } | null
   try {
     before = await prisma.deal.findFirst({ where: { id, tenantId }, select: { stage: true } })
@@ -211,7 +214,7 @@ export async function updateDeal(
 }
 
 export async function deleteDeal(id: string): Promise<{ error: string | null }> {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
   try {
     const { count } = await prisma.deal.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Deal not found" }
@@ -251,7 +254,7 @@ export interface DealRelationsData {
 }
 
 export async function getDealWithRelations(id: string): Promise<DealRelationsData> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   if (!UUID_RE.test(id)) return { deal: null, contact: null, company: null }
   const row = await prisma.deal.findFirst({ where: { id, tenantId }, select: DEAL_SELECT })
   if (!row) return { deal: null, contact: null, company: null }

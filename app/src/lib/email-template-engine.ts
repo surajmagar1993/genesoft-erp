@@ -13,6 +13,7 @@ export type SystemTemplateKey =
     | "PAYMENT_OVERDUE_ALERT"
     | "SUPPORT_TICKET_UPDATE"
     | "CREDIT_NOTE_ISSUED"
+    | "TEAM_INVITE"
 
 export type EmailTemplateCategory = "BILLING" | "ONBOARDING" | "SUPPORT" | "DUNNING" | "SALES"
 
@@ -552,6 +553,48 @@ Regards,
         isActive: true,
     },
 
+    TEAM_INVITE: {
+        key: "TEAM_INVITE",
+        name: "Team Invitation",
+        description: "Sent when a workspace admin invites someone to join their team (Settings → Team).",
+        category: "ONBOARDING",
+        subject: "{{inviter_name}} invited you to {{company_name}} on Genesoft ERP",
+        bodyHtml: `
+<p>Hello <strong>{{invitee_name}}</strong>,</p>
+
+<p><strong>{{inviter_name}}</strong> has invited you to join <strong>{{company_name}}</strong> on Genesoft ERP.</p>
+
+<p>Use the button below to set your password and join the team. The invitation is valid until <strong>{{expires_on}}</strong>.</p>
+
+<p style="color: #64748b; font-size: 13px;">If the button doesn't work, copy this link into your browser:<br>{{invite_url}}</p>
+
+<p style="color: #64748b; font-size: 13px;">If you weren't expecting this, you can ignore this email.</p>
+`,
+        bodyText: `Hello {{invitee_name}},
+
+{{inviter_name}} has invited you to join {{company_name}} on Genesoft ERP.
+
+Set your password and join the team here (valid until {{expires_on}}):
+{{invite_url}}
+
+If you weren't expecting this, you can ignore this email.`,
+        mergeTags: [
+            { tag: "invitee_name", label: "Invitee Name", description: "Name of the person invited", sampleValue: "Priya Sharma" },
+            { tag: "inviter_name", label: "Invited By", description: "Admin who sent the invitation", sampleValue: "Rahul Mehta" },
+            { tag: "company_name", label: "Company", description: "The workspace they are joining", sampleValue: "Your Company Pvt Ltd" },
+            { tag: "invite_url", label: "Invitation Link", description: "Link to accept the invitation", sampleValue: "https://app.example.com/join?token=…" },
+            { tag: "expires_on", label: "Valid Until", description: "Date the invitation expires", sampleValue: "22 Oct 2026" },
+        ],
+        mockVariables: {
+            invitee_name: "Priya Sharma",
+            inviter_name: "Rahul Mehta",
+            company_name: "Your Company Pvt Ltd",
+            invite_url: "https://app.example.com/join?token=sample",
+            expires_on: "22 Oct 2026",
+        },
+        isActive: true,
+    },
+
     CREDIT_NOTE_ISSUED: {
         key: "CREDIT_NOTE_ISSUED",
         name: "Credit Note & Refund Allocation",
@@ -708,7 +751,10 @@ export function compileSystemEmail(params: {
         title: compiledSubject,
         bodyContent: compiledInnerHtml,
         companyName: resolvedVars["company_name"] || "Genesoft ERP",
-        actionButton: actionButton || (resolvedVars["payment_link"] ? { label: "Pay Securely Online", url: resolvedVars["payment_link"] } : undefined),
+        actionButton:
+            actionButton ||
+            (resolvedVars["payment_link"] ? { label: "Pay Securely Online", url: resolvedVars["payment_link"] } : undefined) ||
+            (resolvedVars["invite_url"] ? { label: "Accept Invitation", url: resolvedVars["invite_url"] } : undefined),
     })
 
     return {

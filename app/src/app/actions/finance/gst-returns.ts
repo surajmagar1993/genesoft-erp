@@ -19,6 +19,9 @@ import {
   RawBill,
 } from "@/lib/gst-returns-engine"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export interface GstReturnsOverviewResult {
   year: number
   month: number
@@ -51,7 +54,7 @@ export async function getGstReturnsOverview(params?: {
   year?: number
   month?: number
 }): Promise<GstReturnsOverviewResult> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const now = new Date()
   const year = params?.year || now.getFullYear()

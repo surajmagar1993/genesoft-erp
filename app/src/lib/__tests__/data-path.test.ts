@@ -12,11 +12,10 @@ function sourceFiles(dir: string): string[] {
 }
 
 /**
- * Allowed: both read only the signed-in user's own role, under row-level
- * security. The request proxy shouldn't open a Prisma pool per request, and
- * the dashboard layout runs in the browser, where Prisma can't.
+ * Allowed: the request proxy reads only the signed-in user's own role, under
+ * row-level security (it shouldn't open a Prisma pool per request).
  */
-const OWN_ROLE_LOOKUPS = ["src/lib/supabase/middleware.ts", "src/app/(dashboard)/layout.tsx"]
+const OWN_ROLE_LOOKUPS = ["src/lib/supabase/middleware.ts"]
 
 describe("data access", () => {
     it("no code queries tables through the Supabase client", () => {

@@ -15,6 +15,9 @@ import {
   RawAuBill,
 } from "@/lib/australia-tax-engine"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export interface AustralianBasOverviewResult {
   startYear: number
   quarter: "Q1" | "Q2" | "Q3" | "Q4"
@@ -44,7 +47,7 @@ export async function getAustralianBasOverview(params?: {
   startYear?: number
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }): Promise<AustralianBasOverviewResult> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const now = new Date()
   // Determine Australian FY start year (July to June)

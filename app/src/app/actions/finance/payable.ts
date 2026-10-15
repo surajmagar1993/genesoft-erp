@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma"
 import { pick, toRow, toRows } from "@/lib/pg-row"
 import { getTenantId } from "@/lib/get-tenant-id"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export interface PayableSummary {
   totalOutstanding: number
   totalOverdue: number
@@ -28,7 +31,7 @@ export interface CreditorSummary {
  * Get global payable metrics for the dashboard
  */
 export async function getPayableSummary(): Promise<PayableSummary> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const now = new Date()
 
   // Fetch all non-paid bills
@@ -100,7 +103,7 @@ export async function getPayableSummary(): Promise<PayableSummary> {
  * Get top creditors (vendors) grouped by contact
  */
 export async function getTopCreditors(limit = 10): Promise<CreditorSummary[]> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const now = new Date()
 
   // Fetch bills with contact info

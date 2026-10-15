@@ -17,6 +17,9 @@ import { postToLedger } from "@/lib/ledger"
 import { postInvoiceStock } from "@/lib/stock"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 /* ── Types ── */
 export type InvoiceStatus = "DRAFT" | "SENT" | "ACCEPTED" | "REJECTED" | "EXPIRED" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "CANCELLED"
 export type InvoiceTypeEnum = "TAX_INVOICE" | "PROFORMA" | "CREDIT_NOTE" | "DEBIT_NOTE"
@@ -110,7 +113,7 @@ export async function getInvoices(
   limit: number = 10,
   filters?: { status?: string; type?: InvoiceTypeEnum; search?: string }
 ) {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const offset = (page - 1) * limit
 
   const whereClause: any = { tenantId }
@@ -156,7 +159,7 @@ export async function getInvoices(
 
 /* ── Read One ── */
 export async function getInvoiceById(id: string): Promise<(InvoiceDB & { tenants?: any }) | null> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   try {
     const invoice = await prisma.invoice.findFirst({
@@ -178,7 +181,7 @@ export async function getInvoiceById(id: string): Promise<(InvoiceDB & { tenants
 
 /* ── Get Next Invoice Number (Supports TAX_INVOICE and PROFORMA) ── */
 export async function getNextInvoiceNumber(type: "TAX_INVOICE" | "PROFORMA" = "TAX_INVOICE"): Promise<string> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   return nextInvoiceNumber(tenantId, type)
 }
 
@@ -267,7 +270,7 @@ async function assertLineProducts(tenantId: string, lines: { product_id?: string
 export async function createInvoice(
   payload: CreateInvoicePayload
 ): Promise<{ id: string | null; error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   try {
     if (payload.contact_id && !(await prisma.contact.count({ where: { id: payload.contact_id, tenantId } }))) {
@@ -420,7 +423,7 @@ export interface UpdateInvoicePayload extends CreateInvoicePayload {
 export async function updateInvoice(
   payload: UpdateInvoicePayload
 ): Promise<{ error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   try {
     await assertLineProducts(tenantId, payload.line_items)
@@ -579,7 +582,7 @@ export async function updateInvoice(
 export async function convertProformaToInvoice(
   proformaId: string
 ): Promise<{ success: boolean; newInvoiceNumber?: string; error?: string }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   try {
     const proforma = await prisma.invoice.findFirst({
@@ -649,7 +652,7 @@ export async function convertProformaToInvoice(
 
 /* ── Delete ── */
 export async function deleteInvoice(id: string): Promise<{ error: string | null }> {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
 
   try {
     // Only this business's invoice (checked before anything is deleted)
@@ -698,7 +701,7 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
 export async function sendInvoiceEmail(
   id: string
 ): Promise<{ error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   const invoice = await getInvoiceById(id)
   if (!invoice) return { error: "Invoice not found" }
 
@@ -797,7 +800,7 @@ export async function updateInvoiceTemplate(
   templateId: InvoiceTemplateId
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const invoice = await prisma.invoice.findUnique({
       where: { id, tenantId },
       select: { billTo: true }

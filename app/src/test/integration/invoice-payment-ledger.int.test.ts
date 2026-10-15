@@ -137,9 +137,9 @@ describe("access rules", () => {
         const pay = await createPayment({ contact_id: customer.id, amount: 50, payment_date: "2026-10-05", payment_method: "CASH", type: "INBOUND" })
 
         actAs(await addUser(tenant.id, "VIEWER"))
-        await expect(createInvoice(invoicePayload(customer.id))).rejects.toThrow(/read-only/)
+        await expect(createInvoice(invoicePayload(customer.id))).rejects.toThrow(/can only view Sales/)
 
         actAs(await addUser(tenant.id, "USER"))
-        await expect(deletePayment(pay.id!)).rejects.toThrow(/managers/)
+        await expect(deletePayment(pay.id!)).rejects.toThrow(/full access to Finance or Sales/)
     })
 })

@@ -18,6 +18,9 @@ import {
     type TrialBalance,
 } from "@/lib/accounting-reports"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 const DATE = /^\d{4}-\d{2}-\d{2}$/
 function checkDate(d: string) {
     if (!DATE.test(d)) throw new Error("Choose a valid date")
@@ -32,7 +35,7 @@ export interface LedgerPageData {
 }
 
 export async function getLedgerPageData(): Promise<LedgerPageData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const [ctx, accounts, opening] = await Promise.all([
         getTenantTaxContext(tenantId),
         prisma.account.findMany({ where: { tenantId, isGroup: false, isActive: true }, select: { id: true, code: true, name: true, type: true }, orderBy: { code: "asc" } }),
@@ -42,21 +45,21 @@ export async function getLedgerPageData(): Promise<LedgerPageData> {
 }
 
 export async function getTrialBalance(asOf: string): Promise<TrialBalance> {
-    return trialBalance(await getTenantId(), checkDate(asOf))
+    return trialBalance(await getTenantId(MODULE), checkDate(asOf))
 }
 
 export async function getBalanceSheet(asOf: string): Promise<BalanceSheet> {
-    return balanceSheet(await getTenantId(), checkDate(asOf))
+    return balanceSheet(await getTenantId(MODULE), checkDate(asOf))
 }
 
 export async function getAccountLedger(accountId: string, from: string, to: string): Promise<ActionResult<AccountLedger>> {
-    return toActionResult(async () => accountLedger(await getTenantId(), String(accountId), checkDate(from), checkDate(to)))
+    return toActionResult(async () => accountLedger(await getTenantId(MODULE), String(accountId), checkDate(from), checkDate(to)))
 }
 
 /** Opening balances when moving from another system (managers and admins). */
 export async function saveOpeningBalancesAction(input: OpeningBalanceInput): Promise<ActionResult<{ equityAdjustment: number }>> {
     return toActionResult(async () => {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         const { equityAdjustment } = await saveOpeningBalances(tenantId, { date: checkDate(input.date), lines: Array.isArray(input.lines) ? input.lines.slice(0, 500) : [] })
         revalidatePath("/finance/ledger")
         revalidatePath("/finance/accounts")
@@ -67,7 +70,7 @@ export async function saveOpeningBalancesAction(input: OpeningBalanceInput): Pro
 /** Re-posts every invoice, bill, payment, credit note and payroll run (managers and admins). */
 export async function rebuildLedgerAction(): Promise<ActionResult<{ documents: number; failed: number; firstError: string | null }>> {
     return toActionResult(async () => {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         const res = await rebuildLedger(tenantId)
         revalidatePath("/finance/ledger")
         revalidatePath("/finance/accounts")

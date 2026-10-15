@@ -8,6 +8,9 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { createNotification } from "@/app/actions/notifications"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+
 export type LeadStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST"
 
 export interface Lead {
@@ -75,7 +78,7 @@ export async function getLeads(
   limit: number = 10,
   filters?: { status?: LeadStatus; search?: string }
 ) {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const search = filters?.search?.trim()
   const where = {
     tenantId,
@@ -104,7 +107,7 @@ export async function getLeads(
 }
 
 export async function getLeadById(id: string): Promise<Lead | null> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   if (!UUID_RE.test(id)) return null
   const row = await prisma.lead.findFirst({ where: { id, tenantId }, select: LEAD_SELECT })
   return row ? toLead(row as LeadRow) : null
@@ -159,7 +162,7 @@ async function linkContact(tenantId: string, name: string, email: string, phone:
 export async function createLead(
   formData: Omit<Lead, "id" | "created_at" | "tenant_id" | "updated_at">
 ): Promise<{ error: string | null; id?: string }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   let lead: { id: string }
   try {
     const data = cleanLeadFields(formData)
@@ -205,7 +208,7 @@ export async function updateLead(
   id: string,
   formData: LeadInput
 ): Promise<{ error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   try {
     const existing = await prisma.lead.findFirst({ where: { id, tenantId }, select: { contactId: true, contactName: true } })
     if (!existing) return { error: "Lead not found" }
@@ -229,7 +232,7 @@ export async function updateLead(
 }
 
 export async function deleteLead(id: string): Promise<{ error: string | null }> {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
   try {
     const { count } = await prisma.lead.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Lead not found" }
@@ -246,7 +249,7 @@ export async function deleteLead(id: string): Promise<{ error: string | null }> 
  * This is a critical P1 CRM workflow.
  */
 export async function convertLeadToDeal(leadId: string) {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // 1. Fetch lead

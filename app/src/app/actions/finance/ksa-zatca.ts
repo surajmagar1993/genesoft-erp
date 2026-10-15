@@ -22,6 +22,9 @@ import {
 } from "@/lib/ksa-zatca-engine"
 import { generateQrCodeSvg } from "@/lib/barcode/qrcode"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export interface KsaInvoiceListItem {
   id: string
   invoiceNumber: string
@@ -70,7 +73,7 @@ export async function getKsaVatOverview(params?: {
   year?: number
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }): Promise<KsaVatOverviewResult> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const now = new Date()
   const year = params?.year || now.getFullYear()
@@ -278,7 +281,7 @@ export async function getKsaVatOverview(params?: {
 }
 
 export async function generateZatcaInvoicePayload(invoiceId: string) {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   const invoice = await prisma.invoice.findFirst({
     where: { id: invoiceId, tenantId },

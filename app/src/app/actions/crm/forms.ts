@@ -21,6 +21,9 @@ import type {
     SubmitPublicFormPayload,
 } from "./form-types"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+
 // ============================================
 // OVERVIEW & AUTO-SEEDER
 // ============================================
@@ -29,7 +32,7 @@ export async function getWebFormsOverview(
     formId?: string,
     statusFilter?: string
 ): Promise<WebFormsOverview> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     if (!tenantId) throw new Error("Authentication required")
 
     // Auto-seed starter forms and sample submissions if empty
@@ -150,7 +153,7 @@ export async function createWebForm(data: CreateWebFormInput): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.title?.trim()) return { error: "Form title is required" }
@@ -212,7 +215,7 @@ export async function updateWebForm(
     data: UpdateWebFormInput
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const updateData: any = {}
@@ -246,7 +249,7 @@ export async function updateWebForm(
 
 export async function deleteWebForm(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const { count } = await prisma.webForm.deleteMany({ where: { id, tenantId } })
@@ -264,7 +267,7 @@ export async function toggleWebFormStatus(
     newStatus: WebFormStatus
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         const { count } = await prisma.webForm.updateMany({
             where: { id, tenantId },
             data: { status: newStatus },

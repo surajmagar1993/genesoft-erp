@@ -8,6 +8,9 @@ import { assertTenantRefs } from "@/lib/tenant-refs"
 import { isUuid } from "@/lib/utils"
 import type { Prisma } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+
 /** The database enum: NOTE, EMAIL, CALL, MEETING, TASK */
 export type CommunicationType = "NOTE" | "CALL" | "EMAIL" | "MEETING" | "TASK"
 
@@ -38,7 +41,7 @@ export async function getCommunicationLogs(
   }
 ): Promise<{ data: CommunicationLog[]; total: number }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     for (const id of [filters?.contact_id, filters?.lead_id, filters?.deal_id]) if (id && !isUuid(id)) return { data: [], total: 0 }
     const q = filters?.search?.trim()
     const where: Prisma.CommunicationLogWhereInput = {
@@ -64,7 +67,7 @@ export async function createCommunicationLog(
   formData: Omit<CommunicationLog, "id" | "created_at" | "updated_at" | "tenant_id">
 ): Promise<{ error: string | null; data?: CommunicationLog }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const data = fromRow("CommunicationLog", formData) as Omit<Prisma.CommunicationLogUncheckedCreateInput, "tenantId">
     await assertTenantRefs(tenantId, { contact: data.contactId, lead: data.leadId, deal: data.dealId })
     const row = await prisma.communicationLog.create({ data: { ...data, tenantId } })
@@ -82,7 +85,7 @@ export async function createCommunicationLog(
 
 export async function deleteCommunicationLog(id: string): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const { count } = await prisma.communicationLog.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Log entry not found" }
     return { error: null }

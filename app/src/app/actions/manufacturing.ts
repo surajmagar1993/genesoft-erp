@@ -13,6 +13,9 @@ import {
     StockMovementType
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "manufacturing" as const
+
 export interface BOMItemRecord {
     id: string
     bomId: string
@@ -121,7 +124,7 @@ export interface ManufacturingOverviewData {
  * Get unified manufacturing and MRP overview telemetry, work orders, BOMs, and QC records
  */
 export async function getManufacturingOverview(): Promise<ManufacturingOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
@@ -326,7 +329,7 @@ export async function createBOM(input: {
         notes?: string
     }[]
 }) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const productIds = [...new Set([input.productId, ...input.items.map(i => i.productId)])]
     const ownProducts = await prisma.product.count({ where: { tenantId, id: { in: productIds } } })
@@ -387,7 +390,7 @@ export async function createBOM(input: {
  * Update BOM status
  */
 export async function updateBOMStatus(bomId: string, status: BOMStatus) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     await prisma.billOfMaterials.update({
         where: { id: bomId, tenantId },
@@ -412,7 +415,7 @@ export async function createWorkOrder(input: {
     assignedTo?: string
     notes?: string
 }) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const now = new Date()
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
     const orderNumber = await nextSequence(prisma, "workOrder", tenantId, `WO-${yearMonth}-`, 3)
@@ -489,7 +492,7 @@ export async function updateWorkOrderStatus(
     scrapQuantity?: number,
     notes?: string
 ) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const order = await prisma.workOrder.findUnique({
         where: { id: workOrderId, tenantId },
@@ -689,7 +692,7 @@ export async function recordQualityInspection(workOrderId: string, input: {
     inspectorName?: string
     notes?: string
 }) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const now = new Date()
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
     const inspectionNumber = await nextSequence(prisma, "qualityInspection", tenantId, `QC-${yearMonth}-`, 3)

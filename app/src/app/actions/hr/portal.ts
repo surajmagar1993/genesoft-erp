@@ -1,8 +1,8 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId, getTenantRole } from "@/lib/get-tenant-id"
-import { PORTAL_MANAGER_ROLES, assertCanActForEmployee, findOwnEmployeeId, fireLeaveRequested } from "@/lib/employee-access"
+import { getTenantId } from "@/lib/get-tenant-id"
+import { canActForAnyEmployee, assertCanActForEmployee, findOwnEmployeeId, fireLeaveRequested } from "@/lib/employee-access"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import {
@@ -150,7 +150,7 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
         const tenantId = await getTenantId()
         const supabase = await createClient()
         const { data: { user } } = await supabase.auth.getUser()
-        const isManager = PORTAL_MANAGER_ROLES.includes(await getTenantRole())
+        const isManager = await canActForAnyEmployee()
         const ownEmployeeId = isManager ? null : await findOwnEmployeeId(tenantId)
         if (!isManager && !ownEmployeeId) return null
 
@@ -601,7 +601,7 @@ export async function updatePortalTaskStatus(
             select: { assignedEmployeeId: true },
         })
         if (!task) return { success: false, error: "Task not found" }
-        if (!PORTAL_MANAGER_ROLES.includes(await getTenantRole())) {
+        if (!(await canActForAnyEmployee())) {
             const own = await findOwnEmployeeId(tenantId)
             if (!own || task.assignedEmployeeId !== own) {
                 return { success: false, error: "You can only update tasks assigned to you." }

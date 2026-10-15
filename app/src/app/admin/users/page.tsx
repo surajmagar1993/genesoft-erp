@@ -1,4 +1,5 @@
-import { getGlobalUsers } from "@/app/actions/saas/admin"
+import { isUuid } from "@/lib/utils"
+import { getTenantTeams } from "@/app/actions/saas/admin"
 import { UsersClient } from "./UsersClient"
 
 export const dynamic = "force-dynamic"
@@ -10,21 +11,10 @@ export default async function AdminUsersPage(props: {
     const search = (searchParams.search as string) || ""
     const role = (searchParams.role as string) || "ALL"
     const status = (searchParams.status as string) || "ALL"
+    const tenantParam = (searchParams.tenant as string) || ""
+    const tenant = isUuid(tenantParam) ? tenantParam : ""
 
-    const { users, totalCount } = await getGlobalUsers({
-        search,
-        role,
-        status,
-        limit: 50
-    })
+    const data = await getTenantTeams({ search, role, status, tenantId: tenant || undefined })
 
-    return (
-        <UsersClient
-            initialUsers={users}
-            totalCount={totalCount}
-            searchQuery={search}
-            selectedRole={role}
-            selectedStatus={status}
-        />
-    )
+    return <UsersClient {...data} searchQuery={search} selectedRole={role} selectedStatus={status} selectedTenant={tenant} />
 }

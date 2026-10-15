@@ -28,6 +28,9 @@ import type {
     CreateEmailTemplateInput,
 } from "./email-types"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "crm" as const
+
 // ============================================
 // DATA OVERVIEW & AUTO SEEDER
 // ============================================
@@ -38,7 +41,7 @@ export async function getEmailsOverview(
     entityType?: string,
     entityId?: string
 ): Promise<EmailsOverview> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     if (!tenantId) throw new Error("Authentication required")
 
     // Auto-seed starter mailboxes and threads if empty
@@ -272,7 +275,7 @@ export async function sendEmail(data: SendEmailInput): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         await assertTenantRefs(tenantId, { contact: data.contactId, lead: data.leadId, deal: data.dealId })
 
         const result = await deliverTenantEmail(tenantId, data)
@@ -297,7 +300,7 @@ export async function saveEmailDraft(data: Partial<SendEmailInput>): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         await assertTenantRefs(tenantId, { contact: data.contactId, lead: data.leadId, deal: data.dealId, emailAccount: data.emailAccountId })
         if (!tenantId) return { error: "Authentication required" }
 
@@ -332,7 +335,7 @@ export async function saveEmailDraft(data: Partial<SendEmailInput>): Promise<{
 
 export async function toggleStarEmail(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         const msg = await prisma.emailMessage.findFirst({ where: { id, tenantId } })
         if (!msg) return { error: "Message not found" }
 
@@ -351,7 +354,7 @@ export async function toggleStarEmail(id: string): Promise<{ success?: boolean; 
 
 export async function markEmailAsRead(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         const { count } = await prisma.emailMessage.updateMany({
             where: { id, tenantId },
             data: { isRead: true },
@@ -368,7 +371,7 @@ export async function markEmailAsRead(id: string): Promise<{ success?: boolean; 
 
 export async function deleteEmailMessage(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         const { count } = await prisma.emailMessage.deleteMany({ where: { id, tenantId } })
         if (count === 0) return { error: "Message not found" }
         revalidatePath("/crm/emails")
@@ -385,7 +388,7 @@ export async function syncMailbox(mailboxId: string): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         const account = await prisma.emailAccount.findFirst({ where: { id: mailboxId, tenantId } })
         if (!account) return { error: "Mailbox not found" }
 
@@ -511,7 +514,7 @@ export async function createEmailTemplate(data: CreateEmailTemplateInput): Promi
     error?: string
 }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.name?.trim()) return { error: "Template name is required" }
@@ -541,7 +544,7 @@ export async function createEmailTemplate(data: CreateEmailTemplateInput): Promi
 
 export async function deleteEmailTemplate(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         const { count } = await prisma.emailTemplate.deleteMany({ where: { id, tenantId } })
         if (count === 0) return { error: "Template not found" }
         revalidatePath("/crm/emails")

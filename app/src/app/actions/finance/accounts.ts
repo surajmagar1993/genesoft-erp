@@ -10,6 +10,9 @@ import { adaptTaxAccounts } from "@/lib/default-accounts"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export type AccountType = "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE"
 
 export interface Account {
@@ -35,7 +38,7 @@ export interface Account {
 /* ── Read All ── */
 export async function getAccounts(page: number = 1, limit: number = 100): Promise<{ data: Account[]; total: number }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const [rows, total] = await Promise.all([
       prisma.account.findMany({ where: { tenantId }, orderBy: { code: "asc" }, skip: (page - 1) * limit, take: limit }),
       prisma.account.count({ where: { tenantId } }),
@@ -50,7 +53,7 @@ export async function getAccounts(page: number = 1, limit: number = 100): Promis
 /* ── Get By ID ── */
 export async function getAccountById(id: string): Promise<Account | null> {
   if (!isUuid(id)) return null
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const row = await prisma.account.findFirst({ where: { id, tenantId } })
   return row ? toRow<Account>("Account", row) : null
 }
@@ -68,7 +71,7 @@ export async function createAccount(
   formData: Omit<Account, "id" | "created_at" | "updated_at" | "tenant_id" | "children" | "depth">
 ): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     const data = (await accountData(tenantId, formData)) as Omit<Prisma.AccountUncheckedCreateInput, "tenantId">
     await prisma.account.create({ data: { ...data, balance: 0, tenantId } })
   } catch (err) {
@@ -85,7 +88,7 @@ export async function updateAccount(
   formData: Partial<Omit<Account, "id" | "created_at" | "updated_at" | "tenant_id" | "children" | "depth">>
 ): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     const data = await accountData(tenantId, formData)
     if (data.parentId === id) return { error: "An account can't be its own parent" }
     const { count } = await prisma.account.updateMany({ where: { id, tenantId }, data })
@@ -100,7 +103,7 @@ export async function updateAccount(
 
 /* ── Delete ── */
 export async function deleteAccount(id: string): Promise<{ error: string | null }> {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
 
   // Check if system account
   const account = isUuid(id) ? await prisma.account.findFirst({ where: { id, tenantId }, select: { isSystem: true, balance: true } }) : null
@@ -125,7 +128,7 @@ export async function deleteAccount(id: string): Promise<{ error: string | null 
 
 /* ── Seed Default Indian CoA ── */
 export async function seedDefaultAccounts(): Promise<{ error: string | null; count: number }> {
-  const tenantId = await getTenantManagerId()
+  const tenantId = await getTenantManagerId(MODULE)
 
   // Check if already seeded
   if (await prisma.account.count({ where: { tenantId } })) {

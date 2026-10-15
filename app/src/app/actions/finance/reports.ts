@@ -5,6 +5,9 @@ import { convertAmount } from "@/lib/exchange-rates"
 import { prisma } from "@/lib/prisma"
 import { computeMonthlyProfitAndLoss, computeProfitAndLoss } from "@/lib/profit-and-loss"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 /* ─────────────────────────────────────────
    Types
 ───────────────────────────────────────── */
@@ -74,7 +77,7 @@ export async function getPnlReport(
   startDate: string,
   endDate: string
 ): Promise<PnlReport> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const pnl = await computeProfitAndLoss(tenantId, startDate, endDate)
   return {
     period: { start: startDate, end: endDate },
@@ -91,7 +94,7 @@ export async function getPnlReport(
 ───────────────────────────────────────── */
 
 export async function getMonthlyRevenue(year: number): Promise<MonthlyRevenue[]> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
   const months = await computeMonthlyProfitAndLoss(tenantId, year)
   return months.map((m, idx) => ({
@@ -111,7 +114,7 @@ export async function getCashFlowSummary(
   startDate: string,
   endDate: string
 ): Promise<CashFlowSummary> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   // Fetch Tenant Base Currency
   const tenant = await prisma.tenant.findUnique({
@@ -178,7 +181,7 @@ export async function getCashFlowSummary(
 ───────────────────────────────────────── */
 
 export async function getTopRevenueContacts(limit = 5): Promise<TopRevenueContact[]> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   // Fetch Tenant Base Currency
   const tenant = await prisma.tenant.findUnique({

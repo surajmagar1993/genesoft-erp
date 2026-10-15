@@ -14,6 +14,9 @@ import {
   RawUaeBill,
 } from "@/lib/uae-vat-engine"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "finance" as const
+
 export interface UaeVatOverviewResult {
   year: number
   quarter: "Q1" | "Q2" | "Q3" | "Q4"
@@ -45,7 +48,7 @@ export async function getUaeVatOverview(params?: {
   year?: number
   quarter?: "Q1" | "Q2" | "Q3" | "Q4"
 }): Promise<UaeVatOverviewResult> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
 
   const now = new Date()
   const year = params?.year || now.getFullYear()

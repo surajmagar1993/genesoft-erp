@@ -16,6 +16,9 @@ import {
     InvoiceType,
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 // ============================================
 // TYPES & INTERFACES
 // ============================================
@@ -186,7 +189,7 @@ function getMonthlyMultiplier(freq: RecurringFrequency): number {
 export async function getRecurringInvoicesOverview(
     filterStatus?: string
 ): Promise<RecurringInvoicesOverview> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     if (!tenantId) throw new Error("Authentication required")
 
     // Auto-seed realistic subscriptions if empty
@@ -394,7 +397,7 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
     error?: string
 }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         await assertTenantRefs(tenantId, { contact: data.contactId, product: data.items.map((i) => i.productId) })
         if (!tenantId) return { error: "Authentication required" }
 
@@ -499,7 +502,7 @@ export async function updateRecurringProfile(
     data: Partial<CreateRecurringProfileInput>
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const updateData: any = {}
@@ -543,7 +546,7 @@ export async function toggleRecurringProfileStatus(
     newStatus: RecurringStatus
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const { count } = await prisma.recurringProfile.updateMany({
@@ -566,7 +569,7 @@ export async function toggleRecurringProfileStatus(
 
 export async function deleteRecurringProfile(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const owned = await prisma.recurringProfile.count({ where: { id, tenantId } })
@@ -604,7 +607,7 @@ export async function triggerGenerateInvoice(profileId: string): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantWriterId()
+        const tenantId = await getTenantWriterId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const result = await generateInvoiceFromProfile(tenantId, profileId)
@@ -634,7 +637,7 @@ export async function batchRunDueRecurringProfiles(): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const now = new Date()

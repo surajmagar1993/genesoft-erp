@@ -18,6 +18,9 @@ import {
     LeaveStatus
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "hr" as const
+
 export interface DepartmentRecord {
     id: string
     name: string
@@ -225,7 +228,7 @@ async function autoSeedHRIfEmpty(tenantId: string) {
  * attendance for the specified date, and leave management records.
  */
 export async function getHROverview(selectedDateStr?: string): Promise<HROverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     // 1. Ensure tenant has starter departments
     if (isDemoSeedEnabled()) await autoSeedHRIfEmpty(tenantId)
@@ -410,7 +413,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
  * Creates a new employee with an auto-generated sequential ID (EMP-0001).
  */
 export async function createEmployee(data: CreateEmployeeInput) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     await assertTenantRefs(tenantId, { department: data.departmentId, designation: data.designationId, employee: data.managerId })
 
     if (!data.firstName?.trim()) throw new Error("First name is required")
@@ -476,7 +479,7 @@ export async function createEmployee(data: CreateEmployeeInput) {
  * Updates an employee's profile and organizational assignments.
  */
 export async function updateEmployee(employeeId: string, data: UpdateEmployeeInput) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     await assertTenantRefs(tenantId, { employee: [employeeId, data.managerId], department: data.departmentId, designation: data.designationId })
 
     const existing = await prisma.employee.findFirst({
@@ -524,7 +527,7 @@ export async function createDepartment(data: {
     description?: string
     managerId?: string
 }) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     await assertTenantRefs(tenantId, { employee: data.managerId })
 
     if (!data.name?.trim()) throw new Error("Department name is required")
@@ -552,7 +555,7 @@ export async function createDesignation(data: {
     departmentId?: string
     description?: string
 }) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     await assertTenantRefs(tenantId, { department: data.departmentId })
 
     if (!data.title?.trim()) throw new Error("Designation title is required")
@@ -581,7 +584,7 @@ export async function recordAttendance(data: {
     checkOut?: string
     notes?: string
 }) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     await assertTenantRefs(tenantId, { employee: data.employeeId })
 
     const targetDate = new Date(data.date)
@@ -651,6 +654,7 @@ export async function submitLeaveRequest(data: {
     endDate: string
     reason: string
 }) {
+    // Self-service: anyone may request their own leave (HR access is checked for others)
     const tenantId = await getTenantWriterId()
     await assertCanActForEmployee(tenantId, data.employeeId)
 
@@ -702,7 +706,7 @@ export async function updateLeaveStatus(data: {
     status: LeaveStatus
     rejectionReason?: string
 }) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 

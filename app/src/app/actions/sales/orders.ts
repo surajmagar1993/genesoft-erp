@@ -18,6 +18,9 @@ async function tenantCurrency(tenantId: string): Promise<string> {
 }
 import { prisma } from "@/lib/prisma"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 /* ── Types ── */
 export type SalesOrderStatus = "DRAFT" | "CONFIRMED" | "PROCESSING" | "SHIPPED" | "DELIVERED" | "CANCELLED"
 
@@ -64,7 +67,7 @@ export async function getOrders(
     filters?: { status?: SalesOrderStatus; search?: string }
 ): Promise<{ data: SalesOrderDB[]; total: number }> {
   try {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     const q = filters?.search?.trim()
     const where: Prisma.SalesOrderWhereInput = {
       tenantId,
@@ -89,7 +92,7 @@ function orderRow(r: Prisma.SalesOrderGetPayload<{ include: { items: true } }>):
 /* ── Read One ── */
 export async function getOrderById(id: string): Promise<SalesOrderDB | null> {
   if (!isUuid(id)) return null
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   const row = await prisma.salesOrder.findFirst({ where: { id, tenantId }, include: { items: true } })
   return row ? orderRow(row) : null
 }
@@ -139,7 +142,7 @@ export async function createOrder(
   payload: CreateOrderPayload
 ): Promise<{ id: string | null; error: string | null }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const { header, items } = await orderData(tenantId, payload)
     const order = await prisma.salesOrder.create({ data: { ...header, tenantId, items: { create: items } }, select: { id: true } })
     revalidatePath("/sales/orders")
@@ -159,7 +162,7 @@ export async function updateOrder(
   payload: UpdateOrderPayload
 ): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     const { id, ...fields } = payload
     const { header, items } = await orderData(tenantId, fields)
 
@@ -183,7 +186,7 @@ export async function updateOrder(
 /* ── Delete ── */
 export async function deleteOrder(id: string): Promise<{ error: string | null }> {
   try {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     const { count } = await prisma.salesOrder.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Order not found" }
   } catch (err) {
@@ -198,7 +201,7 @@ export async function deleteOrder(id: string): Promise<{ error: string | null }>
 
 /* ── Convert Quote to Order ── */
 export async function convertQuoteToOrder(quoteId: string): Promise<{ orderId: string | null; error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
 
   // 1. Fetch the quote
   const quote = isUuid(quoteId) ? await prisma.quote.findFirst({ where: { id: quoteId, tenantId }, include: { items: true } }) : null
@@ -246,7 +249,7 @@ export async function convertQuoteToOrder(quoteId: string): Promise<{ orderId: s
  * when it is sent. An order can be invoiced once.
  */
 export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceId: string | null; error: string | null }> {
-  const tenantId = await getTenantWriterId()
+  const tenantId = await getTenantWriterId(MODULE)
   try {
     const order = await prisma.salesOrder.findFirst({
       where: { id: orderId, tenantId },
@@ -308,6 +311,6 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceI
 
 /** The next sales order number (SO-2026-0001…) for the new-order form. */
 export async function getNextOrderNumber(): Promise<string> {
-  const tenantId = await getTenantId()
+  const tenantId = await getTenantId(MODULE)
   return nextSequence(prisma, "salesOrder", tenantId, `SO-${new Date().getFullYear()}-`)
 }

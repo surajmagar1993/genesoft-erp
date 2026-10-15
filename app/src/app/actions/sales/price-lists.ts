@@ -11,6 +11,9 @@ import {
     Prisma,
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 /* ─────────────────────────────────────────
    Interfaces
 ───────────────────────────────────────── */
@@ -399,7 +402,7 @@ export async function getPriceListsOverview(): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         // Auto-seed if empty
@@ -643,7 +646,7 @@ export async function createPriceList(data: CreatePriceListInput): Promise<{
     error?: string
 }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.name?.trim()) return { error: "Price List name is required" }
@@ -704,7 +707,7 @@ export async function updatePriceList(
     data: Partial<CreatePriceListInput> & { isActive?: boolean }
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const existing = await prisma.priceList.findFirst({
@@ -751,7 +754,7 @@ export async function updatePriceList(
 
 export async function deletePriceList(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         await prisma.priceList.delete({
@@ -786,7 +789,7 @@ export async function upsertPriceListItem(data: UpsertPriceListItemInput): Promi
     error?: string
 }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         if (!data.priceListId) return { error: "Price List must be selected" }
@@ -850,7 +853,7 @@ export async function upsertPriceListItem(data: UpsertPriceListItemInput): Promi
 
 export async function deletePriceListItem(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         await prisma.priceListItem.delete({
@@ -874,7 +877,7 @@ export async function assignContactPriceList(
     priceListId: string | null
 ): Promise<{ success?: boolean; error?: string }> {
     try {
-        const tenantId = await getTenantManagerId()
+        const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         if (priceListId && !(await prisma.priceList.count({ where: { id: priceListId, tenantId } }))) {
@@ -911,7 +914,7 @@ export async function calculateEffectivePrice(
     input: CalculatePriceInput
 ): Promise<{ data?: CalculatePriceResult; error?: string }> {
     try {
-        const tenantId = await getTenantId()
+        const tenantId = await getTenantId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
         const product = await prisma.product.findFirst({

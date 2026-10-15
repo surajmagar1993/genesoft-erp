@@ -8,6 +8,9 @@ import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import { RfqStatus, RfqVendorStatus, PurchaseOrderStatus } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "purchase" as const
+
 export interface RfqItemRecord {
     id: string
     rfqId: string
@@ -154,7 +157,7 @@ export interface RecordVendorQuoteInput {
  * Fetches overview metrics, list of RFQs with vendor bids, and lookup data
  */
 export async function getRfqOverview(): Promise<RfqOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
 
     const rawRfqs = await prisma.requestForQuotation.findMany({
         where: { tenantId },
@@ -366,7 +369,7 @@ export async function getRfqOverview(): Promise<RfqOverviewData> {
  * Creates a new Request for Quotation tender
  */
 export async function createRfq(input: CreateRfqInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { contact: input.invitedVendorIds, product: input.items.map((i) => i.productId) })
 
     if (!input.title?.trim()) {
@@ -435,7 +438,7 @@ export async function createRfq(input: CreateRfqInput) {
  * Updates the lifecycle status of an RFQ
  */
 export async function updateRfqStatus(rfqId: string, status: RfqStatus) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const existing = await prisma.requestForQuotation.findFirst({
         where: { id: rfqId, tenantId }
@@ -463,7 +466,7 @@ export async function updateRfqStatus(rfqId: string, status: RfqStatus) {
  * Invites additional vendors to an existing RFQ
  */
 export async function inviteVendorsToRfq(rfqId: string, vendorIds: string[]) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const rfq = await prisma.requestForQuotation.findFirst({
         where: { id: rfqId, tenantId }
@@ -504,7 +507,7 @@ export async function inviteVendorsToRfq(rfqId: string, vendorIds: string[]) {
  * Records quotation pricing and terms submitted by a participating vendor
  */
 export async function recordVendorQuote(input: RecordVendorQuoteInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
 
     const quote = await prisma.rfqVendorQuote.findFirst({
         where: { id: input.quoteId, rfqId: input.rfqId, tenantId },
@@ -585,7 +588,7 @@ export async function recordVendorQuote(input: RecordVendorQuoteInput) {
  * Awards an RFQ to a winning vendor quote, automatically generating a Purchase Order
  */
 export async function awardVendorQuote(rfqId: string, quoteId: string) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
 
     const rfq = await prisma.requestForQuotation.findFirst({
         where: { id: rfqId, tenantId },
@@ -709,7 +712,7 @@ export async function awardVendorQuote(rfqId: string, quoteId: string) {
  * Deletes a draft or cancelled RFQ
  */
 export async function deleteRfq(rfqId: string) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
 
     const rfq = await prisma.requestForQuotation.findFirst({
         where: { id: rfqId, tenantId }

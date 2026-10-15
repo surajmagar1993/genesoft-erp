@@ -21,6 +21,9 @@ import {
     InvoiceStatus,
 } from "@prisma/client"
 
+/** Module access checked by the tenant helpers (src/lib/access.ts) */
+const MODULE = "sales" as const
+
 export interface RentalAssetRecord {
     id: string
     tenantId: string
@@ -458,7 +461,7 @@ async function autoSeedRentalIfEmpty(tenantId: string) {
  * Fetch rental dashboard overview with telemetry, agreements, assets, and return logs.
  */
 export async function getRentalOverview(): Promise<RentalOverviewData> {
-    const tenantId = await getTenantId()
+    const tenantId = await getTenantId(MODULE)
     if (!tenantId) {
         throw new Error("Unauthorized or unauthenticated tenant context")
     }
@@ -677,7 +680,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
  * Register a new rental asset.
  */
 export async function createRentalAsset(input: CreateRentalAssetInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { warehouse: input.warehouseId })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
@@ -717,7 +720,7 @@ export async function createRentalAsset(input: CreateRentalAssetInput) {
  * Update an existing rental asset.
  */
 export async function updateRentalAsset(id: string, input: UpdateRentalAssetInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { warehouse: input.warehouseId })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
@@ -746,7 +749,7 @@ export async function updateRentalAsset(id: string, input: UpdateRentalAssetInpu
  * Delete an asset (only if not currently rented or linked to active agreements).
  */
 export async function deleteRentalAsset(id: string) {
-    const tenantId = await getTenantManagerId()
+    const tenantId = await getTenantManagerId(MODULE)
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     const asset = await prisma.rentalAsset.findUnique({
@@ -782,7 +785,7 @@ export async function deleteRentalAsset(id: string) {
  * Create a new rental agreement with asset checkout.
  */
 export async function createRentalAgreement(input: CreateRentalAgreementInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { contact: input.contactId, rentalAsset: input.items.map((i) => i.assetId) })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
@@ -892,7 +895,7 @@ export async function createRentalAgreement(input: CreateRentalAgreementInput) {
  * Update rental agreement status (e.g. Cancel).
  */
 export async function updateRentalAgreementStatus(id: string, status: RentalStatus) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     const agreement = await prisma.rentalAgreement.findUnique({
@@ -926,7 +929,7 @@ export async function updateRentalAgreementStatus(id: string, status: RentalStat
  * Process rental return and damage inspection.
  */
 export async function processRentalReturn(input: ProcessRentalReturnInput) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { rentalAsset: input.assetId })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
@@ -1043,7 +1046,7 @@ export async function processRentalReturn(input: ProcessRentalReturnInput) {
  * Convert a rental agreement to an official Sales Invoice in `/sales/invoices`.
  */
 export async function convertAgreementToInvoice(agreementId: string) {
-    const tenantId = await getTenantWriterId()
+    const tenantId = await getTenantWriterId(MODULE)
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     const agreement = await prisma.rentalAgreement.findUnique({
