@@ -29,6 +29,7 @@ export default function NewQuotePage() {
             quote_number: data.quoteNumber,
             customer_name: data.customerName,
             customer_email: data.customerEmail,
+            contact_id: data.contactId,
             quote_date: data.quoteDate,
             valid_until: data.validUntil,
             reference: data.reference,

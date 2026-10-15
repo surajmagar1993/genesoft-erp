@@ -142,4 +142,15 @@ describe("access rules", () => {
         actAs(await addUser(tenant.id, "USER"))
         await expect(deletePayment(pay.id!)).rejects.toThrow(/full access to Finance or Sales/)
     })
+
+    it("refuses payments on draft and proforma invoices (they aren't in the books yet)", async () => {
+        const { tenant, user } = await createTestTenant()
+        actAs(user)
+        const customer = await createCustomer(tenant.id)
+        const draft = await createInvoice(invoicePayload(customer.id, { status: "DRAFT" }))
+        const res = await createPayment({ invoice_id: draft.id!, contact_id: customer.id, amount: 100, payment_date: "2026-10-05", payment_method: "CASH" })
+        expect(res.error).toMatch(/still a draft/)
+        expect(await prisma.payment.count({ where: { invoiceId: draft.id! } })).toBe(0)
+        expect((await prisma.invoice.findUniqueOrThrow({ where: { id: draft.id! } })).status).toBe("DRAFT")
+    })
 })

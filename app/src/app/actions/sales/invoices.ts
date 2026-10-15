@@ -74,6 +74,10 @@ export interface InvoiceDB {
   status: InvoiceStatus
   discount: number
   discount_type: "PERCENT" | "FIXED"
+  /** Saved totals (worked out on the server when the invoice is saved) */
+  subtotal?: number
+  tax_amount?: number
+  total?: number
   notes: string
   terms_and_conditions: string
   declaration?: string

@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, CheckCircle2, ArrowLeft, Mail } from 'lucide-react'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta({ title: 'Reset your password | Genesoft ERP', description: 'Get a link to reset your Genesoft ERP password.', path: '/forgot-password', noIndex: true })
 
 interface ForgotPasswordPageProps {
   searchParams: Promise<{ error?: string; message?: string }>

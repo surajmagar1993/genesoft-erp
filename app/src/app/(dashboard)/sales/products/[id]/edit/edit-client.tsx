@@ -3,6 +3,7 @@
 import { ProductForm, ProductFormData } from "@/components/sales/product-form"
 import { ProductDB, updateProduct } from "@/app/actions/sales/products"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 interface EditProductClientProps {
     initialProduct: ProductDB
@@ -59,7 +60,7 @@ export function EditProductClient({ initialProduct }: EditProductClientProps) {
         const { error } = await updateProduct(payload)
         
         if (error) {
-            alert("Error updating product: " + error)
+            toast.error("Error updating product: " + error)
         } else {
             router.push("/sales/products")
         }

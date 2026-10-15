@@ -1152,7 +1152,7 @@ export function UsTaxClient({ initialData }: Props) {
 
       {/* ── MODAL: Form 1099-NEC Authentic IRS Layout Slip ── */}
       <Dialog open={is1099ModalOpen} onOpenChange={setIs1099ModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between text-base">
               <span>Form 1099-NEC - Nonemployee Compensation</span>

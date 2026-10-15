@@ -7,6 +7,9 @@ import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, UserPlus } from 'lucide-react'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta({ title: 'Join your team | Genesoft ERP', description: 'Accept an invitation to a Genesoft ERP workspace.', path: '/join', noIndex: true })
 
 export const dynamic = 'force-dynamic'
 

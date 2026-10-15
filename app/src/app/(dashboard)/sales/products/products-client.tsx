@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { ProductDB, deleteProduct, importProducts, exportProducts } from "@/app/actions/sales/products"
 import { formatCurrency } from "@/lib/utils"
 import { RequireRole } from "@/components/auth/role-context"
+import { toast } from "sonner"
 
 interface ProductsClientProps {
     initialProducts: ProductDB[]
@@ -52,7 +53,7 @@ export function ProductsClient({ initialProducts, total }: ProductsClientProps) 
         setIsDeleting(id)
         const { error } = await deleteProduct(id)
         if (error) {
-            alert("Error deleting product: " + error)
+            toast.error("Error deleting product: " + error)
             setIsDeleting(null)
         } else {
             setProducts((prev) => prev.filter((p) => p.id !== id))
@@ -75,7 +76,7 @@ export function ProductsClient({ initialProducts, total }: ProductsClientProps) 
             document.body.removeChild(link)
         } catch (error) {
             console.error("Export failed", error)
-            alert("Export failed!")
+            toast.error("Export failed!")
         } finally {
             setIsExporting(false)
         }
@@ -97,9 +98,9 @@ export function ProductsClient({ initialProducts, total }: ProductsClientProps) 
                 const { error, count } = await importProducts(results.data as any[])
                 setIsImporting(false)
                 if (error) {
-                    alert(`Import failed: ${error}`)
+                    toast.error(`Import failed: ${error}`)
                 } else {
-                    alert(`Successfully imported ${count} items.`)
+                    toast.success(`Successfully imported ${count} items.`)
                     router.refresh()
                 }
                 if (fileInputRef.current) {
@@ -108,7 +109,7 @@ export function ProductsClient({ initialProducts, total }: ProductsClientProps) 
             },
             error: (error) => {
                 console.error("Parse error:", error)
-                alert("Failed to parse CSV file.")
+                toast.error("Failed to parse CSV file.")
                 setIsImporting(false)
             }
         })

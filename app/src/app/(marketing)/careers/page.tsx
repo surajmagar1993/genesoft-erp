@@ -52,9 +52,9 @@ export default async function CareersPage() {
                     </p>
                     <a
                         href={`mailto:${site.careersEmail}?subject=${encodeURIComponent("CV for Genesoft Infotech")}`}
-                        className="mt-2 inline-flex h-[52px] items-center gap-2 rounded-[10px] bg-s-orange px-6 font-bold text-s-on-orange hover:brightness-95"
+                        className="mt-2 inline-flex min-h-[52px] max-w-full items-center gap-2 rounded-[10px] bg-s-orange px-6 py-3 font-bold text-s-on-orange [overflow-wrap:anywhere] hover:brightness-95"
                     >
-                        <Mail className="h-5 w-5" aria-hidden="true" /> Email your CV to {site.careersEmail}
+                        <Mail className="h-5 w-5 shrink-0" aria-hidden="true" /> <span>Email your CV to {site.careersEmail}</span>
                     </a>
                 </div>
                 )}

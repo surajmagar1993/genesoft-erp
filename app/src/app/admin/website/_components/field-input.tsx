@@ -76,7 +76,7 @@ function ImagePicker({ value, onChange, label }: { value: string; onChange: (v: 
                 )}
             </div>
             <Dialog open={open} onOpenChange={setOpen}>
-                <DialogContent className="max-w-3xl">
+                <DialogContent className="sm:max-w-3xl">
                     <DialogHeader>
                         <DialogTitle>Choose an image</DialogTitle>
                         <DialogDescription>From the Media library, or upload a new one (PNG, JPG or WebP, up to 5 MB).</DialogDescription>

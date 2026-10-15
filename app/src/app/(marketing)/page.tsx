@@ -119,7 +119,7 @@ export default async function HomePage() {
                                     Start free trial
                                 </Link>
                                 <Link href="/erp" className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[10px] border border-[#55514B] px-6 font-semibold text-[#F6F3EE] hover:bg-white/5">
-                                    Learn more <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                                    Learn more<span className="sr-only"> about Genesoft ERP</span> <ArrowRight className="h-4 w-4" aria-hidden="true" />
                                 </Link>
                             </div>
                         </div>
@@ -127,7 +127,7 @@ export default async function HomePage() {
                         <div className="rounded-2xl bg-[#FBFAF8] p-6 text-[#3D3B38] shadow-2xl shadow-black/30" aria-hidden="true">
                             <div className="flex items-start justify-between border-b border-[#E7E2DA] pb-4">
                                 <div>
-                                    <p className="text-xs font-bold uppercase tracking-wide text-[#B4540A]">Tax invoice</p>
+                                    <p className="text-xs font-bold uppercase tracking-wide text-[#AC5009]">Tax invoice</p>
                                     <p className="mt-1 text-sm font-semibold text-[#1F1E1D]">INV-0042</p>
                                 </div>
                                 <span className="rounded-full bg-[#E3F2EA] px-2.5 py-1 text-xs font-semibold text-[#1E7A4B]">Paid</span>

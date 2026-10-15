@@ -38,6 +38,8 @@ import { COMPANY } from "@/lib/constants/company"
 import { InvoiceTemplateDialog } from "@/components/invoices/invoice-template-dialog"
 import { INVOICE_TEMPLATES } from "@/components/invoices/templates/invoice-templates"
 import { RequireRole } from "@/components/auth/role-context"
+import { PORTAL_ONLINE_PAYMENTS_ENABLED } from "@/app/actions/portal/portal-types"
+import { toast } from "sonner"
 
 const formatCurrency = (amount: number, currency: string = "INR") =>
     new Intl.NumberFormat(localeForCurrency(currency), { style: "currency", currency }).format(amount)
@@ -115,7 +117,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
 
     const handleSendWhatsApp = async () => {
         if (!whatsAppPhone) {
-            alert("Please enter a valid phone number")
+            toast.error("Please enter a valid phone number")
             return
         }
         try {
@@ -126,13 +128,13 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                 templateKey: whatsAppTemplate,
             })
             if (res.success) {
-                alert(res.simulated ? "WhatsApp message simulated & recorded in timeline!" : "WhatsApp message dispatched successfully!")
+                toast.success(res.simulated ? "WhatsApp message simulated & recorded in timeline!" : "WhatsApp message dispatched successfully!")
                 setOpenWhatsAppModal(false)
             } else {
-                alert(res.error || "Failed to dispatch WhatsApp message")
+                toast.error(res.error || "Failed to dispatch WhatsApp message")
             }
         } catch (err: any) {
-            alert(err.message || "WhatsApp dispatch error")
+            toast.error(err.message || "WhatsApp dispatch error")
         } finally {
             setIsSendingWhatsApp(false)
         }
@@ -171,7 +173,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                 amount: Number(paymentFormsState.amount)
             })
             if (error) {
-                alert(`Error recording payment: ${error}`)
+                toast.error(`Error recording payment: ${error}`)
             } else {
                 setOpenPaymentModal(false)
                 // Reload page to re-fetch Server side properly
@@ -184,7 +186,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
         startTransition(async () => {
             const { error } = await deletePayment(paymentId)
             if (error) {
-                alert(`Error deleting payment: ${error}`)
+                toast.error(`Error deleting payment: ${error}`)
             } else {
                 router.refresh()
             }
@@ -198,7 +200,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
             if (!error) {
                 router.push("/sales/invoices")
             } else {
-                alert(`Failed to delete invoice: ${error}`)
+                toast.error(`Failed to delete invoice: ${error}`)
             }
         })
     }
@@ -210,24 +212,24 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
         startTransition(async () => {
             const res = await convertProformaToInvoice(invoice.id)
             if (res.success) {
-                alert(`Successfully converted to Tax Invoice: ${res.newInvoiceNumber}`)
+                toast.error(`Successfully converted to Tax Invoice: ${res.newInvoiceNumber}`)
                 router.refresh()
             } else {
-                alert(`Conversion failed: ${res.error}`)
+                toast.error(`Conversion failed: ${res.error}`)
             }
         })
     }
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-12">
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => router.push("/sales/invoices")}>
+                    <Button variant="ghost" size="icon" onClick={() => router.push("/sales/invoices")} aria-label="Back to invoices">
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div>
-                        <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-bold tracking-tight">{invoice.invoice_number}</h1>
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h1 className="whitespace-nowrap text-3xl font-bold tracking-tight">{invoice.invoice_number}</h1>
                             {invoice.type === "PROFORMA" && (
                                 <Badge variant="outline" className="border-amber-500/50 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider text-xs px-2.5 py-0.5">
                                     PROFORMA INVOICE
@@ -242,7 +244,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <Button
                         variant="outline"
                         size="sm"
@@ -267,6 +269,8 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                         <MessageSquare className="mr-1.5 h-4 w-4 text-emerald-600" />
                         WhatsApp
                     </Button>
+                    {/* Online payment of invoices isn't live yet (PORTAL_ONLINE_PAYMENTS_ENABLED) */}
+                    {PORTAL_ONLINE_PAYMENTS_ENABLED && (
                     <Button
                         variant="outline"
                         size="sm"
@@ -276,6 +280,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                         <CreditCard className="mr-1.5 h-4 w-4 text-indigo-600" />
                         Pay Link
                     </Button>
+                    )}
                     {invoice.type === "PROFORMA" && (
                         <Button
                             size="sm"
@@ -452,17 +457,14 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                 <span className="flex items-center gap-2">
                                     <Stamp className="h-4 w-4 text-primary" /> Authorized Signatory
                                 </span>
-                                <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-500/30">
-                                    Verified
-                                </Badge>
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <div className="rounded border border-dashed border-primary/30 p-3 bg-card text-center space-y-1">
                                 <p className="text-xs font-semibold text-primary">For {invoice.tenants?.name || COMPANY.name}</p>
                                 <div className="py-1">
-                                    <Badge variant="secondary" className="text-[10px] font-mono tracking-wider">
-                                        ✓ DIGITALLY AUTHENTICATED
+                                    <Badge variant="secondary" className="text-[10px] tracking-wide">
+                                        Computer-generated document
                                     </Badge>
                                 </div>
                                 <p className="text-sm font-bold text-foreground">{invoice.signatory_name || "Authorized Representative"}</p>
@@ -515,7 +517,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                             <CardDescription>History of receipts against this invoice.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {balanceDue > 0 && (
+                            {PORTAL_ONLINE_PAYMENTS_ENABLED && balanceDue > 0 && (
                                 <div className="mb-4 p-3 rounded-lg border border-indigo-500/30 bg-indigo-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                                     <div className="flex items-center gap-2">
                                         <div className="p-1.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600">

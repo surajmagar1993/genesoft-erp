@@ -1467,7 +1467,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
 
             {/* Modal 1: Add Employee */}
             <Dialog open={isCreateEmployeeOpen} onOpenChange={setIsCreateEmployeeOpen}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <UserPlus className="h-5 w-5 text-primary" />
@@ -1696,7 +1696,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
 
             {/* Modal 2: Edit Employee */}
             <Dialog open={isEditEmployeeOpen} onOpenChange={setIsEditEmployeeOpen}>
-                <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Pencil className="h-5 w-5 text-primary" />
@@ -2280,7 +2280,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
 
             {/* Modal 7: View Employee 360° Profile */}
             <Dialog open={isViewEmployeeOpen} onOpenChange={setIsViewEmployeeOpen}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <div className="flex items-center justify-between">
                             <DialogTitle className="flex items-center gap-2">

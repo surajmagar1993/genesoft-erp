@@ -126,7 +126,7 @@ export async function LegalPage({ pageKey }: { pageKey: string }) {
                 </div>
             </header>
 
-            <div className="mt-12 grid gap-12 lg:grid-cols-[240px_1fr] xl:gap-20">
+            <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 lg:grid-cols-[240px_minmax(0,1fr)] xl:gap-20">
                 <nav aria-label="On this page" className="hidden lg:block">
                     <div className="sticky top-24">
                         <p className="text-xs font-semibold uppercase tracking-wide text-s-muted">On this page</p>
@@ -140,11 +140,11 @@ export async function LegalPage({ pageKey }: { pageKey: string }) {
                     </div>
                 </nav>
 
-                <article className="max-w-4xl space-y-10">
+                <article className="min-w-0 max-w-4xl space-y-10">
                     {sections.map((s, i) => (
                         <section key={s.id} id={s.id} className="scroll-mt-24">
                             <h2 className="text-xl font-semibold text-s-ink">{i + 1}. {s.title}</h2>
-                            <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-s-text [&_a]:text-s-orange-text [&_a]:underline-offset-2 hover:[&_a]:underline [&_li]:ml-5 [&_li]:list-disc [&_strong]:text-s-ink [&_ul]:space-y-1.5">
+                            <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-s-text [&_a]:text-s-orange-text [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:decoration-2 [&_li]:ml-5 [&_li]:list-disc [&_strong]:text-s-ink [&_ul]:space-y-1.5">
                                 {s.blocks.map((b, j) => (
                                     <BlockView key={j} b={b} />
                                 ))}

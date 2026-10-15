@@ -14,6 +14,7 @@ import {
   payPortalInvoice,
 } from "@/app/actions/portal/portal"
 import { PORTAL_ONLINE_PAYMENTS_ENABLED } from "@/app/actions/portal/portal-types"
+import { toast } from "sonner"
 import type {
   PortalDashboardData,
   PortalInvoiceRecord,
@@ -511,10 +512,10 @@ function InvoicesTab({
         setPaySuccessMsg(res.message)
         onRefresh?.()
       } else {
-        alert(res.error || res.message)
+        toast.error(res.error || res.message)
       }
     } catch (err: any) {
-      alert(err.message || "Payment failed")
+      toast.error(err.message || "Payment failed")
     } finally {
       setPaying(false)
     }

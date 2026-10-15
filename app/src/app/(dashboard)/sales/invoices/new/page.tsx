@@ -30,7 +30,7 @@ function NewInvoiceFormWrapper() {
 
     const handleSave = async (data: InvoiceFormData) => {
         if (!data.contactId) {
-            alert("Please select a registered CRM Contact to create an invoice.")
+            toast.error("Please select a registered CRM Contact to create an invoice.")
             return
         }
         const supplyType = getSupplyTypeForRegime(regime?.mode ?? "IN_GST", data.supplierState, data.placeOfSupply)

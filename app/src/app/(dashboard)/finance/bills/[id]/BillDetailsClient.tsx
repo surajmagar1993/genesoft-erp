@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { deleteBill } from "@/app/actions/finance/bills"
 import { createPayment, deletePayment, CreatePaymentPayload, PaymentMethod } from "@/app/actions/finance/payments"
 import { RequireRole } from "@/components/auth/role-context"
+import { toast } from "sonner"
 
 const formatCurrency = (amount: number, currency: string = "INR") =>
     new Intl.NumberFormat(localeForCurrency(currency), { style: "currency", currency }).format(amount)
@@ -101,7 +102,7 @@ export default function BillDetailsClient({ bill }: Props) {
                 amount: Number(paymentFormsState.amount)
             })
             if (error) {
-                alert(`Error recording payment: ${error}`)
+                toast.error(`Error recording payment: ${error}`)
             } else {
                 setOpenPaymentModal(false)
                 router.refresh()
@@ -114,7 +115,7 @@ export default function BillDetailsClient({ bill }: Props) {
         startTransition(async () => {
             const { error } = await deletePayment(paymentId)
             if (error) {
-                alert(`Error deleting payment: ${error}`)
+                toast.error(`Error deleting payment: ${error}`)
             } else {
                 router.refresh()
             }
@@ -128,7 +129,7 @@ export default function BillDetailsClient({ bill }: Props) {
             if (!error) {
                 router.push("/finance/bills")
             } else {
-                alert(`Failed to delete bill: ${error}`)
+                toast.error(`Failed to delete bill: ${error}`)
             }
         })
     }

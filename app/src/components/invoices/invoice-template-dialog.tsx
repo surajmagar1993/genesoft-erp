@@ -92,7 +92,7 @@ export function InvoiceTemplateDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+            <DialogContent className="sm:max-w-5xl h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
                 {/* Header */}
                 <DialogHeader className="p-4 border-b bg-muted/30">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pr-6">

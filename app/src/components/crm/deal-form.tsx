@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Save, X } from "lucide-react"
+import { toast } from "sonner"
 
 export type DealStage = "PROSPECTING" | "QUALIFICATION" | "PROPOSAL" | "NEGOTIATION" | "CLOSED_WON" | "CLOSED_LOST"
 
@@ -69,7 +70,7 @@ export function DealForm({ initialData, mode }: DealFormProps) {
 
     const handleSave = async () => {
         if (!form.title.trim()) {
-            alert("Deal title is required.")
+            toast.error("Deal title is required.")
             return
         }
 
@@ -93,7 +94,7 @@ export function DealForm({ initialData, mode }: DealFormProps) {
             : await updateDeal(form.id!, payload)
 
         if (result.error) {
-            alert(result.error)
+            toast.error(result.error)
             setIsSubmitting(false)
         } else {
             router.push("/crm/deals")

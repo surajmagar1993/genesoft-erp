@@ -1428,7 +1428,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
 
             {/* Compose Email Modal */}
             <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Mail className="h-5 w-5 text-primary" />
@@ -1650,7 +1650,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
 
             {/* Manage Mailboxes Modal */}
             <Dialog open={isAccountsModalOpen} onOpenChange={setIsAccountsModalOpen}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Settings className="h-5 w-5 text-primary" />
@@ -2000,7 +2000,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
 
             {/* Manage Templates Modal */}
             <Dialog open={isTemplatesModalOpen} onOpenChange={setIsTemplatesModalOpen}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <FileText className="h-5 w-5 text-primary" />

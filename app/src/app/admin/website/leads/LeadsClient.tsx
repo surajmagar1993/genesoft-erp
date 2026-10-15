@@ -129,7 +129,7 @@ export function LeadsClient({ data, status, kind }: { data: Data; status: string
             </Card>
 
             <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
-                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+                <DialogContent className="max-h-[90vh] sm:max-w-2xl overflow-y-auto">
                     {open && (
                         <>
                             <DialogHeader>

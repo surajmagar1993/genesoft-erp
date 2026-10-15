@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { CustomerPicker } from "@/components/sales/customer-picker"
 
 /* ── Types ── */
 export interface OrderLineItem {
@@ -134,8 +135,8 @@ export function OrderForm({ initialData, onSave }: OrderFormProps) {
     const { formatMoney: formatCurrency, taxLabel, defaultRate, regime } = useTaxRegime()
 
     const handleSave = () => {
-        if (!form.customerName.trim()) {
-            toast.error("Customer Name is required.")
+        if (!form.contactId || !form.customerName.trim()) {
+            toast.error("Choose the customer from your contacts.")
             return
         }
         if (form.lineItems.length === 0) {
@@ -210,12 +211,12 @@ export function OrderForm({ initialData, onSave }: OrderFormProps) {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="customerName">Customer Name *</Label>
-                                <Input
+                                <Label htmlFor="customerName">Customer *</Label>
+                                <CustomerPicker
                                     id="customerName"
-                                    value={form.customerName}
-                                    onChange={(e) => update("customerName", e.target.value)}
-                                    placeholder="Enter customer name"
+                                    contactId={form.contactId}
+                                    customerName={form.customerName}
+                                    onChange={(c) => setForm((prev) => ({ ...prev, contactId: c.contactId, customerName: c.customerName, customerEmail: c.customerEmail }))}
                                 />
                             </div>
                             <div className="space-y-2">

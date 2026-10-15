@@ -58,7 +58,7 @@ export function NotificationsDropdown() {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 relative">
+                <Button variant="ghost" size="icon" className="h-9 w-9 relative" aria-label={unreadCount > 0 ? `Notifications (${unreadCount} unread)` : "Notifications"}>
                     <Bell className="h-4 w-4" />
                     {unreadCount > 0 && (
                         <Badge

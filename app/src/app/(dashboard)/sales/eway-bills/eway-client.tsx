@@ -1187,7 +1187,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
 
       {/* ── MODAL 1: OFFICIAL PRINTABLE E-WAY BILL SLIP ── */}
       <Dialog open={slipModalOpen} onOpenChange={setSlipModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-6 print:p-0 print:border-none print:shadow-none">
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto p-6 print:p-0 print:border-none print:shadow-none">
           <DialogHeader className="print:hidden">
             <DialogTitle className="flex items-center justify-between">
               <span>Official Statutory E-Way Bill Slip</span>

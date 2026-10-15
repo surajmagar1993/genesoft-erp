@@ -10,6 +10,7 @@ import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { postToLedger } from "@/lib/ledger"
+import { syncInvoiceStock } from "@/lib/stock"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = ["finance", "sales"] as const
@@ -103,11 +104,27 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<{ id
   if (Number.isNaN(paymentDate.getTime())) return { id: null, error: "Enter a valid payment date" }
 
   // A payment is in the document's currency; otherwise the business's own
-  const doc = payload.invoice_id
-    ? await prisma.invoice.findFirst({ where: { id: payload.invoice_id, tenantId }, select: { currencyCode: true } })
-    : payload.bill_id
-      ? await prisma.bill.findFirst({ where: { id: payload.bill_id, tenantId }, select: { currencyCode: true } })
-      : null
+  const invoiceDoc = payload.invoice_id
+    ? await prisma.invoice.findFirst({ where: { id: payload.invoice_id, tenantId }, select: { currencyCode: true, status: true, type: true } })
+    : null
+  const billDoc = !invoiceDoc && payload.bill_id
+    ? await prisma.bill.findFirst({ where: { id: payload.bill_id, tenantId }, select: { currencyCode: true, status: true } })
+    : null
+  // Only issued documents can be paid: a draft or proforma isn't in the books yet (no sale, no stock movement)
+  if (invoiceDoc && (invoiceDoc.type === "PROFORMA" || ["DRAFT", "CANCELLED", "REJECTED", "EXPIRED"].includes(invoiceDoc.status))) {
+    return {
+      id: null,
+      error: invoiceDoc.type === "PROFORMA"
+        ? "A proforma invoice can't take payments. Convert it to a tax invoice first."
+        : invoiceDoc.status === "DRAFT"
+          ? "This invoice is still a draft. Edit it and mark it as Sent before recording a payment."
+          : `A ${invoiceDoc.status.toLowerCase()} invoice can't take payments.`,
+    }
+  }
+  if (billDoc && (billDoc.status === "DRAFT" || billDoc.status === "VOID")) {
+    return { id: null, error: billDoc.status === "DRAFT" ? "This bill is still a draft. Open it before recording a payment." : "A void bill can't take payments." }
+  }
+  const doc = invoiceDoc ?? billDoc
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
   const currencyCode = doc?.currencyCode || payload.currency_code || tenant?.currencyCode || "INR"
   const type = payload.type || (payload.invoice_id ? "INBOUND" : "OUTBOUND")
@@ -238,6 +255,9 @@ export async function syncInvoiceStatus(invoiceId: string) {
   const newStatus = statusFromPayments(invoice.status, Number(invoice.total || 0), Number(agg._sum.amount || 0), "SENT")
   if (newStatus !== invoice.status) {
     await prisma.invoice.updateMany({ where: { id: invoiceId, tenantId }, data: { status: newStatus as InvoiceStatus } })
+    // The status decides whether the sale is in the books and moves stock: keep both in step
+    await postToLedger(tenantId, { kind: "invoice", id: invoiceId })
+    await syncInvoiceStock(tenantId, { invoiceId })
   }
 }
 
@@ -251,5 +271,6 @@ export async function syncBillStatus(billId: string) {
   const newStatus = statusFromPayments(bill.status, Number(bill.total || 0), Number(agg._sum.amount || 0), "OPEN")
   if (newStatus !== bill.status) {
     await prisma.bill.updateMany({ where: { id: billId, tenantId }, data: { status: newStatus as BillStatus } })
+    await postToLedger(tenantId, { kind: "bill", id: billId })
   }
 }

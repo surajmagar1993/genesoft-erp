@@ -235,8 +235,6 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                     const cfg = statusConfig[inv.status as InvoiceStatus]
                                     const StatusIcon = cfg.icon
                                     
-                                    // Calculate total from line items if not directly on the record
-                                    // Assuming 'total' field exists based on the action
                                     const totalAmount = Number(inv.total || 0)
 
                                     return (

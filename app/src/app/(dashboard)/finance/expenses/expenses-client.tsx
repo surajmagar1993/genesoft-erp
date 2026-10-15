@@ -1,7 +1,8 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
-import { useState, useTransition, useMemo } from "react"
+import { useEffect, useState, useTransition, useMemo } from "react"
 import {
     ExpenseRecord,
     JournalEntryRecord,
@@ -66,6 +67,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { RequireRole } from "@/components/auth/role-context"
+import { toast } from "sonner"
 
 interface ExpensesClientProps {
     initialStats: ExpensesOverviewStats
@@ -97,6 +99,7 @@ export default function ExpensesClient({
     vendors,
     employees,
 }: ExpensesClientProps) {
+    const router = useRouter()
     const { formatMoney, regime: moneyRegime } = useTaxRegime()
     const appLocale = moneyRegime?.locale
     const [isPending, startTransition] = useTransition()
@@ -105,6 +108,12 @@ export default function ExpensesClient({
     const [expenses, setExpenses] = useState<ExpenseRecord[]>(initialExpenses)
     const [journalEntries, setJournalEntries] = useState<JournalEntryRecord[]>(initialJournalEntries)
     const [stats, setStats] = useState<ExpensesOverviewStats>(initialStats)
+    // Pick up fresh server data after router.refresh()
+    useEffect(() => {
+        setExpenses(initialExpenses)
+        setJournalEntries(initialJournalEntries)
+        setStats(initialStats)
+    }, [initialExpenses, initialJournalEntries, initialStats])
 
     // Filters & Navigation
     const [activeTab, setActiveTab] = useState("expenses")
@@ -322,7 +331,8 @@ export default function ExpensesClient({
             } else {
                 setIsCreateExpenseOpen(false)
                 // Refresh full state by reloading or fetching
-                window.location.reload()
+                toast.success("Expense recorded and posted to the ledger")
+                router.refresh()
             }
         })
     }
@@ -357,7 +367,8 @@ export default function ExpensesClient({
                 setFormError(res.error)
             } else {
                 setIsCreateJournalOpen(false)
-                window.location.reload()
+                toast.success("Journal voucher posted")
+                router.refresh()
             }
         })
     }
@@ -367,9 +378,10 @@ export default function ExpensesClient({
         startTransition(async () => {
             const res = await updateExpenseStatus(expenseId, newStatus, isClaimSettled)
             if (res.error) {
-                alert(res.error)
+                toast.error(res.error)
             } else {
-                window.location.reload()
+                toast.success("Expense updated")
+                router.refresh()
             }
         })
     }
@@ -383,9 +395,10 @@ export default function ExpensesClient({
         startTransition(async () => {
             const res = await voidExpense(expenseId)
             if (res.error) {
-                alert(res.error)
+                toast.error(res.error)
             } else {
-                window.location.reload()
+                toast.success("Expense voided")
+                router.refresh()
             }
         })
     }
@@ -1087,7 +1100,7 @@ export default function ExpensesClient({
 
             {/* 4. MODAL: Record Expense */}
             <Dialog open={isCreateExpenseOpen} onOpenChange={setIsCreateExpenseOpen}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <ReceiptText className="h-5 w-5 text-indigo-500" />
@@ -1361,7 +1374,7 @@ export default function ExpensesClient({
 
             {/* 5. MODAL: Create Manual Journal Voucher */}
             <Dialog open={isCreateJournalOpen} onOpenChange={setIsCreateJournalOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <BookOpen className="h-5 w-5 text-indigo-500" />
@@ -1690,7 +1703,7 @@ export default function ExpensesClient({
             {/* 7. MODAL: Inspect Journal Voucher Lines */}
             {selectedJournal && (
                 <Dialog open={!!selectedJournal} onOpenChange={() => setSelectedJournal(null)}>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="sm:max-w-2xl">
                         <DialogHeader>
                             <DialogTitle className="flex items-center justify-between">
                                 <span className="font-mono text-indigo-600">

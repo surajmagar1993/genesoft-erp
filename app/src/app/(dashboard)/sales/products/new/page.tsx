@@ -3,6 +3,7 @@
 import { ProductForm, ProductFormData } from "@/components/sales/product-form"
 import { createProduct } from "@/app/actions/sales/products"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export default function NewProductPage() {
     const router = useRouter()
@@ -31,7 +32,7 @@ export default function NewProductPage() {
         const { id, error } = await createProduct(payload)
         
         if (error) {
-            alert("Error creating product: " + error)
+            toast.error("Error creating product: " + error)
         } else {
             router.push("/sales/products")
         }

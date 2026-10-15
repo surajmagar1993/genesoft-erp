@@ -25,6 +25,7 @@ import {
   deleteAccount, seedDefaultAccounts,
 } from "@/app/actions/finance/accounts"
 import { RequireRole } from "@/components/auth/role-context"
+import { toast } from "sonner"
 
 /* ── Helper: Build tree from flat list ── */
 function buildAccountTree(accounts: Account[]): Account[] {
@@ -143,7 +144,7 @@ export default function AccountsClient({ initialAccounts }: Props) {
       if (!error) {
         router.refresh()
       } else {
-        alert(error)
+        toast.error(error)
       }
       setSeeding(false)
     })

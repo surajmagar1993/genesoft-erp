@@ -94,7 +94,7 @@ export function ItemsClient({ kind, items }: { kind: ItemKind; items: Item[] }) 
             </Card>
 
             <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+                <DialogContent className="max-h-[90vh] sm:max-w-2xl overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{editing?.id ? `Edit ${def.singular}` : `Add ${def.singular}`}</DialogTitle>
                         <DialogDescription>Shown on: {def.shownOn}.</DialogDescription>

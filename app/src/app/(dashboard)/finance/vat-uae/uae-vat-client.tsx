@@ -51,6 +51,7 @@ import {
 import type { UaeVatOverviewResult } from "@/app/actions/finance/uae-vat"
 import { exportUaeVat201Json, exportUaeVat201Csv } from "@/app/actions/finance/uae-vat"
 import { validateUaeTrn } from "@/lib/uae-vat-engine"
+import { toast } from "sonner"
 
 const fmtAed = (n: number) =>
   new Intl.NumberFormat("en-AE", {
@@ -103,7 +104,7 @@ export default function UaeVatClient({ initialData }: Props) {
       const res = await exportUaeVat201Json({ year: parseInt(year, 10), quarter })
       downloadFile(res.json, res.filename, "application/json")
     } catch (err: any) {
-      alert("Failed to export FTA JSON: " + (err?.message || "Unknown error"))
+      toast.error("Failed to export FTA JSON: " + (err?.message || "Unknown error"))
     } finally {
       setIsExporting(false)
     }
@@ -115,7 +116,7 @@ export default function UaeVatClient({ initialData }: Props) {
       const res = await exportUaeVat201Csv({ year: parseInt(year, 10), quarter })
       downloadFile(res.csv, res.filename, "text/csv")
     } catch (err: any) {
-      alert("Failed to export Form 201 CSV: " + (err?.message || "Unknown error"))
+      toast.error("Failed to export Form 201 CSV: " + (err?.message || "Unknown error"))
     } finally {
       setIsExporting(false)
     }
@@ -645,7 +646,7 @@ export default function UaeVatClient({ initialData }: Props) {
 
       {/* ── Official Printable Form VAT 201 Modal ── */}
       <Dialog open={printModalOpen} onOpenChange={setPrintModalOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           <div className="p-6 bg-white text-slate-900 print:p-0 print:m-0" id="vat201-print-slip">
             {/* Header with Bilingual English/Arabic Style */}
             <div className="border-b-2 border-slate-900 pb-4 text-center">

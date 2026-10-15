@@ -52,6 +52,7 @@ import {
 
 import type { GstReturnsOverviewResult } from "@/app/actions/finance/gst-returns"
 import { exportGstr1Json, exportGstr1Csv, exportGstr3bJson } from "@/app/actions/finance/gst-returns"
+import { toast } from "sonner"
 
 const fmtInr = (n: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -108,7 +109,7 @@ export default function GstReturnsClient({ initialData }: Props) {
       const res = await exportGstr1Json({ year: parseInt(year, 10), month: parseInt(month, 10) })
       downloadFile(res.json, res.filename, "application/json")
     } catch (err: any) {
-      alert("Failed to export GSTR-1 JSON: " + (err?.message || "Unknown error"))
+      toast.error("Failed to export GSTR-1 JSON: " + (err?.message || "Unknown error"))
     } finally {
       setIsExporting(false)
     }
@@ -124,7 +125,7 @@ export default function GstReturnsClient({ initialData }: Props) {
       })
       downloadFile(res.csv, res.filename, "text/csv")
     } catch (err: any) {
-      alert("Failed to export CSV: " + (err?.message || "Unknown error"))
+      toast.error("Failed to export CSV: " + (err?.message || "Unknown error"))
     } finally {
       setIsExporting(false)
     }
@@ -136,7 +137,7 @@ export default function GstReturnsClient({ initialData }: Props) {
       const res = await exportGstr3bJson({ year: parseInt(year, 10), month: parseInt(month, 10) })
       downloadFile(res.json, res.filename, "application/json")
     } catch (err: any) {
-      alert("Failed to export GSTR-3B JSON: " + (err?.message || "Unknown error"))
+      toast.error("Failed to export GSTR-3B JSON: " + (err?.message || "Unknown error"))
     } finally {
       setIsExporting(false)
     }
@@ -1108,7 +1109,7 @@ export default function GstReturnsClient({ initialData }: Props) {
 
       {/* ── Official Printable Form GSTR-3B Modal ── */}
       <Dialog open={printGstr3bOpen} onOpenChange={setPrintGstr3bOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto p-0">
           <div className="p-6 bg-white text-slate-900 print:p-0 print:m-0" id="gstr3b-print-slip">
             {/* Government Emblem / Header */}
             <div className="border-b-2 border-slate-900 pb-4 text-center">

@@ -21,6 +21,7 @@ import { PaymentDB, deletePayment } from "@/app/actions/finance/payments"
 /* ── Helpers ── */
 import { formatCurrency } from "@/lib/utils"
 import { RequireRole } from "@/components/auth/role-context"
+import { toast } from "sonner"
 
 const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—"
@@ -53,7 +54,7 @@ export default function PaymentsClient({ initialPayments, total }: Props) {
             if (!error) {
                 setPayments((prev) => prev.filter((p) => p.id !== id))
             } else {
-                alert(`Failed to delete payment: ${error}`)
+                toast.error(`Failed to delete payment: ${error}`)
             }
         })
     }

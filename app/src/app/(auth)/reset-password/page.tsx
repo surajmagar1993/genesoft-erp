@@ -6,6 +6,9 @@ import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/password-input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, ArrowLeft, KeyRound } from 'lucide-react'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta({ title: 'Choose a new password | Genesoft ERP', description: 'Set a new password for your Genesoft ERP account.', path: '/reset-password', noIndex: true })
 
 export const dynamic = 'force-dynamic'
 

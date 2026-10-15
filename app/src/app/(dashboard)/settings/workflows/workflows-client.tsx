@@ -1054,7 +1054,7 @@ export function WorkflowsClient({
 
             {/* MODAL: NEW / EDIT WORKFLOW RULE */}
             <Dialog open={isBuilderOpen} onOpenChange={setIsBuilderOpen}>
-                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-base font-bold flex items-center gap-2">
                             <Zap className="h-4 w-4 text-primary" />
@@ -1413,7 +1413,7 @@ export function WorkflowsClient({
 
             {/* MODAL: PRE-BUILT RECIPES */}
             <Dialog open={isRecipesOpen} onOpenChange={setIsRecipesOpen}>
-                <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-base font-bold flex items-center gap-2">
                             <Sparkles className="h-4 w-4 text-primary" />

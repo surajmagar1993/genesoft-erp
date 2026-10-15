@@ -162,7 +162,7 @@
   --s-text: #3D3B38;
   --s-muted: #6B6762;
   --s-orange: #EF7F1A;
-  --s-orange-text: #B4540A;
+  --s-orange-text: #AC5009; /* 4.5:1 or better on every light background (WCAG AA) */
   --s-orange-tint: #FDEBD9;
   --s-charcoal: #2B2A29;
   --s-footer: #1F1E1D;

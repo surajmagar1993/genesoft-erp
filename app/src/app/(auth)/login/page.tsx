@@ -7,6 +7,9 @@ import { PasswordInput } from '@/components/ui/password-input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, CheckCircle2, LogIn } from 'lucide-react'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta({ title: 'Sign in | Genesoft ERP', description: 'Sign in to your Genesoft ERP workspace.', path: '/login' })
 
 interface LoginPageProps {
   searchParams: Promise<{ error?: string; message?: string }>

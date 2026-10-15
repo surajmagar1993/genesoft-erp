@@ -9,6 +9,9 @@ import { AlertCircle, UserPlus } from 'lucide-react'
 import { WorkspaceSlugInput } from '@/components/auth/workspace-slug-input'
 import { CountrySelect } from '@/components/auth/country-select'
 import { Turnstile } from '@/components/turnstile'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta({ title: 'Start your free trial | Genesoft ERP', description: 'Create your Genesoft ERP workspace: 15-day free trial, no card needed.', path: '/register' })
 
 interface RegisterPageProps {
   searchParams: Promise<{ error?: string; plan?: string }>

@@ -304,8 +304,8 @@ export function TemplateModern({ invoice }: TemplateProps) {
                     <div className="border border-dashed border-indigo-200 bg-indigo-50/40 rounded-lg p-3 text-center w-52">
                         <p className="text-[10px] font-semibold text-indigo-700">For {companyName}</p>
                         <div className="my-2 py-1">
-                            <Badge variant="secondary" className="text-[9px] font-mono tracking-wider">
-                                ✓ DIGITALLY AUTHENTICATED
+                            <Badge variant="secondary" className="text-[9px] tracking-wide">
+                                Computer-generated document
                             </Badge>
                         </div>
                         <p className="text-xs font-bold text-slate-900">{invoice.signatory_name || "Authorized Representative"}</p>

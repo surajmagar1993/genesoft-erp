@@ -31,6 +31,7 @@ import {
   TAX_EXEMPTION_REASONS,
 } from "@/lib/gst-engine"
 import type { DocumentProduct } from "@/app/actions/sales/products"
+import { toast } from "sonner"
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
 export interface InvoiceLineItem {
@@ -114,7 +115,8 @@ export const defaultInvoiceForm: InvoiceFormData = {
   status: "DRAFT",
   lineItems: [],
   notes: "",
-  termsAndConditions: TERMS_PRESETS[0].text,
+  // No terms unless the business picks or writes them (presets below are optional starting points)
+  termsAndConditions: "",
   declaration:
     "We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct.",
   signatoryName: "Authorized Representative",
@@ -272,11 +274,11 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
   /* ── Save ────────────────────────────────────────────────────────────────── */
   const handleSave = () => {
     if (!form.customerName.trim()) {
-      alert("Customer Name is required.")
+      toast.error("Customer Name is required.")
       return
     }
     if (form.lineItems.length === 0) {
-      alert("Add at least one line item.")
+      toast.error("Add at least one line item.")
       return
     }
     onSave({ ...form })

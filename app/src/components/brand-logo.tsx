@@ -23,6 +23,8 @@ export function BrandLogo({
             alt="Genesoft Infotech"
             width={3499}
             height={1425}
+            // Shown at most ~56px tall (≈140px wide): without this the browser downloads the 3840px version
+            sizes="140px"
             priority={priority}
             className={cn("h-10 w-auto select-none", className, extra)}
         />

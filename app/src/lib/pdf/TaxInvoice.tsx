@@ -830,7 +830,7 @@ export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoicePr
                   <Image src={invoice.signature_url} style={s.signatureImage} />
                 ) : (
                   <View style={s.digitalSealBox}>
-                    <Text style={s.digitalSealBadge}>✓ DIGITALLY AUTHENTICATED</Text>
+                    <Text style={s.digitalSealBadge}>COMPUTER-GENERATED DOCUMENT</Text>
                     <Text style={s.digitalSealSignatory}>
                       {invoice.signatory_name || "Authorized Representative"}
                     </Text>

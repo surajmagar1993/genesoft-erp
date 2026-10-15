@@ -920,7 +920,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
             {/* View Payslip Dialog */}
             {selectedPayslip && (
                 <Dialog open={Boolean(selectedPayslip)} onOpenChange={(open) => !open && setSelectedPayslip(null)}>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="sm:max-w-2xl">
                         <DialogHeader className="border-b pb-3">
                             <div className="flex justify-between items-center pr-6">
                                 <div>

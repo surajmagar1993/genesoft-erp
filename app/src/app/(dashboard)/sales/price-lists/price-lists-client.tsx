@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
 import { RequireRole } from "@/components/auth/role-context"
+import { toast } from "sonner"
 
 interface PriceListsClientProps {
     initialStats: PriceListsOverviewStats
@@ -276,7 +277,7 @@ export default function PriceListsClient({
         startTransition(async () => {
             const res = await deletePriceList(id)
             if (res.error) {
-                alert(res.error)
+                toast.error(res.error)
             } else {
                 window.location.reload()
             }
@@ -290,7 +291,7 @@ export default function PriceListsClient({
         startTransition(async () => {
             const res = await deletePriceListItem(itemId)
             if (res.error) {
-                alert(res.error)
+                toast.error(res.error)
             } else {
                 window.location.reload()
             }

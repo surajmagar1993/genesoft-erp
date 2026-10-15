@@ -21,6 +21,7 @@ import {
 import { deleteContact, type Contact, importContacts, exportContacts } from "@/app/actions/crm/contacts"
 import { formatCurrency } from "@/lib/utils"
 import { RequireRole } from "@/components/auth/role-context"
+import { toast } from "sonner"
 
 interface Props {
     initialContacts: Contact[]
@@ -88,7 +89,7 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
             document.body.removeChild(link)
         } catch (error) {
             console.error("Export failed", error)
-            alert("Export failed!")
+            toast.error("Export failed!")
         } finally {
             setIsExporting(false)
         }
@@ -110,9 +111,9 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
                 const { error, count } = await importContacts(results.data as any[])
                 setIsImporting(false)
                 if (error) {
-                    alert(`Import failed: ${error}`)
+                    toast.error(`Import failed: ${error}`)
                 } else {
-                    alert(`Successfully imported ${count} contacts.`)
+                    toast.success(`Successfully imported ${count} contacts.`)
                     router.refresh()
                 }
                 if (fileInputRef.current) {
@@ -121,7 +122,7 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
             },
             error: (error) => {
                 console.error("Parse error:", error)
-                alert("Failed to parse CSV file.")
+                toast.error("Failed to parse CSV file.")
                 setIsImporting(false)
             }
         })

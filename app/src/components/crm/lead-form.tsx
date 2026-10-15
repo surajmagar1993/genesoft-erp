@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Save, X } from "lucide-react"
+import { toast } from "sonner"
 
 export type LeadStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST"
 
@@ -51,7 +52,7 @@ export function LeadForm({ initialData, mode }: LeadFormProps) {
 
     const handleSave = async () => {
         if (!form.title.trim()) {
-            alert("Lead title is required.")
+            toast.error("Lead title is required.")
             return
         }
 
@@ -75,7 +76,7 @@ export function LeadForm({ initialData, mode }: LeadFormProps) {
             : await updateLead(form.id!, payload)
 
         if (result.error) {
-            alert(result.error)
+            toast.error(result.error)
             setIsSubmitting(false)
         } else {
             router.push("/crm/leads")

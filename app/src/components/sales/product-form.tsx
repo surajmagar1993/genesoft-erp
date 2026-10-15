@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { BarcodeDisplay } from "@/components/inventory/barcode-display"
 import { Barcode as BarcodeIcon, Sparkles, QrCode as QrIcon } from "lucide-react"
+import { toast } from "sonner"
 
 export interface ProductFormData {
     id?: string
@@ -90,7 +91,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
 
     const handleSave = async () => {
         if (!form.name.trim()) {
-            alert("Product Name is required.")
+            toast.error("Product Name is required.")
             return
         }
         setIsSaving(true)

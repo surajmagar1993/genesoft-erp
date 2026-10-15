@@ -320,15 +320,17 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
     // Submit Create Vendor
     const handleCreateVendorSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!vendorDisplayName.trim()) {
-            toast.error("Supplier contact person or display name is required")
+        // The company name alone is enough; the contact person is optional
+        const displayName = vendorDisplayName.trim() || vendorCompanyName.trim()
+        if (!displayName) {
+            toast.error("Enter the supplier's company name or a contact person.")
             return
         }
 
         setIsSubmittingVendor(true)
         try {
             const res = await createVendor({
-                displayName: vendorDisplayName.trim(),
+                displayName,
                 companyName: vendorCompanyName.trim() || undefined,
                 email: vendorEmail.trim() || undefined,
                 phone: vendorPhone.trim() || undefined,
@@ -1329,7 +1331,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
 
             {/* Modal 1: Create Purchase Order */}
             <Dialog open={isCreatePOOpen} onOpenChange={setIsCreatePOOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <ShoppingCart className="h-5 w-5 text-primary" />
@@ -1348,13 +1350,13 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                     Supplier / Vendor <span className="text-red-500">*</span>
                                 </Label>
                                 <Select value={poVendorId} onValueChange={setPoVendorId}>
-                                    <SelectTrigger id="po-vendor">
+                                    <SelectTrigger id="po-vendor" className="w-full min-w-0 [&>span]:truncate">
                                         <SelectValue placeholder="Select supplier" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {initialData.vendors.map((v) => (
                                             <SelectItem key={v.id} value={v.id}>
-                                                {v.companyName ? `${v.companyName} (${v.displayName})` : v.displayName}
+                                                {v.companyName && v.companyName !== v.displayName ? `${v.companyName} (${v.displayName})` : v.displayName}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -1364,7 +1366,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                             <div className="space-y-2">
                                 <Label htmlFor="po-warehouse">Destination Warehouse</Label>
                                 <Select value={poWarehouseId} onValueChange={setPoWarehouseId}>
-                                    <SelectTrigger id="po-warehouse">
+                                    <SelectTrigger id="po-warehouse" className="w-full min-w-0 [&>span]:truncate">
                                         <SelectValue placeholder="Select target warehouse" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1611,7 +1613,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
 
             {/* Modal 2: Receive Goods Intake */}
             <Dialog open={isReceiveOpen} onOpenChange={setIsReceiveOpen}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Boxes className="h-5 w-5 text-amber-500" />
@@ -1839,7 +1841,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                     <form onSubmit={handleCreateVendorSubmit} className="space-y-4">
                         <div className="grid gap-3 sm:grid-cols-2">
                             <div className="space-y-1 sm:col-span-2">
-                                <Label htmlFor="vendor-comp">Company / Business Name</Label>
+                                <Label htmlFor="vendor-comp">Company / Business Name <span className="text-red-500">*</span></Label>
                                 <Input
                                     id="vendor-comp"
                                     placeholder="Enter company or trade name"
@@ -1850,14 +1852,13 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
 
                             <div className="space-y-1 sm:col-span-2">
                                 <Label htmlFor="vendor-disp">
-                                    Primary Contact / Representative <span className="text-red-500">*</span>
+                                    Primary Contact / Representative (optional)
                                 </Label>
                                 <Input
                                     id="vendor-disp"
                                     placeholder="Enter contact person full name"
                                     value={vendorDisplayName}
                                     onChange={(e) => setVendorDisplayName(e.target.value)}
-                                    required
                                 />
                             </div>
 
@@ -1982,7 +1983,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
 
             {/* Modal 5: View PO Details */}
             <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <div className="flex items-center justify-between">
                             <DialogTitle className="flex items-center gap-2">
