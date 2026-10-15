@@ -8,6 +8,10 @@ import { whatsappHref } from "@/lib/constants/platform"
 import { PROCESS, SERVICES, serviceBySlug } from "@/lib/site-content"
 import { getPageContent, getPublishedItems, getSiteSettings, list, text, type Faq, type Pair } from "@/lib/site-cms"
 import { PortfolioCard } from "@/components/marketing/portfolio-card"
+import { pageMeta } from "@/lib/seo"
+import { JsonLd } from "@/components/marketing/json-ld"
+import { appUrl } from "@/lib/app-url"
+import { serviceLd } from "@/lib/structured-data"
 
 /** Service page template: Software Development, Digital Marketing, IT Support (IT Rentals has its own page). */
 export function generateStaticParams() {
@@ -18,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const s = serviceBySlug((await params).slug)
     if (!s) return {}
     const c = await getPageContent(`service:${s.slug}`)
-    return { title: `${s.name} | Genesoft Infotech`, description: text(c.intro) }
+    return pageMeta({ title: `${s.name} | Genesoft Infotech`, description: text(c.intro), path: `/services/${s.slug}` })
 }
 
 export default async function ServicePage({ params }: { params: Promise<{ slug: string }> }) {
@@ -39,6 +43,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
 
     return (
         <>
+            <JsonLd data={serviceLd(appUrl(), { name: s.name, path: `/services/${s.slug}`, description: s.intro, faqs: s.faqs })} />
             <section className={`${SITE_CONTAINER} grid items-start gap-12 py-14 md:py-20 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] xl:gap-16`}>
                 <div className="flex flex-col gap-5">
                     <nav aria-label="Breadcrumb" className="text-sm text-s-muted">

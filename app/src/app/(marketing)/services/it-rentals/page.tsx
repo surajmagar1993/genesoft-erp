@@ -6,11 +6,16 @@ import { whatsappHref } from "@/lib/constants/platform"
 import { DEFAULT_RENTAL_ITEMS, getPageContent, getPublishedItems, getSiteSettings, text } from "@/lib/site-cms"
 import { RENTAL_STEPS } from "@/lib/site-content"
 import { RentalQuoteForm } from "./quote-form"
+import { pageMeta } from "@/lib/seo"
+import { JsonLd } from "@/components/marketing/json-ld"
+import { appUrl } from "@/lib/app-url"
+import { serviceLd } from "@/lib/structured-data"
 
-export const metadata = {
+export const metadata = pageMeta({
     title: "IT Rentals: laptops, desktops and servers on rent | Genesoft Infotech",
     description: "Rent laptops, desktops, servers, networking and displays for a week, a project or a year. Delivered and set up. Ask for a quote.",
-}
+    path: "/services/it-rentals",
+})
 
 const ICONS = [Laptop, Monitor, Server, Network, Tv, Printer]
 
@@ -20,6 +25,7 @@ export default async function ItRentalsPage() {
     const categories = published.length ? published.map((i) => ({ name: text(i.data.name), text: text(i.data.text) })) : DEFAULT_RENTAL_ITEMS
     return (
         <>
+            <JsonLd data={serviceLd(appUrl(), { name: "IT Rentals", path: "/services/it-rentals", description: text(c.intro) })} />
             <section className="bg-s-charcoal text-[#D9D4CC]">
                 <div className={`${SITE_CONTAINER} grid items-center gap-12 py-16 md:py-20 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]`}>
                     <div className="flex flex-col gap-5">

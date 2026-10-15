@@ -17,12 +17,19 @@ import {
     KeyRound,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { pageMeta } from "@/lib/seo"
+import { JsonLd } from "@/components/marketing/json-ld"
+import { appUrl } from "@/lib/app-url"
+import { softwareLd } from "@/lib/structured-data"
 
-export const metadata = {
+const DESCRIPTION =
+    "Genesoft ERP by Genesoft Infotech brings CRM, invoicing, inventory, accounting, HR and POS together, with GST, VAT or sales tax worked out for your country."
+
+export const metadata = pageMeta({
     title: "Genesoft ERP: CRM, invoicing, inventory and accounting in one place",
-    description:
-        "Genesoft ERP by Genesoft Infotech brings CRM, invoicing, inventory, accounting, HR and POS together, with GST, VAT or sales tax worked out for your country.",
-}
+    description: DESCRIPTION,
+    path: "/erp",
+})
 
 const FEATURES = [
     { icon: Users, title: "CRM", text: "Leads, deals, contacts and companies, with tasks, email and WhatsApp in one timeline." },
@@ -69,6 +76,7 @@ const FAQ = [
 export default function LandingPage() {
     return (
         <>
+            <JsonLd data={softwareLd(appUrl(), DESCRIPTION)} />
             {/* Hero */}
             <section className="border-b border-s-border bg-gradient-to-b from-s-orange-tint/50 to-s-bg">
                 <div className={`${SITE_CONTAINER} grid items-center gap-12 py-16 md:grid-cols-2 md:py-24 xl:gap-20 2xl:py-28`}>

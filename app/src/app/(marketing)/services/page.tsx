@@ -5,11 +5,13 @@ import { ServiceIcon } from "@/components/marketing/service-icon"
 import { Eyebrow, H1, H2, Lead, SiteButton } from "@/components/marketing/ui"
 import { PROCESS, SERVICES } from "@/lib/site-content"
 import { getServiceShorts } from "@/lib/site-cms"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata = {
+export const metadata = pageMeta({
     title: "Services | Genesoft Infotech",
     description: "Software development, digital marketing, IT rentals and IT support from one team in Pune.",
-}
+    path: "/services",
+})
 
 export default async function ServicesPage() {
     const shorts = await getServiceShorts(SERVICES.map((s) => s.slug))

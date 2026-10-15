@@ -2,23 +2,39 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SITE_CONTAINER } from "@/components/marketing/container"
 import { H1 } from "@/components/marketing/ui"
-import { getPublishedItem, list, text } from "@/lib/site-cms"
+import { getPublishedItem, getSiteSettings, list, text } from "@/lib/site-cms"
+import { appUrl } from "@/lib/app-url"
+import { jobPostingLd } from "@/lib/structured-data"
+import { JsonLd } from "@/components/marketing/json-ld"
 import { ApplyForm } from "./apply-form"
+import { pageMeta } from "@/lib/seo"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-    const job = await getPublishedItem("job", (await params).slug)
-    return job ? { title: `${text(job.data.title)} | Careers at Genesoft Infotech`, description: text(job.data.about).slice(0, 160) } : {}
+    const { slug } = await params
+    const job = await getPublishedItem("job", slug)
+    return job ? pageMeta({ title: `${text(job.data.title)} | Careers at Genesoft Infotech`, description: text(job.data.about).slice(0, 160), path: `/careers/${slug}` }) : {}
 }
 
 export default async function JobPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
-    const job = await getPublishedItem("job", slug)
+    const [job, site] = await Promise.all([getPublishedItem("job", slug), getSiteSettings()])
     if (!job) notFound()
     const d = job.data
+    const posting = jobPostingLd(appUrl(), site, {
+        slug,
+        title: text(d.title),
+        about: text(d.about),
+        responsibilities: list(d.responsibilities),
+        requirements: list(d.requirements),
+        type: text(d.type),
+        location: text(d.location),
+        postedAt: job.createdAt,
+    })
     const tags = [text(d.type), text(d.location), text(d.experience), text(d.department)].filter(Boolean)
 
     return (
         <section className={`${SITE_CONTAINER} grid items-start gap-12 py-14 md:py-20 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]`}>
+            <JsonLd data={posting} />
             <article className="flex flex-col gap-5">
                 <nav aria-label="Breadcrumb" className="text-sm text-s-muted">
                     <Link href="/careers" className="hover:text-s-ink">Careers</Link> / <span className="font-semibold text-s-ink">{text(d.title)}</span>

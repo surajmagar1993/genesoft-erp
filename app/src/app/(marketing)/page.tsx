@@ -7,10 +7,14 @@ import { whatsappHref } from "@/lib/constants/platform"
 import { getPageContent, getPublishedItems, getServiceShorts, getSiteSettings, list, text } from "@/lib/site-cms"
 import { PortfolioCard } from "@/components/marketing/portfolio-card"
 import { PROCESS, SERVICES, WHY_US } from "@/lib/site-content"
+import { pageMeta } from "@/lib/seo"
+import { JsonLd } from "@/components/marketing/json-ld"
+import { appUrl } from "@/lib/app-url"
+import { organizationLd } from "@/lib/structured-data"
 
 export async function generateMetadata() {
     const site = await getSiteSettings()
-    return { title: site.seoTitle, description: site.seoDescription }
+    return pageMeta({ title: site.seoTitle, description: site.seoDescription, path: "/" })
 }
 
 export default async function HomePage() {
@@ -26,6 +30,7 @@ export default async function HomePage() {
     const quote = testimonials[0]
     return (
         <>
+            <JsonLd data={organizationLd(appUrl(), site)} />
             {/* Hero */}
             <section className={`${SITE_CONTAINER} grid items-center gap-12 py-16 md:py-24 lg:grid-cols-2 xl:gap-20 2xl:py-28`}>
                 <div className="s-reveal flex flex-col gap-6">

@@ -1,6 +1,7 @@
 import { SITE_CONTAINER } from "@/components/marketing/container"
 import { Fragment, type ReactNode } from "react"
 import type { Metadata } from "next"
+import { pageMeta } from "@/lib/seo"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getLegalLinks, getLegalPage } from "@/lib/site-cms"
@@ -103,7 +104,7 @@ function BlockView({ b }: { b: Block }) {
 /** Page metadata for a legal page (key from src/lib/legal-content.ts). */
 export function legalMetadata(key: string): Metadata {
     const def = legalDef(key)
-    return def ? { title: `${def.title} | Genesoft Infotech`, description: def.metaDescription, alternates: { canonical: def.path } } : {}
+    return def ? pageMeta({ title: `${def.title} | Genesoft Infotech`, description: def.metaDescription, path: def.path }) : {}
 }
 
 /**

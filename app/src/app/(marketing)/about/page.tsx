@@ -3,11 +3,13 @@ import { SITE_CONTAINER } from "@/components/marketing/container"
 import { Eyebrow, H1, H2, Lead, SiteButton } from "@/components/marketing/ui"
 import { PLATFORM } from "@/lib/constants/platform"
 import { getPageContent, getPublishedItems, getSiteSettings, list, mapsHref, text } from "@/lib/site-cms"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata = {
+export const metadata = pageMeta({
     title: "About us | Genesoft Infotech",
     description: "Genesoft Infotech is a Pune-based technology company: software, digital marketing, IT rentals and IT support, and the makers of Genesoft ERP.",
-}
+    path: "/about",
+})
 
 const VALUES = [
     { icon: Layers, title: "Straight answers", text: "Clear scope and price before we start; no hidden extras." },

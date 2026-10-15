@@ -6,11 +6,16 @@ import { telHref, whatsappHref } from "@/lib/constants/platform"
 import { getSiteSettings, mapsHref } from "@/lib/site-cms"
 import { OfficeHoursList } from "@/components/marketing/office-hours"
 import { CONTACT_TOPICS } from "@/lib/site-content"
+import { pageMeta } from "@/lib/seo"
+import { JsonLd } from "@/components/marketing/json-ld"
+import { appUrl } from "@/lib/app-url"
+import { organizationLd } from "@/lib/structured-data"
 
-export const metadata = {
+export const metadata = pageMeta({
     title: "Contact us | Genesoft Infotech",
     description: "Talk to Genesoft Infotech about software, digital marketing, IT rentals, IT support or Genesoft ERP. WhatsApp, call or send us a message.",
-}
+    path: "/contact",
+})
 
 export default async function ContactPage({ searchParams }: { searchParams: Promise<{ topic?: string }> }) {
     const { topic } = await searchParams
@@ -25,6 +30,7 @@ export default async function ContactPage({ searchParams }: { searchParams: Prom
 
     return (
         <section className={`${SITE_CONTAINER} grid items-start gap-12 py-16 md:py-20 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:gap-16`}>
+            <JsonLd data={organizationLd(appUrl(), site)} />
             <div className="flex flex-col gap-6">
                 <H1>Let&apos;s talk</H1>
                 <Lead>Tell us what you need, or reach us directly. We reply within one working day.</Lead>

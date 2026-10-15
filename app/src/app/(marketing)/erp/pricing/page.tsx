@@ -7,13 +7,15 @@ import { PLAN_TIERS, type PlanTier } from "@/lib/saas-subscription-engine"
 import { PlanCards, type PricedPlan } from "./plan-cards"
 import { localeForCurrency } from "@/lib/utils"
 import { PRICING_REGIONS, pricingRegion } from "@/lib/pricing-regions"
+import { pageMeta } from "@/lib/seo"
 
 export const dynamic = "force-dynamic"
 
-export const metadata = {
+export const metadata = pageMeta({
     title: "Pricing | Genesoft ERP",
     description: "Simple plans for Genesoft ERP. 15-day free trial, no card needed, and a 7-day money-back guarantee on your first payment.",
-}
+    path: "/erp/pricing",
+})
 
 function regionFor(code: string | undefined) {
     return pricingRegion(code) || pricingRegion("US")!

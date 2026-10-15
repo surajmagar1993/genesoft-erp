@@ -103,6 +103,7 @@ export interface PublicItem {
     id: string
     slug: string | null
     data: Record<string, FieldValue>
+    createdAt: Date
 }
 
 /** Published items of a kind that may be shown (confirmed, when the kind needs it), in order. */
@@ -112,9 +113,9 @@ export const getPublishedItems = cache(async (kind: ItemKind): Promise<PublicIte
         const rows = await prisma.siteItem.findMany({
             where: { kind, status: "published", ...(def?.confirmLabel ? { confirmed: true } : {}) },
             orderBy: [{ sort: "asc" }, { createdAt: "asc" }],
-            select: { id: true, slug: true, data: true },
+            select: { id: true, slug: true, data: true, createdAt: true },
         })
-        return rows.map((r) => ({ id: r.id, slug: r.slug, data: asObject(r.data) as Record<string, FieldValue> }))
+        return rows.map((r) => ({ id: r.id, slug: r.slug, data: asObject(r.data) as Record<string, FieldValue>, createdAt: r.createdAt }))
     } catch (err) {
         console.error(`getPublishedItems(${kind}) failed`, err)
         return []

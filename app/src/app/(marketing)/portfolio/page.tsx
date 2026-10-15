@@ -6,11 +6,13 @@ import { H1, Lead, SiteButton } from "@/components/marketing/ui"
 import { getPublishedItems, text } from "@/lib/site-cms"
 import { SERVICES } from "@/lib/site-content"
 import { cn } from "@/lib/utils"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata = {
+export const metadata = pageMeta({
     title: "Our work | Genesoft Infotech",
     description: "Projects Genesoft Infotech has delivered: software, marketing, IT rentals and IT support.",
-}
+    path: "/portfolio",
+})
 
 /** Case studies from Super Admin → Website → Portfolio (published and client-approved only). */
 export default async function PortfolioPage({ searchParams }: { searchParams: Promise<{ service?: string }> }) {

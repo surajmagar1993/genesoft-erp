@@ -4,10 +4,12 @@ import { SITE_CONTAINER } from "@/components/marketing/container"
 import { H1, SiteButton } from "@/components/marketing/ui"
 import { getPublishedItem, getPublishedItems, text } from "@/lib/site-cms"
 import { SERVICES } from "@/lib/site-content"
+import { pageMeta } from "@/lib/seo"
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-    const item = await getPublishedItem("portfolio", (await params).slug)
-    return item ? { title: `${text(item.data.title)} | Genesoft Infotech`, description: text(item.data.summary) } : {}
+    const { slug } = await params
+    const item = await getPublishedItem("portfolio", slug)
+    return item ? pageMeta({ title: `${text(item.data.title)} | Genesoft Infotech`, description: text(item.data.summary), path: `/portfolio/${slug}`, image: text(item.data.image) || null }) : {}
 }
 
 export default async function CaseStudyPage({ params }: { params: Promise<{ slug: string }> }) {

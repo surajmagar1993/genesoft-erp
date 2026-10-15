@@ -2,11 +2,13 @@ import { SITE_CONTAINER } from "@/components/marketing/container"
 import Link from "next/link"
 import { getLegalLinks } from "@/lib/site-cms"
 import { SERVICES } from "@/lib/site-content"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata = {
+export const metadata = pageMeta({
     title: "Sitemap | Genesoft Infotech",
     description: "All public pages on the Genesoft Infotech website.",
-}
+    path: "/sitemap",
+})
 
 const GROUPS: { title: string; links: string[][] }[] = [
     { title: "Company", links: [["/", "Home"], ["/about", "About us"], ["/portfolio", "Portfolio"], ["/careers", "Careers"], ["/contact", "Contact us"]] },

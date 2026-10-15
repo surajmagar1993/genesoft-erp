@@ -3,11 +3,13 @@ import { SITE_CONTAINER } from "@/components/marketing/container"
 import { H1, H2, Lead } from "@/components/marketing/ui"
 import Link from "next/link"
 import { getPublishedItems, getSiteSettings, text } from "@/lib/site-cms"
+import { pageMeta } from "@/lib/seo"
 
-export const metadata = {
+export const metadata = pageMeta({
     title: "Careers | Genesoft Infotech",
     description: "Work with Genesoft Infotech in Pune: developers, marketers and IT engineers.",
-}
+    path: "/careers",
+})
 
 /**
  * Job posts come from Super Admin → Website → Jobs (published only). With
