@@ -1,6 +1,6 @@
 # Genesoft Infotech website overhaul: plan
 
-> **Status:** planning only, no code written yet. Owner decisions and open questions are marked.
+> **Status:** planning and design; no code until the design map is approved. Owner decisions are in §2, open items in §14.
 > **Started:** 15 October 2026 · **Owner:** Genesoft Infotech · **Built in:** this repo (`app/`, Next.js), deployed on Vercel.
 
 ---
@@ -25,7 +25,39 @@ Replace the old company website on **genesoftinfotech.com** (static HTML on GoDa
 | 5 | IT Rentals | **"Ask for a quote"** only, no public prices. |
 | 6 | Careers | No openings now. Page shows "no current openings, send us your CV", and admins can **add job posts later**. |
 | 7 | Theme | **Light or dark following the visitor's device setting**, with a manual toggle. |
-| 8 | Content editing | Recommended: **inside Super Admin** (see §7). Awaiting owner confirmation. |
+| 8 | Content editing | **Super Admin → Website** (confirmed 15 Oct). |
+| 9 | Storage / database | **Supabase Storage** for images and CVs; new `site_` tables OK (SQL shown before running). |
+| 10 | Colours | **Orange + charcoal from the logo** (#EF7F1A, #2B2A29) on warm neutrals, one accent everywhere, ERP section included (see design map). |
+| 11 | Copy | Claude writes the copy. Proof (clients, numbers, testimonials, portfolio) stays hidden until real items are confirmed. |
+| 12 | Contact | Main number +91 8888885285 is also **WhatsApp Business**. Office hours **editable** in Super Admin. Google Maps link and social links: owner enters them in Site settings. |
+| 13 | Email hosting | Mailboxes at **GoDaddy**: MX records must not change during the move. |
+| 14 | Legal name | **"Genesoft Infotech Private Limited"** on legal pages and on invoices/receipts to customers. CIN exists but is **not shown**. |
+| 15 | IT Rental Terms | Rules not set yet: the page waits; the Rentals page says terms come with the quote. |
+| 16 | Careers | Applications go to **careers@genesoftinfotech.com**. |
+| 17 | ERP sign-in | Stays on the same domain (**/login**). |
+| 18 | Language | **English only**. |
+| 19 | Design first | A complete design map (site map, design system, every page, phone, admin, journeys) is approved **before any code**. |
+
+## Design map
+
+The visual plan lives in the Claude design canvas **"Genesoft Infotech Website Design Map"**, with 14 artboards:
+
+1. Site map and UX plan
+2. Design system, light and dark
+3. Home, light
+4. Home, dark
+5. Phone views: home and the menu drawer
+6. Service page template
+7. IT Rentals with the quote form
+8. Genesoft ERP `/erp`
+9. Portfolio and case study
+10. About
+11. Careers
+12. Contact
+13. Super Admin → Website
+14. User journeys
+
+**Design tokens:** headings in Sora, body text in Manrope; orange #EF7F1A (buttons get dark text #1F1E1D); orange text #B4540A on light and #F6A55C on dark; page background #FBFAF8 light and #121110 dark; corners 10/16/24px; page width up to 1600px.
 
 ## 3. Audit of the current genesoftinfotech.com (15 Oct 2026)
 
@@ -132,7 +164,7 @@ Content is written from facts only. Anything not yet supplied stays hidden; ther
   - `header.png` (dark lettering) on light backgrounds and `logo.png` (white lettering) on dark ones, switched automatically by `BrandLogo`.
   - The icon-only `logo-mark.png` is used for favicons and small spaces.
   - There is no typed name next to the logo.
-- **Colour:** the brand orange from the logo becomes the main accent for the company site. **(Question:** keep blue for the ERP section, or orange throughout?)
+- **Colour:** orange #EF7F1A and charcoal #2B2A29 from the logo, on warm neutrals, used across the whole site including the ERP section. Primary buttons are orange with dark text (6.1:1 contrast); orange text uses #B4540A on light and #F6A55C on dark.
 - **Layout:**
   - Full width up to 1600px (`SITE_CONTAINER`), with reading text kept at a comfortable width.
   - Built for phones first: no sideways scrolling and large tap targets.
@@ -213,7 +245,7 @@ Every save is recorded in **Admin Audit**. Pages have **Draft → Preview → Pu
 
 ## 10. Legal pages
 
-- **Company name:** "Genesoft Infotech Pvt. Ltd." in all legal pages, as the party to the agreement. "Genesoft Infotech" everywhere else. Platform receipts (tax invoices) should also show the legal name, **to confirm** (see §14).
+- **Company name:** "Genesoft Infotech Private Limited" in all legal pages and on customer invoices and receipts; "Genesoft Infotech" everywhere else. The CIN is not shown.
 - **Scope:** the existing pages cover only Genesoft ERP. They need extending to the company's services:
   - **Terms:** a general part plus an ERP part, or separate "Services Terms" for project work. **(Question.)**
   - **IT Rental Terms**, a new page: deposit, damage and loss, late returns, delivery and pick-up, ownership, insurance. Needs the owner's real rules.
@@ -255,27 +287,16 @@ Each phase is committed and shown on genesoftdev before the next starts. Nothing
 - **Old links break:** 301 redirects, plus a check of every old address.
 - **Supabase free-plan limits** (storage and database size): images are compressed on upload; we watch usage in System Health.
 
-## 14. Questions for the owner
+## 14. Still needed from the owner
 
-1. **Content editing:** confirm **Super Admin → Website** (recommended), rather than a separate backend or an external CMS.
-2. **Storage:** OK to use **Supabase Storage** (same project, free-plan limits) for images and CVs?
-3. **Database:** OK to add the `site_` tables to the shared database (SQL shown to you first)?
-4. **Colours:** orange throughout, or orange for the company and blue for the ERP section?
-5. **Content**, which you said you'll provide:
-   - Short company story; founding year; team size (optional)
-   - For each service: what's included, technologies, typical clients
-   - IT Rentals: equipment categories and brands, minimum rental period, delivery cities, deposit rules
-   - Portfolio projects you're allowed to show (client names, screenshots, results)
-   - Client and partner logos you have permission for (ASUS and Dell: are you an authorised partner?)
-   - Testimonials with names and permission
-   - True numbers: projects, clients, years
-6. **Contact details:** is +91 8888885285 the main number? Is it also on WhatsApp? Office hours? A Google Maps link for the office?
-7. **Email inboxes:** where are info@ and hello@ hosted today (GoDaddy, Google Workspace, Zoho)? I need this to keep them working during the move.
-8. **Legal:** one Terms document with sections, or separate ERP Terms and Services Terms? Should receipts and tax invoices also show "Genesoft Infotech Pvt. Ltd."? Do you have a CIN or GSTIN to show in the footer and on legal pages?
-9. **Careers:** where should applications go: info@ or a separate careers@?
-10. **Social media:** links to LinkedIn, Instagram, Facebook, YouTube and X, if you have them.
-11. **ERP app address:** keep sign-in on the same domain (genesoftinfotech.com/login), or move the app to **app.genesoftinfotech.com**? Recommended: same domain for now.
-12. **Languages:** English only, or Hindi or Marathi later?
+Everything else in the old question list is answered in §2.
+
+1. **Google Maps link and social media links:** enter them in Super Admin → Website → Site settings once it's built, or send them to me.
+2. **Proof items:** client logos (with permission), testimonials (with permission), portfolio projects and true numbers. These sections stay hidden until confirmed.
+3. **Photos:** office, team and project screenshots. Until then the design uses no stock photos.
+4. **Office hours:** the actual times, entered in Site settings.
+5. **IT rental rules**, when ready: deposit, damage, late return and minimum period. They're needed for the IT Rental Terms page.
+6. **Design map sign-off:** comments on the canvas, or "approved".
 
 ## 15. Done when
 
