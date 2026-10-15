@@ -46,6 +46,24 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  /* Public website (genesoftinfotech.com): tokens set on .site below */
+  --color-s-bg: var(--s-bg);
+  --color-s-card: var(--s-card);
+  --color-s-band: var(--s-band);
+  --color-s-border: var(--s-border);
+  --color-s-border-strong: var(--s-border-strong);
+  --color-s-ink: var(--s-ink);
+  --color-s-text: var(--s-text);
+  --color-s-muted: var(--s-muted);
+  --color-s-orange: var(--s-orange);
+  --color-s-orange-text: var(--s-orange-text);
+  --color-s-orange-tint: var(--s-orange-tint);
+  --color-s-charcoal: var(--s-charcoal);
+  --color-s-footer: var(--s-footer);
+  --color-s-on-orange: #1F1E1D;
+  --color-s-whatsapp: #1E7A4B;
+  --font-display: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  --font-site: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
 :root,
@@ -125,4 +143,51 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+/*
+ * Public website theme. The website follows the visitor's device (or their
+ * choice from the toggle), separately from the app's own theme, so its
+ * wrapper carries .site plus .light or .dark (set before paint by
+ * SiteThemeScript). Colours come from the logo: orange #EF7F1A, charcoal
+ * #2B2A29. Orange buttons take dark text (#1F1E1D, 6.1:1); orange text uses
+ * the darker --s-orange-text so it stays readable.
+ */
+.site {
+  --s-bg: #FBFAF8;
+  --s-card: #FFFFFF;
+  --s-band: #F4F1EC;
+  --s-border: #E7E2DA;
+  --s-border-strong: #D6D0C6;
+  --s-ink: #1F1E1D;
+  --s-text: #3D3B38;
+  --s-muted: #6B6762;
+  --s-orange: #EF7F1A;
+  --s-orange-text: #B4540A;
+  --s-orange-tint: #FDEBD9;
+  --s-charcoal: #2B2A29;
+  --s-footer: #1F1E1D;
+  color-scheme: light;
+}
+.site.dark {
+  --s-bg: #121110;
+  --s-card: #1B1A18;
+  --s-band: #1A1917;
+  --s-border: #34312D;
+  --s-border-strong: #4A4640;
+  --s-ink: #F6F3EE;
+  --s-text: #D9D4CC;
+  --s-muted: #A39E96;
+  --s-orange: #F28C33;
+  --s-orange-text: #F6A55C;
+  --s-orange-tint: #3A2614;
+  --s-charcoal: #24221F;
+  --s-footer: #0B0A09;
+  color-scheme: dark;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .site .s-reveal { animation: s-reveal 0.5s ease-out both; }
+}
+@keyframes s-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
 }

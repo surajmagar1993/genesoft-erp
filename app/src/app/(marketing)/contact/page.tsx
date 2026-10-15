@@ -1,56 +1,60 @@
+import { Mail, MapPin, MessageCircle, Phone } from "lucide-react"
 import { SITE_CONTAINER } from "@/components/marketing/container"
-import { Mail, Phone, MapPin } from "lucide-react"
-import { PLATFORM, telHref } from "@/lib/constants/platform"
-import { ContactForm } from "./contact-form"
+import { EnquiryForm } from "@/components/marketing/enquiry-form"
+import { H1, Lead } from "@/components/marketing/ui"
+import { PLATFORM, telHref, whatsappHref } from "@/lib/constants/platform"
+import { CONTACT_TOPICS } from "@/lib/site-content"
 
 export const metadata = {
-    title: "Contact us | Genesoft ERP",
-    description: "Talk to the Genesoft Infotech team about Genesoft ERP: sales questions, support, billing or partnerships.",
+    title: "Contact us | Genesoft Infotech",
+    description: "Talk to Genesoft Infotech about software, digital marketing, IT rentals, IT support or Genesoft ERP. WhatsApp, call or send us a message.",
 }
 
-export default function ContactPage() {
+const MAPS = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${PLATFORM.address.line1}, ${PLATFORM.address.line2}`)}`
+
+export default async function ContactPage({ searchParams }: { searchParams: Promise<{ topic?: string }> }) {
+    const { topic } = await searchParams
+    const preset = (CONTACT_TOPICS as readonly string[]).includes(topic || "") ? topic! : "General"
+
+    const ways = [
+        { icon: MessageCircle, title: "WhatsApp Business", text: `${PLATFORM.whatsapp} · usually the fastest`, href: whatsappHref(PLATFORM.whatsapp, "Hello Genesoft Infotech"), external: true, tint: "bg-[#E3F2EA] text-[#1E7A4B] dark:bg-[#12291D] dark:text-[#4CC38A]" },
+        { icon: Phone, title: "Call us", text: PLATFORM.phone, href: telHref(PLATFORM.phone), external: false, tint: "bg-s-orange-tint text-s-orange-text" },
+        { icon: Mail, title: "Email", text: PLATFORM.email, href: `mailto:${PLATFORM.email}`, external: false, tint: "bg-s-orange-tint text-s-orange-text" },
+    ]
+
     return (
-        <section className="bg-gradient-to-b from-blue-50/60 to-white">
-            <div className={`${SITE_CONTAINER} grid gap-12 py-16 md:grid-cols-5 md:py-20 xl:gap-20`}>
-                <div className="space-y-8 md:col-span-2">
-                    <div>
-                        <h1 className="text-balance text-4xl font-bold tracking-tight text-slate-900">Talk to us</h1>
-                        <p className="mt-3 text-lg text-slate-600">
-                            Questions about plans, setting up your company, or moving from another system? Send us a message and we&apos;ll reply by email.
-                        </p>
-                    </div>
-                    <ul className="space-y-5 text-sm">
-                        <li className="flex gap-3">
-                            <Mail className="mt-0.5 h-5 w-5 text-blue-600" />
-                            <div>
-                                <p className="font-medium text-slate-900">Email</p>
-                                <a href={`mailto:${PLATFORM.email}`} className="text-slate-600 hover:text-slate-900">{PLATFORM.email}</a>
-                            </div>
-                        </li>
-                        <li className="flex gap-3">
-                            <Phone className="mt-0.5 h-5 w-5 text-blue-600" />
-                            <div>
-                                <p className="font-medium text-slate-900">Phone</p>
-                                <a href={telHref(PLATFORM.phone)} className="text-slate-600 hover:text-slate-900">{PLATFORM.phone}</a>
-                            </div>
-                        </li>
-                        <li className="flex gap-3">
-                            <MapPin className="mt-0.5 h-5 w-5 text-blue-600" />
-                            <div>
-                                <p className="font-medium text-slate-900">Office</p>
-                                <p className="text-slate-600">
-                                    {PLATFORM.legalName}<br />
-                                    {PLATFORM.address.line1}<br />
-                                    {PLATFORM.address.line2}, {PLATFORM.address.country}
-                                </p>
-                            </div>
-                        </li>
-                    </ul>
+        <section className={`${SITE_CONTAINER} grid items-start gap-12 py-16 md:py-20 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] xl:gap-16`}>
+            <div className="flex flex-col gap-6">
+                <H1>Let&apos;s talk</H1>
+                <Lead>Tell us what you need, or reach us directly. We reply within one working day.</Lead>
+                <div className="flex flex-col gap-3">
+                    {ways.map(({ icon: Icon, title, text, href, external, tint }) => (
+                        <a
+                            key={title}
+                            href={href}
+                            {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                            className="flex items-center gap-3.5 rounded-[14px] border border-s-border bg-s-card p-4 transition hover:border-s-orange"
+                        >
+                            <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tint}`}>
+                                <Icon className="h-5 w-5" aria-hidden="true" />
+                            </span>
+                            <span className="flex flex-col">
+                                <strong className="text-s-ink">{title}</strong>
+                                <span>{text}</span>
+                            </span>
+                        </a>
+                    ))}
                 </div>
-                <div className="md:col-span-3">
-                    <ContactForm />
+                <div className="flex flex-col gap-2 rounded-[14px] border border-s-border bg-s-card p-5">
+                    <strong className="text-s-ink">Office</strong>
+                    <p className="flex items-start gap-2 leading-relaxed">
+                        <MapPin className="mt-1 h-4 w-4 shrink-0 text-s-orange-text" aria-hidden="true" />
+                        {PLATFORM.address.line1}, {PLATFORM.address.line2}
+                    </p>
+                    <a href={MAPS} target="_blank" rel="noopener noreferrer" className="font-bold text-s-orange-text hover:underline">Open in Google Maps →</a>
                 </div>
             </div>
+            <EnquiryForm topic={preset} />
         </section>
     )
 }

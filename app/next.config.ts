@@ -9,6 +9,18 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // The ERP product pages moved under /erp when the company website took over "/",
+  // and the old static genesoftinfotech.com pages (*.html) point to their new homes
+  async redirects() {
+    return [
+      { source: "/pricing", destination: "/erp/pricing", permanent: true },
+      { source: "/index.html", destination: "/", permanent: true },
+      { source: "/about.html", destination: "/about", permanent: true },
+      { source: "/services.html", destination: "/services", permanent: true },
+      { source: "/contact.html", destination: "/contact", permanent: true },
+      { source: "/careers.html", destination: "/careers", permanent: true },
+    ];
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },

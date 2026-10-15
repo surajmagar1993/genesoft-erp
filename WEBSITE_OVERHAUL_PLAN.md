@@ -1,6 +1,6 @@
 # Genesoft Infotech website overhaul: plan
 
-> **Status:** planning and design; no code until the design map is approved. Owner decisions are in §2, open items in §14.
+> **Status:** Phase 1 built (15 Oct 2026): theme, header/footer/menus, /erp move and redirects, company pages from built-in content. Next: Phase 2 (content storage + Super Admin → Website). Owner decisions are in §2, open items in §14.
 > **Started:** 15 October 2026 · **Owner:** Genesoft Infotech · **Built in:** this repo (`app/`, Next.js), deployed on Vercel.
 
 ---

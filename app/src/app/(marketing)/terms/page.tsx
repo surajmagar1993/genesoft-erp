@@ -45,7 +45,7 @@ const sections: LegalSection[] = [
         body: (
             <p>
                 New workspaces get a 15-day free trial. No payment details are needed to start. When the trial ends you can choose a paid plan or continue
-                on the free plan, which has the limits shown on our <Link href="/pricing">Pricing</Link> page. We may change what the free plan includes,
+                on the free plan, which has the limits shown on our <Link href="/erp/pricing">Pricing</Link> page. We may change what the free plan includes,
                 with notice.
             </p>
         ),
@@ -55,7 +55,7 @@ const sections: LegalSection[] = [
         title: "Paid plans and billing",
         body: (
             <ul>
-                <li>Prices are shown on our <Link href="/pricing">Pricing</Link> page in your currency and include applicable taxes. You pay in advance for each monthly or yearly period.</li>
+                <li>Prices are shown on our <Link href="/erp/pricing">Pricing</Link> page in your currency and include applicable taxes. You pay in advance for each monthly or yearly period.</li>
                 <li>In India we take payments through Razorpay; you pay for each new period when it&apos;s due. In other countries we use Stripe, which renews your plan automatically until you cancel.</li>
                 <li>If you upgrade during a period, you pay the prorated difference straight away. Downgrades take effect at your next renewal.</li>
                 <li>If a renewal isn&apos;t paid, we may move your workspace to the free plan. Your data stays in your workspace.</li>

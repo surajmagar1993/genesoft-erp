@@ -1,250 +1,198 @@
 import Link from "next/link"
+import { ArrowRight, Check, Laptop } from "lucide-react"
 import { SITE_CONTAINER } from "@/components/marketing/container"
-import {
-    ArrowRight,
-    Check,
-    Users,
-    FileText,
-    Boxes,
-    Landmark,
-    ScanBarcode,
-    UserRoundCheck,
-    FolderKanban,
-    Workflow,
-    ShieldCheck,
-    Globe2,
-    Smartphone,
-    KeyRound,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ServiceIcon } from "@/components/marketing/service-icon"
+import { Eyebrow, H1, H2, Lead, SiteButton } from "@/components/marketing/ui"
+import { PLATFORM, whatsappHref } from "@/lib/constants/platform"
+import { PROCESS, SERVICES, WHY_US } from "@/lib/site-content"
 
 export const metadata = {
-    title: "Genesoft ERP: CRM, invoicing, inventory and accounting in one place",
+    title: "Genesoft Infotech | Software, Digital Marketing, IT Rentals and IT Support in Pune",
     description:
-        "Genesoft ERP by Genesoft Infotech brings CRM, invoicing, inventory, accounting, HR and POS together, with GST, VAT or sales tax worked out for your country.",
+        "Genesoft Infotech builds custom software and ERP systems, runs digital marketing, rents laptops and servers, and provides IT support, from Pune, India. Makers of Genesoft ERP.",
 }
 
-const FEATURES = [
-    { icon: Users, title: "CRM", text: "Leads, deals, contacts and companies, with tasks, email and WhatsApp in one timeline." },
-    { icon: FileText, title: "Quotes to invoices", text: "Quotes, sales orders, delivery challans, invoices, credit notes and recurring billing." },
-    { icon: Boxes, title: "Inventory & purchasing", text: "Multiple warehouses, stock transfers, batches and serials, purchase orders and vendor bills." },
-    { icon: Landmark, title: "Accounting", text: "Chart of accounts, expenses, payments, receivables, payables and bank statement matching." },
-    { icon: ScanBarcode, title: "Point of sale", text: "A fast counter screen with barcode scanning, walk-in customers and printed receipts." },
-    { icon: UserRoundCheck, title: "HR & payroll", text: "Employees, attendance, leave, payslips, appraisals and an employee self-service portal." },
-    { icon: FolderKanban, title: "Projects", text: "Tasks on a board, milestones, team members and billable timesheets." },
-    { icon: Workflow, title: "Automation", text: "Rules that create tasks, send emails or call webhooks when invoices, leads or stock change." },
-]
-
-const COUNTRIES = [
-    { flag: "🇮🇳", name: "India", tax: "GST", detail: "CGST + SGST or IGST by state, HSN/SAC codes, GSTIN on invoices." },
-    { flag: "🇦🇪", name: "United Arab Emirates", tax: "VAT 5%", detail: "Tax invoices with your TRN, zero-rated and standard items." },
-    { flag: "🇸🇦", name: "Saudi Arabia", tax: "VAT 15% + ZATCA", detail: "ZATCA phase 1 QR code on every invoice, with your VAT number." },
-    { flag: "🇬🇧", name: "United Kingdom", tax: "VAT", detail: "VAT invoices at 20%, 5% or 0% with your VAT registration number." },
-    { flag: "🇺🇸", name: "United States", tax: "Sales tax", detail: "Set the sales tax rates you charge; your EIN on invoices." },
-    { flag: "🇦🇺", name: "Australia", tax: "GST 10%", detail: "Tax invoices with your ABN and GST at 10% or GST-free." },
-]
-
-const TRUST = [
-    { icon: KeyRound, title: "Roles for every person", text: "Admins, managers, staff and view-only users each see and change only what they should." },
-    { icon: ShieldCheck, title: "Your data stays yours", text: "Each company's records are kept separate, payment and email passwords are stored encrypted, and you can export your data." },
-    { icon: Globe2, title: "Multi-currency", text: "Invoice in your currency with the right number format, and record foreign-currency transactions." },
-    { icon: Smartphone, title: "Works on any screen", text: "Use it in the browser on a laptop, tablet or phone. Nothing to install." },
-]
-
-const STEPS = [
-    { n: "1", title: "Create your workspace", text: "Sign up, pick your country and currency. Your tax setup is ready straight away." },
-    { n: "2", title: "Add customers and products", text: "Type them in or import a CSV. Invite your team and give each person a role." },
-    { n: "3", title: "Send your first invoice", text: "Email it, share it on WhatsApp, or let customers view and download it from their own portal." },
-]
-
-const FAQ = [
-    { q: "How does the free trial work?", a: "You get 15 days to use Genesoft ERP. No card is needed to start. At the end of the trial, choose a plan or stay on the free plan." },
-    { q: "Can I get a refund?", a: "Yes. If you're not happy with your first paid subscription, ask for a refund within 7 days of paying and we'll return it in full. See the Refund & Cancellation policy." },
-    { q: "Which countries do you support?", a: "India, the UAE, Saudi Arabia, the UK, the US and Australia have their tax rules built in. Businesses elsewhere can set their own tax name and rates." },
-    { q: "Do you file my GST or VAT returns?", a: "Not yet. Genesoft ERP works out the tax on every document and gives you a tax summary for any period, which you or your accountant use to file. Direct filing is planned." },
-    { q: "Who owns my data?", a: "You do. We only process it to run the service for you, and you can export it or ask us to delete it." },
-    { q: "Is there a mobile app?", a: "Genesoft ERP works in the browser on phones and tablets today. A dedicated mobile app is planned." },
-]
-
-export default function LandingPage() {
+export default function HomePage() {
     return (
         <>
             {/* Hero */}
-            <section className="border-b border-slate-100 bg-gradient-to-b from-blue-50/60 to-white">
-                <div className={`${SITE_CONTAINER} grid items-center gap-12 py-16 md:grid-cols-2 md:py-24 xl:gap-20 2xl:py-28`}>
-                    <div className="space-y-6">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-medium text-blue-700">
-                            Built for India, the Gulf, the UK, the US and Australia
-                        </span>
-                        <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl xl:text-6xl">
-                            Run sales, stock and accounts in one place.
-                        </h1>
-                        <p className="max-w-xl text-lg leading-relaxed text-slate-600 xl:text-xl">
-                            Genesoft ERP brings your CRM, invoicing, inventory, accounting, HR and point of sale together, with GST, VAT or sales tax worked out for your country.
-                        </p>
-                        <div className="flex flex-col gap-3 sm:flex-row">
-                            <Button asChild size="lg" className="bg-blue-600 text-white hover:bg-blue-700">
-                                <Link href="/register">
-                                    Start 15-day free trial <ArrowRight className="ml-1 h-4 w-4" />
-                                </Link>
-                            </Button>
-                            <Button asChild size="lg" variant="outline" className="border-slate-300 bg-white text-slate-800 hover:bg-slate-50">
-                                <Link href="/pricing">See pricing</Link>
-                            </Button>
-                        </div>
-                        <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-600">
-                            {["No card needed to start", "Cancel anytime", "7-day money-back on your first payment"].map((t) => (
-                                <li key={t} className="flex items-center gap-1.5">
-                                    <Check className="h-4 w-4 text-blue-600" /> {t}
-                                </li>
-                            ))}
-                        </ul>
+            <section className={`${SITE_CONTAINER} grid items-center gap-12 py-16 md:py-24 lg:grid-cols-2 xl:gap-20 2xl:py-28`}>
+                <div className="s-reveal flex flex-col gap-6">
+                    <Eyebrow>Software · Marketing · IT Rentals · IT Support</Eyebrow>
+                    <H1 className="xl:text-[64px]">Technology that keeps your business moving.</H1>
+                    <Lead className="max-w-[600px]">
+                        From Pune, {PLATFORM.brandName} builds custom software, grows your brand online, rents you the IT equipment you need, and keeps it all running. One team, one point of contact.
+                    </Lead>
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                        <SiteButton href="/contact">Get a quote</SiteButton>
+                        <SiteButton href="/erp" variant="secondary">Explore Genesoft ERP</SiteButton>
                     </div>
+                    <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-s-muted">
+                        {["Free first consultation", "Clear quote before we start", "Support after launch"].map((t) => (
+                            <li key={t} className="flex items-center gap-1.5">
+                                <Check className="h-4 w-4 text-s-orange-text" aria-hidden="true" /> {t}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
 
-                    {/* Illustrative invoice: sample data, not customer data */}
-                    <div className="relative w-full md:justify-self-end lg:max-w-xl" aria-hidden="true">
-                        <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60">
-                            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                {/* Four services as a visual, no stock photos */}
+                <div className="grid grid-cols-2 gap-4" aria-hidden="true">
+                    {SERVICES.map((s, i) => (
+                        <div
+                            key={s.slug}
+                            className={
+                                i === 1 || i === 2
+                                    ? "flex min-h-[170px] flex-col justify-between rounded-[20px] bg-s-charcoal p-6 text-[#F6F3EE]"
+                                    : "flex min-h-[170px] flex-col justify-between rounded-[20px] bg-s-orange-tint p-6 text-s-ink"
+                            }
+                        >
+                            <ServiceIcon name={s.icon} className={i === 1 || i === 2 ? "h-8 w-8 text-[#F6A55C]" : "h-8 w-8 text-s-orange-text"} />
+                            <span className="font-display text-lg font-semibold leading-snug">{s.name}</span>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* Services */}
+            <section className="bg-s-band py-20 md:py-24">
+                <div className={`${SITE_CONTAINER} flex flex-col gap-10`}>
+                    <div className="flex flex-wrap items-end justify-between gap-4">
+                        <div className="flex max-w-2xl flex-col gap-2.5">
+                            <Eyebrow>What we do</Eyebrow>
+                            <H2>Four services, one team</H2>
+                        </div>
+                        <Link href="/services" className="font-bold text-s-orange-text hover:underline">All services →</Link>
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                        {SERVICES.map((s) => (
+                            <Link
+                                key={s.slug}
+                                href={`/services/${s.slug}`}
+                                className="group flex flex-col gap-3.5 rounded-2xl border border-s-border bg-s-card p-6 transition hover:-translate-y-0.5 hover:border-s-orange"
+                            >
+                                <span className="flex h-[52px] w-[52px] items-center justify-center rounded-xl bg-s-orange-tint text-s-orange-text">
+                                    <ServiceIcon name={s.icon} className="h-6 w-6" />
+                                </span>
+                                <span className="font-display text-xl font-semibold text-s-ink">{s.name}</span>
+                                <span className="leading-relaxed text-s-text">{s.short}</span>
+                                <span className="mt-auto font-bold text-s-orange-text">{s.slug === "it-rentals" ? "Get a quote" : "Explore"} →</span>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Genesoft ERP */}
+            <section className="py-20 md:py-24">
+                <div className={SITE_CONTAINER}>
+                    <div className="grid items-center gap-12 rounded-[28px] bg-s-charcoal p-8 text-[#D9D4CC] md:p-14 lg:grid-cols-2">
+                        <div className="flex flex-col gap-5">
+                            <span className="self-start rounded-full bg-[#3A2614] px-3 py-1 text-[13px] font-bold text-[#F6A55C]">Our product</span>
+                            <h2 className="text-balance font-display text-3xl font-bold leading-tight text-[#F6F3EE] xl:text-[44px]">Genesoft ERP: sales, stock and accounts in one place</h2>
+                            <p className="text-lg leading-relaxed">
+                                CRM, invoicing, inventory, accounting, HR and payroll, with GST, VAT or sales tax for your country. Try it free for 15 days, no card needed.
+                            </p>
+                            <ul className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                {["Quotes to invoices", "Multi-warehouse stock", "GST / VAT built in", "Team roles per module"].map((t) => (
+                                    <li key={t} className="flex items-center gap-2">
+                                        <Check className="h-4 w-4 text-[#F6A55C]" aria-hidden="true" /> {t}
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="mt-1 flex flex-col gap-3 sm:flex-row">
+                                <Link href="/register" className="inline-flex h-[52px] items-center justify-center rounded-[10px] bg-[#F28C33] px-6 font-bold text-s-on-orange hover:brightness-95">
+                                    Start free trial
+                                </Link>
+                                <Link href="/erp" className="inline-flex h-[52px] items-center justify-center gap-2 rounded-[10px] border border-[#55514B] px-6 font-semibold text-[#F6F3EE] hover:bg-white/5">
+                                    Learn more <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                                </Link>
+                            </div>
+                        </div>
+                        {/* Illustrative invoice: sample data, not customer data */}
+                        <div className="rounded-2xl bg-[#FBFAF8] p-6 text-[#3D3B38] shadow-2xl shadow-black/30" aria-hidden="true">
+                            <div className="flex items-start justify-between border-b border-[#E7E2DA] pb-4">
                                 <div>
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">Tax Invoice</p>
-                                    <p className="mt-1 text-sm font-semibold text-slate-900">INV-0042</p>
+                                    <p className="text-xs font-bold uppercase tracking-wide text-[#B4540A]">Tax invoice</p>
+                                    <p className="mt-1 text-sm font-semibold text-[#1F1E1D]">INV-0042</p>
                                 </div>
-                                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">Paid</span>
+                                <span className="rounded-full bg-[#E3F2EA] px-2.5 py-1 text-xs font-semibold text-[#1E7A4B]">Paid</span>
                             </div>
                             <div className="space-y-3 py-4 text-sm">
-                                {[
-                                    ["Annual maintenance contract", "₹48,000.00"],
-                                    ["On-site support visits (4)", "₹12,000.00"],
-                                ].map(([item, amount]) => (
-                                    <div key={item} className="flex justify-between text-slate-700">
-                                        <span>{item}</span>
-                                        <span className="font-medium text-slate-900">{amount}</span>
-                                    </div>
-                                ))}
+                                <div className="flex justify-between"><span>Annual maintenance contract</span><span className="font-semibold text-[#1F1E1D]">₹48,000.00</span></div>
+                                <div className="flex justify-between"><span>On-site support visits (4)</span><span className="font-semibold text-[#1F1E1D]">₹12,000.00</span></div>
                             </div>
-                            <div className="space-y-1.5 border-t border-slate-100 pt-4 text-sm">
-                                <div className="flex justify-between text-slate-500"><span>CGST 9%</span><span>₹5,400.00</span></div>
-                                <div className="flex justify-between text-slate-500"><span>SGST 9%</span><span>₹5,400.00</span></div>
-                                <div className="flex justify-between pt-2 text-base font-semibold text-slate-900"><span>Total</span><span>₹70,800.00</span></div>
+                            <div className="space-y-1.5 border-t border-[#E7E2DA] pt-4 text-sm">
+                                <div className="flex justify-between text-[#6B6762]"><span>CGST 9%</span><span>₹5,400.00</span></div>
+                                <div className="flex justify-between text-[#6B6762]"><span>SGST 9%</span><span>₹5,400.00</span></div>
+                                <div className="flex justify-between pt-2 text-base font-bold text-[#1F1E1D]"><span>Total</span><span>₹70,800.00</span></div>
                             </div>
-                            <p className="mt-4 text-[11px] text-slate-400">Sample invoice. Outside India the same invoice shows one VAT or GST line.</p>
+                            <p className="mt-4 text-[11px] text-[#6B6762]">Sample invoice. Outside India the same invoice shows one VAT or GST line.</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Features */}
-            <section id="features" className="scroll-mt-20 py-20">
-                <div className={SITE_CONTAINER}>
-                    <div className="mx-auto max-w-2xl text-center">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">Everything a growing business runs on</h2>
-                        <p className="mt-3 text-slate-600 xl:text-lg">One login, one set of records. Sales, stock and accounts stay in step without re-typing.</p>
+            {/* Why us */}
+            <section className="pb-20 md:pb-24">
+                <div className={`${SITE_CONTAINER} grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] xl:gap-16`}>
+                    <div className="flex flex-col gap-3">
+                        <Eyebrow>Why Genesoft</Eyebrow>
+                        <H2 className="leading-tight">A partner for the whole job, not just one part</H2>
                     </div>
-                    <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:gap-6">
-                        {FEATURES.map(({ icon: Icon, title, text }) => (
-                            <div key={title} className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md xl:p-6">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                                    <Icon className="h-5 w-5" />
-                                </div>
-                                <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
-                                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{text}</p>
+                    <div className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+                        {WHY_US.map((w) => (
+                            <div key={w.title} className="flex flex-col gap-2">
+                                <h3 className="font-display text-xl font-semibold text-s-ink">{w.title}</h3>
+                                <p className="leading-relaxed">{w.text}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* Countries */}
-            <section id="countries" className="scroll-mt-20 border-y border-slate-100 bg-slate-50 py-20">
-                <div className={SITE_CONTAINER}>
-                    <div className="mx-auto max-w-2xl text-center">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">The right tax for your country</h2>
-                        <p className="mt-3 text-slate-600 xl:text-lg">
-                            Choose your country when you sign up. Invoices, quotes and bills then use your tax, currency and number format automatically.
-                        </p>
-                    </div>
-                    <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                        {COUNTRIES.map((c) => (
-                            <div key={c.name} className="rounded-xl border border-slate-200 bg-white p-5">
-                                <div className="flex items-center justify-between">
-                                    <span className="flex items-center gap-2 font-semibold text-slate-900">
-                                        <span className="text-xl" aria-hidden="true">{c.flag}</span> {c.name}
-                                    </span>
-                                    <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">{c.tax}</span>
-                                </div>
-                                <p className="mt-3 text-sm leading-relaxed text-slate-600">{c.detail}</p>
-                            </div>
-                        ))}
-                    </div>
-                    <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-slate-600">
-                        Somewhere else? Pick <strong className="font-semibold text-slate-900">Other country</strong> and set your own tax name and rates.
-                        Every workspace gets a tax summary for any period to file with your tax authority.
-                    </p>
-                </div>
-            </section>
-
-            {/* Trust */}
-            <section className="py-20">
-                <div className={SITE_CONTAINER}>
-                    <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">Built to be trusted with your business</h2>
-                    <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                        {TRUST.map(({ icon: Icon, title, text }) => (
-                            <div key={title}>
-                                <Icon className="h-6 w-6 text-blue-600" />
-                                <h3 className="mt-3 font-semibold text-slate-900">{title}</h3>
-                                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{text}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Steps */}
-            <section className="border-y border-slate-100 bg-slate-50 py-20">
-                <div className={SITE_CONTAINER}>
-                    <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">Get started in three steps</h2>
-                    <ol className="mt-12 grid gap-6 md:grid-cols-3">
-                        {STEPS.map((s) => (
-                            <li key={s.n} className="rounded-xl border border-slate-200 bg-white p-6">
-                                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">{s.n}</span>
-                                <h3 className="mt-4 font-semibold text-slate-900">{s.title}</h3>
-                                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{s.text}</p>
+            {/* Process */}
+            <section className="bg-s-band py-20">
+                <div className={`${SITE_CONTAINER} flex flex-col gap-9`}>
+                    <H2 className="text-center">How we work</H2>
+                    <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+                        {PROCESS.map((p, i) => (
+                            <li key={p.title} className="flex flex-col gap-2.5 rounded-2xl border border-s-border bg-s-card p-5">
+                                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-s-orange font-bold text-s-on-orange">{i + 1}</span>
+                                <span className="font-display font-semibold text-s-ink">{p.title}</span>
+                                <span className="text-sm leading-relaxed">{p.text}</span>
                             </li>
                         ))}
                     </ol>
                 </div>
             </section>
 
-            {/* FAQ */}
+            {/* IT rentals band */}
             <section className="py-20">
-                <div className={SITE_CONTAINER}>
-                    <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">Questions people ask</h2>
-                    <div className="mt-10 grid items-start gap-4 lg:grid-cols-2">
-                        {FAQ.map((item) => (
-                            <details key={item.q} className="group rounded-xl border border-slate-200 bg-white p-5 [&_summary::-webkit-details-marker]:hidden">
-                                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-slate-900">
-                                    {item.q}
-                                    <span className="text-xl leading-none text-slate-400 transition-transform group-open:rotate-45" aria-hidden="true">+</span>
-                                </summary>
-                                <p className="mt-3 text-sm leading-relaxed text-slate-600">{item.a}</p>
-                            </details>
-                        ))}
+                <div className={`${SITE_CONTAINER} grid items-center gap-8 lg:grid-cols-[auto_minmax(0,1fr)_auto]`}>
+                    <span className="hidden h-16 w-16 items-center justify-center rounded-2xl bg-s-orange-tint text-s-orange-text lg:flex">
+                        <Laptop className="h-8 w-8" aria-hidden="true" />
+                    </span>
+                    <div className="flex flex-col gap-2">
+                        <h2 className="font-display text-2xl font-bold text-s-ink md:text-3xl">Need laptops or servers for a project?</h2>
+                        <p className="text-lg">Rent them for a week, a month or a year, delivered and set up for you.</p>
                     </div>
+                    <SiteButton href="/services/it-rentals" variant="secondary">See IT Rentals</SiteButton>
                 </div>
             </section>
 
-            {/* CTA */}
-            <section className={`${SITE_CONTAINER} pb-20`}>
-                <div className="rounded-2xl bg-blue-600 px-6 py-14 text-center text-white md:px-12 xl:py-20">
-                    <h2 className="text-3xl font-bold tracking-tight xl:text-4xl">Try Genesoft ERP free for 15 days</h2>
-                    <p className="mx-auto mt-3 max-w-xl text-blue-100">No card needed. Set up your company in minutes and send your first invoice today.</p>
-                    <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-                        <Button asChild size="lg" className="bg-white text-blue-700 hover:bg-blue-50">
-                            <Link href="/register">Start free trial</Link>
-                        </Button>
-                        <Button asChild size="lg" variant="outline" className="border-blue-300 bg-transparent text-white hover:bg-blue-700 hover:text-white">
-                            <Link href="/contact">Talk to us</Link>
-                        </Button>
+            {/* Closing call to action */}
+            <section className="pb-20 md:pb-24">
+                <div className={SITE_CONTAINER}>
+                    <div className="flex flex-col items-start justify-between gap-8 rounded-[28px] bg-s-orange p-8 text-s-on-orange md:p-14 lg:flex-row lg:items-center">
+                        <div className="flex max-w-2xl flex-col gap-2.5">
+                            <h2 className="font-display text-3xl font-bold leading-tight xl:text-4xl">Tell us what you need</h2>
+                            <p className="text-lg leading-relaxed">Software, marketing, equipment or support: send a short note and we&apos;ll reply within one working day.</p>
+                        </div>
+                        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                            <SiteButton href="/contact" variant="dark">Get a quote</SiteButton>
+                            <SiteButton href={whatsappHref(PLATFORM.whatsapp, "Hello Genesoft Infotech, I'd like a quote.")} external variant="onOrange">WhatsApp us</SiteButton>
+                        </div>
                     </div>
                 </div>
             </section>

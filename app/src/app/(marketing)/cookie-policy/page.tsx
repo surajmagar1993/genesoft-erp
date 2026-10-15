@@ -50,9 +50,9 @@ const sections: LegalSection[] = [
         title: "The cookies we use",
         body: (
             <>
-                <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <div className="overflow-x-auto rounded-lg border border-s-border">
                     <table className="w-full min-w-[560px] text-left text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <thead className="bg-s-band text-xs uppercase tracking-wide text-s-muted">
                             <tr>
                                 <th className="px-3 py-2 font-semibold">Name</th>
                                 <th className="px-3 py-2 font-semibold">What it does</th>
@@ -60,12 +60,12 @@ const sections: LegalSection[] = [
                                 <th className="px-3 py-2 font-semibold">Type</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200">
+                        <tbody className="divide-y divide-s-border">
                             {ITEMS.map((c) => (
                                 <tr key={c.name} className="align-top">
                                     <td className="px-3 py-2.5">
-                                        <code className="text-[13px] text-slate-900">{c.name}</code>
-                                        <div className="text-xs text-slate-500">{c.kind}</div>
+                                        <code className="text-[13px] text-s-ink">{c.name}</code>
+                                        <div className="text-xs text-s-muted">{c.kind}</div>
                                     </td>
                                     <td className="px-3 py-2.5">{c.purpose}</td>
                                     <td className="px-3 py-2.5">{c.lasts}</td>

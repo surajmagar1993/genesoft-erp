@@ -40,22 +40,22 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
 
     return (
         <>
-            <section className="border-b border-slate-100 bg-gradient-to-b from-blue-50/60 to-white">
+            <section className="border-b border-s-border bg-gradient-to-b from-s-orange-tint/50 to-s-bg">
                 <div className="mx-auto max-w-3xl px-4 py-16 text-center md:px-6">
-                    <h1 className="text-balance text-4xl font-bold tracking-tight text-slate-900 md:text-5xl xl:text-6xl">Simple pricing that grows with you</h1>
-                    <p className="mt-4 text-lg text-slate-600">
+                    <h1 className="text-balance text-4xl font-bold tracking-tight text-s-ink md:text-5xl xl:text-6xl">Simple pricing that grows with you</h1>
+                    <p className="mt-4 text-lg text-s-text">
                         Start with a 15-day free trial. No card needed. Pay monthly, or yearly and save 20%.
                     </p>
-                    <nav className="mt-8 inline-flex flex-wrap justify-center gap-1 rounded-lg border border-slate-200 bg-white p-1" aria-label="Prices for region">
+                    <nav className="mt-8 inline-flex flex-wrap justify-center gap-1 rounded-lg border border-s-border bg-s-card p-1" aria-label="Prices for region">
                         {PRICING_REGIONS.map((r) => (
                             <Link
                                 key={r.code}
-                                href={`/pricing?region=${r.code}`}
+                                href={`/erp/pricing?region=${r.code}`}
                                 aria-current={r.code === region.code ? "page" : undefined}
                                 className={
                                     r.code === region.code
-                                        ? "rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white"
-                                        : "rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                                        ? "rounded-md bg-s-orange px-3 py-1.5 text-sm font-medium text-s-on-orange"
+                                        : "rounded-md px-3 py-1.5 text-sm font-medium text-s-text hover:bg-s-band"
                                 }
                             >
                                 {r.label}
@@ -68,15 +68,15 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
             <section className="py-16">
                 <div className={SITE_CONTAINER}>
                     <PlanCards plans={plans} currency={pricing.currency} locale={localeForCurrency(pricing.currency)} />
-                    <p className="mt-8 text-center text-sm text-slate-500">
+                    <p className="mt-8 text-center text-sm text-s-muted">
                         Prices are per workspace and include applicable taxes. Cancel anytime.
                         Not happy with your first paid month or year? Ask within 7 days for a full refund.{" "}
-                        <Link href="/refund-policy" className="font-medium text-blue-700 hover:underline">Refund policy</Link>
+                        <Link href="/refund-policy" className="font-medium text-s-orange-text hover:underline">Refund policy</Link>
                     </p>
                 </div>
             </section>
 
-            <section className="border-t border-slate-100 bg-slate-50 py-16">
+            <section className="border-t border-s-border bg-s-band py-16">
                 <div className={`${SITE_CONTAINER} grid gap-8 md:grid-cols-3 xl:gap-12`}>
                     {[
                         { q: "What happens after the trial?", a: "Choose a paid plan to keep your full features, or carry on with the free plan. Your data stays put either way." },
@@ -84,8 +84,8 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                         { q: "How do I pay?", a: "By card, UPI or net banking through Razorpay in India, and by card through Stripe in other countries." },
                     ].map((item) => (
                         <div key={item.q}>
-                            <h3 className="font-semibold text-slate-900">{item.q}</h3>
-                            <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.a}</p>
+                            <h3 className="font-semibold text-s-ink">{item.q}</h3>
+                            <p className="mt-2 text-sm leading-relaxed text-s-text">{item.a}</p>
                         </div>
                     ))}
                 </div>

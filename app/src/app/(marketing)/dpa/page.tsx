@@ -97,19 +97,19 @@ const sections: LegalSection[] = [
         body: (
             <>
                 <p>You agree that we may use these providers to run the service. Each is bound by a contract that protects the data:</p>
-                <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <div className="overflow-x-auto rounded-lg border border-s-border">
                     <table className="w-full min-w-[480px] text-left text-sm">
-                        <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                        <thead className="bg-s-band text-xs uppercase tracking-wide text-s-muted">
                             <tr>
                                 <th className="px-3 py-2 font-semibold">Provider</th>
                                 <th className="px-3 py-2 font-semibold">What for</th>
                                 <th className="px-3 py-2 font-semibold">Where</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200">
+                        <tbody className="divide-y divide-s-border">
                             {SUBPROCESSORS.map((s) => (
                                 <tr key={s.name}>
-                                    <td className="px-3 py-2.5 font-medium text-slate-900">{s.name}</td>
+                                    <td className="px-3 py-2.5 font-medium text-s-ink">{s.name}</td>
                                     <td className="px-3 py-2.5">{s.purpose}</td>
                                     <td className="px-3 py-2.5">{s.location}</td>
                                 </tr>

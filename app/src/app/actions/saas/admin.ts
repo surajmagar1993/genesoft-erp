@@ -691,7 +691,7 @@ async function _savePricingRegion(regionCode: string, plans: { tier: PaidPlan; a
 
     revalidatePath('/admin/pricing')
     revalidatePath('/settings')
-    revalidatePath('/pricing')
+    revalidatePath('/erp/pricing')
     return { changed: changed.length, stripeSync }
 }
 
@@ -723,7 +723,7 @@ async function _savePlanSettings(input: PlanConfig) {
         },
     })
     revalidatePath('/admin/pricing')
-    revalidatePath('/pricing')
+    revalidatePath('/erp/pricing')
     revalidatePath('/settings')
     return config
 }

@@ -26,7 +26,7 @@ export function PlanCards({ plans, currency, locale }: { plans: PricedPlan[]; cu
     return (
         <div>
             <div className="mb-10 flex justify-center">
-                <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1" role="group" aria-label="Billing period">
+                <div className="inline-flex rounded-lg border border-s-border bg-s-band p-1" role="group" aria-label="Billing period">
                     {(["MONTHLY", "ANNUAL"] as const).map((c) => (
                         <button
                             key={c}
@@ -35,7 +35,7 @@ export function PlanCards({ plans, currency, locale }: { plans: PricedPlan[]; cu
                             aria-pressed={cycle === c}
                             className={cn(
                                 "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
-                                cycle === c ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
+                                cycle === c ? "bg-s-card text-s-ink shadow-sm" : "text-s-text hover:text-s-ink"
                             )}
                         >
                             {c === "MONTHLY" ? "Monthly" : "Yearly (save 20%)"}
@@ -52,34 +52,34 @@ export function PlanCards({ plans, currency, locale }: { plans: PricedPlan[]; cu
                         <div
                             key={plan.tier}
                             className={cn(
-                                "relative flex flex-col rounded-xl border bg-white p-6",
-                                featured ? "border-blue-600 shadow-lg shadow-blue-100" : "border-slate-200"
+                                "relative flex flex-col rounded-xl border bg-s-card p-6",
+                                featured ? "border-s-orange shadow-lg shadow-black/5" : "border-s-border"
                             )}
                         >
                             {featured && (
-                                <span className="absolute -top-3 left-6 rounded-full bg-blue-600 px-3 py-0.5 text-xs font-medium text-white">Most popular</span>
+                                <span className="absolute -top-3 left-6 rounded-full bg-s-orange px-3 py-0.5 text-xs font-medium text-s-on-orange">Most popular</span>
                             )}
-                            <h2 className="text-lg font-semibold text-slate-900">{plan.name}</h2>
-                            <p className="mt-1 min-h-10 text-sm text-slate-600">{plan.tagline}</p>
+                            <h2 className="text-lg font-semibold text-s-ink">{plan.name}</h2>
+                            <p className="mt-1 min-h-10 text-sm text-s-text">{plan.tagline}</p>
                             <div className="mt-5">
-                                <span className="text-3xl font-bold tracking-tight text-slate-900">{plan.monthly === 0 ? "Free" : money(price)}</span>
-                                {plan.monthly > 0 && <span className="text-sm text-slate-500"> / month</span>}
+                                <span className="text-3xl font-bold tracking-tight text-s-ink">{plan.monthly === 0 ? "Free" : money(price)}</span>
+                                {plan.monthly > 0 && <span className="text-sm text-s-muted"> / month</span>}
                                 {plan.monthly > 0 && cycle === "ANNUAL" && (
-                                    <p className="mt-1 text-xs text-slate-500">{money(plan.annual)} billed yearly</p>
+                                    <p className="mt-1 text-xs text-s-muted">{money(plan.annual)} billed yearly</p>
                                 )}
                             </div>
                             <Button
                                 asChild
-                                className={cn("mt-6", featured ? "bg-blue-600 text-white hover:bg-blue-700" : "border border-slate-300 bg-white text-slate-800 hover:bg-slate-50")}
+                                className={cn("mt-6", featured ? "bg-s-orange text-s-on-orange hover:brightness-95" : "border border-s-border-strong bg-s-card text-s-ink hover:bg-s-band")}
                             >
                                 <Link href={plan.tier === "FREE" ? "/register" : `/register?plan=${plan.tier}`}>
                                     {plan.tier === "FREE" ? "Start free" : "Start free trial"}
                                 </Link>
                             </Button>
-                            <ul className="mt-6 space-y-2.5 text-sm text-slate-700">
+                            <ul className="mt-6 space-y-2.5 text-sm text-s-text">
                                 {plan.features.map((f) => (
                                     <li key={f} className="flex gap-2">
-                                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+                                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-s-orange-text" />
                                         <span>{f}</span>
                                     </li>
                                 ))}

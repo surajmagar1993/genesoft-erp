@@ -255,7 +255,7 @@ export async function executePlanChange(params: {
 
         revalidatePath("/settings")
         revalidatePath(`/admin/tenants/${tenantId}`)
-        revalidatePath("/pricing")
+        revalidatePath("/erp/pricing")
         revalidatePath("/admin/pricing")
 
         return {

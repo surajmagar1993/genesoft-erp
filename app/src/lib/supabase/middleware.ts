@@ -48,8 +48,14 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
         request.nextUrl.pathname.startsWith('/register') ||
         request.nextUrl.pathname.startsWith('/forgot-password')
 
+    // Website sections with sub-pages (company site + the Genesoft ERP product pages)
+    const isWebsiteSection = ['/erp', '/services', '/portfolio', '/careers'].some(
+        (p) => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(`${p}/`)
+    )
+
     const isPublicPage = request.nextUrl.pathname === '/' ||
-        request.nextUrl.pathname === '/pricing' ||
+        isWebsiteSection ||
+        request.nextUrl.pathname === '/pricing' || // redirects to /erp/pricing
         request.nextUrl.pathname === '/contact' ||
         request.nextUrl.pathname === '/privacy' ||
         request.nextUrl.pathname === '/terms' ||

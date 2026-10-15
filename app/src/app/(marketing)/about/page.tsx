@@ -1,81 +1,81 @@
-import Link from "next/link"
-import { Globe2, Layers, ShieldCheck, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Globe2, Layers, MapPin, ShieldCheck, Users } from "lucide-react"
 import { SITE_CONTAINER } from "@/components/marketing/container"
+import { Eyebrow, H1, H2, Lead, SiteButton } from "@/components/marketing/ui"
 import { PLATFORM } from "@/lib/constants/platform"
 
 export const metadata = {
-    title: "About us | Genesoft ERP",
-    description: "Genesoft Infotech builds Genesoft ERP, one system for sales, stock, accounts and people, for growing businesses in India and abroad.",
+    title: "About us | Genesoft Infotech",
+    description: "Genesoft Infotech is a Pune-based technology company: software, digital marketing, IT rentals and IT support, and the makers of Genesoft ERP.",
 }
 
 const VALUES = [
-    { icon: Layers, title: "One system, not ten", text: "CRM, invoicing, inventory, accounting, HR and payroll share one set of records, so nothing is typed twice." },
-    { icon: Globe2, title: "Your country's rules", text: "GST, VAT and sales tax are worked out for India, the Gulf, the UK, the US and Australia, with your currency and number format." },
-    { icon: ShieldCheck, title: "Your data stays yours", text: "Each business's records are kept separate. You can export everything at any time, and we never sell your data." },
-    { icon: Users, title: "Built for the whole team", text: "Invite your staff and decide what each person can see and change, module by module." },
+    { icon: Layers, title: "Straight answers", text: "Clear scope and price before we start; no hidden extras." },
+    { icon: ShieldCheck, title: "Your data, protected", text: "Careful with access, passwords and client information." },
+    { icon: Globe2, title: "Built to last", text: "Work that's maintainable, documented and yours to keep." },
+    { icon: Users, title: "Here after launch", text: "Support that picks up the phone, and comes on site when needed." },
 ]
+
+const MAPS = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${PLATFORM.address.line1}, ${PLATFORM.address.line2}`)}`
 
 export default function AboutPage() {
     return (
         <>
-            <section className="border-b border-slate-100 bg-gradient-to-b from-blue-50/60 to-white">
-                <div className={`${SITE_CONTAINER} py-16 md:py-24`}>
-                    <div className="max-w-3xl">
-                        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">About us</p>
-                        <h1 className="mt-3 text-balance text-4xl font-bold tracking-tight text-slate-900 md:text-5xl xl:text-6xl">
-                            Business software that keeps things simple
-                        </h1>
-                        <p className="mt-5 text-lg leading-relaxed text-slate-600 xl:text-xl">
-                            {PLATFORM.legalName} is a software company based in Pune, India. We build {PLATFORM.productName}: one place for a growing
-                            business to run its sales, stock, accounts and people, with the right tax for its country.
-                        </p>
-                    </div>
+            <section className="bg-s-band">
+                <div className={`${SITE_CONTAINER} flex flex-col gap-5 py-16 md:py-24`}>
+                    <Eyebrow>About {PLATFORM.brandName}</Eyebrow>
+                    <H1 className="max-w-4xl">A technology partner for growing businesses</H1>
+                    <Lead className="max-w-3xl">
+                        We&apos;re a Pune-based team that builds software, grows brands online, supplies IT equipment on rent and keeps systems running, so our clients can focus on their own work.
+                    </Lead>
                 </div>
             </section>
 
-            <section className="py-16 md:py-20">
-                <div className={`${SITE_CONTAINER} grid gap-12 lg:grid-cols-2 xl:gap-20`}>
-                    <div className="space-y-4 text-[15px] leading-relaxed text-slate-700 xl:text-base">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">Why we built it</h2>
-                        <p>
-                            Many small and mid-sized businesses keep customers in one tool, invoices in another and stock in a spreadsheet. Numbers drift
-                            apart, the same details are typed again and again, and month-end means chasing figures.
-                        </p>
-                        <p>
-                            {PLATFORM.productName} brings those jobs together. A quote becomes an order and then an invoice; the invoice moves stock, reaches
-                            the customer&apos;s statement and posts to the ledger, all without re-typing.
-                        </p>
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
+            <section className={`${SITE_CONTAINER} grid gap-12 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] xl:gap-16`}>
+                <H2>What we do</H2>
+                <div className="flex flex-col gap-4 text-lg leading-relaxed">
+                    <p>
+                        Many small and mid-sized businesses keep customers in one tool, invoices in another and stock in a spreadsheet. Numbers drift apart, the same details are typed again and again,
+                        and month-end means chasing figures.
+                    </p>
+                    <p>
+                        We work across four areas: software development, digital marketing, IT rentals and IT support. We also build {PLATFORM.productName}, our own business software for
+                        companies in India, the Gulf, the UK, the US and Australia, where a quote becomes an order and an invoice, moves stock and reaches the ledger without re-typing.
+                    </p>
+                </div>
+            </section>
+
+            <section className="bg-s-band py-20">
+                <div className={`${SITE_CONTAINER} flex flex-col gap-8`}>
+                    <H2>What we stand for</H2>
+                    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                         {VALUES.map(({ icon: Icon, title, text }) => (
-                            <div key={title} className="rounded-xl border border-slate-200 bg-white p-5 xl:p-6">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                                    <Icon className="h-5 w-5" />
-                                </div>
-                                <h3 className="mt-4 font-semibold text-slate-900">{title}</h3>
-                                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">{text}</p>
+                            <div key={title} className="flex flex-col gap-3 rounded-2xl border border-s-border bg-s-card p-6">
+                                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-s-orange-tint text-s-orange-text">
+                                    <Icon className="h-5 w-5" aria-hidden="true" />
+                                </span>
+                                <h3 className="font-display text-lg font-semibold text-s-ink">{title}</h3>
+                                <p className="leading-relaxed">{text}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            <section className="border-t border-slate-100 bg-slate-50 py-16">
-                <div className={`${SITE_CONTAINER} flex flex-col items-start justify-between gap-6 md:flex-row md:items-center`}>
-                    <div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-900">Get in touch</h2>
-                        <p className="mt-2 text-slate-600">
-                            {PLATFORM.address.line1}, {PLATFORM.address.line2} · {PLATFORM.email} · {PLATFORM.phone}
-                        </p>
-                    </div>
+            <section className={`${SITE_CONTAINER} grid gap-6 py-20 lg:grid-cols-2`}>
+                <div className="flex flex-col gap-3 rounded-[20px] border border-s-border bg-s-card p-8">
+                    <h2 className="font-display text-2xl font-bold text-s-ink">Visit us</h2>
+                    <p className="flex items-start gap-2 text-lg leading-relaxed">
+                        <MapPin className="mt-1 h-5 w-5 shrink-0 text-s-orange-text" aria-hidden="true" />
+                        {PLATFORM.address.line1}, {PLATFORM.address.line2}
+                    </p>
+                    <a href={MAPS} target="_blank" rel="noopener noreferrer" className="font-bold text-s-orange-text hover:underline">Open in Google Maps →</a>
+                </div>
+                <div className="flex flex-col items-start justify-center gap-4 rounded-[20px] bg-s-orange p-8 text-s-on-orange">
+                    <h2 className="font-display text-2xl font-bold">Let&apos;s work together</h2>
+                    <p className="text-lg leading-relaxed">Tell us what you need and we&apos;ll reply within one working day.</p>
                     <div className="flex flex-col gap-3 sm:flex-row">
-                        <Button asChild size="lg" className="bg-blue-600 text-white hover:bg-blue-700">
-                            <Link href="/register">Start free trial</Link>
-                        </Button>
-                        <Button asChild size="lg" variant="outline" className="border-slate-300 bg-white text-slate-800 hover:bg-slate-50">
-                            <Link href="/contact">Contact us</Link>
-                        </Button>
+                        <SiteButton href="/contact" variant="dark">Get a quote</SiteButton>
+                        <SiteButton href="/register" variant="onOrange">Try Genesoft ERP</SiteButton>
                     </div>
                 </div>
             </section>
