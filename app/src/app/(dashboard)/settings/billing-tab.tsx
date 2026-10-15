@@ -101,6 +101,8 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
         const diff = new Date(settings.trialEndsAt).getTime() - Date.now()
         return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
     }, [settings?.isTrial, settings?.trialEndsAt])
+    // The trial counts (as Pro) only until it ends; afterwards the workspace's own plan applies
+    const trialActive = !!settings?.isTrial && trialDaysRemaining > 0
 
     // Real-time proration quote when targetPlan is selected
     const prorationQuote = useMemo(() => {
@@ -294,11 +296,21 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
                             </div>
 
                             <CardDescription className="text-muted-foreground font-medium text-sm">
-                                {settings?.isTrial ? (
+                                {trialActive ? (
                                     <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold">
                                         <Clock className="h-4 w-4" />
-                                        PRO Trial Active &bull; {trialDaysRemaining} days remaining (ends{" "}
-                                        {settings.trialEndsAt ? new Date(settings.trialEndsAt).toLocaleDateString() : "soon"})
+                                        PRO Trial Active &bull; {trialDaysRemaining} {trialDaysRemaining === 1 ? "day" : "days"} remaining (ends{" "}
+                                        {new Date(settings.trialEndsAt).toLocaleDateString()})
+                                    </span>
+                                ) : settings?.isTrial && currentPlan === "FREE" ? (
+                                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                                        <Clock className="h-4 w-4" />
+                                        Trial ended{settings.trialEndsAt ? ` on ${new Date(settings.trialEndsAt).toLocaleDateString()}` : ""} &bull; You&apos;re on the Free plan. Choose a plan below to get more.
+                                    </span>
+                                ) : currentPlan === "FREE" ? (
+                                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        Free plan &bull; Nothing to pay
                                     </span>
                                 ) : (
                                     <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
@@ -314,7 +326,7 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
 
                         {/* Right Summary Badge */}
                         <div className="flex items-center gap-3">
-                            {settings?.isTrial && (
+                            {trialActive && (
                                 <div className="text-right bg-card/60 p-2.5 rounded-lg border border-primary/20">
                                     <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">
                                         Trial Days Left

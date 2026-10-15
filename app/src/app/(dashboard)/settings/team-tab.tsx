@@ -33,7 +33,7 @@ const ROLE_HELP: Record<TeamRole, string> = {
 const LEVEL_HELP = "View: read only · Edit: create and change records · Full: also delete, void and approve"
 
 /** One row per module with a level picker. */
-function AccessMatrix({ value, onChange, disabled }: { value: ModuleAccess; onChange: (v: ModuleAccess) => void; disabled?: boolean }) {
+function AccessMatrix({ value, onChange, disabled, planModules }: { value: ModuleAccess; onChange: (v: ModuleAccess) => void; disabled?: boolean; planModules: Record<string, boolean> }) {
     const setAll = (level: AccessLevel) => onChange(uniformAccess(level))
     return (
         <div className="space-y-3 min-w-0">
@@ -46,13 +46,16 @@ function AccessMatrix({ value, onChange, disabled }: { value: ModuleAccess; onCh
                 ))}
             </div>
             <div className="rounded-lg border divide-y">
-                {MODULES.map((m) => (
-                    <div key={m.key} className="flex items-center justify-between gap-3 px-3 py-2">
+                {MODULES.map((m) => {
+                    // Not on the workspace's plan: nobody can use it, whatever is set here
+                    const notInPlan = planModules[m.key] === false
+                    return (
+                    <div key={m.key} className={`flex items-center justify-between gap-3 px-3 py-2 ${notInPlan ? "opacity-50" : ""}`}>
                         <div className="min-w-0">
                             <p className="text-sm font-medium">{m.label}</p>
-                            <p className="text-xs text-muted-foreground truncate">{m.description}</p>
+                            <p className="text-xs text-muted-foreground truncate">{notInPlan ? "Not on your plan. Upgrade in Billing to use it." : m.description}</p>
                         </div>
-                        <Select value={value[m.key]} disabled={disabled} onValueChange={(v) => onChange({ ...value, [m.key]: v as AccessLevel })}>
+                        <Select value={value[m.key]} disabled={disabled || notInPlan} onValueChange={(v) => onChange({ ...value, [m.key]: v as AccessLevel })}>
                             <SelectTrigger className="h-8 w-[130px] shrink-0" aria-label={`${m.label} access`}>
                                 <SelectValue />
                             </SelectTrigger>
@@ -65,7 +68,8 @@ function AccessMatrix({ value, onChange, disabled }: { value: ModuleAccess; onCh
                             </SelectContent>
                         </Select>
                     </div>
-                ))}
+                    )
+                })}
             </div>
             <p className="text-xs text-muted-foreground">{LEVEL_HELP}. Settings and the team are for admins only; everyone can use the dashboard, the employee portal and support.</p>
         </div>
@@ -100,7 +104,7 @@ async function copy(text: string) {
     }
 }
 
-export default function TeamTab({ initialMembers, invites }: { initialMembers: TeamMember[]; invites: PendingInvite[] }) {
+export default function TeamTab({ initialMembers, invites, planModules = {} }: { initialMembers: TeamMember[]; invites: PendingInvite[]; planModules?: Record<string, boolean> }) {
     const router = useRouter()
     const [members, setMembers] = useState(initialMembers)
     const [pendingId, setPendingId] = useState<string | null>(null)
@@ -337,7 +341,7 @@ export default function TeamTab({ initialMembers, invites }: { initialMembers: T
                     </DialogHeader>
                     <div className="space-y-4 min-w-0">
                         <RolePicker value={editRole} onChange={setEditRole} disabled={saving} />
-                        {editRole === "MEMBER" && <AccessMatrix value={editAccess} onChange={setEditAccess} disabled={saving} />}
+                        {editRole === "MEMBER" && <AccessMatrix value={editAccess} onChange={setEditAccess} disabled={saving} planModules={planModules} />}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>Cancel</Button>
@@ -368,7 +372,7 @@ export default function TeamTab({ initialMembers, invites }: { initialMembers: T
                             </div>
                         </div>
                         <RolePicker value={inviteRole} onChange={setInviteRole} disabled={sending} />
-                        {inviteRole === "MEMBER" && <AccessMatrix value={inviteAccess} onChange={setInviteAccess} disabled={sending} />}
+                        {inviteRole === "MEMBER" && <AccessMatrix value={inviteAccess} onChange={setInviteAccess} disabled={sending} planModules={planModules} />}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setInviteOpen(false)} disabled={sending}>Cancel</Button>

@@ -11,7 +11,7 @@ import BillingTab from "./billing-tab"
 import PaymentGatewaysTab from "./payment-gateways-tab"
 import TeamTab from "./team-tab"
 import DataAccountTab from "./data-account-tab"
-import { getTenantRole } from "@/lib/get-tenant-id"
+import { getMyAccess, getTenantRole } from "@/lib/get-tenant-id"
 import { getPendingInvites, getTeamMembers } from "@/app/actions/settings/team"
 import { getBillingPricing } from "@/app/actions/saas/subscription"
 import { getPlanConfig, PLAN_ORDER } from "@/lib/plan-config"
@@ -34,6 +34,7 @@ export default async function SettingsPage({
     const gatewayConfig = await getTenantPaymentGateways()
     const billingPricing = await getBillingPricing().catch(() => undefined)
     const planConfig = await getPlanConfig()
+    const { planModules } = await getMyAccess()
     const planFeatures = Object.fromEntries(PLAN_ORDER.map((t) => [t, planConfig[t].features]))
     const role = await getTenantRole()
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN"
@@ -162,7 +163,7 @@ export default async function SettingsPage({
                 {/* Team & Access (workspace admins only) */}
                 {isAdmin && (
                     <TabsContent value="team">
-                        <TeamTab initialMembers={teamMembers} invites={teamInvites} />
+                        <TeamTab initialMembers={teamMembers} invites={teamInvites} planModules={planModules} />
                     </TabsContent>
                 )}
 
