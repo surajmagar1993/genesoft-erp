@@ -115,7 +115,9 @@ export async function reportError(report: ErrorReport): Promise<void> {
         const stack = scrubSecrets(String(report.stack || "")).slice(0, 8000)
         const path = String(report.path || "").slice(0, 500)
         const fingerprint = errorFingerprint(message, path)
-        const label = report.source === "browser" ? "[browser] " : ""
+        // A developer's local server uses the shared database and email key: label its errors and never email them
+        const local = process.env.NODE_ENV === "development"
+        const label = `${local ? "[local dev] " : ""}${report.source === "browser" ? "[browser] " : ""}`
         const stored = `${label}${message}${report.digest ? `\n(reference ${report.digest})` : ""}\n[error id ${fingerprint}]`
 
         // Has this error been seen in the last 24 hours? (checked before logging this one)
@@ -130,7 +132,7 @@ export async function reportError(report: ErrorReport): Promise<void> {
                 stack: stack || null,
             },
         })
-        if (report.source === "server" && seen === 0 && !isDisconnectNoise(message)) await sendAlert(report, fingerprint, message, stack)
+        if (report.source === "server" && seen === 0 && !local && !isDisconnectNoise(message)) await sendAlert(report, fingerprint, message, stack)
     } catch (err) {
         // Monitoring must never break the request that failed
         console.error("reportError failed:", err)
