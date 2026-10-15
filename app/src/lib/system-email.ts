@@ -13,7 +13,9 @@ const LEFTOVER_TAG = /{{\s*[\w-]+\s*}}/g
 export async function sendSystemEmail(
     templateKey: SystemTemplateKey,
     to: string | null | undefined,
-    variables: Record<string, string>
+    variables: Record<string, string>,
+    /** Sender: an address on RESEND_DOMAIN (else notifications@ is used), and where replies go */
+    sender?: { name: string; address: string; replyTo?: string }
 ): Promise<{ sent: boolean; reason?: string }> {
     try {
         const apiKey = process.env.RESEND_API_KEY
@@ -39,8 +41,10 @@ export async function sendSystemEmail(
             useSampleData: false,
         })
 
+        const ownDomain = sender?.address.toLowerCase().endsWith(`@${domain.toLowerCase()}`)
         const { error } = await new Resend(apiKey).emails.send({
-            from: `Genesoft ERP <notifications@${domain}>`,
+            from: ownDomain ? `${sender!.name} <${sender!.address}>` : `Genesoft ERP <notifications@${domain}>`,
+            ...(sender ? { replyTo: sender.replyTo || sender.address } : {}),
             to: [to],
             subject: compiled.subject.replace(LEFTOVER_TAG, "").replace(/[\r\n]+/g, " ").trim(),
             html: compiled.html.replace(LEFTOVER_TAG, ""),

@@ -1,6 +1,6 @@
 # Genesoft Infotech website overhaul: plan
 
-> **Status (15 Oct 2026):** Phase 1 live. Phase 2 built: content tables (run on live), Super Admin → Website (settings, pages with draft/publish/history, lists, media, leads inbox), forms save leads, careers applications with private CVs. Phase 5 legal editor built: every legal page is editable in Super Admin → Website → Pages → Legal (draft/publish/history, "last updated" on publish); Privacy now covers website enquiries, quote requests and job applications; Cookie Policy lists the website theme setting; IT Rental Terms is a draft with 9 `[OWNER: …]` rules to fill in and stays hidden until published. Next: owner fills rental rules, legal review, structured data, Turnstile, welcome email, then go-live (domain). Owner decisions are in §2, open items in §14.
+> **Status (15 Oct 2026):** Phase 1 live. Phase 2 built: content tables (run on live), Super Admin → Website (settings, pages with draft/publish/history, lists, media, leads inbox), forms save leads, careers applications with private CVs. Phase 5 legal editor built: every legal page is editable in Super Admin → Website → Pages → Legal (draft/publish/history, "last updated" on publish); Privacy now covers website enquiries, quote requests and job applications; Cookie Policy lists the website theme setting; IT Rental Terms is a draft with 9 `[OWNER: …]` rules to fill in and stays hidden until published. Next: owner fills rental rules, legal review, structured data, Turnstile, then go-live (domain). Owner decisions are in §2, open items in §14.
 > **Started:** 15 October 2026 · **Owner:** Genesoft Infotech · **Built in:** this repo (`app/`, Next.js), deployed on Vercel.
 
 ---
@@ -233,7 +233,7 @@ Every save is recorded in **Admin Audit**. Pages have **Draft → Preview → Pu
 - **Spam protection:** the hidden-field trap and 3-per-10-minutes limit that exist today, plus **Cloudflare Turnstile** (a free, privacy-friendly CAPTCHA) once the site is live.
 - **Welcome emails from hello@:**
   - When a client signs up for Genesoft ERP (or is added as a services client), a welcome email is sent from **hello@** using an editable template in Admin → Email Templates.
-  - Today the app sends no welcome email; Supabase sends only the confirm-your-email message.
+  - Built (15 Oct 2026): sent once to the owner of each new ERP business after they confirm their email or first sign in; template "Welcome to Genesoft ERP" in Admin → Email Templates. Services clients: not yet (owner chose ERP only for now).
 - **Code change:** `PLATFORM.email` is split into `contactEmail` (info@) and `welcomeEmail` (hello@), and every place is updated (website, legal pages, receipts, reply-to addresses).
 - **Sending domain:** Resend must be verified for genesoftinfotech.com, which needs DNS records.
 
@@ -310,7 +310,7 @@ Each item below has its own editor in Super Admin → Website, so you can add or
 - [ ] Every link works; no 500s; old `.html` addresses redirect.
 - [ ] Super Admin can edit every section in §7.2, preview, publish, and see each change in Admin Audit.
 - [ ] Contact, service and quote forms reach info@, appear in the Leads inbox and send a confirmation.
-- [ ] New ERP clients get the welcome email from hello@.
+- [x] New ERP clients get the welcome email from hello@genesoftinfotech.com.
 - [ ] Legal pages use "Genesoft Infotech Pvt. Ltd."; the rest of the site uses "Genesoft Infotech".
 - [ ] No placeholder or unconfirmed content is visible.
 - [ ] Lighthouse 90+ on phone; sitemap, robots and structured data are valid.

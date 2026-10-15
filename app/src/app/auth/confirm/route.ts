@@ -1,6 +1,7 @@
-import { NextResponse, type NextRequest } from "next/server"
+import { after, NextResponse, type NextRequest } from "next/server"
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
+import { sendWelcomeEmailOnce } from "@/lib/welcome-email"
 
 export const dynamic = "force-dynamic"
 
@@ -39,6 +40,12 @@ export async function GET(request: NextRequest) {
         const target = type === "recovery" || next === "/reset-password" ? "/forgot-password" : "/login"
         const message = `${error.message.replace(/\.?$/, ".")} Please request a new link.`
         return NextResponse.redirect(new URL(`${target}?error=${encodeURIComponent(message)}`, origin))
+    }
+
+    // A confirmed sign-up: welcome the new business owner (once, after the response)
+    if (type === "signup" || type === "email" || code) {
+        const { data } = await supabase.auth.getUser()
+        if (data.user) after(() => sendWelcomeEmailOnce(data.user!.id))
     }
 
     return NextResponse.redirect(new URL(next, origin))

@@ -329,70 +329,53 @@ Regards,
 
     WELCOME_ONBOARDING: {
         key: "WELCOME_ONBOARDING",
-        name: "Welcome & Onboarding Credentials",
-        description: "Sent to new workspace members or SaaS tenant administrators upon workspace creation.",
+        name: "Welcome to Genesoft ERP",
+        description: "Sent once to the owner of a new business, from hello@, after they confirm their email or first sign in. Replies go to hello@.",
         category: "ONBOARDING",
-        subject: "Welcome to {{company_name}} — Let's Set Up Your Workspace",
+        subject: "Welcome to Genesoft ERP, {{user_name}}",
         bodyHtml: `
 <p>Hello <strong>{{user_name}}</strong>,</p>
 
-<p>Welcome to <strong>{{company_name}}</strong>! Your workspace for <strong>{{tenant_name}}</strong> is ready for production.</p>
+<p>Thank you for choosing Genesoft ERP. The workspace for <strong>{{tenant_name}}</strong> is ready, and your free trial of every Pro feature runs until <strong>{{trial_ends_on}}</strong>. No payment details are needed during the trial.</p>
 
-<div style="background-color: #f1f5f9; border-left: 4px solid #2563eb; padding: 16px 20px; border-radius: 4px; margin: 24px 0;">
-    <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 700; color: #1e293b;">Your Account Details</p>
-    <p style="margin: 0; font-size: 13px; color: #475569;">
-        <strong>Login Email:</strong> {{user_email}}<br>
-        <strong>Workspace Subdomain:</strong> {{tenant_slug}}<br>
-        <strong>Initial Role:</strong> {{user_role}}
-    </p>
-</div>
-
-<p>To get your organization running smoothly, we recommend completing these 3 quick initial steps:</p>
+<p>Three things that help you get going:</p>
 
 <ol style="padding-left: 20px; color: #334155; line-height: 1.8;">
-    <li><strong>Verify Company Settings:</strong> Add your GSTIN/TRN/ABN, company address, and bank account for automated billing.</li>
-    <li><strong>Invite Team Members:</strong> Assign roles (Admin, Sales, Accountant, Inventory Manager) to your staff.</li>
-    <li><strong>Import Data:</strong> Rapidly load your existing contacts, product catalogs, and opening ledger balances.</li>
+    <li><strong>Company details:</strong> in Settings, add your address, tax number and logo so they appear on your invoices.</li>
+    <li><strong>Your customers and products:</strong> add them one by one, or import them from a CSV file.</li>
+    <li><strong>Your team:</strong> in Settings → Team &amp; Access, invite colleagues and choose what each person can see and change.</li>
 </ol>
 
-<p>Click below to log in and start configuring your workspace:</p>
+<p>If you have a question or want help setting things up, just reply to this email. It reaches our team directly.</p>
+
+<p>Warm regards,<br>The Genesoft Infotech team</p>
 `,
         bodyText: `Hello {{user_name}},
 
-Welcome to {{company_name}}! Your workspace for {{tenant_name}} is ready.
+Thank you for choosing Genesoft ERP. The workspace for {{tenant_name}} is ready, and your free trial of every Pro feature runs until {{trial_ends_on}}. No payment details are needed during the trial.
 
-Account Details:
-- Login Email: {{user_email}}
-- Workspace: {{tenant_slug}}
-- Role: {{user_role}}
+Three things that help you get going:
+1. Company details: in Settings, add your address, tax number and logo so they appear on your invoices.
+2. Your customers and products: add them one by one, or import them from a CSV file.
+3. Your team: in Settings > Team & Access, invite colleagues and choose what each person can see and change.
 
-Get started by logging in: {{login_url}}
+Open your workspace: {{workspace_url}}
 
-If you need any help, check our documentation at {{setup_guide_url}} or reply to {{support_email}}.
+If you have a question or want help setting things up, just reply to this email. It reaches our team directly.
 
-Best regards,
-The {{company_name}} Team`,
+Warm regards,
+The Genesoft Infotech team`,
         mergeTags: [
-            { tag: "user_name", label: "User Name", description: "First name or full name of recipient", sampleValue: "Sarah Connor" },
-            { tag: "user_email", label: "User Email", description: "Email address used for sign in", sampleValue: "sarah@acmecorp.com" },
-            { tag: "company_name", label: "Platform Name", description: "Name of the ERP SaaS platform", sampleValue: "Your Company Pvt Ltd" },
-            { tag: "tenant_name", label: "Tenant Organization", description: "Company or tenant account name", sampleValue: "Acme Manufacturing Ltd" },
-            { tag: "tenant_slug", label: "Subdomain / Slug", description: "Tenant unique domain identifier", sampleValue: "acme" },
-            { tag: "user_role", label: "Assigned Role", description: "User permission role (SUPER_ADMIN, TENANT_ADMIN)", sampleValue: "TENANT_ADMIN" },
-            { tag: "login_url", label: "Login URL", description: "Direct authentication gateway", sampleValue: "https://app.example.com/login" },
-            { tag: "setup_guide_url", label: "Setup Guide URL", description: "Quickstart documentation link", sampleValue: "https://docs.example.com/quickstart" },
-            { tag: "support_email", label: "Support Email", description: "Customer success contact email", sampleValue: "support@example.com" },
+            { tag: "user_name", label: "Owner's name", description: "Name given at sign-up", sampleValue: "Priya Sharma" },
+            { tag: "tenant_name", label: "Business name", description: "The new workspace's company name", sampleValue: "Sharma Traders" },
+            { tag: "trial_ends_on", label: "Trial ends", description: "Last day of the free trial", sampleValue: "30 Oct 2026" },
+            { tag: "workspace_url", label: "Workspace link", description: "Sign-in link to the workspace (also the button)", sampleValue: "https://genesoftinfotech.com/login" },
         ],
         mockVariables: {
-            user_name: "Sarah Connor",
-            user_email: "sarah@acme.com",
-            company_name: "Genesoft ERP",
-            tenant_name: "Acme Industrial Group",
-            tenant_slug: "acme",
-            user_role: "TENANT_ADMIN",
-            login_url: "https://app.example.com/login",
-            setup_guide_url: "https://docs.example.com/quickstart",
-            support_email: "support@example.com",
+            user_name: "Priya Sharma",
+            tenant_name: "Sharma Traders",
+            trial_ends_on: "30 Oct 2026",
+            workspace_url: "https://genesoftinfotech.com/login",
         },
         isActive: true,
     },
@@ -754,7 +737,8 @@ export function compileSystemEmail(params: {
         actionButton:
             actionButton ||
             (resolvedVars["payment_link"] ? { label: "Pay Securely Online", url: resolvedVars["payment_link"] } : undefined) ||
-            (resolvedVars["invite_url"] ? { label: "Accept Invitation", url: resolvedVars["invite_url"] } : undefined),
+            (resolvedVars["invite_url"] ? { label: "Accept Invitation", url: resolvedVars["invite_url"] } : undefined) ||
+            (resolvedVars["workspace_url"] ? { label: "Open your workspace", url: resolvedVars["workspace_url"] } : undefined),
     })
 
     return {

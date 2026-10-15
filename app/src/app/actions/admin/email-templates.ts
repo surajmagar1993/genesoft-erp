@@ -125,8 +125,8 @@ export async function getSystemEmailTemplates(): Promise<SystemEmailTemplatesOve
     })
 
     // Which templates the platform actually sends today; the rest are previews only.
-    // Sign-up emails come from Supabase Auth, so WELCOME_ONBOARDING isn't sent from here.
-    const AUTO_SENT: SystemTemplateKey[] = ["SUPPORT_TICKET_UPDATE"]
+    // (Sign-up confirmation emails come from Supabase Auth; the welcome email follows it, see src/lib/welcome-email.ts.)
+    const AUTO_SENT: SystemTemplateKey[] = ["SUPPORT_TICKET_UPDATE", "TEAM_INVITE", "WELCOME_ONBOARDING"]
     const templatesWithUsage = templates.map((t) => ({ ...t, sentAutomatically: AUTO_SENT.includes(t.key as SystemTemplateKey) }))
 
     const allTags = new Set<string>()

@@ -6,7 +6,9 @@ import { appUrl } from "@/lib/app-url"
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
+import { after } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { sendWelcomeEmailOnce } from '@/lib/welcome-email'
 import { getPlatformGate } from '@/lib/platform-security'
 import { SIGNUP_COUNTRIES, getTaxJurisdiction } from '@/lib/tax-jurisdiction'
 
@@ -27,6 +29,9 @@ export async function login(formData: FormData) {
   }
 
   if (user) {
+    // New business owner who hasn't had the welcome email yet (e.g. confirmed on another device)
+    after(() => sendWelcomeEmailOnce(user.id))
+
     // Get user role to determine redirect destination
     const profile = await prisma.user.findUnique({
       where: { id: user.id },
@@ -157,6 +162,9 @@ export async function register(formData: FormData) {
     // but typically email confirmation prevents them from logging in anyway.
     redirect('/register?error=Application+setup+failed.+Please+contact+support.')
   }
+
+  // Email confirmation off: the account is already active, so welcome them now
+  if (authData.session) after(() => sendWelcomeEmailOnce(authData.user!.id))
 
   redirect('/login?message=Account+created+successfully.+Please+sign+in.')
 }
