@@ -3882,3 +3882,97 @@ model Company {
   @@index([tenantId], map: "idx_companies_tenant_id")
   @@map("companies")
 }
+
+// ============================================
+// PUBLIC WEBSITE CONTENT (Super Admin → Website)
+// Platform-wide, no tenant. SQL: website_cms_migration.sql (adds CHECKs on
+// kind/status and a partial unique index on site_items(kind, slug)).
+// ============================================
+
+model SiteSetting {
+  id        String   @id @default("site")
+  data      Json     @default("{}")
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  @@map("site_settings")
+}
+
+model SiteContent {
+  key         String    @id
+  draft       Json      @default("{}")
+  published   Json?
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedBy   String?   @map("updated_by") @db.Uuid
+
+  @@map("site_content")
+}
+
+model SiteContentVersion {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String
+  data        Json
+  publishedAt DateTime @default(now()) @map("published_at") @db.Timestamptz(6)
+  publishedBy String?  @map("published_by") @db.Uuid
+
+  @@index([key, publishedAt(sort: Desc)], map: "idx_site_content_versions_key")
+  @@map("site_content_versions")
+}
+
+model SiteItem {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// portfolio | client | testimonial | stat | team | job | rental_item
+  kind      String
+  slug      String?
+  data      Json     @default("{}")
+  sort      Int      @default(0)
+  /// draft | published | archived
+  status    String   @default("draft")
+  /// Permission / confirmed tick: unconfirmed items are never shown
+  confirmed Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  @@index([kind, status, sort], map: "idx_site_items_kind_status")
+  @@map("site_items")
+}
+
+model SiteMedia {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// site-media (public) | site-private (CVs)
+  bucket     String
+  path       String   @unique
+  url        String?
+  alt        String   @default("")
+  mime       String
+  bytes      Int
+  width      Int?
+  height     Int?
+  uploadedBy String?  @map("uploaded_by") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("site_media")
+}
+
+model SiteLead {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// contact | quote | application
+  kind      String
+  topic     String   @default("General")
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  data      Json     @default("{}")
+  /// new | contacted | quote_sent | won | lost | spam
+  status    String   @default("new")
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  @@index([status, createdAt(sort: Desc)], map: "idx_site_leads_status")
+  @@map("site_leads")
+}
