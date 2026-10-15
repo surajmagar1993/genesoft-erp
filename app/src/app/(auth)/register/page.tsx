@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AlertCircle, UserPlus } from 'lucide-react'
 import { WorkspaceSlugInput } from '@/components/auth/workspace-slug-input'
 import { CountrySelect } from '@/components/auth/country-select'
+import { Turnstile } from '@/components/turnstile'
 
 interface RegisterPageProps {
   searchParams: Promise<{ error?: string; plan?: string }>
@@ -128,6 +129,8 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           <Link href="/privacy" target="_blank" className="underline hover:text-foreground">Privacy Policy</Link> and{' '}
           <Link href="/refund-policy" target="_blank" className="underline hover:text-foreground">Refund Policy</Link>.
         </p>
+
+        <Turnstile />
 
         <SubmitButton className="w-full h-10 font-medium" loadingText="Creating account...">
           <UserPlus className="mr-2 h-4 w-4" />

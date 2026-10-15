@@ -142,6 +142,7 @@ We don't sell personal data. We share it only with providers that help us run ou
 - **Supabase:** database, file storage and sign-in.
 - **Vercel:** hosting of the website and app.
 - **Resend:** sending emails.
+- **Cloudflare (Turnstile):** the spam check on our website forms and sign-up page. It looks at technical signals such as your IP address and browser to tell people from bots, and doesn't use advertising cookies.
 - **Razorpay** (India) and **Stripe** (other countries): taking payments.
 - **Meta (WhatsApp)** and your own email provider: only if you connect them to send messages from your workspace.
 

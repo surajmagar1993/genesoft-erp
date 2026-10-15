@@ -9,7 +9,9 @@ import { createClient } from '@/lib/supabase/server'
 import { after } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendWelcomeEmailOnce } from '@/lib/welcome-email'
-import { getPlatformGate } from '@/lib/platform-security'
+import { clientIp, getPlatformGate } from '@/lib/platform-security'
+import { headers } from 'next/headers'
+import { TURNSTILE_FAILED, turnstileEnabled, verifyTurnstile } from '@/lib/turnstile'
 import { SIGNUP_COUNTRIES, getTaxJurisdiction } from '@/lib/tax-jurisdiction'
 
 export async function login(formData: FormData) {
@@ -84,6 +86,10 @@ export async function register(formData: FormData) {
 
   if (password !== confirmPassword) {
     redirect('/register?error=Passwords+do+not+match')
+  }
+
+  if (turnstileEnabled() && !(await verifyTurnstile(String(formData.get('cf-turnstile-response') || ''), clientIp(await headers())))) {
+    redirect(`/register?error=${encodeURIComponent(TURNSTILE_FAILED)}`)
   }
 
   if (!slug) {

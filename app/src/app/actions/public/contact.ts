@@ -10,6 +10,7 @@ import { toActionResult, type ActionResult } from "@/lib/action-result"
 import { CONTACT_TOPICS, RENTAL_CATEGORIES, RENTAL_PERIODS } from "@/lib/site-content"
 import { getPublishedItem, getPublishedItems, getSiteSettings } from "@/lib/site-cms"
 import { documentKind, storageConfigured, uploadPrivateFile } from "@/lib/storage"
+import { assertTurnstile } from "@/lib/turnstile"
 
 const WINDOW_MS = 10 * 60 * 1000
 const MAX_PER_WINDOW = 3
@@ -106,9 +107,11 @@ export async function sendContactMessage(input: {
     topic: string
     message: string
     website?: string // honeypot
+    turnstileToken?: string
 }): Promise<ActionResult<{ sent: true }>> {
     return toActionResult(async () => {
         if (input.website) return { sent: true as const } // bot: pretend success
+        await assertTurnstile(input.turnstileToken, clientIp(await headers()))
         const v = cleanVisitor(input)
         const topic = (CONTACT_TOPICS as readonly string[]).includes(input.topic) ? input.topic : "General"
         const message = (input.message || "").trim()
@@ -131,9 +134,11 @@ export async function sendRentalQuote(input: {
     city: string
     notes?: string
     website?: string // honeypot
+    turnstileToken?: string
 }): Promise<ActionResult<{ sent: true }>> {
     return toActionResult(async () => {
         if (input.website) return { sent: true as const }
+        await assertTurnstile(input.turnstileToken, clientIp(await headers()))
         const v = cleanVisitor(input)
         const published = await getPublishedItems("rental_item")
         const categories = [...(published.length ? published.map((i) => String(i.data.name)) : RENTAL_CATEGORIES.map((c) => c.name)), "Other"]
@@ -166,6 +171,7 @@ export async function sendRentalQuote(input: {
 export async function sendJobApplication(formData: FormData): Promise<ActionResult<{ sent: true }>> {
     return toActionResult(async () => {
         if (formData.get("website")) return { sent: true as const }
+        await assertTurnstile(String(formData.get("cf-turnstile-response") || ""), clientIp(await headers()))
         const v = cleanVisitor({
             name: String(formData.get("name") || ""),
             email: String(formData.get("email") || ""),

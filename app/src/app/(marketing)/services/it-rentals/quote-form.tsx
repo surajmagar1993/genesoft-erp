@@ -8,6 +8,7 @@ import { RENTAL_PERIODS } from "@/lib/site-content"
 import { PLATFORM, whatsappHref } from "@/lib/constants/platform"
 import { fieldClass, labelClass, textareaClass } from "@/components/marketing/ui"
 import { cn } from "@/lib/utils"
+import { Turnstile, resetTurnstile } from "@/components/turnstile"
 
 type Line = { id: number; category: string; quantity: string; specs: string }
 
@@ -38,9 +39,13 @@ export function RentalQuoteForm({ categories, whatsapp = PLATFORM.whatsapp }: { 
                 city: String(form.get("city") || ""),
                 notes: String(form.get("notes") || ""),
                 website: String(form.get("website") || ""),
+                turnstileToken: String(form.get("cf-turnstile-response") || ""),
             })
             if (res.success) setSent(true)
-            else setError(res.error)
+            else {
+                setError(res.error)
+                resetTurnstile()
+            }
         })
     }
 
@@ -136,6 +141,7 @@ export function RentalQuoteForm({ categories, whatsapp = PLATFORM.whatsapp }: { 
             <div className="hidden" aria-hidden="true">
                 <label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label>
             </div>
+            <Turnstile />
             <label className="flex items-start gap-2.5 text-sm leading-relaxed text-s-text">
                 <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#EF7F1A]" />
                 <span>I agree to the <Link href="/privacy" className="font-semibold text-s-orange-text hover:underline">Privacy Policy</Link> and to being contacted about this quote.</span>

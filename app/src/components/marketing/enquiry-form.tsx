@@ -8,6 +8,7 @@ import { CONTACT_TOPICS } from "@/lib/site-content"
 import { PLATFORM, whatsappHref } from "@/lib/constants/platform"
 import { fieldClass, labelClass, textareaClass } from "@/components/marketing/ui"
 import { cn } from "@/lib/utils"
+import { Turnstile, resetTurnstile } from "@/components/turnstile"
 
 /**
  * Website enquiry form (Contact page and every service page). Goes to info@
@@ -32,9 +33,13 @@ export function EnquiryForm({ topic = "General", title = "Send us a message", sh
                 topic: picked,
                 message: String(form.get("message") || ""),
                 website: String(form.get("website") || ""),
+                turnstileToken: String(form.get("cf-turnstile-response") || ""),
             })
             if (res.success) setSent(true)
-            else setError(res.error)
+            else {
+                setError(res.error)
+                resetTurnstile()
+            }
         })
     }
 
@@ -97,6 +102,7 @@ export function EnquiryForm({ topic = "General", title = "Send us a message", sh
             <div className="hidden" aria-hidden="true">
                 <label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label>
             </div>
+            <Turnstile className="sm:col-span-2" />
             <label className="flex items-start gap-2.5 text-sm leading-relaxed text-s-text sm:col-span-2">
                 <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#EF7F1A]" />
                 <span>

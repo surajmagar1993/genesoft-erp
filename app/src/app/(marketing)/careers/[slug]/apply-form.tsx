@@ -5,6 +5,7 @@ import { useState, useTransition } from "react"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { sendJobApplication } from "@/app/actions/public/contact"
 import { fieldClass, labelClass, textareaClass } from "@/components/marketing/ui"
+import { Turnstile, resetTurnstile } from "@/components/turnstile"
 
 export function ApplyForm({ job, title }: { job: string; title: string }) {
     const [isPending, startTransition] = useTransition()
@@ -19,7 +20,10 @@ export function ApplyForm({ job, title }: { job: string; title: string }) {
         startTransition(async () => {
             const res = await sendJobApplication(form)
             if (res.success) setSent(true)
-            else setError(res.error)
+            else {
+                setError(res.error)
+                resetTurnstile()
+            }
         })
     }
 
@@ -51,6 +55,7 @@ export function ApplyForm({ job, title }: { job: string; title: string }) {
             <label className={labelClass}>LinkedIn or portfolio (optional)<input name="link" type="url" placeholder="https://" className={fieldClass} /></label>
             <label className={labelClass}>A few lines about you (optional)<textarea name="message" rows={4} maxLength={3000} className={textareaClass} /></label>
             <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
+            <Turnstile />
             <label className="flex items-start gap-2.5 text-sm leading-relaxed text-s-text">
                 <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#EF7F1A]" />
                 <span>I agree to the <Link href="/privacy" className="font-semibold text-s-orange-text hover:underline">Privacy Policy</Link>. My CV is kept only as long as needed to consider me.</span>
