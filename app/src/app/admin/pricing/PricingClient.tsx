@@ -14,6 +14,9 @@ import { REGIONAL_PRICING_CATALOG, PLAN_TIERS } from "@/lib/saas-subscription-en
 import { annualFromMonthly } from "@/lib/plan-pricing-math"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { PlanConfig } from "@/lib/plan-config-shared"
+import { PlanSettingsEditor } from "./PlanSettingsEditor"
 
 const TIERS = ["BASIC", "PRO", "ENTERPRISE"] as const
 
@@ -118,28 +121,42 @@ function RegionRow({ region }: { region: PricingRegionRow }) {
     )
 }
 
-export function PricingClient({ regions }: { regions: PricingRegionRow[] }) {
+export function PricingClient({ regions, planConfig, tab }: { regions: PricingRegionRow[]; planConfig: PlanConfig; tab?: string }) {
     return (
-        <div className="mx-auto max-w-7xl space-y-6 px-4 pb-12">
+        <div className="mx-auto max-w-7xl space-y-5 px-4 pb-12">
             <div className="border-b pb-5">
                 <h1 className="text-2xl font-bold tracking-tight">Pricing &amp; Plans</h1>
-                <p className="mt-0.5 text-sm text-muted-foreground">
-                    Monthly price per region (yearly is 12 months less 20%). The switch shows or hides a plan: a hidden plan isn&apos;t offered on the pricing page or at checkout, but businesses already on it keep it. The Free plan is always offered.
-                </p>
+                <p className="mt-0.5 text-sm text-muted-foreground">Prices per region, and what each plan includes.</p>
             </div>
 
-            <Card className="gap-0 divide-y overflow-hidden py-0">
-                <div className="hidden bg-muted/40 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground md:grid md:grid-cols-[170px_repeat(3,minmax(0,1fr))_80px] md:gap-4">
-                    <div>Region</div>
-                    {TIERS.map((t) => (
-                        <div key={t}>{PLAN_TIERS[t].name}</div>
-                    ))}
-                    <div />
-                </div>
-                {regions.map((region) => (
-                    <RegionRow key={region.code} region={region} />
-                ))}
-            </Card>
+            <Tabs defaultValue={tab === "plans" ? "plans" : "prices"} className="space-y-4">
+                <TabsList>
+                    <TabsTrigger value="prices">Prices</TabsTrigger>
+                    <TabsTrigger value="plans">Limits &amp; modules</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="prices" className="space-y-4">
+                    <p className="max-w-3xl text-sm text-muted-foreground">
+                        Monthly price per region (yearly is 12 months less 20%). The switch shows or hides a plan: a hidden plan isn&apos;t offered on the pricing page or at checkout, but businesses already on it keep it. The Free plan is always offered.
+                    </p>
+                    <Card className="gap-0 divide-y overflow-hidden py-0">
+                        <div className="hidden bg-muted/40 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground md:grid md:grid-cols-[170px_repeat(3,minmax(0,1fr))_80px] md:gap-4">
+                            <div>Region</div>
+                            {TIERS.map((t) => (
+                                <div key={t}>{PLAN_TIERS[t].name}</div>
+                            ))}
+                            <div />
+                        </div>
+                        {regions.map((region) => (
+                            <RegionRow key={region.code} region={region} />
+                        ))}
+                    </Card>
+                </TabsContent>
+
+                <TabsContent value="plans">
+                    <PlanSettingsEditor config={planConfig} />
+                </TabsContent>
+            </Tabs>
         </div>
     )
 }

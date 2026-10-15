@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { headers } from "next/headers"
 import { getEffectivePricing } from "@/lib/plan-pricing"
+import { getPlanConfig } from "@/lib/plan-config"
 import { PLAN_TIERS, type PlanTier } from "@/lib/saas-subscription-engine"
 import { PlanCards, type PricedPlan } from "./plan-cards"
 import { localeForCurrency } from "@/lib/utils"
@@ -24,14 +25,14 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
     const region = regionFor(params.region || geo)
 
     // Live prices: Admin → Pricing, with the built-in catalog as fallback
-    const pricing = await getEffectivePricing(region.currency)
+    const [pricing, planConfig] = await Promise.all([getEffectivePricing(region.currency), getPlanConfig()])
     // Plans switched off in Admin → Pricing aren't offered
     const tiers = (["FREE", "BASIC", "PRO", "ENTERPRISE"] as PlanTier[]).filter((t) => !pricing.hidden.includes(t))
     const plans: PricedPlan[] = tiers.map((tier) => ({
         tier,
         name: PLAN_TIERS[tier].name,
         tagline: PLAN_TIERS[tier].tagline,
-        features: PLAN_TIERS[tier].features,
+        features: planConfig[tier].features,
         monthly: pricing.monthly[tier],
         annual: pricing.annual[tier],
     }))

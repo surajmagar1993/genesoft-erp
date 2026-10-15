@@ -14,6 +14,7 @@ import DataAccountTab from "./data-account-tab"
 import { getTenantRole } from "@/lib/get-tenant-id"
 import { getPendingInvites, getTeamMembers } from "@/app/actions/settings/team"
 import { getBillingPricing } from "@/app/actions/saas/subscription"
+import { getPlanConfig, PLAN_ORDER } from "@/lib/plan-config"
 import { getEmailPreferences } from "@/app/actions/settings/email-preferences"
 import { EmailPreferencesCard } from "./email-preferences-card"
 import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
@@ -32,6 +33,8 @@ export default async function SettingsPage({
     const settings = await getTenantSettings()
     const gatewayConfig = await getTenantPaymentGateways()
     const billingPricing = await getBillingPricing().catch(() => undefined)
+    const planConfig = await getPlanConfig()
+    const planFeatures = Object.fromEntries(PLAN_ORDER.map((t) => [t, planConfig[t].features]))
     const role = await getTenantRole()
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN"
     const teamMembers = isAdmin ? await getTeamMembers() : []
@@ -153,7 +156,7 @@ export default async function SettingsPage({
 
                 {/* Billing Settings */}
                 <TabsContent value="billing">
-                    <BillingTab settings={settings as any} pricing={billingPricing} checkoutResult={checkoutResult} />
+                    <BillingTab settings={settings as any} pricing={billingPricing} checkoutResult={checkoutResult} planFeatures={planFeatures} />
                 </TabsContent>
 
                 {/* Team & Access (workspace admins only) */}

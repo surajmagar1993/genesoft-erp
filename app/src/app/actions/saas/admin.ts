@@ -9,6 +9,7 @@ import { stripe } from "@/lib/stripe"
 import { ensureStripePrice, type PaidPlan } from "@/lib/stripe-plans"
 import { annualFromMonthly } from "@/lib/plan-pricing"
 import { PRICING_REGIONS } from "@/lib/pricing-regions"
+import { PLAN_CONFIG_ACTION, PLAN_ORDER, getPlanConfig, normalizePlanConfig, planName, type PlanConfig } from "@/lib/plan-config"
 import { getRegionalPricing } from "@/lib/saas-subscription-engine"
 import { calculatePlatformMrr } from "@/lib/platform-mrr"
 import { sendSystemEmail } from "@/lib/system-email"
@@ -692,6 +693,39 @@ async function _savePricingRegion(regionCode: string, plans: { tier: PaidPlan; a
     revalidatePath('/settings')
     revalidatePath('/pricing')
     return { changed: changed.length, stripeSync }
+}
+
+/** What each plan includes (limits, modules, pricing-page bullets), as the platform saved it. */
+export async function getPlanSettings(): Promise<PlanConfig> {
+    await ensureSuperAdmin()
+    return getPlanConfig()
+}
+
+/**
+ * Saves what each plan includes. Stored as an admin audit entry, so every
+ * change is kept with who made it; the newest entry is the one in force.
+ * Takes effect on the next request in every workspace.
+ */
+async function _savePlanSettings(input: PlanConfig) {
+    const user = await ensureSuperAdmin()
+    const config = normalizePlanConfig(input)
+    for (const tier of PLAN_ORDER) {
+        if (!config[tier].features.length) throw new Error(`Add at least one feature line for the ${planName(tier)} plan`)
+    }
+    const before = await getPlanConfig()
+    await prisma.adminAuditLog.create({
+        data: {
+            adminId: user.id,
+            adminEmail: user.email || "unknown",
+            action: PLAN_CONFIG_ACTION,
+            targetType: "PLAN_CONFIG",
+            metadata: { config, previous: before } as unknown as Prisma.InputJsonValue,
+        },
+    })
+    revalidatePath('/admin/pricing')
+    revalidatePath('/pricing')
+    revalidatePath('/settings')
+    return config
 }
 
 export async function getSupportTickets(page: number = 1, limit: number = 15) {
@@ -1637,6 +1671,10 @@ export async function createTenant(...args: Parameters<typeof _createTenant>) {
 
 export async function updateTenantDetails(...args: Parameters<typeof _updateTenantDetails>) {
     return toActionResult(() => _updateTenantDetails(...args))
+}
+
+export async function savePlanSettings(...args: Parameters<typeof _savePlanSettings>) {
+    return toActionResult(() => _savePlanSettings(...args))
 }
 
 export async function savePricingRegion(...args: Parameters<typeof _savePricingRegion>) {

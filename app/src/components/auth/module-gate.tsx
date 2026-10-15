@@ -1,8 +1,9 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
 import { Lock } from "lucide-react"
-import { hasModuleAccess } from "@/lib/get-tenant-id"
+import { hasModuleAccess, isInPlan } from "@/lib/get-tenant-id"
 import { MODULES, type ModuleKey } from "@/lib/access"
+import { PlanGate } from "@/components/auth/plan-gate"
 
 /**
  * Server-side page guard for a module: people without access see a short
@@ -10,6 +11,8 @@ import { MODULES, type ModuleKey } from "@/lib/access"
  */
 export async function ModuleGate({ module, children }: { module: ModuleKey; children: ReactNode }) {
     if (await hasModuleAccess(module, "VIEW")) return <>{children}</>
+    // Left out of the workspace's plan: show the upgrade notice instead
+    if (!(await isInPlan(module))) return <PlanGate feature={module}>{children}</PlanGate>
     const label = MODULES.find((m) => m.key === module)?.label ?? module
     return (
         <div className="flex min-h-[50vh] items-center justify-center p-6">

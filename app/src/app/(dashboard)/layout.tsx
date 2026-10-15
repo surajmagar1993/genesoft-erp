@@ -193,12 +193,17 @@ interface AppSidebarProps {
     /** Module access of a member (null for admins: everything) */
     access: ModuleAccess | null
     accessLoaded: boolean
+    /** Modules the workspace's plan includes (POS and Rentals too); hidden when false */
+    planModules: Record<string, boolean>
     countryCode: string
     multiJurisdiction: boolean
     tenantName?: string
 }
 
-function AppSidebar({ access, accessLoaded, countryCode, multiJurisdiction, tenantName }: AppSidebarProps) {
+/** Parts of Sales a plan can leave out */
+const PLAN_ROUTES: Record<string, string> = { "/sales/pos": "pos", "/sales/rental": "rentals" }
+
+function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJurisdiction, tenantName }: AppSidebarProps) {
     const pathname = usePathname()
     const jurisdiction = getTaxJurisdiction(countryCode)
 
@@ -232,6 +237,8 @@ function AppSidebar({ access, accessLoaded, countryCode, multiJurisdiction, tena
             ...group,
             items: group.items.filter((item) => {
                 const module = moduleForPath(item.href)
+                // Modules the plan leaves out are hidden for everyone, admins too
+                if (planModules[PLAN_ROUTES[item.href] ?? module ?? ""] === false) return false
                 if (!module) return true
                 if (!accessLoaded) return false
                 return !access || access[module] !== "NONE"
@@ -410,6 +417,7 @@ export default function DashboardLayout({
     const [bannerMessage, setBannerMessage] = useState<string | null>(null)
     const [role, setRole] = useState<string | null>(null)
     const [access, setAccess] = useState<ModuleAccess | null>(null)
+    const [planModules, setPlanModules] = useState<Record<string, boolean>>({})
 
     useEffect(() => {
         let isMounted = true
@@ -445,10 +453,11 @@ export default function DashboardLayout({
     useEffect(() => {
         let isMounted = true
         getMyAccess()
-            .then(({ role, access }) => {
+            .then(({ role, access, planModules }) => {
                 if (!isMounted) return
                 setRole(role)
                 setAccess(access)
+                setPlanModules(planModules)
                 if (role === 'SUPER_ADMIN' && !pathname.startsWith('/admin') && !pathname.startsWith('/saas')) {
                     window.location.href = '/admin/dashboard'
                 }
@@ -470,6 +479,7 @@ export default function DashboardLayout({
             <AppSidebar
                 access={role && isAdminRole(role) ? null : access}
                 accessLoaded={role !== null}
+                planModules={planModules}
                 countryCode={tenantCountry}
                 multiJurisdiction={multiJurisdiction}
                 tenantName={tenantName}

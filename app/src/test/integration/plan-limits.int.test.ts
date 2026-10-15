@@ -5,7 +5,10 @@ import { createVendor } from "@/app/actions/purchase"
 import { createWarehouse } from "@/app/actions/inventory"
 import { inviteTeamMember, setTeamMemberActive } from "@/app/actions/settings/team"
 import { createRentalAsset } from "@/app/actions/rental"
-import { getPricingPlans, savePricingRegion } from "@/app/actions/saas/admin"
+import { getPlanSettings, getPricingPlans, savePlanSettings, savePricingRegion } from "@/app/actions/saas/admin"
+import { getMyAccess, getTenantId } from "@/lib/get-tenant-id"
+import { createEmployee } from "@/app/actions/hr"
+import { PLAN_CONFIG_ACTION, defaultPlanConfig } from "@/lib/plan-config"
 import { createPlanCheckout } from "@/app/actions/saas/razorpay"
 import { getEffectivePricing } from "@/lib/plan-pricing"
 import { assertWithinLimit, effectivePlan } from "@/lib/plan-limits"
@@ -113,5 +116,57 @@ describe("Admin → Pricing & Plans", () => {
         actAs(user)
         await expect(createPlanCheckout("BASIC", "MONTHLY")).rejects.toThrow(/isn't available/)
         await prisma.pricingPlan.deleteMany({ where: { regionCode: "IN", tier: "BASIC" } })
+    })
+})
+
+describe("editable plan settings (Admin → Pricing & Plans → Limits & modules)", () => {
+    it("the super admin changes a limit and a module; every business follows on its next request", async () => {
+        const { tenant, user } = await createTestTenant({ plan: "BASIC" })
+        const { user: admin } = await createTestTenant({ role: "SUPER_ADMIN" })
+
+        actAs(admin)
+        const config = await getPlanSettings()
+        expect(config).toEqual(defaultPlanConfig())
+        config.BASIC.limits.contacts = 2
+        config.BASIC.modules.hr = false
+        config.BASIC.modules.pos = true
+        config.BASIC.features = ["Up to 2 contacts", "Point of Sale"]
+        expect((await savePlanSettings(config)).success).toBe(true)
+        expect(await prisma.adminAuditLog.count({ where: { action: PLAN_CONFIG_ACTION } })).toBe(1)
+
+        actAs(user)
+        await prisma.contact.createMany({ data: [{ tenantId: tenant.id, displayName: "A" }, { tenantId: tenant.id, displayName: "B" }] })
+        expect((await createContact(contact("C"))).error).toMatch(/Basic plan allows up to 2 contacts/)
+
+        // HR is closed even to the workspace admin, with an upgrade message naming the cheapest plan that has it
+        const mine = await getMyAccess()
+        expect(mine.access.hr).toBe("NONE")
+        expect(mine.planModules).toMatchObject({ hr: false, pos: true, rentals: false })
+        await expect(getTenantId("hr")).rejects.toThrow(/HR.* is on the Free plan\. Upgrade/)
+        await expect(createEmployee({} as never)).rejects.toThrow(/Upgrade/)
+
+        // Back to the defaults
+        actAs(admin)
+        expect((await savePlanSettings(defaultPlanConfig())).success).toBe(true)
+        actAs(user)
+        expect((await getMyAccess()).access.hr).toBe("FULL")
+        await prisma.adminAuditLog.deleteMany({ where: { action: PLAN_CONFIG_ACTION } })
+    })
+
+    it("rejects bad input: negative limits are ignored, a plan needs a feature line, only the super admin can save", async () => {
+        const { user: admin } = await createTestTenant({ role: "SUPER_ADMIN" })
+        actAs(admin)
+        const config = defaultPlanConfig()
+        config.FREE.limits.users = -3 as never
+        config.PRO.features = []
+        expect(await savePlanSettings(config)).toMatchObject({ success: false, error: expect.stringMatching(/Pro plan/) })
+        config.PRO.features = ["Everything"]
+        const saved = await savePlanSettings(config)
+        expect(saved.success && saved.data.FREE.limits.users).toBe(1)
+
+        const { user } = await createTestTenant()
+        actAs(user)
+        expect((await savePlanSettings(defaultPlanConfig())).success).toBe(false)
+        await prisma.adminAuditLog.deleteMany({ where: { action: PLAN_CONFIG_ACTION } })
     })
 })

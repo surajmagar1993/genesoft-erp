@@ -3,29 +3,19 @@ import { prisma } from "@/lib/prisma"
 import { readTeam } from "@/lib/team-settings"
 import { PLAN_TIERS, getTierRank, type PlanTier } from "@/lib/saas-subscription-engine"
 
+import { PLAN_MODULES, getPlanConfig, lowestPlanWith, planName, type LimitKind, type PlanConfig, type PlanModuleKey } from "@/lib/plan-config"
+
 /**
- * What a workspace's plan allows (the limits on the pricing page, from
- * PLAN_TIERS). An active trial counts as Pro (Billing shows "PRO Trial");
- * after it ends the workspace's own plan applies.
+ * What a workspace's plan allows: the limits and modules set in Admin →
+ * Pricing & Plans (src/lib/plan-config.ts). An active trial counts as Pro
+ * (Billing shows "PRO Trial"); after it ends the workspace's own plan applies.
  *
  * Limits only stop new records: a workspace over a limit (e.g. after a
  * downgrade) keeps everything it has but can't add more.
  */
-export type LimitKind = "users" | "contacts" | "invoicesPerMonth" | "warehouses"
-export type PlanFeature = "pos" | "rentals" | "manufacturing"
-
-/** Plan needed for each feature that isn't on every plan. */
-export const FEATURE_PLAN: Record<PlanFeature, PlanTier> = {
-    pos: "ENTERPRISE",
-    rentals: "ENTERPRISE",
-    manufacturing: "ENTERPRISE",
-}
-
-const FEATURE_LABEL: Record<PlanFeature, string> = {
-    pos: "Point of Sale",
-    rentals: "Rentals",
-    manufacturing: "Manufacturing",
-}
+export type { LimitKind }
+/** Modules that can be left out of a plan (incl. POS and Rentals inside Sales) */
+export type PlanFeature = PlanModuleKey
 
 const TRIAL_TIER: PlanTier = "PRO"
 
@@ -55,18 +45,12 @@ export function effectivePlan(
     return { tier, plan, onTrial }
 }
 
-export function limitFor(tier: PlanTier, kind: LimitKind): number | null {
-    const limits = PLAN_TIERS[tier].limits
-    switch (kind) {
-        case "users": return limits.maxTeamMembers
-        case "contacts": return limits.maxContacts
-        case "invoicesPerMonth": return limits.maxInvoicesPerMonth
-        case "warehouses": return limits.maxWarehouses
-    }
+export function limitFor(config: PlanConfig, tier: PlanTier, kind: LimitKind): number | null {
+    return config[tier].limits[kind]
 }
 
-export function planAllows(tier: PlanTier, feature: PlanFeature): boolean {
-    return getTierRank(tier) >= getTierRank(FEATURE_PLAN[feature])
+export function planAllows(config: PlanConfig, tier: PlanTier, feature: PlanFeature): boolean {
+    return config[tier].modules[feature] !== false
 }
 
 const loadPlan = cache(async (tenantId: string): Promise<EffectivePlan> => {
@@ -107,11 +91,6 @@ const NOUN: Record<LimitKind, [string, string]> = {
     warehouses: ["warehouse", "warehouses"],
 }
 
-/** "Free", "Basic", "Pro", "Enterprise" */
-function planName(tier: PlanTier): string {
-    return tier.charAt(0) + tier.slice(1).toLowerCase()
-}
-
 function limitMessage(p: EffectivePlan, kind: LimitKind, max: number): string {
     const plan = p.onTrial ? "trial" : `${planName(p.tier)} plan`
     const noun = NOUN[kind][max === 1 ? 0 : 1]
@@ -130,8 +109,8 @@ export async function assertWithinLimit(
 ): Promise<void> {
     const adding = opts.adding ?? 1
     if (adding <= 0) return
-    const p = await loadPlan(tenantId)
-    const max = limitFor(p.tier, kind)
+    const [p, config] = await Promise.all([loadPlan(tenantId), getPlanConfig()])
+    const max = limitFor(config, p.tier, kind)
     if (max === null) return
     const used = await countUsage(opts.db ?? prisma, tenantId, kind, opts.includePendingInvites ?? true)
     if (used + adding > max) throw new PlanLimitError(limitMessage(p, kind, max))
@@ -152,12 +131,16 @@ export async function planLimitError(
     }
 }
 
-export function featureMessage(feature: PlanFeature): string {
-    return `${FEATURE_LABEL[feature]} is on the ${planName(FEATURE_PLAN[feature])} plan. Upgrade in Settings → Billing to use it.`
+export function featureMessage(config: PlanConfig, feature: PlanFeature): string {
+    const label = PLAN_MODULES.find((m) => m.key === feature)?.label ?? feature
+    const tier = lowestPlanWith(config, feature)
+    return tier
+        ? `${label} is on the ${planName(tier)} plan. Upgrade in Settings → Billing to use it.`
+        : `${label} isn't included in your plan.`
 }
 
 /** Throws a PlanLimitError when the workspace's plan doesn't include the feature. */
 export async function assertPlanFeature(tenantId: string, feature: PlanFeature): Promise<void> {
-    const p = await loadPlan(tenantId)
-    if (!planAllows(p.tier, feature)) throw new PlanLimitError(featureMessage(feature))
+    const [p, config] = await Promise.all([loadPlan(tenantId), getPlanConfig()])
+    if (!planAllows(config, p.tier, feature)) throw new PlanLimitError(featureMessage(config, feature))
 }

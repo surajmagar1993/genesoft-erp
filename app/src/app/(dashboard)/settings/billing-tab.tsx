@@ -56,6 +56,8 @@ interface BillingTabProps {
     pricing?: EffectivePricing
     /** Set when Stripe Checkout sends the customer back (?success=true / ?canceled=true) */
     checkoutResult?: "success" | "canceled"
+    /** Feature bullets per plan from Admin → Pricing & Plans */
+    planFeatures?: Partial<Record<PlanTier, string[]>>
 }
 
 type RazorpayResponse = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }
@@ -66,7 +68,7 @@ declare global {
     }
 }
 
-export default function BillingTab({ settings, pricing, checkoutResult }: BillingTabProps) {
+export default function BillingTab({ settings, pricing, checkoutResult, planFeatures }: BillingTabProps) {
     const router = useRouter()
     const currentPlan: PlanTier = (settings?.plan as PlanTier) || "FREE"
     const currency = settings?.currency_code || settings?.currencyCode || "INR"
@@ -446,7 +448,7 @@ export default function BillingTab({ settings, pricing, checkoutResult }: Billin
                             <CardContent className="flex-1 space-y-4 pt-2">
                                 <div className="h-px bg-border/60 w-full" />
                                 <div className="space-y-2.5 text-xs">
-                                    {plan.features.map((f) => (
+                                    {(planFeatures?.[tier] ?? plan.features).map((f) => (
                                         <div key={f} className="flex items-start gap-2.5">
                                             <div className="mt-0.5 rounded-full bg-emerald-500/10 p-0.5 shrink-0">
                                                 <Check className="h-3 w-3 text-emerald-600 stroke-[3]" />

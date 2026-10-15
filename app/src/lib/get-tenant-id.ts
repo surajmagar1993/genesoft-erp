@@ -6,6 +6,8 @@ import { readClosure } from "@/lib/workspace-closure"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
 import { MODULES, atLeast, levelFor, resolveAccess, type AccessLevel, type ModuleAccess, type ModuleKey } from "@/lib/access"
+import { getPlanConfig, planName, lowestPlanWith, type PlanConfig } from "@/lib/plan-config"
+import { effectivePlan } from "@/lib/plan-limits"
 
 /**
  * Role ladder inside a workspace:
@@ -28,7 +30,18 @@ const TENANT_ADMIN_ROLES = ["ADMIN", "SUPER_ADMIN"]
 // Cached per request: a page or action that checks several times hits the database once
 type ModuleArg = ModuleKey | readonly ModuleKey[]
 
-const getTenantContext = cache(async (): Promise<{ tenantId: string; role: string; access: ModuleAccess }> => {
+type TenantContext = {
+  tenantId: string
+  role: string
+  access: ModuleAccess
+  /** Modules (incl. "pos", "rentals") the workspace's plan includes */
+  planModules: Record<string, boolean>
+  /** Modules the plan leaves out: access to them is NONE for everyone */
+  planBlocked: ModuleKey[]
+  planConfig: PlanConfig | null
+}
+
+const getTenantContext = cache(async (): Promise<TenantContext> => {
   const supabase = await createClient()
 
   const {
@@ -53,15 +66,22 @@ const getTenantContext = cache(async (): Promise<{ tenantId: string; role: strin
 
   const role: string = profile.role ?? "USER"
   let savedAccess: unknown = null
+  let planModules: Record<string, boolean> = {}
+  let planConfig: PlanConfig | null = null
 
   // A workspace suspended by the platform admin (Admin → Tenants) loses access.
   // Platform admins keep theirs so they can still reach /admin.
   if (role !== "SUPER_ADMIN") {
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: profile.tenantId },
-      select: { isActive: true, settings: true },
-    })
+    const [tenant, config] = await Promise.all([
+      prisma.tenant.findUnique({
+        where: { id: profile.tenantId },
+        select: { isActive: true, settings: true, plan: true, isTrial: true, trialEndsAt: true },
+      }),
+      getPlanConfig(),
+    ])
     savedAccess = readSavedAccess(tenant?.settings, user.id)
+    planConfig = config
+    planModules = config[effectivePlan(tenant ?? { plan: "FREE", isTrial: false, trialEndsAt: null }).tier].modules
     if (tenant && !tenant.isActive) {
       await supabase.auth.signOut()
       if (readClosure(tenant.settings)) {
@@ -71,7 +91,12 @@ const getTenantContext = cache(async (): Promise<{ tenantId: string; role: strin
     }
   }
 
-  return { tenantId: profile.tenantId, role, access: resolveAccess(role, savedAccess) }
+  // A module the plan leaves out is closed to everyone, admins included
+  const access = resolveAccess(role, savedAccess)
+  const planBlocked = MODULES.map((m) => m.key).filter((k) => planModules[k] === false)
+  for (const k of planBlocked) access[k] = "NONE"
+
+  return { tenantId: profile.tenantId, role, access, planModules, planBlocked, planConfig }
 })
 
 /** Saved module access for one member: tenants.settings.team.access[userId]. */
@@ -85,10 +110,16 @@ function moduleLabel(module: ModuleArg): string {
   return keys.map((k) => MODULES.find((m) => m.key === k)?.label ?? k).join(" or ")
 }
 
-function requireLevel(access: ModuleAccess, module: ModuleArg, min: AccessLevel): void {
+function requireLevel(ctx: TenantContext, module: ModuleArg, min: AccessLevel): void {
+  const { access } = ctx
   const level = levelFor(access, module)
   if (atLeast(level, min)) return
   const what = moduleLabel(module)
+  const keys = (Array.isArray(module) ? module : [module]) as ModuleKey[]
+  if (ctx.planConfig && keys.every((k) => ctx.planBlocked.includes(k))) {
+    const tier = lowestPlanWith(ctx.planConfig, keys[0])
+    throw new Error(tier ? `${what} is on the ${planName(tier)} plan. Upgrade in Settings → Billing to use it.` : `${what} isn't included in your plan.`)
+  }
   if (level === "NONE") throw new Error(`You don't have access to ${what}. Ask a workspace admin.`)
   if (level === "VIEW") throw new Error(`You can only view ${what}. Ask a workspace admin for edit access.`)
   throw new Error(`Only people with full access to ${what} can do this.`)
@@ -100,8 +131,9 @@ function requireLevel(access: ModuleAccess, module: ModuleArg, min: AccessLevel)
  * Redirects to /login if the user is not authenticated or deactivated.
  */
 export async function getTenantId(module?: ModuleArg): Promise<string> {
-  const { tenantId, access } = await getTenantContext()
-  if (module) requireLevel(access, module, "VIEW")
+  const ctx = await getTenantContext()
+  if (module) requireLevel(ctx, module, "VIEW")
+  const { tenantId } = ctx
   return tenantId
 }
 
@@ -110,10 +142,18 @@ export async function getTenantRole(): Promise<string> {
   return (await getTenantContext()).role
 }
 
-/** The caller's role and module access, for showing or hiding menus and buttons. */
-export async function getMyAccess(): Promise<{ role: string; access: ModuleAccess }> {
-  const { role, access } = await getTenantContext()
-  return { role, access }
+/**
+ * The caller's role and module access, for showing or hiding menus and
+ * buttons, plus which modules the workspace's plan includes (e.g. "pos").
+ */
+export async function getMyAccess(): Promise<{ role: string; access: ModuleAccess; planModules: Record<string, boolean> }> {
+  const { role, access, planModules } = await getTenantContext()
+  return { role, access, planModules }
+}
+
+/** True when the workspace's plan includes the module (POS and Rentals included). */
+export async function isInPlan(module: string): Promise<boolean> {
+  return (await getTenantContext()).planModules[module] !== false
 }
 
 /** True when the caller has at least `min` on the module (no throw), e.g. for self-service "act for others". */
@@ -126,9 +166,10 @@ export async function hasModuleAccess(module: ModuleArg, min: AccessLevel): Prom
  * change business records.
  */
 export async function getTenantWriterId(module?: ModuleArg): Promise<string> {
-  const { tenantId, role, access } = await getTenantContext()
+  const ctx = await getTenantContext()
+  const { tenantId, role } = ctx
   if (module) {
-    requireLevel(access, module, "EDIT")
+    requireLevel(ctx, module, "EDIT")
     return tenantId
   }
   if (!WRITER_ROLES.includes(role)) {
@@ -143,9 +184,10 @@ export async function getTenantWriterId(module?: ModuleArg): Promise<string> {
  * budgets, pricing, credit notes) and HR/payroll records.
  */
 export async function getTenantManagerId(module?: ModuleArg): Promise<string> {
-  const { tenantId, role, access } = await getTenantContext()
+  const ctx = await getTenantContext()
+  const { tenantId, role } = ctx
   if (module) {
-    requireLevel(access, module, "FULL")
+    requireLevel(ctx, module, "FULL")
     return tenantId
   }
   if (!MANAGER_ROLES.includes(role)) {
