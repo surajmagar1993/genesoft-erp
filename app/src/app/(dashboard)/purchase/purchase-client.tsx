@@ -351,6 +351,8 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                 startTransition(() => {
                     router.refresh()
                 })
+            } else {
+                toast.error(res.error)
             }
         } catch (err: any) {
             toast.error(err.message || "Failed to create supplier")

@@ -189,8 +189,11 @@ export async function executePlanChange(params: {
     }
 
     try {
-        const { quote, tenant } = await quotePlanChange(tenantId, targetPlan, billingCycle)
+        const { quote, tenant, pricing } = await quotePlanChange(tenantId, targetPlan, billingCycle)
         const currentPlan = (tenant.plan as PlanTier) || "FREE"
+        if (targetPlan !== currentPlan && pricing.hidden.includes(targetPlan) && !caller.isSuperAdmin) {
+            return { success: false, message: "", error: "This plan isn't available right now" }
+        }
         const settings = (tenant.settings as any) || {}
         const currentSub = settings.subscription || {}
 

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { recordContactTransaction } from "@/lib/contact-ledger"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { planLimitError } from "@/lib/plan-limits"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -195,6 +196,9 @@ export async function createContact(
       }
     }
 
+    const limit = await planLimitError(tenantId, "contacts")
+    if (limit) return { error: limit }
+
     const created = await prisma.contact.create({
       data: {
         tenantId,
@@ -378,6 +382,9 @@ export async function importContacts(
         },
       })
     }
+
+    const limit = await planLimitError(tenantId, "contacts", { adding: rows.length })
+    if (limit) return { error: limit, count: 0 }
 
     const created = await prisma.$transaction(rows.map((r) => prisma.contact.create({ data: r.data as never, select: { id: true } })))
     // An imported balance becomes an opening entry on the customer's statement (not a bare number)

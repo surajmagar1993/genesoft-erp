@@ -1,5 +1,6 @@
 "use client"
 
+import { unwrap } from "@/lib/action-result"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { 
@@ -515,7 +516,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                 })
                 toast.success("Warehouse updated successfully")
             } else {
-                await createWarehouse({
+                unwrap(await createWarehouse({
                     name: whName,
                     code: whCode,
                     address: whAddress,
@@ -525,7 +526,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                     contactName: whContactName,
                     contactPhone: whContactPhone,
                     isDefault: whIsDefault
-                })
+                }))
                 toast.success("Warehouse provisioned successfully")
             }
             setIsWarehouseOpen(false)

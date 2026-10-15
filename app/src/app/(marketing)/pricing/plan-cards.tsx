@@ -40,7 +40,7 @@ export function PlanCards({ plans, currency, locale }: { plans: PricedPlan[]; cu
                 </div>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <div className={cn("grid gap-6 md:grid-cols-2", plans.length >= 4 ? "lg:grid-cols-4" : plans.length === 3 ? "lg:grid-cols-3" : "")}>
                 {plans.map((plan) => {
                     const featured = plan.tier === "PRO"
                     const price = cycle === "ANNUAL" ? plan.annual / 12 : plan.monthly

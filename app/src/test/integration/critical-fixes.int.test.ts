@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { prisma } from "@/lib/prisma"
+import { unwrap } from "@/lib/action-result"
 import { convertLeadToDeal, createLead, getLeadById, getLeads, updateLead } from "@/app/actions/crm/leads"
 import { createDeal, getDealById, getDeals, updateDealStage } from "@/app/actions/crm/deals"
 import { createProduct, getProductById, importProducts, updateProduct } from "@/app/actions/sales/products"
@@ -30,7 +31,7 @@ describe("C1 leads", () => {
         expect((await getLeads(1, 10, { search: "asha@" })).total).toBe(2)
         expect((await getLeads(1, 10, { search: "redesign" })).total).toBe(1)
 
-        const res = await convertLeadToDeal(created.id!)
+        const res = unwrap(await convertLeadToDeal(created.id!))
         const deal = await prisma.deal.findUniqueOrThrow({ where: { id: res.dealId }, include: { contact: true } })
         expect(deal.contact.displayName).toBe("Asha Rao")
         expect((await getLeadById(created.id!))?.status).toBe("CONVERTED")
@@ -142,13 +143,13 @@ describe("C5 delivery challan → invoice", () => {
                 items: { create: [{ productName: "Steel rods", description: "12mm", hsnCode: "7214", quantity: 10, unitPrice: 100, taxRate: 18 }] },
             } as never,
         })
-        const res = await convertChallanToInvoice(challan.id)
+        const res = unwrap(await convertChallanToInvoice(challan.id))
         const inv = await prisma.invoice.findUniqueOrThrow({ where: { id: res.invoice.id }, include: { items: true } })
         expect((inv.billTo as { name: string }).name).toBe("Mehta Stores")
         expect(inv.currencyCode).toBe("INR")
         expect(Number(inv.total)).toBe(1180)
         expect(Number(inv.items[0].igstRate)).toBe(18) // Maharashtra → Karnataka
         expect(inv.items[0].description).toBe("Steel rods — 12mm")
-        await expect(convertChallanToInvoice(challan.id)).rejects.toThrow(/already/)
+        expect(await convertChallanToInvoice(challan.id)).toMatchObject({ success: false, error: expect.stringMatching(/already/) })
     })
 })

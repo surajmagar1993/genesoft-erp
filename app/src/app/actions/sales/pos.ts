@@ -1,5 +1,6 @@
 "use server"
 
+import { assertPlanFeature } from "@/lib/plan-limits"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { deductStockForSale } from "@/lib/stock"
@@ -139,6 +140,7 @@ export async function quickCreateWalkInContact(
   phone?: string
 ): Promise<{ id: string; displayName: string }> {
   const tenantId = await getTenantWriterId(MODULE)
+  await assertPlanFeature(tenantId, "pos")
 
   const contact = await prisma.contact.create({
     data: {
@@ -164,6 +166,7 @@ export async function createPOSSale(
   data: POSTransactionData
 ): Promise<POSSaleResult> {
   const tenantId = await getTenantWriterId(MODULE)
+  await assertPlanFeature(tenantId, "pos")
 
   try {
     // 1. Resolve or create contact
@@ -352,6 +355,7 @@ export async function openPOSSession(
   staffName: string
 ): Promise<POSSessionRecord> {
   const tenantId = await getTenantWriterId(MODULE)
+  await assertPlanFeature(tenantId, "pos")
 
   // Close any existing open sessions
   await prisma.pOSSession.updateMany({

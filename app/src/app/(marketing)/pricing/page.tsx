@@ -4,6 +4,7 @@ import { getEffectivePricing } from "@/lib/plan-pricing"
 import { PLAN_TIERS, type PlanTier } from "@/lib/saas-subscription-engine"
 import { PlanCards, type PricedPlan } from "./plan-cards"
 import { localeForCurrency } from "@/lib/utils"
+import { PRICING_REGIONS, pricingRegion } from "@/lib/pricing-regions"
 
 export const dynamic = "force-dynamic"
 
@@ -12,19 +13,8 @@ export const metadata = {
     description: "Simple plans for Genesoft ERP. 15-day free trial, no card needed, and a 7-day money-back guarantee on your first payment.",
 }
 
-const REGIONS = [
-    { code: "IN", label: "India", currency: "INR" },
-    { code: "AE", label: "UAE", currency: "AED" },
-    { code: "SA", label: "Saudi Arabia", currency: "SAR" },
-    { code: "UK", label: "UK", currency: "GBP" },
-    { code: "US", label: "US", currency: "USD" },
-    { code: "AU", label: "Australia", currency: "AUD" },
-]
-
 function regionFor(code: string | undefined) {
-    const upper = (code || "").toUpperCase()
-    const normalized = upper === "GB" ? "UK" : upper
-    return REGIONS.find((r) => r.code === normalized) || REGIONS.find((r) => r.code === "US")!
+    return pricingRegion(code) || pricingRegion("US")!
 }
 
 export default async function PricingPage({ searchParams }: { searchParams: Promise<{ region?: string }> }) {
@@ -35,7 +25,8 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
 
     // Live prices: Admin → Pricing, with the built-in catalog as fallback
     const pricing = await getEffectivePricing(region.currency)
-    const tiers: PlanTier[] = ["FREE", "BASIC", "PRO", "ENTERPRISE"]
+    // Plans switched off in Admin → Pricing aren't offered
+    const tiers = (["FREE", "BASIC", "PRO", "ENTERPRISE"] as PlanTier[]).filter((t) => !pricing.hidden.includes(t))
     const plans: PricedPlan[] = tiers.map((tier) => ({
         tier,
         name: PLAN_TIERS[tier].name,
@@ -54,7 +45,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                         Start with a 15-day free trial. No card needed. Pay monthly, or yearly and save 20%.
                     </p>
                     <nav className="mt-8 inline-flex flex-wrap justify-center gap-1 rounded-lg border border-slate-200 bg-white p-1" aria-label="Prices for region">
-                        {REGIONS.map((r) => (
+                        {PRICING_REGIONS.map((r) => (
                             <Link
                                 key={r.code}
                                 href={`/pricing?region=${r.code}`}

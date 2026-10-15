@@ -5,6 +5,7 @@ import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { deliverTenantEmail } from "@/lib/email-delivery"
 import { revalidatePath } from "next/cache"
+import { planLimitError } from "@/lib/plan-limits"
 import { headers } from "next/headers"
 import { CommunicationType, LeadStatus } from "@prisma/client"
 import type {
@@ -430,7 +431,8 @@ export async function submitPublicForm(payload: SubmitPublicFormPayload): Promis
             })
             if (existingContact) {
                 resolvedContactId = existingContact.id
-            } else {
+            } else if (!(await planLimitError(tenantId, "contacts"))) {
+                // Over the plan's contact limit the submission still becomes a lead, without a contact
                 const newContact = await prisma.contact.create({
                     data: {
                         tenantId,

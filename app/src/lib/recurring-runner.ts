@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client"
+import { planLimitError } from "@/lib/plan-limits"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { postInvoiceStock } from "@/lib/stock"
@@ -83,6 +84,9 @@ if (!profile) return { error: "Recurring profile not found" }
         phone: profile.contact.phone || "",
         address: profile.contact.billingAddress || {},
     }
+
+    const limit = await planLimitError(tenantId, "invoicesPerMonth")
+    if (limit) return { error: limit }
 
     const taxCtx = await getTenantTaxContext(tenantId)
     const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {

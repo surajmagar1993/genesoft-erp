@@ -71,7 +71,7 @@ describe("sign-up", () => {
 
 describe("plan checkout (Razorpay, test mode)", () => {
     it("charges the live price, applies the plan only after a verified payment, once", async () => {
-        const { tenant, user } = await createTestTenant()
+        const { tenant, user } = await createTestTenant({ plan: "FREE" })
         await prisma.pricingPlan.create({
             data: { regionCode: "IN", tier: "PRO", amount: 999, currency: "INR", gateway: "RAZORPAY", isActive: true } as never,
         })
@@ -107,13 +107,13 @@ describe("plan checkout (Razorpay, test mode)", () => {
     })
 
     it("another business can't claim the order; non-admins can't start checkout; no free upgrades", async () => {
-        const a = await createTestTenant()
+        const a = await createTestTenant({ plan: "FREE" })
         actAs(a.user)
         const checkout = await createPlanCheckout("BASIC", "MONTHLY")
         if (checkout.gateway !== "RAZORPAY") throw new Error("expected Razorpay")
         markOrderPaid(checkout.orderId)
 
-        const b = await createTestTenant()
+        const b = await createTestTenant({ plan: "FREE" })
         actAs(b.user)
         await expect(verifyRazorpayPayment(checkout.orderId, "pay_x", sign(checkout.orderId, "pay_x"))).rejects.toThrow(/does not belong/)
         expect((await prisma.tenant.findUniqueOrThrow({ where: { id: b.tenant.id } })).plan).toBe("FREE")

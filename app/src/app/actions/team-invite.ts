@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { appUrl } from "@/lib/app-url"
 import { verifyInviteToken } from "@/lib/invite-token"
 import { readTeam, updateTeam, type TeamInvite } from "@/lib/team-settings"
+import { planLimitError } from "@/lib/plan-limits"
 
 /**
  * Public: the invite page (/join?token=…). The signed token names the
@@ -51,6 +52,10 @@ export async function acceptInvite(formData: FormData) {
     if (await prisma.user.findFirst({ where: { email: { equals: invite.email, mode: "insensitive" } }, select: { id: true } })) {
         back("This email already has an account. Sign in instead, or ask your admin to invite a different email.")
     }
+
+    // The plan may have changed since the invite was sent
+    const limit = await planLimitError(tenantId, "users", { includePendingInvites: false })
+    if (limit) back("This workspace has no free seats on its plan. Ask your admin to upgrade the plan or free up a seat.")
 
     const supabase = await createClient()
     const { data, error } = await supabase.auth.signUp({

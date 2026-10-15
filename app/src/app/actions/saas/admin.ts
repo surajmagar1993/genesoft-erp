@@ -8,6 +8,8 @@ import { clearPlatformGateCache } from "@/lib/platform-security"
 import { stripe } from "@/lib/stripe"
 import { ensureStripePrice, type PaidPlan } from "@/lib/stripe-plans"
 import { annualFromMonthly } from "@/lib/plan-pricing"
+import { PRICING_REGIONS } from "@/lib/pricing-regions"
+import { getRegionalPricing } from "@/lib/saas-subscription-engine"
 import { calculatePlatformMrr } from "@/lib/platform-mrr"
 import { sendSystemEmail } from "@/lib/system-email"
 import { adaptTaxAccounts } from "@/lib/default-accounts"
@@ -585,74 +587,111 @@ async function _updateTenantDetails(
     return updated
 }
 
-export async function getPricingPlans() {
-    await ensureSuperAdmin()
-
-    try {
-        const plans = await prisma.pricingPlan.findMany({
-            orderBy: [
-                { regionCode: 'asc' },
-                { amount: 'asc' }
-            ]
-        })
-        return plans.map((plan: any) => ({
-            ...plan,
-            amount: plan.amount ? Number(plan.amount) : 0
-        }))
-    } catch (error) {
-        console.error("getPricingPlans error:", error)
-        return []
-    }
+export interface PricingPlanCell {
+    tier: PaidPlan
+    amount: number
+    isActive: boolean
+    /** false when the price is the built-in default (no saved row yet) */
+    saved: boolean
 }
 
-async function _updatePricingPlan(id: string, data: { amount: number, isActive: boolean }) {
+export interface PricingRegionRow {
+    code: string
+    label: string
+    currency: string
+    gateway: string
+    plans: PricingPlanCell[]
+}
+
+const PRICED_TIERS: PaidPlan[] = ["BASIC", "PRO", "ENTERPRISE"]
+
+/** Every sales region with its paid plan prices (saved, or the built-in default). */
+export async function getPricingPlans(): Promise<PricingRegionRow[]> {
     await ensureSuperAdmin()
 
-    if (!(Number(data.amount) > 0)) throw new Error("Price must be greater than zero")
-
-    const updated = await prisma.pricingPlan.update({
-        where: { id },
-        data: {
-            amount: data.amount,
-            isActive: data.isActive
+    const rows = await prisma.pricingPlan.findMany({ select: { regionCode: true, tier: true, amount: true, isActive: true, gateway: true } })
+    return PRICING_REGIONS.map((region) => {
+        const mine = rows.filter((r) => r.regionCode === region.code)
+        const catalog = getRegionalPricing(region.currency)
+        return {
+            code: region.code,
+            label: region.label,
+            currency: region.currency,
+            gateway: mine.find((r) => r.gateway)?.gateway ?? region.gateway,
+            plans: PRICED_TIERS.map((tier) => {
+                const row = mine.find((r) => r.tier === tier)
+                return row
+                    ? { tier, amount: Number(row.amount), isActive: row.isActive, saved: true }
+                    : { tier, amount: catalog.monthly[tier], isActive: true, saved: false }
+            }),
         }
     })
+}
+
+/**
+ * Saves a region's paid plan prices and visibility (creating rows the region
+ * doesn't have yet). A plan switched off is hidden from the pricing page and
+ * can't be bought; workspaces already on it keep it.
+ */
+async function _savePricingRegion(regionCode: string, plans: { tier: PaidPlan; amount: number; isActive: boolean }[]) {
+    await ensureSuperAdmin()
+
+    const region = PRICING_REGIONS.find((r) => r.code === regionCode)
+    if (!region) throw new Error("Unknown region")
+    for (const p of plans) {
+        if (!PRICED_TIERS.includes(p.tier)) throw new Error("Invalid plan")
+        if (!(Number(p.amount) > 0)) throw new Error(`Enter a price above zero for ${p.tier}`)
+    }
+
+    const before = await prisma.pricingPlan.findMany({ where: { regionCode }, select: { tier: true, amount: true, isActive: true, gateway: true } })
+    const gateway = before.find((r) => r.gateway)?.gateway ?? region.gateway
+    const changed = plans.filter((p) => {
+        const old = before.find((r) => r.tier === p.tier)
+        return !old || Number(old.amount) !== Number(p.amount) || old.isActive !== p.isActive
+    })
+    if (changed.length === 0) return { changed: 0, stripeSync: { synced: false } as { synced: boolean; error?: string } }
+
+    await prisma.$transaction(
+        changed.map((p) =>
+            prisma.pricingPlan.upsert({
+                where: { regionCode_tier: { regionCode, tier: p.tier } },
+                update: { amount: p.amount, isActive: p.isActive },
+                create: { regionCode, tier: p.tier, amount: p.amount, isActive: p.isActive, currency: region.currency, gateway },
+            })
+        )
+    )
 
     // Keep Stripe in step: Stripe prices can't be edited, so a changed amount
     // becomes a new monthly + annual price under the plan's lookup keys.
     // Razorpay needs nothing here: its orders are priced from this table.
     let stripeSync: { synced: boolean; error?: string } = { synced: false }
-    if (updated.isActive && updated.tier !== "FREE" && stripe) {
+    const toSync = changed.filter((p) => p.isActive)
+    if (gateway === "STRIPE" && toSync.length && stripe) {
         try {
-            const monthly = Number(updated.amount)
-            for (const [cycle, amount] of [["MONTHLY", monthly], ["ANNUAL", annualFromMonthly(monthly)]] as const) {
-                await ensureStripePrice(stripe, {
-                    plan: updated.tier as PaidPlan,
-                    cycle,
-                    currency: updated.currency,
-                    amount,
-                })
+            for (const p of toSync) {
+                const monthly = Number(p.amount)
+                for (const [cycle, amount] of [["MONTHLY", monthly], ["ANNUAL", annualFromMonthly(monthly)]] as const) {
+                    await ensureStripePrice(stripe, { plan: p.tier, cycle, currency: region.currency, amount })
+                }
             }
             stripeSync = { synced: true }
         } catch (err) {
-            console.error("updatePricingPlan: Stripe price sync failed", err)
+            console.error("savePricingRegion: Stripe price sync failed", err)
             stripeSync = { synced: false, error: err instanceof Error ? err.message : "Stripe sync failed" }
         }
     }
 
-    await logAdminAction("PRICING_PLAN_UPDATE", id, "PRICING_PLAN", {
-        regionCode: updated.regionCode,
-        tier: updated.tier,
-        amount: Number(updated.amount),
-        currency: updated.currency,
-        isActive: updated.isActive,
+    await logAdminAction("PRICING_PLAN_UPDATE", regionCode, "PRICING_PLAN", {
+        regionCode,
+        currency: region.currency,
+        plans: changed.map((p) => ({ tier: p.tier, amount: Number(p.amount), isActive: p.isActive })),
         stripeSync,
     })
 
     revalidatePath('/admin/pricing')
     revalidatePath('/settings')
     revalidatePath('/pricing')
-    return { ...updated, amount: Number(updated.amount), stripeSync }
+    return { changed: changed.length, stripeSync }
 }
 
 export async function getSupportTickets(page: number = 1, limit: number = 15) {
@@ -1600,8 +1639,8 @@ export async function updateTenantDetails(...args: Parameters<typeof _updateTena
     return toActionResult(() => _updateTenantDetails(...args))
 }
 
-export async function updatePricingPlan(...args: Parameters<typeof _updatePricingPlan>) {
-    return toActionResult(() => _updatePricingPlan(...args))
+export async function savePricingRegion(...args: Parameters<typeof _savePricingRegion>) {
+    return toActionResult(() => _savePricingRegion(...args))
 }
 
 export async function replyToTicket(...args: Parameters<typeof _replyToTicket>) {

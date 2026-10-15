@@ -1,5 +1,7 @@
 "use server"
 
+import { toActionResult } from "@/lib/action-result"
+import { assertWithinLimit } from "@/lib/plan-limits"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { fireStockAlert } from "@/lib/workflow-engine"
@@ -306,7 +308,11 @@ export async function getInventoryOverview(): Promise<InventoryOverviewData> {
 /**
  * Creates a new warehouse storage facility.
  */
-export async function createWarehouse(data: {
+export async function createWarehouse(...args: Parameters<typeof _createWarehouse>) {
+    return toActionResult(() => _createWarehouse(...args))
+}
+
+async function _createWarehouse(data: {
     name: string
     code: string
     address?: string
@@ -329,6 +335,7 @@ export async function createWarehouse(data: {
         where: { tenantId, code: cleanCode }
     })
     if (existing) throw new Error(`Warehouse with code '${cleanCode}' already exists`)
+    await assertWithinLimit(tenantId, "warehouses")
 
     if (data.isDefault) {
         await prisma.warehouse.updateMany({

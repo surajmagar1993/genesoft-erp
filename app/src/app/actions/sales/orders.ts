@@ -10,6 +10,7 @@ import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { buildInvoiceLines, contactPlaceOfSupply } from "@/lib/invoice-lines"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
+import { planLimitError } from "@/lib/plan-limits"
 
 /** Documents are always in the business's own currency (never a browser-sent or "INR" default). */
 async function tenantCurrency(tenantId: string): Promise<string> {
@@ -261,6 +262,8 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceI
     const contactId = order.contactId
     const already = await prisma.invoice.findFirst({ where: { tenantId, billTo: { path: ["salesOrderId"], equals: order.id } }, select: { invoiceNumber: true } })
     if (already) return { invoiceId: null, error: `Already invoiced as ${already.invoiceNumber}` }
+    const limit = await planLimitError(tenantId, "invoicesPerMonth")
+    if (limit) return { invoiceId: null, error: limit }
 
     const built = await buildInvoiceLines(
       tenantId,

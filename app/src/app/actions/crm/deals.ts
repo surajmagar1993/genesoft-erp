@@ -5,6 +5,7 @@ import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-te
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
+import { assertWithinLimit } from "@/lib/plan-limits"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -121,6 +122,7 @@ async function resolveDealContact(tenantId: string, name: string, company: strin
     if (company && !existing.companyName) await prisma.contact.updateMany({ where: { id: existing.id, tenantId }, data: { companyName: company } })
     return existing.id
   }
+  await assertWithinLimit(tenantId, "contacts")
   const created = await prisma.contact.create({
     data: { tenantId, displayName, companyName: company || null, type: company && !name ? "COMPANY" : "INDIVIDUAL" },
     select: { id: true },

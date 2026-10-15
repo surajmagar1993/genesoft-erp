@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { unwrap } from "@/lib/action-result"
 import {
     Truck,
     Navigation,
@@ -348,7 +349,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
 
         startTransition(async () => {
             try {
-                const res = await convertChallanToInvoice(selectedChallan.id)
+                const res = unwrap(await convertChallanToInvoice(selectedChallan.id))
                 toast.success(`Converted to Tax Invoice ${res.invoice.invoiceNumber}!`)
                 setIsConvertModalOpen(false)
                 router.refresh()

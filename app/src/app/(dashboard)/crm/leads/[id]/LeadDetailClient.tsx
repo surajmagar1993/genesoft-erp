@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation"
 import type { Lead, LeadStatus } from "@/app/actions/crm/leads"
 import { convertLeadToDeal, updateLead } from "@/app/actions/crm/leads"
+import { unwrap } from "@/lib/action-result"
 import { toast } from "sonner"
 import EntityTasks from "@/components/crm/EntityTasks"
 import EntityCommunications from "@/components/crm/EntityCommunications"
@@ -63,7 +64,7 @@ export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Pr
   const handleConvert = async () => {
     try {
       setIsConverting(true)
-      const result = await convertLeadToDeal(lead.id)
+      const result = unwrap(await convertLeadToDeal(lead.id))
       toast.success("Lead successfully converted to a Deal!")
       router.push(`/crm/deals/${result.dealId}`)
     } catch (error: any) {

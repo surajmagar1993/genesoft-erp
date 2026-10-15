@@ -28,6 +28,7 @@ export async function createPlanCheckout(plan: PlanTier, cycle: BillingCycle = "
   if (!PAID_PLANS.includes(plan)) throw new Error("Invalid plan")
 
   const { quote, pricing } = await quotePlanChange(tenantId, plan, cycle)
+  if (pricing.hidden.includes(plan)) throw new Error("This plan isn't available right now")
   if (!(quote.netPayableToday > 0)) {
     throw new Error("Nothing to pay for this change. Use the plan change button instead.")
   }

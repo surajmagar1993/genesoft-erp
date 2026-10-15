@@ -226,7 +226,10 @@ export default function BillingTab({ settings, pricing, checkoutResult }: Billin
         }
     }
 
-    const tierKeys: PlanTier[] = ["FREE", "BASIC", "PRO", "ENTERPRISE"]
+    // Plans switched off in Admin → Pricing aren't offered (the current plan always shows)
+    const tierKeys: PlanTier[] = (["FREE", "BASIC", "PRO", "ENTERPRISE"] as PlanTier[]).filter(
+        (t) => t === currentPlan || !pricing?.hidden?.includes(t)
+    )
 
     // Plan picked on the public pricing page at signup, not activated yet
     const intendedPlan: PlanTier | null =

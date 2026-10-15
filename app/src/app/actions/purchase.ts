@@ -9,6 +9,7 @@ import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-te
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { planLimitError } from "@/lib/plan-limits"
 import { PurchaseOrderStatus, StockMovementType } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
@@ -303,6 +304,9 @@ export async function createVendor(data: {
     const cleanDisplayName = data.displayName?.trim() || data.companyName?.trim()
     if (!cleanDisplayName) throw new Error("Supplier name is required")
 
+    const limit = await planLimitError(tenantId, "contacts")
+    if (limit) return { success: false as const, error: limit }
+
     const newVendor = await prisma.contact.create({
         data: {
             tenantId,
@@ -323,7 +327,7 @@ export async function createVendor(data: {
     })
 
     revalidatePath("/purchase")
-    return { success: true, vendor: newVendor }
+    return { success: true as const, vendor: newVendor }
 }
 
 /**

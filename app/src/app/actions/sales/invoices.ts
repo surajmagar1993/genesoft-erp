@@ -16,6 +16,7 @@ import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
 import { postToLedger } from "@/lib/ledger"
 import { postInvoiceStock } from "@/lib/stock"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
+import { planLimitError } from "@/lib/plan-limits"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -339,6 +340,11 @@ export async function createInvoice(
     // Insert Invoice and Line Items atomically
     if (!isProforma && LIVE_FOR_CREDIT.includes(payload.status)) {
       await assertCreditLimit(tenantId, payload.contact_id, summary.grandTotal)
+    }
+
+    if (!isProforma) {
+      const limit = await planLimitError(tenantId, "invoicesPerMonth")
+      if (limit) return { id: null, error: limit }
     }
 
     const invoice = await prisma.invoice.create({

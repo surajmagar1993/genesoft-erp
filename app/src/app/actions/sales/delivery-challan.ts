@@ -1,5 +1,7 @@
 "use server"
 
+import { toActionResult } from "@/lib/action-result"
+import { assertWithinLimit } from "@/lib/plan-limits"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
@@ -451,6 +453,10 @@ export async function updateDeliveryChallanStatus(id: string, status: ChallanSta
  * 1-Click Convert Delivery Challan into a Tax Invoice (Invoice model)
  */
 export async function convertChallanToInvoice(challanId: string) {
+    return toActionResult(() => _convertChallanToInvoice(challanId))
+}
+
+async function _convertChallanToInvoice(challanId: string) {
     const tenantId = await getTenantWriterId(MODULE)
 
     const challan = await prisma.deliveryChallan.findUnique({
@@ -475,6 +481,8 @@ export async function convertChallanToInvoice(challanId: string) {
         taxRate: Number(item.taxRate ?? 0),
     })), placeOfSupply)
     const invoiceNumber = await nextInvoiceNumber(tenantId)
+
+    await assertWithinLimit(tenantId, "invoicesPerMonth")
 
     return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Re-check inside the transaction so two clicks can't create two invoices

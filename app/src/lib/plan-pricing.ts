@@ -1,25 +1,25 @@
 import { prisma } from "@/lib/prisma"
+import { annualFromMonthly } from "@/lib/plan-pricing-math"
 import { getRegionalPricing, type PlanTier, type RegionalPricing } from "@/lib/saas-subscription-engine"
 
 export type BillingGateway = "RAZORPAY" | "STRIPE"
 
 export interface EffectivePricing extends RegionalPricing {
     gateway: BillingGateway
+    /** Paid plans switched off in Admin → Pricing: not shown and can't be bought */
+    hidden: PlanTier[]
 }
 
 const PAID_TIERS: Exclude<PlanTier, "FREE">[] = ["BASIC", "PRO", "ENTERPRISE"]
-const ANNUAL_DISCOUNT = 0.8 // annual = 12 months less 20%, same rule as the built-in catalog
-
-export function annualFromMonthly(monthly: number): number {
-    return Math.round(monthly * 12 * ANNUAL_DISCOUNT)
-}
+export { annualFromMonthly }
 
 /**
  * Plan prices for a currency. Admin → Pricing (pricing_plans) is the source
- * of truth: its active monthly prices override the built-in catalog, and the
- * annual price is derived from them. Tiers or currencies with no row keep the
- * catalog price. The gateway comes from the rows (INR defaults to Razorpay,
- * everything else to Stripe).
+ * of truth: its monthly prices override the built-in catalog, and the annual
+ * price is derived from them. A paid plan switched off there is hidden (not
+ * offered or sold). Tiers or currencies with no row keep the catalog price.
+ * The gateway comes from the rows (INR defaults to Razorpay, everything else
+ * to Stripe).
  */
 export async function getEffectivePricing(currencyCode?: string | null): Promise<EffectivePricing> {
     const catalog = getRegionalPricing(currencyCode)
@@ -27,14 +27,17 @@ export async function getEffectivePricing(currencyCode?: string | null): Promise
     const monthly = { ...catalog.monthly }
     const annual = { ...catalog.annual }
     let gateway: BillingGateway = currency === "INR" ? "RAZORPAY" : "STRIPE"
+    const hidden: PlanTier[] = []
 
     try {
-        const rows: { tier: PlanTier; amount: unknown; gateway: string }[] = await prisma.pricingPlan.findMany({
-            where: { currency, isActive: true },
-            select: { tier: true, amount: true, gateway: true },
+        const rows: { tier: PlanTier; amount: unknown; gateway: string; isActive: boolean }[] = await prisma.pricingPlan.findMany({
+            where: { currency },
+            select: { tier: true, amount: true, gateway: true, isActive: true },
         })
         for (const row of rows) {
             if (!PAID_TIERS.includes(row.tier as Exclude<PlanTier, "FREE">)) continue
+            // A hidden plan keeps its price for workspaces already on it (renewals, MRR)
+            if (!row.isActive) hidden.push(row.tier)
             const price = Number(row.amount)
             if (!(price > 0)) continue
             monthly[row.tier] = price
@@ -46,5 +49,5 @@ export async function getEffectivePricing(currencyCode?: string | null): Promise
         console.error("getEffectivePricing: falling back to the built-in catalog", err)
     }
 
-    return { ...catalog, monthly, annual, gateway }
+    return { ...catalog, monthly, annual, gateway, hidden }
 }

@@ -8,6 +8,7 @@ import { appUrl } from "@/lib/app-url"
 import { sendSystemEmail } from "@/lib/system-email"
 import { createInviteToken } from "@/lib/invite-token"
 import { INVITE_DAYS, readTeam, updateTeam, type InviteRole } from "@/lib/team-settings"
+import { planLimitError } from "@/lib/plan-limits"
 import { isAdminRole, resolveAccess, uniformAccess, type ModuleAccess } from "@/lib/access"
 
 /** Admin: everything incl. team and settings. Member: what their module access allows. */
@@ -170,6 +171,10 @@ export async function setTeamMemberActive(
         const tenantId = await getTenantAdminId()
 
         const member = await getEditableMember(tenantId, userId)
+        if (isActive && !member.isActive) {
+            const limit = await planLimitError(tenantId, "users")
+            if (limit) return { success: false, error: limit }
+        }
         if (!isActive && member.role === "ADMIN" && member.isActive && (await isLastActiveAdmin(tenantId, userId))) {
             return { success: false, error: "The workspace needs at least one active admin." }
         }
@@ -214,6 +219,12 @@ export async function inviteTeamMember(input: {
         const existing = await prisma.user.findFirst({ where: { email: { equals: email, mode: "insensitive" } }, select: { tenantId: true } })
         if (existing?.tenantId === tenantId) return { success: false, error: "This person is already in your team." }
         if (existing) return { success: false, error: "This email already has a Genesoft account in another workspace. Ask them to use a different email." }
+
+        // A new invite takes a seat on the plan; re-inviting the same email replaces the old one
+        const settings = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
+        const replacing = readTeam(settings?.settings).invites.some((i) => i.email === email && new Date(i.expiresAt).getTime() > Date.now())
+        const limit = await planLimitError(tenantId, "users", { adding: replacing ? 0 : 1 })
+        if (limit) return { success: false, error: limit }
 
         const [tenant, inviter] = await Promise.all([
             prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),

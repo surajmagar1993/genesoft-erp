@@ -1,5 +1,6 @@
 "use server"
 
+import { planLimitError } from "@/lib/plan-limits"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { buildInvoiceLines, contactPlaceOfSupply, type InvoiceLineInput } from "@/lib/invoice-lines"
@@ -1290,6 +1291,9 @@ export async function createProjectInvoice(input: ProjectInvoiceInput): Promise<
             if (!(amount > 0)) return { success: false, error: "Enter the amount to invoice" }
             lines = [{ description: input.description?.trim() || `${project.name} — project fee`, quantity: 1, unitPrice: Math.round(amount * 100) / 100 }]
         }
+
+        const limit = await planLimitError(tenantId, "invoicesPerMonth")
+        if (limit) return { success: false, error: limit }
 
         const built = await buildInvoiceLines(tenantId, lines, contactPlaceOfSupply(project.client))
         const invoiceNumber = await nextInvoiceNumber(tenantId)

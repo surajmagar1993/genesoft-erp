@@ -7,6 +7,8 @@ import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { createNotification } from "@/app/actions/notifications"
+import { assertWithinLimit, PlanLimitError } from "@/lib/plan-limits"
+import { toActionResult } from "@/lib/action-result"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -152,6 +154,13 @@ async function linkContact(tenantId: string, name: string, email: string, phone:
     const match = await prisma.contact.findFirst({ where: { tenantId, email: { equals: email, mode: "insensitive" } }, select: { id: true } })
     if (match) return match.id
   }
+  // Over the plan's contact limit the lead is still saved, just without a linked contact
+  try {
+    await assertWithinLimit(tenantId, "contacts")
+  } catch (err) {
+    if (err instanceof PlanLimitError) return null
+    throw err
+  }
   const created = await prisma.contact.create({
     data: { tenantId, displayName: name || email || phone, email: email || null, phone: phone || null, type: "INDIVIDUAL" },
     select: { id: true },
@@ -249,6 +258,10 @@ export async function deleteLead(id: string): Promise<{ error: string | null }> 
  * This is a critical P1 CRM workflow.
  */
 export async function convertLeadToDeal(leadId: string) {
+  return toActionResult(() => _convertLeadToDeal(leadId))
+}
+
+async function _convertLeadToDeal(leadId: string) {
   const tenantId = await getTenantWriterId(MODULE)
 
   return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -264,6 +277,7 @@ export async function convertLeadToDeal(leadId: string) {
     let contactId = lead.contactId
 
     if (!contactId) {
+      await assertWithinLimit(tenantId, "contacts", { db: tx })
       const newContact = await tx.contact.create({
         data: {
           tenantId,

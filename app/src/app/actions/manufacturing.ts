@@ -1,5 +1,6 @@
 "use server"
 
+import { assertPlanFeature } from "@/lib/plan-limits"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
@@ -330,6 +331,7 @@ export async function createBOM(input: {
     }[]
 }) {
     const tenantId = await getTenantWriterId(MODULE)
+    await assertPlanFeature(tenantId, "manufacturing")
 
     const productIds = [...new Set([input.productId, ...input.items.map(i => i.productId)])]
     const ownProducts = await prisma.product.count({ where: { tenantId, id: { in: productIds } } })
@@ -416,6 +418,7 @@ export async function createWorkOrder(input: {
     notes?: string
 }) {
     const tenantId = await getTenantWriterId(MODULE)
+    await assertPlanFeature(tenantId, "manufacturing")
     const now = new Date()
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
     const orderNumber = await nextSequence(prisma, "workOrder", tenantId, `WO-${yearMonth}-`, 3)

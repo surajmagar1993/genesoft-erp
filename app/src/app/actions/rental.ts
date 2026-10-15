@@ -1,5 +1,6 @@
 "use server"
 
+import { assertPlanFeature } from "@/lib/plan-limits"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
@@ -681,6 +682,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
  */
 export async function createRentalAsset(input: CreateRentalAssetInput) {
     const tenantId = await getTenantWriterId(MODULE)
+    await assertPlanFeature(tenantId, "rentals")
     await assertTenantRefs(tenantId, { warehouse: input.warehouseId })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
@@ -786,6 +788,7 @@ export async function deleteRentalAsset(id: string) {
  */
 export async function createRentalAgreement(input: CreateRentalAgreementInput) {
     const tenantId = await getTenantWriterId(MODULE)
+    await assertPlanFeature(tenantId, "rentals")
     await assertTenantRefs(tenantId, { contact: input.contactId, rentalAsset: input.items.map((i) => i.assetId) })
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
@@ -1047,6 +1050,7 @@ export async function processRentalReturn(input: ProcessRentalReturnInput) {
  */
 export async function convertAgreementToInvoice(agreementId: string) {
     const tenantId = await getTenantWriterId(MODULE)
+    await assertPlanFeature(tenantId, "rentals")
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
     const agreement = await prisma.rentalAgreement.findUnique({

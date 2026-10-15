@@ -3,14 +3,20 @@ import { signInAs } from "./fake-supabase"
 
 type Role = "SUPER_ADMIN" | "ADMIN" | "MANAGER" | "USER" | "VIEWER"
 
-/** A fresh business with one signed-in user of the given role. */
-export async function createTestTenant(opts: { country?: string; currency?: string; role?: Role; name?: string } = {}) {
+/**
+ * A fresh business with one signed-in user of the given role. It's on the
+ * Enterprise plan (no plan limits) unless a test asks for another plan.
+ */
+export async function createTestTenant(opts: { country?: string; currency?: string; role?: Role; name?: string; plan?: "FREE" | "BASIC" | "PRO" | "ENTERPRISE"; trialDays?: number } = {}) {
     const tenant = await prisma.tenant.create({
         data: {
             name: opts.name ?? `Test Co ${Math.random().toString(36).slice(2, 8)}`,
             countryCode: opts.country ?? "IN",
             currencyCode: opts.currency ?? "INR",
             billingRegion: opts.country ?? "IN",
+            plan: opts.plan ?? "ENTERPRISE",
+            isTrial: !!opts.trialDays,
+            trialEndsAt: opts.trialDays ? new Date(Date.now() + opts.trialDays * 86400000) : null,
             settings: opts.country === "IN" || !opts.country ? { gstin: "27AAAAA0000A1Z5" } : {},
         },
     })
