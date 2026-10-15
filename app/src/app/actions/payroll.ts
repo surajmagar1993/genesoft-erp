@@ -371,7 +371,7 @@ export async function assignEmployeeSalary(employeeId: string, salaryStructureId
 /**
  * Generate monthly pay run with automated attendance and leave sync
  */
-export async function generatePayRun(
+async function _generatePayRun(
     periodMonth: number,
     periodYear: number,
     payDateString: string,
@@ -644,7 +644,7 @@ export async function generatePayRun(
 /**
  * Approve a draft pay run
  */
-export async function approvePayRun(payRunId: string) {
+async function _approvePayRun(payRunId: string) {
     const tenantId = await getTenantManagerId(MODULE)
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -673,7 +673,7 @@ export async function approvePayRun(payRunId: string) {
 /**
  * Disburse / mark pay run as PAID
  */
-export async function processPayRun(
+async function _processPayRun(
     payRunId: string,
     paymentMethod: string = "DIRECT_DEPOSIT",
     paymentReference?: string
@@ -719,7 +719,7 @@ export async function processPayRun(
 /**
  * Delete a draft pay run
  */
-export async function deletePayRun(payRunId: string) {
+async function _deletePayRun(payRunId: string) {
     const tenantId = await getTenantManagerId(MODULE)
 
     const run = await prisma.payrollRun.findUnique({
@@ -811,4 +811,21 @@ export async function updatePfWageCeiling(ceiling: number): Promise<ActionResult
         revalidatePath("/hr")
         return { pfWageCeiling: value }
     })
+}
+
+/* Exported as ActionResult so the user sees the real message (e.g. a missing salary) in production, and expected refusals don't raise error alerts */
+export async function generatePayRun(...args: Parameters<typeof _generatePayRun>) {
+    return toActionResult(() => _generatePayRun(...args))
+}
+
+export async function approvePayRun(...args: Parameters<typeof _approvePayRun>) {
+    return toActionResult(() => _approvePayRun(...args))
+}
+
+export async function processPayRun(...args: Parameters<typeof _processPayRun>) {
+    return toActionResult(() => _processPayRun(...args))
+}
+
+export async function deletePayRun(...args: Parameters<typeof _deletePayRun>) {
+    return toActionResult(() => _deletePayRun(...args))
 }

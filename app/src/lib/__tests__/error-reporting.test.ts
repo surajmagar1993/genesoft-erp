@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 
 vi.mock("@/lib/prisma", () => ({ prisma: {} }))
 
-import { errorFingerprint, firstMeaningfulLine, scrubSecrets } from "@/lib/error-reporting"
+import { errorFingerprint, firstMeaningfulLine, isDisconnectNoise, scrubSecrets } from "@/lib/error-reporting"
 
 describe("scrubSecrets", () => {
     it("hides credentials that can end up in error messages", () => {
@@ -49,3 +49,13 @@ describe("firstMeaningfulLine", () => {
     })
 })
 
+
+describe("isDisconnectNoise", () => {
+    it("treats a visitor leaving mid-page as noise, not a fault", () => {
+        expect(isDisconnectNoise("The destination stream errored while writing data.")).toBe(true)
+        expect(isDisconnectNoise("aborted")).toBe(true)
+        expect(isDisconnectNoise("read ECONNRESET")).toBe(true)
+        expect(isDisconnectNoise("Set a monthly salary for Aarav Sharma before running payroll.")).toBe(false)
+        expect(isDisconnectNoise("Cannot read properties of undefined (reading 'id')")).toBe(false)
+    })
+})

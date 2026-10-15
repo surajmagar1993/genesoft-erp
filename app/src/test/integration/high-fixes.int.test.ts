@@ -95,7 +95,7 @@ describe("H4 payroll", () => {
         const { tenant, user } = await createTestTenant()
         actAs(user)
         await prisma.employee.create({ data: { tenantId: tenant.id, employeeNumber: "EMP-2", firstName: "No", displayName: "No Salary", email: `no-${uid()}@example.test`, status: "ACTIVE", joiningDate: new Date(2025, 0, 1) } as never })
-        await expect(generatePayRun(9, 2026, "2026-09-30")).rejects.toThrow(/Set a monthly salary for No Salary/)
+        expect(await generatePayRun(9, 2026, "2026-09-30")).toMatchObject({ success: false, error: expect.stringMatching(/Set a monthly salary for No Salary/) })
     })
 })
 

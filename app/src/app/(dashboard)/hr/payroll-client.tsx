@@ -76,6 +76,7 @@ import {
     updatePfWageCeiling
 } from "@/app/actions/payroll"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 const MONTH_NAMES = [
     "January", "February", "March", "April", "May", "June",
@@ -158,12 +159,12 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
         e.preventDefault()
         startTransition(async () => {
             try {
-                const res = await generatePayRun(
+                const res = unwrap(await generatePayRun(
                     Number(runMonth),
                     Number(runYear),
                     runPayDate,
                     runNotes || undefined
-                )
+                ))
                 if (res.success) {
                     toast.success(`Payroll run ${res.runNumber} generated successfully in draft mode!`)
                     setIsRunWizardOpen(false)
@@ -179,7 +180,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
     const handleApprove = (runId: string) => {
         startTransition(async () => {
             try {
-                const res = await approvePayRun(runId)
+                const res = unwrap(await approvePayRun(runId))
                 if (res.success) {
                     toast.success("Payroll run approved successfully!")
                     router.refresh()
@@ -197,11 +198,11 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
 
         startTransition(async () => {
             try {
-                const res = await processPayRun(
+                const res = unwrap(await processPayRun(
                     selectedRunForDisburse.id,
                     disburseMethod,
                     disburseRef || undefined
-                )
+                ))
                 if (res.success) {
                     toast.success(`Payroll ${selectedRunForDisburse.runNumber} marked as disbursed & paid!`)
                     setIsDisburseModalOpen(false)
@@ -219,7 +220,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
         if (!confirm("Are you sure you want to discard this draft payroll run? All draft payslips will be deleted.")) return
         startTransition(async () => {
             try {
-                const res = await deletePayRun(runId)
+                const res = unwrap(await deletePayRun(runId))
                 if (res.success) {
                     toast.success("Draft payroll run deleted")
                     router.refresh()

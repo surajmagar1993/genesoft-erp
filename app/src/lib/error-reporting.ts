@@ -100,6 +100,15 @@ async function sendAlert(report: ErrorReport, fingerprint: string, message: stri
     })
 }
 
+/**
+ * Errors that only mean the visitor went away while a page was still streaming
+ * (closed the tab, clicked elsewhere). Logged as warnings, never emailed.
+ */
+const DISCONNECT_NOISE = [/destination stream errored while writing data/i, /\bECONNRESET\b/, /^aborted$/i, /The operation was aborted/i, /^Connection closed\.?$/i]
+export function isDisconnectNoise(message: string): boolean {
+    return DISCONNECT_NOISE.some((re) => re.test(message.trim()))
+}
+
 export async function reportError(report: ErrorReport): Promise<void> {
     try {
         const message = scrubSecrets(String(report.message || "Unknown error")).trim().slice(0, 2000) || "Unknown error"
@@ -115,13 +124,13 @@ export async function reportError(report: ErrorReport): Promise<void> {
         })
         await prisma.systemLog.create({
             data: {
-                level: report.source === "browser" ? "WARN" : "ERROR",
+                level: report.source === "browser" || isDisconnectNoise(message) ? "WARN" : "ERROR",
                 message: stored,
                 path: path || null,
                 stack: stack || null,
             },
         })
-        if (report.source === "server" && seen === 0) await sendAlert(report, fingerprint, message, stack)
+        if (report.source === "server" && seen === 0 && !isDisconnectNoise(message)) await sendAlert(report, fingerprint, message, stack)
     } catch (err) {
         // Monitoring must never break the request that failed
         console.error("reportError failed:", err)
