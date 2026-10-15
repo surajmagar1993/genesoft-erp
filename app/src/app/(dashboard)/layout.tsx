@@ -253,13 +253,13 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/reports" className="flex items-center gap-3">
-                                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary overflow-hidden">
+                                <div className="flex aspect-square size-8 shrink-0 items-center justify-center">
                                     <Image
-                                        src="/logo.png"
-                                        alt="Genesoft"
+                                        src="/logo-mark.png"
+                                        alt="Genesoft Infotech"
                                         width={32}
                                         height={32}
-                                        className="object-contain"
+                                        className="size-8 object-contain"
                                     />
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">

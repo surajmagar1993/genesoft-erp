@@ -95,7 +95,10 @@ const sections: LegalSection[] = [
         title: "Who we share data with",
         body: (
             <>
-                <p>We don&apos;t sell personal data. We share it only with providers that help us run Genesoft ERP, under contracts that protect it:</p>
+                <p>
+                    We don&apos;t sell personal data. We share it only with providers that help us run Genesoft ERP, under contracts that protect it. For
+                    data your business keeps about its own customers and staff, see our <Link href="/dpa">Data Processing Agreement</Link>.
+                </p>
                 <ul>
                     <li><strong>Supabase:</strong> database and sign-in.</li>
                     <li><strong>Vercel:</strong> hosting of the website and app.</li>
@@ -167,7 +170,7 @@ const sections: LegalSection[] = [
         body: (
             <p>
                 We use only the cookies needed to keep you signed in and to remember basic preferences, such as light or dark mode. We don&apos;t use
-                advertising or cross-site tracking cookies.
+                advertising or cross-site tracking cookies. The <Link href="/cookie-policy">Cookie Policy</Link> lists each one.
             </p>
         ),
     },

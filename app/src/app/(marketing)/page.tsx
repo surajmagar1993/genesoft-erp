@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { SITE_CONTAINER } from "@/components/marketing/container"
 import {
     ArrowRight,
     Check,
@@ -70,15 +71,15 @@ export default function LandingPage() {
         <>
             {/* Hero */}
             <section className="border-b border-slate-100 bg-gradient-to-b from-blue-50/60 to-white">
-                <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 md:grid-cols-2 md:px-6 md:py-24">
+                <div className={`${SITE_CONTAINER} grid items-center gap-12 py-16 md:grid-cols-2 md:py-24 xl:gap-20 2xl:py-28`}>
                     <div className="space-y-6">
                         <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white px-3 py-1 text-xs font-medium text-blue-700">
                             Built for India, the Gulf, the UK, the US and Australia
                         </span>
-                        <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl">
+                        <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight text-slate-900 md:text-5xl xl:text-6xl">
                             Run sales, stock and accounts in one place.
                         </h1>
-                        <p className="max-w-lg text-lg leading-relaxed text-slate-600">
+                        <p className="max-w-xl text-lg leading-relaxed text-slate-600 xl:text-xl">
                             Genesoft ERP brings your CRM, invoicing, inventory, accounting, HR and point of sale together, with GST, VAT or sales tax worked out for your country.
                         </p>
                         <div className="flex flex-col gap-3 sm:flex-row">
@@ -101,7 +102,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Illustrative invoice: sample data, not customer data */}
-                    <div className="relative" aria-hidden="true">
+                    <div className="relative w-full md:justify-self-end lg:max-w-xl" aria-hidden="true">
                         <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60">
                             <div className="flex items-start justify-between border-b border-slate-100 pb-4">
                                 <div>
@@ -134,14 +135,14 @@ export default function LandingPage() {
 
             {/* Features */}
             <section id="features" className="scroll-mt-20 py-20">
-                <div className="mx-auto max-w-6xl px-4 md:px-6">
+                <div className={SITE_CONTAINER}>
                     <div className="mx-auto max-w-2xl text-center">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Everything a growing business runs on</h2>
-                        <p className="mt-3 text-slate-600">One login, one set of records. Sales, stock and accounts stay in step without re-typing.</p>
+                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">Everything a growing business runs on</h2>
+                        <p className="mt-3 text-slate-600 xl:text-lg">One login, one set of records. Sales, stock and accounts stay in step without re-typing.</p>
                     </div>
-                    <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:gap-6">
                         {FEATURES.map(({ icon: Icon, title, text }) => (
-                            <div key={title} className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
+                            <div key={title} className="rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md xl:p-6">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                                     <Icon className="h-5 w-5" />
                                 </div>
@@ -155,10 +156,10 @@ export default function LandingPage() {
 
             {/* Countries */}
             <section id="countries" className="scroll-mt-20 border-y border-slate-100 bg-slate-50 py-20">
-                <div className="mx-auto max-w-6xl px-4 md:px-6">
+                <div className={SITE_CONTAINER}>
                     <div className="mx-auto max-w-2xl text-center">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900">The right tax for your country</h2>
-                        <p className="mt-3 text-slate-600">
+                        <h2 className="text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">The right tax for your country</h2>
+                        <p className="mt-3 text-slate-600 xl:text-lg">
                             Choose your country when you sign up. Invoices, quotes and bills then use your tax, currency and number format automatically.
                         </p>
                     </div>
@@ -184,8 +185,8 @@ export default function LandingPage() {
 
             {/* Trust */}
             <section className="py-20">
-                <div className="mx-auto max-w-6xl px-4 md:px-6">
-                    <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">Built to be trusted with your business</h2>
+                <div className={SITE_CONTAINER}>
+                    <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">Built to be trusted with your business</h2>
                     <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
                         {TRUST.map(({ icon: Icon, title, text }) => (
                             <div key={title}>
@@ -200,8 +201,8 @@ export default function LandingPage() {
 
             {/* Steps */}
             <section className="border-y border-slate-100 bg-slate-50 py-20">
-                <div className="mx-auto max-w-6xl px-4 md:px-6">
-                    <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">Get started in three steps</h2>
+                <div className={SITE_CONTAINER}>
+                    <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">Get started in three steps</h2>
                     <ol className="mt-12 grid gap-6 md:grid-cols-3">
                         {STEPS.map((s) => (
                             <li key={s.n} className="rounded-xl border border-slate-200 bg-white p-6">
@@ -216,11 +217,11 @@ export default function LandingPage() {
 
             {/* FAQ */}
             <section className="py-20">
-                <div className="mx-auto max-w-3xl px-4 md:px-6">
-                    <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">Questions people ask</h2>
-                    <div className="mt-10 divide-y divide-slate-200 rounded-xl border border-slate-200">
+                <div className={SITE_CONTAINER}>
+                    <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900 xl:text-4xl">Questions people ask</h2>
+                    <div className="mt-10 grid items-start gap-4 lg:grid-cols-2">
                         {FAQ.map((item) => (
-                            <details key={item.q} className="group p-5 [&_summary::-webkit-details-marker]:hidden">
+                            <details key={item.q} className="group rounded-xl border border-slate-200 bg-white p-5 [&_summary::-webkit-details-marker]:hidden">
                                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-medium text-slate-900">
                                     {item.q}
                                     <span className="text-xl leading-none text-slate-400 transition-transform group-open:rotate-45" aria-hidden="true">+</span>
@@ -233,9 +234,9 @@ export default function LandingPage() {
             </section>
 
             {/* CTA */}
-            <section className="px-4 pb-20 md:px-6">
-                <div className="mx-auto max-w-6xl rounded-2xl bg-blue-600 px-6 py-14 text-center text-white md:px-12">
-                    <h2 className="text-3xl font-bold tracking-tight">Try Genesoft ERP free for 15 days</h2>
+            <section className={`${SITE_CONTAINER} pb-20`}>
+                <div className="rounded-2xl bg-blue-600 px-6 py-14 text-center text-white md:px-12 xl:py-20">
+                    <h2 className="text-3xl font-bold tracking-tight xl:text-4xl">Try Genesoft ERP free for 15 days</h2>
                     <p className="mx-auto mt-3 max-w-xl text-blue-100">No card needed. Set up your company in minutes and send your first invoice today.</p>
                     <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
                         <Button asChild size="lg" className="bg-white text-blue-700 hover:bg-blue-50">

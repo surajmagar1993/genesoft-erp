@@ -1,3 +1,4 @@
+import { SITE_CONTAINER } from "@/components/marketing/container"
 import Link from "next/link"
 import { headers } from "next/headers"
 import { getEffectivePricing } from "@/lib/plan-pricing"
@@ -41,7 +42,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
         <>
             <section className="border-b border-slate-100 bg-gradient-to-b from-blue-50/60 to-white">
                 <div className="mx-auto max-w-3xl px-4 py-16 text-center md:px-6">
-                    <h1 className="text-balance text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">Simple pricing that grows with you</h1>
+                    <h1 className="text-balance text-4xl font-bold tracking-tight text-slate-900 md:text-5xl xl:text-6xl">Simple pricing that grows with you</h1>
                     <p className="mt-4 text-lg text-slate-600">
                         Start with a 15-day free trial. No card needed. Pay monthly, or yearly and save 20%.
                     </p>
@@ -65,7 +66,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
             </section>
 
             <section className="py-16">
-                <div className="mx-auto max-w-6xl px-4 md:px-6">
+                <div className={SITE_CONTAINER}>
                     <PlanCards plans={plans} currency={pricing.currency} locale={localeForCurrency(pricing.currency)} />
                     <p className="mt-8 text-center text-sm text-slate-500">
                         Prices are per workspace and include applicable taxes. Cancel anytime.
@@ -76,7 +77,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
             </section>
 
             <section className="border-t border-slate-100 bg-slate-50 py-16">
-                <div className="mx-auto grid max-w-5xl gap-8 px-4 md:grid-cols-3 md:px-6">
+                <div className={`${SITE_CONTAINER} grid gap-8 md:grid-cols-3 xl:gap-12`}>
                     {[
                         { q: "What happens after the trial?", a: "Choose a paid plan to keep your full features, or carry on with the free plan. Your data stays put either way." },
                         { q: "Can I change plans later?", a: "Yes. Upgrade anytime and pay only the difference for the rest of your billing period. Downgrades take effect at your next renewal." },

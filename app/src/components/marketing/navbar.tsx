@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
+import { BrandLogo } from "@/components/brand-logo"
+import { SITE_CONTAINER } from "@/components/marketing/container"
 import { usePathname } from "next/navigation"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -12,6 +13,7 @@ const LINKS = [
     { href: "/#features", label: "Features" },
     { href: "/#countries", label: "Countries" },
     { href: "/pricing", label: "Pricing" },
+    { href: "/about", label: "About" },
     { href: "/contact", label: "Contact" },
 ]
 
@@ -20,10 +22,9 @@ export function PublicNavbar() {
 
     return (
         <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/75">
-            <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
-                <Link href="/" className="flex items-center gap-2.5" aria-label="Genesoft ERP home">
-                    <Image src="/logo.png" alt="" width={32} height={32} className="h-8 w-8 rounded-md object-contain" priority />
-                    <span className="text-[15px] font-semibold tracking-tight text-slate-900">Genesoft ERP</span>
+            <div className={cn(SITE_CONTAINER, "flex h-16 items-center justify-between gap-4 md:h-20")}>
+                <Link href="/" className="flex shrink-0 items-center" aria-label="Genesoft Infotech home">
+                    <BrandLogo on="light" priority className="h-10 md:h-12 xl:h-14" />
                 </Link>
 
                 <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
@@ -32,7 +33,7 @@ export function PublicNavbar() {
                             key={link.href}
                             href={link.href}
                             className={cn(
-                                "rounded-md px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900",
+                                "rounded-md px-3 py-2 text-sm font-medium text-slate-600 lg:px-4 lg:text-[15px] transition-colors hover:bg-slate-100 hover:text-slate-900",
                                 pathname === link.href && "text-slate-900"
                             )}
                         >
@@ -58,7 +59,10 @@ export function PublicNavbar() {
                     </SheetTrigger>
                     <SheetContent side="right" className="light w-72 bg-white text-slate-900">
                         <SheetHeader>
-                            <SheetTitle className="text-left text-slate-900">Genesoft ERP</SheetTitle>
+                            <SheetTitle className="text-left">
+                                <span className="sr-only">Menu</span>
+                                <BrandLogo on="light" className="h-9" />
+                            </SheetTitle>
                         </SheetHeader>
                         <nav className="mt-2 flex flex-col gap-1 px-4" aria-label="Mobile">
                             {LINKS.map((link) => (

@@ -1,3 +1,4 @@
+import { SITE_CONTAINER } from "@/components/marketing/container"
 import { Mail, Phone, MapPin } from "lucide-react"
 import { PLATFORM, telHref } from "@/lib/constants/platform"
 import { ContactForm } from "./contact-form"
@@ -10,7 +11,7 @@ export const metadata = {
 export default function ContactPage() {
     return (
         <section className="bg-gradient-to-b from-blue-50/60 to-white">
-            <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 md:grid-cols-5 md:px-6 md:py-20">
+            <div className={`${SITE_CONTAINER} grid gap-12 py-16 md:grid-cols-5 md:py-20 xl:gap-20`}>
                 <div className="space-y-8 md:col-span-2">
                     <div>
                         <h1 className="text-balance text-4xl font-bold tracking-tight text-slate-900">Talk to us</h1>

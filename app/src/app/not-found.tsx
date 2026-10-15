@@ -1,58 +1,43 @@
-import React from "react"
 import Link from "next/link"
-import { ShieldAlert, ArrowLeft } from "lucide-react"
+import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { LEGAL_LINKS } from "@/components/marketing/legal-links"
 
 export const metadata = {
-    title: "Page Not Found | Genesoft ERP",
-    description: "The requested page could not be found.",
+    title: "Page not found | Genesoft ERP",
+    description: "The page you were looking for doesn't exist.",
 }
 
 export default function NotFound() {
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-[#090d16] text-slate-100 font-sans">
-            {/* Ambient Background Glows */}
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-[120px] pointer-events-none" />
-
-            <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Card className="border-primary/10 shadow-2xl bg-card/30 backdrop-blur-xl overflow-hidden relative text-center py-6 px-4">
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-                    
-                    <CardHeader className="space-y-4">
-                        <div className="mx-auto h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                            <ShieldAlert className="h-8 w-8" />
-                        </div>
-                        <div className="space-y-1">
-                            <Badge404 />
-                            <CardTitle className="text-3xl font-black tracking-tight text-white mt-2">
-                                404 — Lost in Space
-                            </CardTitle>
-                        </div>
-                        <CardDescription className="text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">
-                            The page you are looking for doesn&apos;t exist, has been moved, or you might not have authorization to view it.
-                        </CardDescription>
-                    </CardHeader>
-
-                    <CardContent className="pt-2">
-                        <Button className="gap-2 font-bold shadow-lg shadow-primary/20 hover:shadow-primary/35 transition-all w-full py-6 text-sm" asChild>
-                            <Link href="/reports">
-                                <ArrowLeft className="h-4 w-4" />
-                                Return to Safety
-                            </Link>
+        <div className="light flex min-h-screen flex-col bg-white text-slate-900 [color-scheme:light]">
+            <header className="border-b border-slate-200">
+                <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center px-4 sm:px-6 lg:px-10 xl:px-16 md:h-[72px]">
+                    <Link href="/" aria-label="Genesoft Infotech home">
+                        <BrandLogo on="light" className="h-9 md:h-11" />
+                    </Link>
+                </div>
+            </header>
+            <main className="flex flex-1 items-center justify-center px-4 py-20">
+                <div className="max-w-md text-center">
+                    <p className="text-sm font-semibold text-blue-700">404</p>
+                    <h1 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Page not found</h1>
+                    <p className="mt-3 text-slate-600">The page you were looking for doesn&apos;t exist or has moved.</p>
+                    <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+                        <Button asChild className="bg-blue-600 text-white hover:bg-blue-700">
+                            <Link href="/">Go to the homepage</Link>
                         </Button>
-                    </CardContent>
-                </Card>
-            </div>
+                        <Button asChild variant="outline" className="border-slate-300 bg-white text-slate-800 hover:bg-slate-50">
+                            <Link href="/login">Sign in</Link>
+                        </Button>
+                    </div>
+                    <p className="mt-8 text-sm text-slate-500">
+                        Need help? <Link href="/contact" className="text-blue-700 hover:underline">Contact us</Link> ·{" "}
+                        <Link href="/sitemap" className="text-blue-700 hover:underline">All pages</Link> ·{" "}
+                        <Link href={LEGAL_LINKS[1].href} className="text-blue-700 hover:underline">{LEGAL_LINKS[1].label}</Link>
+                    </p>
+                </div>
+            </main>
         </div>
-    )
-}
-
-function Badge404() {
-    return (
-        <span className="inline-flex items-center rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-bold text-rose-500 border border-rose-500/20 uppercase tracking-widest mx-auto">
-            Route Invalid
-        </span>
     )
 }

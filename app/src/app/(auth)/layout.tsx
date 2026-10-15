@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import { BrandLogo } from '@/components/brand-logo'
 import Link from 'next/link'
 
 export default function AuthLayout({
@@ -11,14 +11,9 @@ export default function AuthLayout({
       {/* Left branding panel */}
       <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-primary/20 via-background to-background border-r border-border p-12">
         <div className="flex items-center gap-3">
-          <Image
-            src="/header.png"
-            alt="Genesoft Infotech"
-            width={200}
-            height={56}
-            className="object-contain"
-            priority
-          />
+          <Link href="/" aria-label="Genesoft Infotech home">
+            <BrandLogo priority className="h-14" />
+          </Link>
         </div>
 
         <div className="space-y-6">
@@ -61,14 +56,7 @@ export default function AuthLayout({
         {/* Mobile logo */}
         <div className="mb-8 lg:hidden">
           <Link href="/">
-            <Image
-              src="/header.png"
-              alt="Genesoft Infotech"
-              width={180}
-              height={50}
-              className="object-contain"
-              priority
-            />
+            <BrandLogo className="h-12" />
           </Link>
         </div>
 

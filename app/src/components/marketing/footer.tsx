@@ -1,5 +1,7 @@
 import Link from "next/link"
-import Image from "next/image"
+import { LEGAL_LINKS } from "@/components/marketing/legal-links"
+import { BrandLogo } from "@/components/brand-logo"
+import { SITE_CONTAINER } from "@/components/marketing/container"
 import { Mail, Phone, MapPin } from "lucide-react"
 import { PLATFORM, telHref } from "@/lib/constants/platform"
 
@@ -16,6 +18,7 @@ const COLUMNS = [
     {
         title: "Company",
         links: [
+            { href: "/about", label: "About us" },
             { href: "/contact", label: "Contact us" },
             { href: "/login", label: "Sign in" },
             { href: "/sitemap", label: "Sitemap" },
@@ -23,11 +26,7 @@ const COLUMNS = [
     },
     {
         title: "Legal",
-        links: [
-            { href: "/privacy", label: "Privacy Policy" },
-            { href: "/terms", label: "Terms of Service" },
-            { href: "/refund-policy", label: "Refund & Cancellation" },
-        ],
+        links: [...LEGAL_LINKS],
     },
 ]
 
@@ -36,11 +35,10 @@ export function PublicFooter() {
 
     return (
         <footer className="border-t border-slate-200 bg-slate-50">
-            <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-5 md:px-6">
+            <div className={`${SITE_CONTAINER} grid gap-10 py-12 md:grid-cols-5 lg:py-16`}>
                 <div className="md:col-span-2 space-y-4">
-                    <Link href="/" className="flex items-center gap-2.5">
-                        <Image src="/logo.png" alt="" width={28} height={28} className="h-7 w-7 rounded-md object-contain" />
-                        <span className="font-semibold text-slate-900">Genesoft ERP</span>
+                    <Link href="/" className="inline-flex" aria-label="Genesoft Infotech home">
+                        <BrandLogo on="light" className="h-12" />
                     </Link>
                     <p className="max-w-xs text-sm leading-relaxed text-slate-600">
                         CRM, invoicing, inventory, accounting and HR for growing businesses, with GST or VAT handled for your country.
@@ -75,7 +73,7 @@ export function PublicFooter() {
                 ))}
             </div>
             <div className="border-t border-slate-200">
-                <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-xs text-slate-500 md:flex-row md:items-center md:justify-between md:px-6">
+                <div className={`${SITE_CONTAINER} flex flex-col gap-2 py-5 text-xs text-slate-500 md:flex-row md:items-center md:justify-between`}>
                     <p>© {year} {PLATFORM.legalName}. All rights reserved.</p>
                     <p>
                         <a href={PLATFORM.website} className="hover:text-slate-900">genesoftinfotech.com</a>
