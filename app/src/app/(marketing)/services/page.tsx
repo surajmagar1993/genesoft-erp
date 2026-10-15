@@ -4,13 +4,15 @@ import { SITE_CONTAINER } from "@/components/marketing/container"
 import { ServiceIcon } from "@/components/marketing/service-icon"
 import { Eyebrow, H1, H2, Lead, SiteButton } from "@/components/marketing/ui"
 import { PROCESS, SERVICES } from "@/lib/site-content"
+import { getServiceShorts } from "@/lib/site-cms"
 
 export const metadata = {
     title: "Services | Genesoft Infotech",
     description: "Software development, digital marketing, IT rentals and IT support from one team in Pune.",
 }
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+    const shorts = await getServiceShorts(SERVICES.map((s) => s.slug))
     return (
         <>
             <section className={`${SITE_CONTAINER} flex flex-col gap-5 py-16 md:py-20`}>
@@ -26,7 +28,7 @@ export default function ServicesPage() {
                             <ServiceIcon name={s.icon} className="h-7 w-7" />
                         </span>
                         <h2 className="font-display text-2xl font-bold text-s-ink">{s.name}</h2>
-                        <p className="text-lg leading-relaxed">{s.short}</p>
+                        <p className="text-lg leading-relaxed">{shorts[s.slug] || s.short}</p>
                         {s.includes.length > 0 && (
                             <ul className="grid gap-2 sm:grid-cols-2">
                                 {s.includes.slice(0, 4).map((i) => (

@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useState, useTransition } from "react"
 import { AlertCircle, CheckCircle2, MessageCircle, Plus, X } from "lucide-react"
 import { sendRentalQuote } from "@/app/actions/public/contact"
-import { RENTAL_CATEGORIES, RENTAL_PERIODS } from "@/lib/site-content"
+import { RENTAL_PERIODS } from "@/lib/site-content"
 import { PLATFORM, whatsappHref } from "@/lib/constants/platform"
 import { fieldClass, labelClass, textareaClass } from "@/components/marketing/ui"
 import { cn } from "@/lib/utils"
@@ -13,11 +13,12 @@ type Line = { id: number; category: string; quantity: string; specs: string }
 
 const legendClass = "mb-3 font-display text-lg font-semibold text-s-ink"
 
-export function RentalQuoteForm() {
+export function RentalQuoteForm({ categories, whatsapp = PLATFORM.whatsapp }: { categories: string[]; whatsapp?: string }) {
+    const options = [...categories, "Other"]
     const [isPending, startTransition] = useTransition()
     const [sent, setSent] = useState(false)
     const [error, setError] = useState<string | null>(null)
-    const [lines, setLines] = useState<Line[]>([{ id: 1, category: RENTAL_CATEGORIES[0].name, quantity: "1", specs: "" }])
+    const [lines, setLines] = useState<Line[]>([{ id: 1, category: options[0], quantity: "1", specs: "" }])
 
     const update = (id: number, patch: Partial<Line>) => setLines((ls) => ls.map((l) => (l.id === id ? { ...l, ...patch } : l)))
 
@@ -50,7 +51,7 @@ export function RentalQuoteForm() {
                 <h2 className="font-display text-2xl font-bold text-s-ink">Quote request sent</h2>
                 <p className="max-w-md text-s-text">We&apos;ll check stock and email your quote within one working day. Want to talk it through now?</p>
                 <a
-                    href={whatsappHref(PLATFORM.whatsapp, "Hello, I just requested an IT rental quote on your website.")}
+                    href={whatsappHref(whatsapp, "Hello, I just requested an IT rental quote on your website.")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-2 inline-flex h-12 items-center gap-2 rounded-[10px] bg-s-whatsapp px-5 font-bold text-white"
@@ -75,7 +76,7 @@ export function RentalQuoteForm() {
                         <label className={labelClass}>
                             Equipment
                             <select value={l.category} onChange={(e) => update(l.id, { category: e.target.value })} className={fieldClass}>
-                                {RENTAL_CATEGORIES.map((c) => <option key={c.name}>{c.name}</option>)}
+                                {options.map((c) => <option key={c}>{c}</option>)}
                             </select>
                         </label>
                         <label className={labelClass}>
@@ -100,7 +101,7 @@ export function RentalQuoteForm() {
                 {lines.length < 10 && (
                     <button
                         type="button"
-                        onClick={() => setLines((ls) => [...ls, { id: Date.now(), category: RENTAL_CATEGORIES[0].name, quantity: "1", specs: "" }])}
+                        onClick={() => setLines((ls) => [...ls, { id: Date.now(), category: options[0], quantity: "1", specs: "" }])}
                         className="inline-flex h-10 items-center gap-1.5 self-start rounded-[10px] border border-dashed border-s-border-strong px-3.5 text-sm font-bold text-s-orange-text hover:bg-s-band"
                     >
                         <Plus className="h-4 w-4" aria-hidden="true" /> Add another item

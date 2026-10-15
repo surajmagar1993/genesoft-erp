@@ -4,6 +4,8 @@ import { BrandLogo } from "@/components/brand-logo"
 import { SITE_CONTAINER } from "@/components/marketing/container"
 import { LEGAL_LINKS } from "@/components/marketing/legal-links"
 import { PLATFORM, telHref, whatsappHref } from "@/lib/constants/platform"
+import { getSiteSettings } from "@/lib/site-cms"
+import { SocialIcon } from "@/components/marketing/social-icon"
 import { SERVICES } from "@/lib/site-content"
 
 const COLUMNS = [
@@ -30,8 +32,9 @@ const COLUMNS = [
 ]
 
 /** Always dark (charcoal), so it uses the white-lettered logo in both themes. */
-export function PublicFooter() {
+export async function PublicFooter() {
     const year = new Date().getFullYear()
+    const site = await getSiteSettings()
 
     return (
         <footer className="bg-s-footer text-[#D9D4CC]">
@@ -44,21 +47,37 @@ export function PublicFooter() {
                     <ul className="space-y-2 text-sm">
                         <li className="flex items-center gap-2">
                             <Mail className="h-4 w-4 text-[#A39E96]" aria-hidden="true" />
-                            <a href={`mailto:${PLATFORM.email}`} className="hover:text-white">{PLATFORM.email}</a>
+                            <a href={`mailto:${site.email}`} className="hover:text-white">{site.email}</a>
                         </li>
                         <li className="flex items-center gap-2">
                             <Phone className="h-4 w-4 text-[#A39E96]" aria-hidden="true" />
-                            <a href={telHref(PLATFORM.phone)} className="hover:text-white">{PLATFORM.phone}</a>
+                            <a href={telHref(site.phone)} className="hover:text-white">{site.phone}</a>
                             <span className="text-[#A39E96]">·</span>
-                            <a href={whatsappHref(PLATFORM.whatsapp)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-white">
+                            <a href={whatsappHref(site.whatsapp)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-white">
                                 <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
                             </a>
                         </li>
                         <li className="flex items-start gap-2">
                             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#A39E96]" aria-hidden="true" />
-                            <span>{PLATFORM.address.line1}, {PLATFORM.address.line2}</span>
+                            <span>{site.addressLine1}, {site.addressLine2}</span>
                         </li>
                     </ul>
+                    {site.socials.length > 0 && (
+                        <div className="flex gap-2.5 pt-1">
+                            {site.socials.map((so) => (
+                                <a
+                                    key={so.network}
+                                    href={so.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label={so.network}
+                                    className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#3A3733] hover:border-[#F6A55C] hover:text-white"
+                                >
+                                    <SocialIcon network={so.network} />
+                                </a>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {COLUMNS.map((col) => (

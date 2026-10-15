@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-forwarded-for": "203.0.113.7" }) }))
 
 import { sendContactMessage, sendRentalQuote } from "@/app/actions/public/contact"
+import { prisma } from "@/lib/prisma"
 
 const visitor = { name: "Asha Rao", email: "asha@example.test", company: "Rao Traders", phone: "+91 98765 43210" }
 
@@ -26,9 +27,16 @@ describe("website forms (contact, service enquiries, IT rental quotes)", () => {
         expect(await sendRentalQuote({ ...visitor, items: [{ category: "Laptops", quantity: 10 }], startDate: "next week", period: "1 month", city: "Pune" })).toMatchObject({ success: false, error: expect.stringMatching(/start date/) })
     })
 
-    it("a valid request with email not configured says how else to reach us", async () => {
-        // Tests run without a Resend key: the visitor is pointed to info@ instead of losing the message silently
-        const res = await sendRentalQuote({ ...visitor, items: [{ category: "Laptops", quantity: 10, specs: "i5, 16 GB" }], startDate: "2026-11-01", period: "3 months", city: "Pune" })
-        expect(res).toMatchObject({ success: false, error: expect.stringMatching(/info@genesoftinfotech\.com/) })
+    it("valid requests are saved to the Leads inbox even when email isn't configured", async () => {
+        // Tests run without a Resend key: the lead must still be kept, so nothing is lost
+        const quote = await sendRentalQuote({ ...visitor, email: "quote@example.test", items: [{ category: "Laptops", quantity: 10, specs: "i5, 16 GB" }], startDate: "2026-11-01", period: "3 months", city: "Pune" })
+        expect(quote).toEqual({ success: true, data: { sent: true } })
+        const lead = await prisma.siteLead.findFirstOrThrow({ where: { email: "quote@example.test" } })
+        expect(lead).toMatchObject({ kind: "quote", topic: "IT Rentals", status: "new", company: "Rao Traders" })
+        expect(lead.data).toMatchObject({ city: "Pune", period: "3 months", items: [{ category: "Laptops", quantity: 10, specs: "i5, 16 GB" }] })
+
+        const msg = await sendContactMessage({ ...visitor, email: "msg@example.test", topic: "IT Support", message: "Our office network keeps dropping." })
+        expect(msg.success).toBe(true)
+        expect(await prisma.siteLead.findFirstOrThrow({ where: { email: "msg@example.test" } })).toMatchObject({ kind: "contact", topic: "IT Support" })
     })
 })

@@ -1,14 +1,16 @@
 import Link from "next/link"
 import { MessageCircle } from "lucide-react"
-import { PLATFORM, whatsappHref } from "@/lib/constants/platform"
+import { whatsappHref } from "@/lib/constants/platform"
+import { getSiteSettings } from "@/lib/site-cms"
 
 const WA_TEXT = "Hello Genesoft Infotech, I'd like to know more."
 
 /** Floating WhatsApp button (tablets and desktops). */
-export function WhatsAppButton() {
+export async function WhatsAppButton() {
+    const { whatsapp } = await getSiteSettings()
     return (
         <a
-            href={whatsappHref(PLATFORM.whatsapp, WA_TEXT)}
+            href={whatsappHref(whatsapp, WA_TEXT)}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Chat with us on WhatsApp"
@@ -20,7 +22,8 @@ export function WhatsAppButton() {
 }
 
 /** Bar fixed to the bottom of phones: Get a quote + WhatsApp. */
-export function PhoneActionBar() {
+export async function PhoneActionBar() {
+    const { whatsapp } = await getSiteSettings()
     return (
         <>
             <div className="h-[72px] md:hidden" aria-hidden="true" />
@@ -29,7 +32,7 @@ export function PhoneActionBar() {
                     Get a quote
                 </Link>
                 <a
-                    href={whatsappHref(PLATFORM.whatsapp, WA_TEXT)}
+                    href={whatsappHref(whatsapp, WA_TEXT)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex flex-1 items-center justify-center gap-2 rounded-[10px] bg-s-whatsapp font-bold text-white"

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
  * Website enquiry form (Contact page and every service page). Goes to info@
  * via sendContactMessage. `topic` preselects the service.
  */
-export function EnquiryForm({ topic = "General", title = "Send us a message", showTopics = true }: { topic?: string; title?: string; showTopics?: boolean }) {
+export function EnquiryForm({ topic = "General", title = "Send us a message", showTopics = true, whatsapp = PLATFORM.whatsapp }: { topic?: string; title?: string; showTopics?: boolean; whatsapp?: string }) {
     const [isPending, startTransition] = useTransition()
     const [sent, setSent] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -45,7 +45,7 @@ export function EnquiryForm({ topic = "General", title = "Send us a message", sh
                 <h2 className="font-display text-2xl font-bold text-s-ink">Thanks, we&apos;ve got it</h2>
                 <p className="max-w-md text-s-text">We&apos;ll reply to the email address you gave us within one working day. Need us sooner?</p>
                 <a
-                    href={whatsappHref(PLATFORM.whatsapp, "Hello, I just sent an enquiry on your website.")}
+                    href={whatsappHref(whatsapp, "Hello, I just sent an enquiry on your website.")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-2 inline-flex h-12 items-center gap-2 rounded-[10px] bg-s-whatsapp px-5 font-bold text-white"

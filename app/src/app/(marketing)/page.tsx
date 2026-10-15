@@ -3,32 +3,41 @@ import { ArrowRight, Check, Laptop } from "lucide-react"
 import { SITE_CONTAINER } from "@/components/marketing/container"
 import { ServiceIcon } from "@/components/marketing/service-icon"
 import { Eyebrow, H1, H2, Lead, SiteButton } from "@/components/marketing/ui"
-import { PLATFORM, whatsappHref } from "@/lib/constants/platform"
+import { whatsappHref } from "@/lib/constants/platform"
+import { getPageContent, getPublishedItems, getServiceShorts, getSiteSettings, list, text } from "@/lib/site-cms"
+import { PortfolioCard } from "@/components/marketing/portfolio-card"
 import { PROCESS, SERVICES, WHY_US } from "@/lib/site-content"
 
-export const metadata = {
-    title: "Genesoft Infotech | Software, Digital Marketing, IT Rentals and IT Support in Pune",
-    description:
-        "Genesoft Infotech builds custom software and ERP systems, runs digital marketing, rents laptops and servers, and provides IT support, from Pune, India. Makers of Genesoft ERP.",
+export async function generateMetadata() {
+    const site = await getSiteSettings()
+    return { title: site.seoTitle, description: site.seoDescription }
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+    const [site, home, clients, stats, testimonials, work] = await Promise.all([
+        getSiteSettings(),
+        getPageContent("page:home"),
+        getPublishedItems("client"),
+        getPublishedItems("stat"),
+        getPublishedItems("testimonial"),
+        getPublishedItems("portfolio"),
+    ])
+    const shorts = await getServiceShorts(SERVICES.map((s) => s.slug))
+    const quote = testimonials[0]
     return (
         <>
             {/* Hero */}
             <section className={`${SITE_CONTAINER} grid items-center gap-12 py-16 md:py-24 lg:grid-cols-2 xl:gap-20 2xl:py-28`}>
                 <div className="s-reveal flex flex-col gap-6">
-                    <Eyebrow>Software · Marketing · IT Rentals · IT Support</Eyebrow>
-                    <H1 className="xl:text-[64px]">Technology that keeps your business moving.</H1>
-                    <Lead className="max-w-[600px]">
-                        From Pune, {PLATFORM.brandName} builds custom software, grows your brand online, rents you the IT equipment you need, and keeps it all running. One team, one point of contact.
-                    </Lead>
+                    {text(home.eyebrow) && <Eyebrow>{text(home.eyebrow)}</Eyebrow>}
+                    <H1 className="xl:text-[64px]">{text(home.heading)}</H1>
+                    <Lead className="max-w-[600px]">{text(home.lead)}</Lead>
                     <div className="flex flex-col gap-3 sm:flex-row">
                         <SiteButton href="/contact">Get a quote</SiteButton>
                         <SiteButton href="/erp" variant="secondary">Explore Genesoft ERP</SiteButton>
                     </div>
                     <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-s-muted">
-                        {["Free first consultation", "Clear quote before we start", "Support after launch"].map((t) => (
+                        {list(home.points).slice(0, 3).map((t) => (
                             <li key={t} className="flex items-center gap-1.5">
                                 <Check className="h-4 w-4 text-s-orange-text" aria-hidden="true" /> {t}
                             </li>
@@ -75,7 +84,7 @@ export default function HomePage() {
                                     <ServiceIcon name={s.icon} className="h-6 w-6" />
                                 </span>
                                 <span className="font-display text-xl font-semibold text-s-ink">{s.name}</span>
-                                <span className="leading-relaxed text-s-text">{s.short}</span>
+                                <span className="leading-relaxed text-s-text">{shorts[s.slug] || s.short}</span>
                                 <span className="mt-auto font-bold text-s-orange-text">{s.slug === "it-rentals" ? "Get a quote" : "Explore"} →</span>
                             </Link>
                         ))}
@@ -167,6 +176,60 @@ export default function HomePage() {
                 </div>
             </section>
 
+            {/* Recent work: only published, client-approved case studies */}
+            {work.length > 0 && (
+                <section className="py-20">
+                    <div className={`${SITE_CONTAINER} flex flex-col gap-9`}>
+                        <div className="flex flex-wrap items-end justify-between gap-4">
+                            <H2>Recent work</H2>
+                            <Link href="/portfolio" className="font-bold text-s-orange-text hover:underline">View portfolio →</Link>
+                        </div>
+                        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                            {work.slice(0, 3).map((w) => (
+                                <PortfolioCard key={w.id} item={w} />
+                            ))}
+                        </div>
+                    </div>
+                </section>
+            )}
+
+            {/* Proof: only confirmed clients, numbers and testimonials */}
+            {(clients.length > 0 || stats.length > 0 || quote) && (
+                <section className="bg-s-band py-20">
+                    <div className={`${SITE_CONTAINER} flex flex-col gap-10`}>
+                        <H2 className="text-center">Trusted by businesses like yours</H2>
+                        {clients.length > 0 && (
+                            <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
+                                {clients.map((c) => (
+                                    <li key={c.id}>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={text(c.data.logo)} alt={text(c.data.name)} className="h-12 max-w-[160px] object-contain opacity-80 transition hover:opacity-100 dark:rounded-md dark:bg-white dark:p-1.5" />
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        {stats.length > 0 && (
+                            <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                                {stats.slice(0, 4).map((st) => (
+                                    <div key={st.id} className="flex flex-col-reverse items-center gap-1 rounded-2xl bg-s-card p-6 text-center">
+                                        <dt className="text-s-muted">{text(st.data.label)}</dt>
+                                        <dd className="font-display text-4xl font-bold text-s-ink">{text(st.data.value)}</dd>
+                                    </div>
+                                ))}
+                            </dl>
+                        )}
+                        {quote && (
+                            <figure className="mx-auto flex max-w-3xl flex-col gap-4 rounded-[20px] border border-s-border bg-s-card p-8">
+                                <blockquote className="text-xl leading-relaxed text-s-ink">&ldquo;{text(quote.data.quote)}&rdquo;</blockquote>
+                                <figcaption className="text-sm text-s-muted">
+                                    {[text(quote.data.name), text(quote.data.role), text(quote.data.company)].filter(Boolean).join(", ")}
+                                </figcaption>
+                            </figure>
+                        )}
+                    </div>
+                </section>
+            )}
+
             {/* IT rentals band */}
             <section className="py-20">
                 <div className={`${SITE_CONTAINER} grid items-center gap-8 lg:grid-cols-[auto_minmax(0,1fr)_auto]`}>
@@ -191,7 +254,7 @@ export default function HomePage() {
                         </div>
                         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
                             <SiteButton href="/contact" variant="dark">Get a quote</SiteButton>
-                            <SiteButton href={whatsappHref(PLATFORM.whatsapp, "Hello Genesoft Infotech, I'd like a quote.")} external variant="onOrange">WhatsApp us</SiteButton>
+                            <SiteButton href={whatsappHref(site.whatsapp, "Hello Genesoft Infotech, I'd like a quote.")} external variant="onOrange">WhatsApp us</SiteButton>
                         </div>
                     </div>
                 </div>

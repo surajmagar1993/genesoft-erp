@@ -7,6 +7,12 @@ import { usePathname } from "next/navigation"
 import Image from "next/image"
 import {
     LayoutDashboard,
+    Globe2,
+    Inbox,
+    FileText,
+    ListChecks,
+    Image as ImageIcon,
+    SlidersHorizontal,
     Building2,
     CreditCard,
     MessageSquare,
@@ -69,6 +75,17 @@ const adminNavigation = [
         ],
     },
     {
+        label: "Website",
+        items: [
+            { name: "Website overview", href: "/admin/website", icon: Globe2, exact: true },
+            { name: "Leads inbox", href: "/admin/website/leads", icon: Inbox },
+            { name: "Pages", href: "/admin/website/pages", icon: FileText },
+            { name: "Lists", href: "/admin/website/lists", icon: ListChecks },
+            { name: "Media library", href: "/admin/website/media", icon: ImageIcon },
+            { name: "Site settings", href: "/admin/website/settings", icon: SlidersHorizontal },
+        ],
+    },
+    {
         label: "Support",
         items: [
             { name: "Support Inbox", href: "/admin/support", icon: MessageSquare },
@@ -123,7 +140,7 @@ function AdminSidebar() {
                         <SidebarGroupContent>
                             <SidebarMenu>
                                 {group.items.map((item) => {
-                                    const isActive = pathname.startsWith(item.href)
+                                    const isActive = "exact" in item && item.exact ? pathname === item.href : pathname.startsWith(item.href)
                                     return (
                                         <SidebarMenuItem key={item.name}>
                                             <SidebarMenuButton

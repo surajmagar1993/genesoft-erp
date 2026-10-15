@@ -4,8 +4,10 @@ import { Check } from "lucide-react"
 import { SITE_CONTAINER } from "@/components/marketing/container"
 import { EnquiryForm } from "@/components/marketing/enquiry-form"
 import { H1, H2, Lead, SiteButton } from "@/components/marketing/ui"
-import { PLATFORM, whatsappHref } from "@/lib/constants/platform"
+import { whatsappHref } from "@/lib/constants/platform"
 import { PROCESS, SERVICES, serviceBySlug } from "@/lib/site-content"
+import { getPageContent, getPublishedItems, getSiteSettings, list, text, type Faq, type Pair } from "@/lib/site-cms"
+import { PortfolioCard } from "@/components/marketing/portfolio-card"
 
 /** Service page template: Software Development, Digital Marketing, IT Support (IT Rentals has its own page). */
 export function generateStaticParams() {
@@ -14,12 +16,26 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
     const s = serviceBySlug((await params).slug)
-    return s ? { title: `${s.name} | Genesoft Infotech`, description: s.intro } : {}
+    if (!s) return {}
+    const c = await getPageContent(`service:${s.slug}`)
+    return { title: `${s.name} | Genesoft Infotech`, description: text(c.intro) }
 }
 
 export default async function ServicePage({ params }: { params: Promise<{ slug: string }> }) {
-    const s = serviceBySlug((await params).slug)
-    if (!s || s.slug === "it-rentals") notFound()
+    const base = serviceBySlug((await params).slug)
+    if (!base || base.slug === "it-rentals") notFound()
+    const [c, work, site] = await Promise.all([getPageContent(`service:${base.slug}`), getPublishedItems("portfolio"), getSiteSettings()])
+    // Published text from Super Admin → Website → Pages, over the built-in defaults
+    const s = {
+        ...base,
+        heading: text(c.heading),
+        intro: text(c.intro),
+        includes: list<Pair>(c.includes),
+        getList: list(c.getList),
+        faqs: list<Faq>(c.faqs).map((f) => ({ q: f.q, a: f.a })),
+        tech: base.tech ? list(c.tech) : undefined,
+    }
+    const related = work.filter((w) => text(w.data.service) === base.name).slice(0, 3)
 
     return (
         <>
@@ -32,7 +48,7 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                     <Lead className="max-w-[680px]">{s.intro}</Lead>
                     <div className="flex flex-col gap-3 sm:flex-row">
                         <SiteButton href="#enquiry">Discuss your project</SiteButton>
-                        <SiteButton href={whatsappHref(PLATFORM.whatsapp, `Hello, I'd like to talk about ${s.name}.`)} external variant="secondary">WhatsApp us</SiteButton>
+                        <SiteButton href={whatsappHref(site.whatsapp, `Hello, I'd like to talk about ${s.name}.`)} external variant="secondary">WhatsApp us</SiteButton>
                     </div>
                 </div>
                 <aside className="flex flex-col gap-3.5 rounded-[20px] border border-s-border bg-s-card p-7">
@@ -88,6 +104,17 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                 </div>
             </section>
 
+            {related.length > 0 && (
+                <section className={`${SITE_CONTAINER} flex flex-col gap-8 py-20`}>
+                    <H2>Related work</H2>
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                        {related.map((w) => (
+                            <PortfolioCard key={w.id} item={w} />
+                        ))}
+                    </div>
+                </section>
+            )}
+
             {s.faqs.length > 0 && (
                 <section className={`${SITE_CONTAINER} grid gap-10 py-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]`}>
                     <H2>Questions</H2>
@@ -110,10 +137,10 @@ export default async function ServicePage({ params }: { params: Promise<{ slug: 
                     <div className="flex flex-col gap-4">
                         <H2 className="leading-tight">Tell us about your project</H2>
                         <p className="text-lg leading-relaxed">
-                            We reply from <strong className="text-s-ink">{PLATFORM.email}</strong> within one working day. Prefer to talk? Call or WhatsApp {PLATFORM.phone}.
+                            We reply from <strong className="text-s-ink">{site.email}</strong> within one working day. Prefer to talk? Call or WhatsApp {site.phone}.
                         </p>
                     </div>
-                    <EnquiryForm topic={s.topic} title="Your project" showTopics={false} />
+                    <EnquiryForm topic={s.topic} title="Your project" showTopics={false} whatsapp={site.whatsapp} />
                 </div>
             </section>
         </>

@@ -8,6 +8,8 @@ import { PLATFORM } from "@/lib/constants/platform"
 import { clientIp } from "@/lib/platform-security"
 import { toActionResult, type ActionResult } from "@/lib/action-result"
 import { CONTACT_TOPICS, RENTAL_CATEGORIES, RENTAL_PERIODS } from "@/lib/site-content"
+import { getPublishedItem, getPublishedItems, getSiteSettings } from "@/lib/site-cms"
+import { documentKind, storageConfigured, uploadPrivateFile } from "@/lib/storage"
 
 const WINDOW_MS = 10 * 60 * 1000
 const MAX_PER_WINDOW = 3
@@ -41,11 +43,20 @@ function cleanVisitor(input: { name?: string; email?: string; company?: string; 
 }
 
 /**
- * Emails a website form to info@ with the visitor as reply-to. Each IP gets 3
- * messages per 10 minutes (counted in System Logs, which keep only metadata,
- * never the message text).
+ * Saves a website form to the Leads inbox (Super Admin → Website → Leads) and
+ * emails it to `to` (info@, or careers@ for applications) with the visitor as
+ * reply-to. The lead is saved first, so a failed email loses nothing. Each IP
+ * gets 3 submissions per 10 minutes (counted in System Logs, which keep only
+ * metadata, never the message text).
  */
-async function deliver(kind: "CONTACT_FORM" | "RENTAL_QUOTE", topic: string, v: Visitor, rows: [string, string][], body: string) {
+async function deliver(
+    kind: "CONTACT_FORM" | "RENTAL_QUOTE" | "JOB_APPLICATION",
+    topic: string,
+    v: Visitor,
+    rows: [string, string][],
+    body: string,
+    lead: { data: Record<string, unknown>; to?: string }
+) {
     const ip = clientIp(await headers()) || "unknown"
     const ipTag = `ip=${createHash("sha256").update(ip).digest("hex").slice(0, 16)}`
     const recent = await prisma.systemLog.count({
@@ -53,27 +64,37 @@ async function deliver(kind: "CONTACT_FORM" | "RENTAL_QUOTE", topic: string, v: 
     })
     if (recent >= MAX_PER_WINDOW) throw new Error("You've sent a few messages already. Please wait 10 minutes and try again.")
 
+    const leadKind = kind === "RENTAL_QUOTE" ? "quote" : kind === "JOB_APPLICATION" ? "application" : "contact"
+    const saved = await prisma.siteLead.create({
+        data: { kind: leadKind, topic, name: v.name, email: v.email, phone: v.phone || null, company: v.company || null, data: { ...lead.data, message: body } },
+        select: { id: true },
+    })
+    await prisma.systemLog.create({
+        data: { level: "INFO", path: "/contact", message: `${kind} ${ipTag} topic=${topic} lead=${saved.id}` },
+    })
+
     const apiKey = process.env.RESEND_API_KEY
     const domain = process.env.RESEND_DOMAIN
-    if (!apiKey || !domain) throw new Error(`Our form is unavailable right now. Please email us at ${PLATFORM.email}.`)
-
+    if (!apiKey || !domain) {
+        console.error(`Website form saved as lead ${saved.id} but not emailed: RESEND_API_KEY / RESEND_DOMAIN missing`)
+        return saved.id
+    }
     const allRows: [string, string][] = [["Name", v.name], ["Email", v.email], ["Phone", v.phone || "-"], ["Company", v.company || "-"], ["Topic", topic], ...rows]
-    const subject = kind === "RENTAL_QUOTE" ? `[IT Rentals] Quote request from ${v.name}` : `[${topic}] Website enquiry from ${v.name}`
+    const subject =
+        kind === "RENTAL_QUOTE" ? `[IT Rentals] Quote request from ${v.name}` : kind === "JOB_APPLICATION" ? `[Careers] Application from ${v.name}: ${topic}` : `[${topic}] Website enquiry from ${v.name}`
     const { error } = await new Resend(apiKey).emails.send({
         from: `Genesoft website <website@${domain}>`,
-        to: [PLATFORM.email],
+        to: [lead.to || (await getSiteSettings()).email],
         replyTo: v.email,
         subject,
-        text: `${allRows.map(([k, val]) => `${k}: ${val}`).join("\n")}\n\n${body}`,
+        text: `${allRows.map(([k, val]) => `${k}: ${val}`).join("\n")}\n\n${body}\n\nAlso in Super Admin → Website → Leads.`,
         html: `<table cellpadding="4" style="border-collapse:collapse;font-family:sans-serif;font-size:14px">${allRows
             .map(([k, val]) => `<tr><td style="color:#6B6762;vertical-align:top"><strong>${escapeHtml(k)}</strong></td><td style="white-space:pre-wrap">${escapeHtml(val)}</td></tr>`)
-            .join("")}</table><p style="white-space:pre-wrap;font-family:sans-serif;font-size:14px">${escapeHtml(body)}</p>`,
+            .join("")}</table><p style="white-space:pre-wrap;font-family:sans-serif;font-size:14px">${escapeHtml(body)}</p><p style="font-family:sans-serif;font-size:12px;color:#6B6762">Also in Super Admin → Website → Leads.</p>`,
     })
-    if (error) throw new Error(`We couldn't send your message. Please email us at ${PLATFORM.email} or WhatsApp ${PLATFORM.whatsapp}.`)
-
-    await prisma.systemLog.create({
-        data: { level: "INFO", path: "/contact", message: `${kind} ${ipTag} topic=${topic}` },
-    })
+    // The lead is safe in the inbox either way; only log the email failure
+    if (error) console.error(`Website form saved as lead ${saved.id} but the email failed:`, error.message)
+    return saved.id
 }
 
 /** Contact page and service enquiry forms. A filled hidden "website" field means a bot. */
@@ -93,7 +114,7 @@ export async function sendContactMessage(input: {
         const message = (input.message || "").trim()
         if (message.length < 10) throw new Error("Please tell us a little more (at least 10 characters).")
         if (message.length > 5000) throw new Error("Your message is too long. Please keep it under 5,000 characters.")
-        await deliver("CONTACT_FORM", topic, v, [], message)
+        await deliver("CONTACT_FORM", topic, v, [], message, { data: {} })
         return { sent: true as const }
     })
 }
@@ -114,7 +135,8 @@ export async function sendRentalQuote(input: {
     return toActionResult(async () => {
         if (input.website) return { sent: true as const }
         const v = cleanVisitor(input)
-        const categories = RENTAL_CATEGORIES.map((c) => c.name)
+        const published = await getPublishedItems("rental_item")
+        const categories = [...(published.length ? published.map((i) => String(i.data.name)) : RENTAL_CATEGORIES.map((c) => c.name)), "Other"]
         const items = (Array.isArray(input.items) ? input.items : []).slice(0, 10).map((i) => ({
             category: categories.includes(i.category) ? i.category : "Other",
             quantity: Math.floor(Number(i.quantity)),
@@ -135,7 +157,42 @@ export async function sendRentalQuote(input: {
             ["Rental period", period],
             ["Delivery city", city],
         ]
-        await deliver("RENTAL_QUOTE", "IT Rentals", v, rows, notes || "(no extra notes)")
+        await deliver("RENTAL_QUOTE", "IT Rentals", v, rows, notes || "(no extra notes)", { data: { items, startDate: start || null, period, city } })
+        return { sent: true as const }
+    })
+}
+
+/** Careers: apply for a published job with a CV (PDF or Word, up to 5 MB, stored privately). */
+export async function sendJobApplication(formData: FormData): Promise<ActionResult<{ sent: true }>> {
+    return toActionResult(async () => {
+        if (formData.get("website")) return { sent: true as const }
+        const v = cleanVisitor({
+            name: String(formData.get("name") || ""),
+            email: String(formData.get("email") || ""),
+            phone: String(formData.get("phone") || ""),
+        })
+        const job = await getPublishedItem("job", String(formData.get("job") || ""))
+        if (!job) throw new Error("This job is no longer open.")
+        const link = String(formData.get("link") || "").trim()
+        if (link && !/^https:\/\/[^\s]+$/.test(link)) throw new Error("Enter your LinkedIn or portfolio as a full https:// link, or leave it empty.")
+        const note = String(formData.get("message") || "").trim().slice(0, 3000)
+        const file = formData.get("cv")
+        if (!(file instanceof File) || file.size === 0) throw new Error("Attach your CV (PDF or Word).")
+        if (file.size > 5 * 1024 * 1024) throw new Error("Your CV must be 5 MB or smaller.")
+        const buf = Buffer.from(await file.arrayBuffer())
+        const kind = documentKind(buf)
+        if (!kind) throw new Error("Attach your CV as a PDF or Word file.")
+        if (!storageConfigured()) throw new Error(`Applications can't be received online right now. Please email your CV to ${PLATFORM.careersEmail}.`)
+
+        const path = `cvs/${new Date().toISOString().slice(0, 7)}/${crypto.randomUUID()}.${kind.ext}`
+        await uploadPrivateFile("site-private", path, buf, kind.type)
+        const media = await prisma.siteMedia.create({ data: { bucket: "site-private", path, mime: kind.type, bytes: buf.length, alt: `CV: ${v.name}` }, select: { id: true } })
+        const title = String(job.data.title || "Job")
+        const settings = await getSiteSettings()
+        await deliver("JOB_APPLICATION", title, v, [["Job", title], ["Link", link || "-"], ["CV", "Download it in Super Admin → Website → Leads"]], note || "(no message)", {
+            data: { job: job.slug, jobTitle: title, link: link || null, cvMediaId: media.id },
+            to: settings.careersEmail,
+        })
         return { sent: true as const }
     })
 }
