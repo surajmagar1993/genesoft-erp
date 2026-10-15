@@ -6,6 +6,7 @@ import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { quotePlanChange, applyPlanChange } from "@/lib/plan-change"
 import { getEffectivePricing, type EffectivePricing } from "@/lib/plan-pricing"
+import { logTenantAudit } from "@/lib/tenant-audit"
 import {
     PlanTier,
     BillingCycle,
@@ -38,9 +39,12 @@ async function getCallerContext(targetTenantId?: string) {
     }
 }
 
+/** The business's activity log; when the Super Admin does it, the Super Admin log too. */
 async function logAudit(action: string, targetId: string, metadata: any = {}) {
     try {
         const caller = await getCallerContext()
+        await logTenantAudit(targetId, action, { target: { type: "TENANT_SUBSCRIPTION", id: targetId }, metadata, actor: { id: caller.userId, email: caller.email } })
+        if (!caller.isSuperAdmin) return
         await prisma.adminAuditLog.create({
             data: {
                 adminId: caller.userId,

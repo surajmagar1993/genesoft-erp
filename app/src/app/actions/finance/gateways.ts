@@ -14,6 +14,7 @@ import {
     OnlinePaymentResult,
 } from "@/lib/payment-gateway-engine"
 import { createPayment } from "./payments"
+import { logTenantAudit } from "@/lib/tenant-audit"
 
 /**
  * Retrieves the tenant's payment gateway configuration from tenant settings.
@@ -119,6 +120,8 @@ export async function saveTenantPaymentGateways(
         })
 
         revalidatePath("/settings")
+        // Which settings were sent, never their values
+        await logTenantAudit(tenantId, "PAYMENT_GATEWAY_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { fields: Object.keys(newConfig ?? {}).sort() } })
         return { success: true, message: "Payment gateway credentials saved successfully" }
     } catch (error: any) {
         console.error("Error saving payment gateways:", error)

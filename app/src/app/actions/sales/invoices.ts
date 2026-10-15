@@ -17,6 +17,7 @@ import { postToLedger } from "@/lib/ledger"
 import { postInvoiceStock } from "@/lib/stock"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { planLimitError } from "@/lib/plan-limits"
+import { logTenantAudit } from "@/lib/tenant-audit"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -698,6 +699,7 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
     await postToLedger(tenantId, { kind: "invoice", id })
     for (const paymentId of paymentIds) await postToLedger(tenantId, { kind: "payment", id: paymentId })
     await postInvoiceStock(tenantId, { invoiceNumber: owned.invoiceNumber })
+    await logTenantAudit(tenantId, "INVOICE_DELETED", { target: { type: "INVOICE", id }, metadata: { invoiceNumber: owned.invoiceNumber, paymentsRemoved: paymentIds.length } })
 
     revalidatePath("/sales/invoices")
     return { error: null }

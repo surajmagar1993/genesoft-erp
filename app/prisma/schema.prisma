@@ -48,6 +48,7 @@ model Tenant {
   users             User[]
   contacts          Contact[]
   products          Product[]
+  auditLogs         TenantAuditLog[]
   invoices          Invoice[]
   quotes            Quote[]
   salesOrders       SalesOrder[]
@@ -1295,6 +1296,26 @@ model AdminAuditLog {
   @@index([adminId])
   @@index([action])
   @@map("admin_audit_logs")
+}
+
+/// What a business's own people did (and the billing system / Super Admin acting
+/// on it): tenant_audit_migration.sql. Super Admin actions live in AdminAuditLog.
+model TenantAuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  actorId    String?  @map("actor_id") @db.Uuid
+  actorEmail String?  @map("actor_email")
+  action     String
+  targetType String?  @map("target_type")
+  targetId   String?  @map("target_id")
+  metadata   Json     @default("{}")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt(sort: Desc)], map: "idx_tenant_audit_logs_tenant_time")
+  @@index([action], map: "idx_tenant_audit_logs_action")
+  @@map("tenant_audit_logs")
 }
 
 model GlobalSettings {

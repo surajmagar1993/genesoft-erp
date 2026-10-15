@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { postToLedger } from "@/lib/ledger"
 import { syncInvoiceStock } from "@/lib/stock"
+import { logTenantAudit } from "@/lib/tenant-audit"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = ["finance", "sales"] as const
@@ -203,7 +204,7 @@ export async function createPayment(payload: CreatePaymentPayload): Promise<{ id
 export async function deletePayment(id: string): Promise<{ error: string | null }> {
   const tenantId = await getTenantManagerId(MODULE)
 
-  const p = await prisma.payment.findFirst({ where: { id, tenantId }, select: { invoiceId: true, billId: true } })
+  const p = await prisma.payment.findFirst({ where: { id, tenantId }, select: { invoiceId: true, billId: true, amount: true, currencyCode: true, reference: true } })
   if (!p) return { error: "Payment not found" }
 
   try {
@@ -234,6 +235,7 @@ export async function deletePayment(id: string): Promise<{ error: string | null 
 
   revalidatePath("/finance/payments")
   revalidatePath("/finance/payable")
+  await logTenantAudit(tenantId, "PAYMENT_DELETED", { target: { type: "PAYMENT", id }, metadata: { amount: Number(p.amount), currency: p.currencyCode, reference: p.reference, invoiceId: p.invoiceId, billId: p.billId } })
 
   return { error: null }
 }

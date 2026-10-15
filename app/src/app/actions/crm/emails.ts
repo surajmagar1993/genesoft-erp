@@ -10,6 +10,7 @@ import { openSecret, sealSecret } from "@/lib/secret-box"
 import { revalidatePath } from "next/cache"
 import { checkSmtpTarget } from "@/lib/smtp-guard"
 import { CommunicationType } from "@prisma/client"
+import { logTenantAudit } from "@/lib/tenant-audit"
 import {
     EmailDirection,
     EmailStatus,
@@ -446,6 +447,7 @@ export async function createEmailAccount(data: CreateEmailAccountInput): Promise
         })
 
         revalidatePath("/crm/emails")
+        await logTenantAudit(tenantId, "EMAIL_ACCOUNT_ADDED", { target: { type: "EMAIL_ACCOUNT", id: created.id }, metadata: { address: created.email } })
         return { success: true, accountId: created.id }
     } catch (err: any) {
         console.error("createEmailAccount error:", err)
@@ -496,6 +498,7 @@ export async function deleteEmailAccount(id: string): Promise<{ success?: boolea
         const tenantId = await getTenantAdminId()
         const { count } = await prisma.emailAccount.deleteMany({ where: { id, tenantId } })
         if (count === 0) return { error: "Mailbox not found" }
+        await logTenantAudit(tenantId, "EMAIL_ACCOUNT_REMOVED", { target: { type: "EMAIL_ACCOUNT", id } })
         revalidatePath("/crm/emails")
         return { success: true }
     } catch (err: any) {

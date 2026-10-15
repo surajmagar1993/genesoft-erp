@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import { getEffectivePricing, type EffectivePricing } from "@/lib/plan-pricing"
+import { BILLING_SYSTEM, logTenantAudit } from "@/lib/tenant-audit"
 import {
     calculateSubscriptionProration,
     compileSaaSSubscriptionInvoice,
@@ -111,27 +112,19 @@ export async function applyPlanChange(
         },
     })
 
-    try {
-        await prisma.adminAuditLog.create({
-            data: {
-                adminId: params.actor?.id ?? "system",
-                adminEmail: params.actor?.email ?? "billing@system",
-                action: quote.isUpgrade ? "TENANT_PLAN_UPGRADE" : "TENANT_PLAN_DOWNGRADE",
-                targetId: tenantId,
-                targetType: "TENANT_SUBSCRIPTION",
-                metadata: {
-                    fromPlan: tenant.plan,
-                    toPlan: params.targetPlan,
-                    billingCycle: params.billingCycle,
-                    amountPaid: params.amountPaid ?? null,
-                    paymentRef: params.paymentRef ?? null,
-                    invoiceNumber: invoice?.invoiceNumber ?? null,
-                },
-            },
-        })
-    } catch (err) {
-        console.error("applyPlanChange: failed to write audit log", err)
-    }
+    // The business's activity log (not the Super Admin's): who changed the plan, or the gateway
+    await logTenantAudit(tenantId, quote.isUpgrade ? "TENANT_PLAN_UPGRADE" : "TENANT_PLAN_DOWNGRADE", {
+        target: { type: "TENANT_SUBSCRIPTION", id: tenantId },
+        actor: params.actor ? { id: params.actor.id, email: params.actor.email ?? null } : BILLING_SYSTEM,
+        metadata: {
+            fromPlan: tenant.plan,
+            toPlan: params.targetPlan,
+            billingCycle: params.billingCycle,
+            amountPaid: params.amountPaid ?? null,
+            paymentRef: params.paymentRef ?? null,
+            invoiceNumber: invoice?.invoiceNumber ?? null,
+        },
+    })
 
     return { alreadyApplied: false, invoice, quote }
 }

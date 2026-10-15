@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantAdminId } from "@/lib/get-tenant-id"
 import { streamTenantExport } from "@/lib/tenant-data"
+import { logTenantAudit } from "@/lib/tenant-audit"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
@@ -30,6 +31,7 @@ export async function GET() {
 
     const slug = (tenant.domain || tenant.name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "workspace"
     const filename = `genesoft-export-${slug}-${new Date().toISOString().slice(0, 10)}.zip`
+    await logTenantAudit(tenantId, "DATA_EXPORT", { target: { type: "TENANT", id: tenantId } })
     return new Response(streamTenantExport(tenantId, tenant.name), {
         headers: {
             "Content-Type": "application/zip",

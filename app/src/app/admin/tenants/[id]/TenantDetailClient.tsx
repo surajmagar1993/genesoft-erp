@@ -46,11 +46,12 @@ import { formatSaaSInvoiceReceiptHtml, PlanTier, BillingCycle } from "@/lib/saas
 import { Printer, PlusCircle } from "lucide-react"
 import { readClosure } from "@/lib/workspace-closure"
 import { TenantClosureCard } from "./TenantClosureCard"
+import { ActivityLogTable } from "@/components/activity-log-table"
 
 export function TenantDetailClient({ tenant }: { tenant: any }) {
     const router = useRouter()
     const closure = readClosure(tenant.settings)
-    const [activeTab, setActiveTab] = useState<"overview" | "users" | "records" | "audit">("overview")
+    const [activeTab, setActiveTab] = useState<"overview" | "users" | "records" | "audit" | "activity">("overview")
     const [isLoading, setIsLoading] = useState(false)
     const [isEditOpen, setIsEditOpen] = useState(false)
 
@@ -367,7 +368,17 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                             : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                 >
-                    Governance Audit Trail ({tenant.auditLogs?.length || 0})
+                    Super Admin actions ({tenant.auditLogs?.length || 0})
+                </button>
+                <button
+                    onClick={() => setActiveTab("activity")}
+                    className={`pb-3 px-3 text-sm font-semibold border-b-2 transition-colors ${
+                        activeTab === "activity"
+                            ? "border-primary text-primary"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                    Client activity ({tenant.activityLogs?.length || 0})
                 </button>
             </div>
 
@@ -718,7 +729,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                     <CardHeader className="bg-muted/20 border-b pb-3">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Shield className="h-4 w-4 text-primary" />
-                            Platform Super Admin Audit Logs
+                            Super Admin actions on this business
                         </CardTitle>
                         <CardDescription>
                             Historical ledger of platform actions, plan adjustments, and trial modifications.
@@ -763,6 +774,19 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                 )}
                             </TableBody>
                         </Table>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Tab 5: the business's own activity log (Settings → Activity log for its admins) */}
+            {activeTab === "activity" && (
+                <Card className="border-primary/10 shadow-sm bg-card/60 backdrop-blur overflow-hidden">
+                    <CardHeader className="bg-muted/20 border-b pb-3">
+                        <CardTitle className="text-base">Client activity</CardTitle>
+                        <CardDescription>What this business&apos;s own people did: plan and billing, team and access, settings, deletes, payroll and exports.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <ActivityLogTable rows={tenant.activityLogs || []} emptyText="No activity recorded for this business yet." />
                     </CardContent>
                 </Card>
             )}

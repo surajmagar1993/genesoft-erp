@@ -6,6 +6,7 @@ import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { clearFolder, uploadPublicFile } from "@/lib/storage"
 import { toActionResult, type ActionResult } from "@/lib/action-result"
+import { logTenantAudit } from "@/lib/tenant-audit"
 
 export interface TenantAddress {
   street?: string
@@ -97,6 +98,8 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
     revalidatePath("/crm")
     revalidatePath("/sales/invoices")
 
+    // Which fields changed (names only)
+    await logTenantAudit(tenantId, "SETTINGS_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { fields: Object.keys(data).sort() } })
     return { success: true }
   } catch (err: any) {
     console.error("Exception updating tenant settings:", err)
@@ -133,6 +136,7 @@ export async function uploadTenantLogo(formData: FormData): Promise<ActionResult
     const logoUrl = await uploadPublicFile(LOGO_BUCKET, filePath, buf, kind.type)
     await prisma.tenant.update({ where: { id: tenantId }, data: { logoUrl } })
     await clearFolder(LOGO_BUCKET, tenantId, filePath)
+    await logTenantAudit(tenantId, "LOGO_UPLOADED", { target: { type: "TENANT", id: tenantId } })
     revalidatePath("/settings")
     return { logoUrl }
   })
@@ -144,6 +148,7 @@ export async function removeTenantLogo(): Promise<ActionResult<{ removed: true }
     const tenantId = await getTenantAdminId()
     await prisma.tenant.update({ where: { id: tenantId }, data: { logoUrl: null } })
     await clearFolder(LOGO_BUCKET, tenantId)
+    await logTenantAudit(tenantId, "LOGO_REMOVED", { target: { type: "TENANT", id: tenantId } })
     revalidatePath("/settings")
     return { removed: true as const }
   })

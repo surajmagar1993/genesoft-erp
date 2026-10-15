@@ -361,16 +361,29 @@ export async function getTenantById(tenantId: string) {
             _sum: { total: true }
         })
 
-        // Fetch recent audit logs for this tenant
+        // Super Admin actions on this tenant, and the tenant's own activity log
         const auditLogs = await prisma.adminAuditLog.findMany({
             where: { targetId: tenantId },
             orderBy: { createdAt: "desc" },
-            take: 10
+            take: 50
         })
+        const activityLogs = (
+            await prisma.tenantAuditLog.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" }, take: 200 })
+        ).map((r) => ({
+            id: r.id,
+            createdAt: r.createdAt.toISOString(),
+            actorEmail: r.actorEmail,
+            action: r.action,
+            targetType: r.targetType,
+            targetId: r.targetId,
+            metadata: (r.metadata && typeof r.metadata === "object" ? r.metadata : {}) as Record<string, unknown>,
+            tenantId: r.tenantId,
+        }))
 
         return {
             ...tenant,
             // Never send stored credentials (WhatsApp, gateways, SMTP…) to the browser
+            activityLogs,
             settings: redactSecrets(tenant.settings),
             totalRevenue: Number(revenueAgg._sum.total || 0),
             auditLogs

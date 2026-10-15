@@ -9,6 +9,7 @@ import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { adaptTaxAccounts, inputTaxLabel } from "@/lib/default-accounts"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
+import { logTenantAudit } from "@/lib/tenant-audit"
 import {
     ExpenseStatus,
     JournalSourceType,
@@ -1107,6 +1108,7 @@ export async function voidExpense(id: string): Promise<{ success?: boolean; erro
 
         revalidatePath("/finance/expenses")
         revalidatePath("/finance/accounts")
+        await logTenantAudit(tenantId, "EXPENSE_VOIDED", { target: { type: "EXPENSE", id }, metadata: { title: expense.title, amount: Number(expense.totalAmount) } })
         return { success: true }
     } catch (err: any) {
         console.error("Error in voidExpense:", err)

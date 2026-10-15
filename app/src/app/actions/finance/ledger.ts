@@ -6,6 +6,7 @@ import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { toActionResult, type ActionResult } from "@/lib/action-result"
 import { rebuildLedger } from "@/lib/ledger"
+import { logTenantAudit } from "@/lib/tenant-audit"
 import {
     accountLedger,
     balanceSheet,
@@ -72,6 +73,7 @@ export async function rebuildLedgerAction(): Promise<ActionResult<{ documents: n
     return toActionResult(async () => {
         const tenantId = await getTenantManagerId(MODULE)
         const res = await rebuildLedger(tenantId)
+        await logTenantAudit(tenantId, "LEDGER_REBUILT", { metadata: { documents: res.documents, failed: res.failed.length } })
         revalidatePath("/finance/ledger")
         revalidatePath("/finance/accounts")
         return { documents: res.documents, failed: res.failed.length, firstError: res.failed[0]?.error ?? null }

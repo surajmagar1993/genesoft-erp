@@ -10,6 +10,7 @@ import { createInviteToken } from "@/lib/invite-token"
 import { INVITE_DAYS, readTeam, updateTeam, type InviteRole } from "@/lib/team-settings"
 import { planLimitError } from "@/lib/plan-limits"
 import { isAdminRole, resolveAccess, uniformAccess, type ModuleAccess } from "@/lib/access"
+import { logTenantAudit } from "@/lib/tenant-audit"
 
 /** Admin: everything incl. team and settings. Member: what their module access allows. */
 export type TeamRole = InviteRole
@@ -157,6 +158,7 @@ export async function updateTeamMember(
 
         revalidatePath("/settings")
         revalidatePath("/admin/users")
+        await logTenantAudit(tenantId, "TEAM_MEMBER_UPDATED", { target: { type: "USER", id: userId }, metadata: { memberEmail: member.email, role: change.role, ...(change.access ? { access: change.access } : {}) } })
         return { success: true }
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : "Failed to update the member" }
@@ -187,6 +189,7 @@ export async function setTeamMemberActive(
 
         revalidatePath("/settings")
         revalidatePath("/admin/users")
+        await logTenantAudit(tenantId, isActive ? "TEAM_MEMBER_REACTIVATED" : "TEAM_MEMBER_DEACTIVATED", { target: { type: "USER", id: userId }, metadata: { memberEmail: member.email } })
         return { success: true }
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : "Failed to update status" }
@@ -262,6 +265,7 @@ export async function inviteTeamMember(input: {
 
         revalidatePath("/settings")
         revalidatePath("/admin/users")
+        await logTenantAudit(tenantId, "TEAM_INVITE_SENT", { target: { type: "INVITE", id }, metadata: { email, role: input.role, emailSent: mail.sent } })
         return { success: true, inviteUrl: url, emailSent: mail.sent, emailError: mail.reason }
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : "Failed to send the invite" }
@@ -292,6 +296,7 @@ export async function revokeInvite(inviteId: string): Promise<{ success: boolean
             return { ...t, invites: t.invites.filter((i) => i.id !== inviteId) }
         })
         if (!found) return { success: false, error: "Invite not found" }
+        await logTenantAudit(tenantId, "TEAM_INVITE_REVOKED", { target: { type: "INVITE", id: inviteId } })
         revalidatePath("/settings")
         revalidatePath("/admin/users")
         return { success: true }

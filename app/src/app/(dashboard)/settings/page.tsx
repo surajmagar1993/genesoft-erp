@@ -2,7 +2,7 @@ import Link from "next/link"
 import { appUrl } from "@/lib/app-url"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards, Zap, Users, Database } from "lucide-react"
+import { Building2, Globe, ShieldCheck, Mail, MapPin, CreditCard, WalletCards, Zap, Users, Database, History } from "lucide-react"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
 import { getTenantPaymentGateways } from "@/app/actions/finance/gateways"
 import CompanyProfileTab from "./company-profile-tab"
@@ -18,8 +18,10 @@ import { getPlanConfig, PLAN_ORDER } from "@/lib/plan-config"
 import { getEmailPreferences } from "@/app/actions/settings/email-preferences"
 import { EmailPreferencesCard } from "./email-preferences-card"
 import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
+import { getMyActivityLog } from "@/app/actions/activity"
+import { ActivityLogTable } from "@/components/activity-log-table"
 
-const SETTINGS_TABS = ["organization", "taxation", "account", "gateways", "billing", "team", "data"]
+const SETTINGS_TABS = ["organization", "taxation", "account", "gateways", "billing", "team", "data", "activity"]
 
 export default async function SettingsPage({
     searchParams,
@@ -40,6 +42,7 @@ export default async function SettingsPage({
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN"
     const teamMembers = isAdmin ? await getTeamMembers() : []
     const teamInvites = isAdmin ? await getPendingInvites() : []
+    const activity = isAdmin ? await getMyActivityLog().catch(() => []) : []
     const siteUrl = appUrl()
     const emailPrefs = await getEmailPreferences()
     const regime = resolveTaxRegime(settings?.country_code, null, settings?.currency_code)
@@ -95,6 +98,11 @@ export default async function SettingsPage({
                     {isAdmin && (
                         <TabsTrigger value="data" className="flex items-center gap-2">
                             <Database className="h-4 w-4" /> Data & Account
+                        </TabsTrigger>
+                    )}
+                    {isAdmin && (
+                        <TabsTrigger value="activity" className="flex items-center gap-2">
+                            <History className="h-4 w-4" /> Activity log
                         </TabsTrigger>
                     )}
                 </TabsList>
@@ -171,6 +179,22 @@ export default async function SettingsPage({
                 {isAdmin && (
                     <TabsContent value="data">
                         <DataAccountTab workspaceName={settings?.name || ""} />
+                    </TabsContent>
+                )}
+                {isAdmin && (
+                    <TabsContent value="activity">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Activity log</CardTitle>
+                                <CardDescription>
+                                    Important changes in your workspace: plan and billing, team and access, settings and saved credentials, deleted
+                                    or voided documents, payroll and data exports. Newest first; secrets are never recorded.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <ActivityLogTable rows={activity} emptyText="No changes recorded yet. New activity appears here from now on." />
+                            </CardContent>
+                        </Card>
                     </TabsContent>
                 )}
             </Tabs>

@@ -3,6 +3,7 @@
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
+import { logTenantAudit } from "@/lib/tenant-audit"
 import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { toActionResult, type ActionResult } from "@/lib/action-result"
 import { ESI_GROSS_LIMIT, getPfWageCeiling, pfWage } from "@/lib/payroll-rules"
@@ -667,6 +668,7 @@ async function _approvePayRun(payRunId: string) {
 
     await postToLedger(tenantId, { kind: "payrollRun", id: payRunId })
     revalidatePath("/hr")
+    await logTenantAudit(tenantId, "PAYROLL_RUN_APPROVED", { target: { type: "PAYROLL_RUN", id: payRunId }, metadata: { runNumber: run.runNumber } })
     return { success: true, run: updated }
 }
 
@@ -713,6 +715,7 @@ async function _processPayRun(
 
     await postToLedger(tenantId, { kind: "payrollRun", id: payRunId })
     revalidatePath("/hr")
+    await logTenantAudit(tenantId, "PAYROLL_RUN_PAID", { target: { type: "PAYROLL_RUN", id: payRunId }, metadata: { runNumber: run.runNumber } })
     return { success: true }
 }
 
@@ -739,6 +742,7 @@ async function _deletePayRun(payRunId: string) {
     })
 
     revalidatePath("/hr")
+    await logTenantAudit(tenantId, "PAYROLL_RUN_DELETED", { target: { type: "PAYROLL_RUN", id: payRunId }, metadata: { runNumber: run.runNumber } })
     return { success: true }
 }
 
@@ -809,6 +813,7 @@ export async function updatePfWageCeiling(ceiling: number): Promise<ActionResult
         const payroll = (settings.payroll || {}) as Record<string, unknown>
         await prisma.tenant.update({ where: { id: tenantId }, data: { settings: { ...settings, payroll: { ...payroll, pfWageCeiling: value } } as never } })
         revalidatePath("/hr")
+        await logTenantAudit(tenantId, "PF_CEILING_UPDATED", { metadata: { pfWageCeiling: value } })
         return { pfWageCeiling: value }
     })
 }

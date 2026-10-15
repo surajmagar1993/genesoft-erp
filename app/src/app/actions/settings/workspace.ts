@@ -9,6 +9,7 @@ import { stripe } from "@/lib/stripe"
 import { PLATFORM } from "@/lib/constants/platform"
 import { CLOSURE_GRACE_DAYS, type WorkspaceClosure } from "@/lib/workspace-closure"
 import type { ActionResult } from "@/lib/action-result"
+import { logTenantAudit } from "@/lib/tenant-audit"
 
 /** Tells the Genesoft team a workspace was closed. Never throws. */
 async function notifyPlatform(tenantName: string, tenantId: string, closure: WorkspaceClosure) {
@@ -77,20 +78,11 @@ export async function closeWorkspace(input: { confirmName: string; reason?: stri
         where: { id: tenantId },
         data: { isActive: false, settings: { ...settings, closure } as never },
     })
-    try {
-        await prisma.adminAuditLog.create({
-            data: {
-                adminId: user.id,
-                adminEmail: user.email || "unknown",
-                action: "TENANT_CLOSED_BY_OWNER",
-                targetId: tenantId,
-                targetType: "TENANT",
-                metadata: { reason: closure.reason ?? null, purgeAfter: closure.purgeAfter },
-            },
-        })
-    } catch (err) {
-        console.error("closeWorkspace: audit log failed", err)
-    }
+    await logTenantAudit(tenantId, "TENANT_CLOSED_BY_OWNER", {
+        target: { type: "TENANT", id: tenantId },
+        actor: { id: user.id, email: user.email ?? null },
+        metadata: { reason: closure.reason ?? null, purgeAfter: closure.purgeAfter },
+    })
     await notifyPlatform(tenant.name, tenantId, closure)
 
     await supabase.auth.signOut()

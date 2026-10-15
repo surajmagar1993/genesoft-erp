@@ -122,6 +122,7 @@ const billItemRows = (billId: string, lines: BillItem[]) =>
 
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { createNotification } from "@/app/actions/notifications"
+import { logTenantAudit } from "@/lib/tenant-audit"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "finance" as const
@@ -336,6 +337,7 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
 
     await postToLedger(tenantId, { kind: "bill", id })
     for (const paymentId of paymentIds) await postToLedger(tenantId, { kind: "payment", id: paymentId })
+    await logTenantAudit(tenantId, "BILL_DELETED", { target: { type: "BILL", id }, metadata: { paymentsRemoved: paymentIds.length } })
 
     revalidatePath("/finance/bills")
     revalidatePath("/finance/payable")

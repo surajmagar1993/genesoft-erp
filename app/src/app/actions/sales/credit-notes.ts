@@ -15,6 +15,7 @@ import {
     Prisma,
 } from "@prisma/client"
 import { recordTransaction } from "@/app/actions/crm/ledger"
+import { logTenantAudit } from "@/lib/tenant-audit"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -846,5 +847,6 @@ export async function voidCreditNote(creditNoteId: string) {
     }
 
     revalidatePath("/sales/credit-notes")
+    await logTenantAudit(tenantId, "CREDIT_NOTE_VOIDED", { target: { type: "CREDIT_NOTE", id: creditNoteId }, metadata: { creditNoteNumber: creditNote.creditNoteNumber } })
     return { success: true }
 }
