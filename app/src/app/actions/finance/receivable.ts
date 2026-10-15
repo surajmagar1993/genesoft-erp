@@ -1,6 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
+import { pick, toRow, toRows } from "@/lib/pg-row"
 import { getTenantId } from "@/lib/get-tenant-id"
 
 export interface ReceivableSummary {
@@ -27,29 +28,20 @@ export interface DebtorSummary {
  * Get global receivable metrics for the dashboard
  */
 export async function getReceivableSummary(): Promise<ReceivableSummary> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
   const now = new Date()
 
   // Fetch all non-paid invoices
-  const { data: invoices } = await supabase
-    .from("invoices")
-    .select("id, total, status, invoice_date, due_date, currency_code")
-    .eq("tenant_id", tenantId)
-    .not("status", "eq", "PAID")
-    .not("status", "eq", "CANCELLED")
+  const invoices = (await prisma.invoice.findMany({ where: { tenantId, status: { notIn: ["PAID", "CANCELLED"] } } }))
+    .map((i) => pick(toRow("Invoice", i), ["id", "total", "status", "invoice_date", "due_date", "currency_code"]) as { id: string; total: number; status: string; invoice_date: string; due_date: string | null; currency_code: string })
 
   // Fetch all payments for these invoices to calculate real balance
   const invoiceIds = invoices?.map(inv => inv.id) || []
   let payments: any[] = []
   
   if (invoiceIds.length > 0) {
-    const { data: pData } = await supabase
-      .from("payments")
-      .select("invoice_id, amount")
-      .in("invoice_id", invoiceIds)
-      .eq("tenant_id", tenantId)
-    payments = pData || []
+    payments = (await prisma.payment.findMany({ where: { tenantId, invoiceId: { in: invoiceIds } }, select: { invoiceId: true, amount: true } }))
+      .map((p) => ({ invoice_id: p.invoiceId, amount: Number(p.amount) }))
   }
 
   const summary: ReceivableSummary = {
@@ -108,37 +100,23 @@ export async function getReceivableSummary(): Promise<ReceivableSummary> {
  * Get top debtors grouped by customer
  */
 export async function getTopDebtors(limit = 10): Promise<DebtorSummary[]> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
   const now = new Date()
 
   // Fetch invoices with contact info
-  const { data: invoices } = await supabase
-    .from("invoices")
-    .select(`
-      id, 
-      total, 
-      status, 
-      invoice_date, 
-      due_date, 
-      contact_id,
-      contacts (display_name)
-    `)
-    .eq("tenant_id", tenantId)
-    .not("status", "eq", "PAID")
-    .not("status", "eq", "CANCELLED")
+  const invoices = (await prisma.invoice.findMany({ where: { tenantId, status: { notIn: ["PAID", "CANCELLED"] } }, include: { contact: { select: { displayName: true } } } }))
+    .map((i) => ({
+      ...(pick(toRow("Invoice", i), ["id", "total", "status", "invoice_date", "due_date", "contact_id"]) as { id: string; total: number; status: string; invoice_date: string; due_date: string | null; contact_id: string }),
+      contacts: { display_name: i.contact.displayName },
+    }))
 
   // Fetch payments
   const invoiceIds = invoices?.map(inv => inv.id) || []
   let payments: any[] = []
   
   if (invoiceIds.length > 0) {
-    const { data: pData } = await supabase
-      .from("payments")
-      .select("invoice_id, amount")
-      .in("invoice_id", invoiceIds)
-      .eq("tenant_id", tenantId)
-    payments = pData || []
+    payments = (await prisma.payment.findMany({ where: { tenantId, invoiceId: { in: invoiceIds } }, select: { invoiceId: true, amount: true } }))
+      .map((p) => ({ invoice_id: p.invoiceId, amount: Number(p.amount) }))
   }
 
   const debtorMap = new Map<string, DebtorSummary>()

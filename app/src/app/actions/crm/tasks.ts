@@ -1,9 +1,12 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
-import { stamped } from "@/lib/db-row"
+import { prisma } from "@/lib/prisma"
+import { fromRow, toRow, toRows } from "@/lib/pg-row"
+import { assertTenantRefs } from "@/lib/tenant-refs"
+import { isUuid } from "@/lib/utils"
+import type { Prisma } from "@prisma/client"
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT"
@@ -35,103 +38,83 @@ export async function getTasks(
     search?: string 
   }
 ): Promise<{ data: Task[]; total: number }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantId()
-  const offset = (page - 1) * limit
-
-  let query = supabase
-    .from("tasks")
-    .select("*", { count: "exact" })
-    .eq("tenant_id", tenantId)
-
-  if (filters?.search) {
-    query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
-  }
-  if (filters?.contact_id) query = query.eq("contact_id", filters.contact_id)
-  if (filters?.lead_id) query = query.eq("lead_id", filters.lead_id)
-  if (filters?.deal_id) query = query.eq("deal_id", filters.deal_id)
-  if (filters?.status) query = query.eq("status", filters.status)
-
-  const { data, count, error } = await query
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (error) {
-    console.error("Error fetching tasks:", error.message)
+  try {
+    const tenantId = await getTenantId()
+    for (const id of [filters?.contact_id, filters?.lead_id, filters?.deal_id]) if (id && !isUuid(id)) return { data: [], total: 0 }
+    const q = filters?.search?.trim()
+    const where: Prisma.TaskWhereInput = {
+      tenantId,
+      ...(q ? { OR: [{ title: { contains: q, mode: "insensitive" } }, { description: { contains: q, mode: "insensitive" } }] } : {}),
+      ...(filters?.contact_id ? { contactId: filters.contact_id } : {}),
+      ...(filters?.lead_id ? { leadId: filters.lead_id } : {}),
+      ...(filters?.deal_id ? { dealId: filters.deal_id } : {}),
+      ...(filters?.status ? { status: filters.status } : {}),
+    }
+    const [rows, total] = await Promise.all([
+      prisma.task.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * limit, take: limit }),
+      prisma.task.count({ where }),
+    ])
+    return { data: toRows<Task>("Task", rows), total }
+  } catch (err) {
+    console.error("Error fetching tasks:", err)
     return { data: [], total: 0 }
   }
-  return { data: data ?? [], total: count || 0 }
 }
 
 export async function getTaskById(id: string): Promise<Task | null> {
-  const supabase = await createClient()
+  if (!isUuid(id)) return null
   const tenantId = await getTenantId()
-
-  const { data, error } = await supabase
-    .from("tasks")
-    .select("*")
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (error) return null
-  return data
+  const row = await prisma.task.findFirst({ where: { id, tenantId } })
+  return row ? toRow<Task>("Task", row) : null
 }
 
 export async function createTask(
   formData: Omit<Task, "id" | "created_at" | "updated_at" | "tenant_id">
 ): Promise<{ error: string | null, data?: Task }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantWriterId()
+  try {
+    const tenantId = await getTenantWriterId()
+    const data = fromRow("Task", formData) as Omit<Prisma.TaskUncheckedCreateInput, "tenantId">
+    await assertTenantRefs(tenantId, { contact: data.contactId, lead: data.leadId, deal: data.dealId })
+    const row = await prisma.task.create({ data: { ...data, tenantId } })
 
-  const { data, error } = await supabase
-    .from("tasks")
-    .insert([stamped({ ...formData, tenant_id: tenantId })])
-    .select()
-    .single()
+    revalidatePath("/crm/tasks")
+    if (formData.contact_id) revalidatePath(`/crm/contacts/${formData.contact_id}`)
+    if (formData.lead_id) revalidatePath(`/crm/leads/${formData.lead_id}`)
+    if (formData.deal_id) revalidatePath(`/crm/deals/${formData.deal_id}`)
 
-  if (error) return { error: error.message }
-  
-  revalidatePath("/crm/tasks")
-  if (formData.contact_id) revalidatePath(`/crm/contacts/${formData.contact_id}`)
-  if (formData.lead_id) revalidatePath(`/crm/leads/${formData.lead_id}`)
-  if (formData.deal_id) revalidatePath(`/crm/deals/${formData.deal_id}`)
-  
-  return { error: null, data }
+    return { error: null, data: toRow<Task>("Task", row) }
+  } catch (err: any) {
+    return { error: err.message || "Failed to create task" }
+  }
 }
 
 export async function updateTask(
   id: string,
   formData: Partial<Omit<Task, "id" | "created_at" | "updated_at" | "tenant_id">>
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantWriterId()
+  try {
+    const tenantId = await getTenantWriterId()
+    const data = fromRow("Task", formData) as Prisma.TaskUncheckedUpdateManyInput
+    await assertTenantRefs(tenantId, { contact: data.contactId as string | null, lead: data.leadId as string | null, deal: data.dealId as string | null })
+    const { count } = await prisma.task.updateMany({ where: { id, tenantId }, data })
+    if (count === 0) return { error: "Task not found" }
 
-  const { error } = await supabase
-    .from("tasks")
-    .update(formData)
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) return { error: error.message }
-  
-  revalidatePath("/crm/tasks")
-  
-  return { error: null }
+    revalidatePath("/crm/tasks")
+    return { error: null }
+  } catch (err: any) {
+    return { error: err.message || "Failed to update task" }
+  }
 }
 
 export async function deleteTask(id: string): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantWriterId()
+  try {
+    const tenantId = await getTenantWriterId()
+    const { count } = await prisma.task.deleteMany({ where: { id, tenantId } })
+    if (count === 0) return { error: "Task not found" }
 
-  const { error } = await supabase
-    .from("tasks")
-    .delete()
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) return { error: error.message }
-  
-  revalidatePath("/crm/tasks")
-  return { error: null }
+    revalidatePath("/crm/tasks")
+    return { error: null }
+  } catch (err: any) {
+    return { error: err.message || "Failed to delete task" }
+  }
 }

@@ -1,6 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
+import { pick, toRow, toRows } from "@/lib/pg-row"
 import { getTenantId } from "@/lib/get-tenant-id"
 
 export interface PayableSummary {
@@ -27,30 +28,20 @@ export interface CreditorSummary {
  * Get global payable metrics for the dashboard
  */
 export async function getPayableSummary(): Promise<PayableSummary> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
   const now = new Date()
 
   // Fetch all non-paid bills
-  const { data: bills } = await supabase
-    .from("bills")
-    .select("id, total, status, bill_date, due_date, currency_code")
-    .eq("tenant_id", tenantId)
-    .not("status", "eq", "PAID")
-    .not("status", "eq", "VOID")
+  const bills = (await prisma.bill.findMany({ where: { tenantId, status: { notIn: ["PAID", "VOID"] } } }))
+    .map((b) => pick(toRow("Bill", b), ["id", "total", "status", "bill_date", "due_date", "currency_code"]) as { id: string; total: number; status: string; bill_date: string; due_date: string | null; currency_code: string })
 
   // Fetch all outbound payments for these bills
   const billIds = bills?.map(b => b.id) || []
   let payments: any[] = []
   
   if (billIds.length > 0) {
-    const { data: pData } = await supabase
-      .from("payments")
-      .select("bill_id, amount")
-      .in("bill_id", billIds)
-      .eq("tenant_id", tenantId)
-      .eq("type", "OUTBOUND")
-    payments = pData || []
+    payments = (await prisma.payment.findMany({ where: { tenantId, billId: { in: billIds }, type: "OUTBOUND" }, select: { billId: true, amount: true } }))
+      .map((p) => ({ bill_id: p.billId, amount: Number(p.amount) }))
   }
 
   const summary: PayableSummary = {
@@ -109,38 +100,23 @@ export async function getPayableSummary(): Promise<PayableSummary> {
  * Get top creditors (vendors) grouped by contact
  */
 export async function getTopCreditors(limit = 10): Promise<CreditorSummary[]> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
   const now = new Date()
 
   // Fetch bills with contact info
-  const { data: bills } = await supabase
-    .from("bills")
-    .select(`
-      id, 
-      total, 
-      status, 
-      bill_date, 
-      due_date, 
-      contact_id,
-      contacts (display_name)
-    `)
-    .eq("tenant_id", tenantId)
-    .not("status", "eq", "PAID")
-    .not("status", "eq", "VOID")
+  const bills = (await prisma.bill.findMany({ where: { tenantId, status: { notIn: ["PAID", "VOID"] } }, include: { contact: { select: { displayName: true } } } }))
+    .map((b) => ({
+      ...(pick(toRow("Bill", b), ["id", "total", "status", "bill_date", "due_date", "contact_id"]) as { id: string; total: number; status: string; bill_date: string; due_date: string | null; contact_id: string }),
+      contacts: { display_name: b.contact.displayName },
+    }))
 
   // Fetch payments
   const billIds = bills?.map(b => b.id) || []
   let payments: any[] = []
   
   if (billIds.length > 0) {
-    const { data: pData } = await supabase
-      .from("payments")
-      .select("bill_id, amount")
-      .in("bill_id", billIds)
-      .eq("tenant_id", tenantId)
-      .eq("type", "OUTBOUND")
-    payments = pData || []
+    payments = (await prisma.payment.findMany({ where: { tenantId, billId: { in: billIds }, type: "OUTBOUND" }, select: { billId: true, amount: true } }))
+      .map((p) => ({ bill_id: p.billId, amount: Number(p.amount) }))
   }
 
   const creditorMap = new Map<string, CreditorSummary>()

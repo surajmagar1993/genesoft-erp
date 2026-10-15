@@ -1,6 +1,7 @@
 import { formatCurrency } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
 import { getTenantId } from "@/lib/get-tenant-id"
+import { toRows } from "@/lib/pg-row"
 import {
   Users,
   Target,
@@ -23,29 +24,16 @@ async function getCRMStats() {
   const tenantId = await getTenantId();
   const currency = (await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } }))?.currencyCode || "INR";
 
-  const [
-    { count: contactsCount },
-    { count: leadsCount },
-    { count: dealsCount },
-    { count: companiesCount },
-    { data: recentLeads },
-    { data: recentDeals },
-  ] = await Promise.all([
-    supabase.from("contacts").select("*", { count: "exact", head: true }),
-    supabase.from("leads").select("*", { count: "exact", head: true }),
-    supabase.from("deals").select("*", { count: "exact", head: true }),
-    supabase.from("companies").select("*", { count: "exact", head: true }),
-    supabase
-      .from("leads")
-      .select("id, title, contact_name, status, created_at")
-      .order("created_at", { ascending: false })
-      .limit(5),
-    supabase
-      .from("deals")
-      .select("id, title, stage, value, created_at")
-      .order("created_at", { ascending: false })
-      .limit(5),
+  const [contactsCount, leadsCount, dealsCount, companiesCount, leads, deals] = await Promise.all([
+    prisma.contact.count({ where: { tenantId } }),
+    prisma.lead.count({ where: { tenantId } }),
+    prisma.deal.count({ where: { tenantId } }),
+    prisma.company.count({ where: { tenantId } }),
+    prisma.lead.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" }, take: 5 }),
+    prisma.deal.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" }, take: 5 }),
   ]);
+  const recentLeads = toRows<{ id: string; title: string; contact_name: string | null; status: string; created_at: string }>("Lead", leads);
+  const recentDeals = toRows<{ id: string; title: string; stage: string; value: number; created_at: string }>("Deal", deals);
 
   return {
     contacts: contactsCount ?? 0,

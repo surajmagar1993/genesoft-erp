@@ -1,8 +1,8 @@
 "use server"
 
 import type { AdminAuditLog } from "@prisma/client"
+import { getCurrentUser } from "@/lib/current-user"
 import { prisma } from "@/lib/prisma"
-import { createClient } from "@/lib/supabase/server"
 import { toActionResult, type ActionResult } from "@/lib/action-result"
 import { canSignUnsubscribeTokens } from "@/lib/unsubscribe-token"
 import {
@@ -13,13 +13,10 @@ import {
 } from "@/lib/marketing-email"
 
 async function ensureSuperAdmin() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     if (!user) throw new Error("Unauthorized")
-    // "*" so a database without the is_active column still works
-    const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-    const row = profile as { role?: string; is_active?: boolean } | null
-    if (!row || row.role !== "SUPER_ADMIN" || row.is_active === false) {
+    const row = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true, isActive: true } })
+    if (!row || row.role !== "SUPER_ADMIN" || row.isActive === false) {
         throw new Error("Forbidden: Super Admin access required")
     }
     return user

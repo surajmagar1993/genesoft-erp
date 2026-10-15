@@ -2,7 +2,6 @@
 
 import { prisma } from "@/lib/prisma"
 import { recordContactTransaction } from "@/lib/contact-ledger"
-import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 
@@ -114,25 +113,7 @@ export async function getContacts(
     return { data: formatted, total }
   } catch (err: any) {
     console.error("Error in getContacts with Prisma:", err)
-    // Fallback to supabase client
-    const supabase = await createClient()
-    let query = supabase
-      .from("contacts")
-      .select("*", { count: "exact" })
-      .eq("tenant_id", tenantId)
-
-    if (search) {
-      query = query.or(`display_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`)
-    }
-
-    const { data, count, error } = await query
-      .range(offset, offset + limit - 1)
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      return { data: [], total: 0 }
-    }
-    return { data: data ?? [], total: count || 0 }
+    return { data: [], total: 0 }
   }
 }
 

@@ -1,19 +1,17 @@
+import { prisma } from "@/lib/prisma"
+import { getTenantId } from "@/lib/get-tenant-id"
+import { toRow, type PgRow } from "@/lib/pg-row"
 import { isUuid } from "@/lib/utils"
-import { createClient } from "@/lib/supabase/server"
 import { ContactForm, emptyContactForm } from "@/components/crm/contact-form"
 import { notFound } from "next/navigation"
 
 export default async function EditContactPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     if (!isUuid(id)) notFound()
-    const supabase = await createClient()
-    const { data, error } = await supabase
-        .from("contacts")
-        .select("*")
-        .eq("id", id)
-        .single()
-
-    if (error || !data) notFound()
+    const tenantId = await getTenantId()
+    const record = await prisma.contact.findFirst({ where: { id, tenantId } })
+    if (!record) notFound()
+    const data = toRow<PgRow>("Contact", record)
 
     // Split phone into dial code and raw number
     const parsePhone = (phoneStr: string | null) => {

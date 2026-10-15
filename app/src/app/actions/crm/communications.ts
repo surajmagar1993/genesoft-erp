@@ -1,11 +1,15 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
-import { stamped } from "@/lib/db-row"
+import { prisma } from "@/lib/prisma"
+import { fromRow, toRow, toRows } from "@/lib/pg-row"
+import { assertTenantRefs } from "@/lib/tenant-refs"
+import { isUuid } from "@/lib/utils"
+import type { Prisma } from "@prisma/client"
 
-export type CommunicationType = "NOTE" | "CALL" | "EMAIL" | "MEETING" | "SMS" | "OTHER"
+/** The database enum: NOTE, EMAIL, CALL, MEETING, TASK */
+export type CommunicationType = "NOTE" | "CALL" | "EMAIL" | "MEETING" | "TASK"
 
 export interface CommunicationLog {
   id: string
@@ -33,67 +37,56 @@ export async function getCommunicationLogs(
     search?: string
   }
 ): Promise<{ data: CommunicationLog[]; total: number }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantId()
-  const offset = (page - 1) * limit
-
-  let query = supabase
-    .from("communication_logs")
-    .select("*", { count: "exact" })
-    .eq("tenant_id", tenantId)
-
-  if (filters?.search) {
-    query = query.or(`subject.ilike.%${filters.search}%,content.ilike.%${filters.search}%`)
-  }
-  if (filters?.contact_id) query = query.eq("contact_id", filters.contact_id)
-  if (filters?.lead_id) query = query.eq("lead_id", filters.lead_id)
-  if (filters?.deal_id) query = query.eq("deal_id", filters.deal_id)
-  if (filters?.type) query = query.eq("type", filters.type)
-
-  const { data, count, error } = await query
-    .order("logged_at", { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (error) {
-    console.error("Error fetching communication logs:", error.message)
+  try {
+    const tenantId = await getTenantId()
+    for (const id of [filters?.contact_id, filters?.lead_id, filters?.deal_id]) if (id && !isUuid(id)) return { data: [], total: 0 }
+    const q = filters?.search?.trim()
+    const where: Prisma.CommunicationLogWhereInput = {
+      tenantId,
+      ...(q ? { OR: [{ subject: { contains: q, mode: "insensitive" } }, { content: { contains: q, mode: "insensitive" } }] } : {}),
+      ...(filters?.contact_id ? { contactId: filters.contact_id } : {}),
+      ...(filters?.lead_id ? { leadId: filters.lead_id } : {}),
+      ...(filters?.deal_id ? { dealId: filters.deal_id } : {}),
+      ...(filters?.type ? { type: filters.type } : {}),
+    }
+    const [rows, total] = await Promise.all([
+      prisma.communicationLog.findMany({ where, orderBy: { loggedAt: "desc" }, skip: (page - 1) * limit, take: limit }),
+      prisma.communicationLog.count({ where }),
+    ])
+    return { data: toRows<CommunicationLog>("CommunicationLog", rows), total }
+  } catch (err) {
+    console.error("Error fetching communication logs:", err)
     return { data: [], total: 0 }
   }
-  return { data: data ?? [], total: count || 0 }
 }
 
 export async function createCommunicationLog(
   formData: Omit<CommunicationLog, "id" | "created_at" | "updated_at" | "tenant_id">
 ): Promise<{ error: string | null; data?: CommunicationLog }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantWriterId()
+  try {
+    const tenantId = await getTenantWriterId()
+    const data = fromRow("CommunicationLog", formData) as Omit<Prisma.CommunicationLogUncheckedCreateInput, "tenantId">
+    await assertTenantRefs(tenantId, { contact: data.contactId, lead: data.leadId, deal: data.dealId })
+    const row = await prisma.communicationLog.create({ data: { ...data, tenantId } })
 
-  const { data, error } = await supabase
-    .from("communication_logs")
-    .insert([stamped({ ...formData, tenant_id: tenantId })])
-    .select()
-    .single()
+    // Revalidate relevant paths
+    if (formData.contact_id) revalidatePath(`/crm/contacts/${formData.contact_id}`)
+    if (formData.lead_id) revalidatePath(`/crm/leads/${formData.lead_id}`)
+    if (formData.deal_id) revalidatePath(`/crm/deals/${formData.deal_id}`)
 
-  if (error) return { error: error.message }
-
-  // Revalidate relevant paths
-  if (formData.contact_id) revalidatePath(`/crm/contacts/${formData.contact_id}`)
-  if (formData.lead_id) revalidatePath(`/crm/leads/${formData.lead_id}`)
-  if (formData.deal_id) revalidatePath(`/crm/deals/${formData.deal_id}`)
-
-  return { error: null, data }
+    return { error: null, data: toRow<CommunicationLog>("CommunicationLog", row) }
+  } catch (err: any) {
+    return { error: err.message || "Failed to save the log entry" }
+  }
 }
 
 export async function deleteCommunicationLog(id: string): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantWriterId()
-
-  const { error } = await supabase
-    .from("communication_logs")
-    .delete()
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) return { error: error.message }
-
-  return { error: null }
+  try {
+    const tenantId = await getTenantWriterId()
+    const { count } = await prisma.communicationLog.deleteMany({ where: { id, tenantId } })
+    if (count === 0) return { error: "Log entry not found" }
+    return { error: null }
+  } catch (err: any) {
+    return { error: err.message || "Failed to delete the log entry" }
+  }
 }

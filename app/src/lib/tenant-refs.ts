@@ -23,6 +23,7 @@ const REF_MODELS = {
     emailAccount: "Mailbox",
     purchaseOrder: "Purchase order",
     salesOrder: "Sales order",
+    quote: "Quote",
     salaryStructure: "Salary structure",
     productBatch: "Batch",
     rentalAsset: "Rental asset",

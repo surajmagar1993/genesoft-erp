@@ -1,19 +1,17 @@
+import { prisma } from "@/lib/prisma"
+import { getTenantId } from "@/lib/get-tenant-id"
+import { toRow, type PgRow } from "@/lib/pg-row"
 import { isUuid } from "@/lib/utils"
-import { createClient } from "@/lib/supabase/server"
 import { CompanyForm, defaultCompanyForm } from "@/components/crm/company-form"
 import { notFound } from "next/navigation"
 
 export default async function EditCompanyPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     if (!isUuid(id)) notFound()
-    const supabase = await createClient()
-    const { data, error } = await supabase
-        .from("companies")
-        .select("*")
-        .eq("id", id)
-        .single()
-
-    if (error || !data) notFound()
+    const tenantId = await getTenantId()
+    const record = await prisma.company.findFirst({ where: { id, tenantId } })
+    if (!record) notFound()
+    const data = toRow<PgRow>("Company", record)
 
     const initialData = {
         ...defaultCompanyForm,

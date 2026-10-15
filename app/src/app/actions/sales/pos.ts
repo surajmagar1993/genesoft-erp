@@ -3,7 +3,6 @@
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { deductStockForSale } from "@/lib/stock"
-import { createClient } from "@/lib/supabase/server"
 import { getTenantTaxContext, invoiceItemTaxColumns, productTaxRate } from "@/lib/tenant-tax"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -161,7 +160,6 @@ export async function quickCreateWalkInContact(
 export async function createPOSSale(
   data: POSTransactionData
 ): Promise<POSSaleResult> {
-  const supabase = await createClient()
   const tenantId = await getTenantWriterId()
 
   try {
@@ -179,13 +177,9 @@ export async function createPOSSale(
     }
 
     // 2. Generate invoice number
-    const { data: tenant } = await supabase
-      .from("tenants")
-      .select("fiscal_year_start")
-      .eq("id", tenantId)
-      .single()
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { fiscalYearStart: true } })
 
-    const fiscalMonthStart = tenant?.fiscal_year_start || 4
+    const fiscalMonthStart = tenant?.fiscalYearStart || 4
     const now = new Date()
     let startYear = now.getFullYear()
     const currentMonth = now.getMonth() + 1

@@ -9,11 +9,11 @@ import { createAccount } from "@/app/actions/finance/accounts"
 import { actAs, createCustomer, createTestTenant } from "./helpers"
 
 /**
- * These create records through the Supabase client. The test database, like
- * the live one, has updated_at NOT NULL with no default and rejects unknown
- * columns, so these fail if a payload doesn't match the table.
+ * These used to save through the Supabase client and broke on column
+ * mismatches; they now go through Prisma. The test database, like the live
+ * one, has updated_at NOT NULL with no default, so these also check that.
  */
-describe("records saved through the Supabase client", () => {
+describe("records that used to be saved through the Supabase client", () => {
     it("quotes, orders, bills, tasks, communication logs and accounts can be created", async () => {
         const { tenant, user } = await createTestTenant()
         actAs(user)

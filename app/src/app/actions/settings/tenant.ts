@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { fromRow, toRow } from "@/lib/pg-row"
 import { prisma } from "@/lib/prisma"
 import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -32,23 +32,12 @@ export interface TenantSettings {
 
 export async function getTenantSettings(): Promise<TenantSettings | null> {
   try {
-    const supabase = await createClient()
     const tenantId = await getTenantId()
 
     if (!tenantId) return null
 
-    const { data, error } = await supabase
-      .from("tenants")
-      .select("*")
-      .eq("id", tenantId)
-      .single()
-
-    if (error) {
-      console.error("Error fetching tenant settings:", error.message)
-      return null
-    }
-
-    return data as TenantSettings
+    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
+    return tenant ? toRow<TenantSettings>("Tenant", tenant) : null
   } catch (err) {
     console.error("Exception fetching tenant settings:", err)
     return null
@@ -57,7 +46,6 @@ export async function getTenantSettings(): Promise<TenantSettings | null> {
 
 export async function updateTenantSettings(data: Partial<TenantSettings>): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient()
     const tenantId = await getTenantAdminId()
 
     if (!tenantId) {
@@ -75,14 +63,14 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
     if (data.gstin !== undefined) payload.gstin = data.gstin?.trim() || null
     if (data.address !== undefined) payload.address = data.address
 
-    // Settings JSON is merged, never replaced (it also holds subscription, invoices, integrations).
-    // The tax ID, state and tax overrides are mirrored there because invoices, tax reports and
-    // the tax engine read them from settings.
-    const touchesSettings =
-      data.settings !== undefined || data.gstin !== undefined || data.address !== undefined || data.tax_settings !== undefined
+    // Settings JSON is merged, never replaced (it also holds subscription, invoices, integrations),
+    // and only these keys are written here: a free-form `settings` patch would let a workspace
+    // admin rewrite their own subscription. The tax ID, state and tax overrides are mirrored
+    // there because invoices, tax reports and the tax engine read them from settings.
+    const touchesSettings = data.gstin !== undefined || data.address !== undefined || data.tax_settings !== undefined
     if (touchesSettings) {
       const current = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
-      const merged: Record<string, unknown> = { ...((current?.settings as Record<string, unknown>) || {}), ...(data.settings || {}) }
+      const merged: Record<string, unknown> = { ...((current?.settings as Record<string, unknown>) || {}) }
       if (data.gstin !== undefined) merged.gstin = data.gstin?.trim() || null
       if (data.address !== undefined && data.address && typeof data.address === "object" && "state" in data.address) {
         merged.state = (data.address as TenantAddress).state || null
@@ -99,15 +87,7 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
       payload.settings = merged
     }
 
-    const { error } = await supabase
-      .from("tenants")
-      .update(payload)
-      .eq("id", tenantId)
-
-    if (error) {
-      console.error("Error updating tenant settings:", error.message)
-      return { success: false, error: error.message }
-    }
+    await prisma.tenant.update({ where: { id: tenantId }, data: fromRow("Tenant", payload) })
 
     revalidatePath("/settings")
     revalidatePath("/reports")

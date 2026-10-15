@@ -1,9 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
-import { stamped } from "@/lib/db-row"
+import { fromRow, toRow } from "@/lib/pg-row"
+import { isUuid } from "@/lib/utils"
+import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantTaxContext, productTaxRate } from "@/lib/tenant-tax"
 
@@ -62,45 +63,39 @@ function fromDbRow<T extends Record<string, unknown>>(row: T): ProductDB {
   return { ...(rest as unknown as ProductDB), unit_price: Number(unitPrice ?? (row as { unit_price?: unknown }).unit_price ?? 0) }
 }
 
+/** Form fields → Prisma data; the tax group must be this business's own. */
+async function productData(tenantId: string, input: Record<string, unknown>): Promise<Prisma.ProductUncheckedUpdateManyInput> {
+  const data = fromRow("Product", toDbRow(input)) as Prisma.ProductUncheckedUpdateManyInput
+  if (typeof data.taxGroupId === "string" && !(await prisma.taxGroup.findFirst({ where: { id: data.taxGroupId, tenantId }, select: { id: true } }))) {
+    throw new Error("Tax group not found")
+  }
+  return data
+}
+
 /* ── Read All ── */
 export async function getProducts(
   page: number = 1, 
   limit: number = 10
 ): Promise<{ data: ProductDB[]; total: number }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantId()
-
-  const { data, count, error } = await supabase
-    .from("products")
-    .select("*", { count: "exact" })
-    .eq("tenant_id", tenantId)
-    .range((page - 1) * limit, page * limit - 1)
-    .order("name", { ascending: true })
-
-  if (error) {
-    console.error("getProducts error:", error.message)
+  try {
+    const tenantId = await getTenantId()
+    const [rows, total] = await Promise.all([
+      prisma.product.findMany({ where: { tenantId }, orderBy: { name: "asc" }, skip: (page - 1) * limit, take: limit }),
+      prisma.product.count({ where: { tenantId } }),
+    ])
+    return { data: rows.map((r) => fromDbRow(toRow("Product", r))), total }
+  } catch (err) {
+    console.error("getProducts error:", err)
     return { data: [], total: 0 }
   }
-  return { data: (data ?? []).map(fromDbRow), total: count || 0 }
 }
 
 /* ── Read One ── */
 export async function getProductById(id: string): Promise<ProductDB | null> {
-  const supabase = await createClient()
+  if (!isUuid(id)) return null
   const tenantId = await getTenantId()
-
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (error) {
-    console.error("getProductById error:", error.message)
-    return null
-  }
-  return data ? fromDbRow(data) : null
+  const row = await prisma.product.findFirst({ where: { id, tenantId } })
+  return row ? fromDbRow(toRow("Product", row)) : null
 }
 
 /* ── Create ── */
@@ -126,31 +121,17 @@ export interface CreateProductPayload {
 export async function createProduct(
   payload: CreateProductPayload
 ): Promise<{ id: string | null; error: string | null }> {
-  const supabase = await createClient()
   const tenantId = await getTenantWriterId()
 
-  let row: Record<string, unknown>
   try {
-    row = toDbRow(payload as unknown as Record<string, unknown>)
+    const data = await productData(tenantId, payload as unknown as Record<string, unknown>)
+    const row = await prisma.product.create({ data: { ...(data as Omit<Prisma.ProductUncheckedCreateInput, "tenantId">), tenantId }, select: { id: true } })
+    revalidatePath("/sales/products")
+    return { id: row.id, error: null }
   } catch (err) {
+    console.error("createProduct error:", err)
     return { id: null, error: err instanceof Error ? err.message : "Invalid product" }
   }
-  const { data, error } = await supabase
-    .from("products")
-    .insert(stamped({
-      ...row,
-      tenant_id: tenantId,
-    }))
-    .select("id")
-    .single()
-
-  if (error) {
-    console.error("createProduct error:", error.message)
-    return { id: null, error: error.message }
-  }
-
-  revalidatePath("/sales/products")
-  return { id: data.id, error: null }
 }
 
 /* ── Update ── */
@@ -161,29 +142,16 @@ export interface UpdateProductPayload extends CreateProductPayload {
 export async function updateProduct(
   payload: UpdateProductPayload
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient()
   const tenantId = await getTenantWriterId()
-
   const { id, ...fields } = payload
-  let row: Record<string, unknown>
+
   try {
-    row = toDbRow(fields as unknown as Record<string, unknown>)
+    const data = await productData(tenantId, fields as unknown as Record<string, unknown>)
+    const { count } = await prisma.product.updateMany({ where: { id, tenantId }, data })
+    if (count === 0) return { error: "Product not found" }
   } catch (err) {
+    console.error("updateProduct error:", err)
     return { error: err instanceof Error ? err.message : "Invalid product" }
-  }
-
-  const { error } = await supabase
-    .from("products")
-    .update({
-      ...row,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) {
-    console.error("updateProduct error:", error.message)
-    return { error: error.message }
   }
 
   revalidatePath("/sales/products")
@@ -193,18 +161,14 @@ export async function updateProduct(
 
 /* ── Delete ── */
 export async function deleteProduct(id: string): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantManagerId()
-
-  const { error } = await supabase
-    .from("products")
-    .delete()
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) {
-    console.error("deleteProduct error:", error.message)
-    return { error: error.message }
+  try {
+    const tenantId = await getTenantManagerId()
+    const { count } = await prisma.product.deleteMany({ where: { id, tenantId } })
+    if (count === 0) return { error: "Product not found" }
+  } catch (err) {
+    console.error("deleteProduct error:", err)
+    if ((err as { code?: string })?.code === "P2003") return { error: "This product is used on invoices, orders or stock records, so it can't be deleted. Mark it inactive instead." }
+    return { error: err instanceof Error ? err.message : "Failed to delete product" }
   }
 
   revalidatePath("/sales/products")
@@ -213,27 +177,14 @@ export async function deleteProduct(id: string): Promise<{ error: string | null 
 
 /* ── Import / Export ── */
 export async function exportProducts(limit: number = 1000): Promise<ProductDB[]> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
-
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("tenant_id", tenantId)
-    .limit(limit)
-    .order("name", { ascending: true })
-
-  if (error) {
-    console.error("exportProducts error:", error.message)
-    return []
-  }
-  return (data ?? []).map(fromDbRow)
+  const rows = await prisma.product.findMany({ where: { tenantId }, orderBy: { name: "asc" }, take: limit })
+  return rows.map((r) => fromDbRow(toRow("Product", r)))
 }
 
 export async function importProducts(
   products: any[]
 ): Promise<{ error: string | null; count: number }> {
-  const supabase = await createClient()
   const tenantId = await getTenantWriterId()
 
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
@@ -265,18 +216,16 @@ export async function importProducts(
     return { error: err instanceof Error ? err.message : "Invalid file", count: 0 }
   }
 
-  const { data, error } = await supabase
-    .from("products")
-    .insert(insertData.map(stamped))
-    .select("id")
-
-  if (error) {
-    console.error("importProducts error:", error.message)
-    return { error: error.message, count: 0 }
+  let created: { count: number }
+  try {
+    created = await prisma.product.createMany({ data: insertData.map((r) => ({ ...(fromRow("Product", r) as Omit<Prisma.ProductCreateManyInput, "tenantId">), tenantId })) })
+  } catch (err) {
+    console.error("importProducts error:", err)
+    return { error: err instanceof Error ? err.message : "Failed to import products", count: 0 }
   }
 
   revalidatePath("/sales/products")
-  return { error: null, count: data?.length || 0 }
+  return { error: null, count: created.count }
 }
 
 /* ── For document forms (invoice line picker) ── */

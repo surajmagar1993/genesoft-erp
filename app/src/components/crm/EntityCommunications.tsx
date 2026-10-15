@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
-  Plus, Phone, Mail, MessageSquare, Users, StickyNote,
+  Plus, Phone, Mail, MessageSquare, Users, StickyNote, CheckSquare,
   Loader2, Trash2, MoreHorizontal
 } from "lucide-react"
 import {
@@ -35,8 +35,7 @@ const typeConfig: Record<CommunicationType, {
   CALL:    { label: "Call",    icon: Phone,         color: "bg-blue-50 text-blue-700 border-blue-200",       dotColor: "bg-blue-500"     },
   EMAIL:   { label: "Email",   icon: Mail,          color: "bg-purple-50 text-purple-700 border-purple-200", dotColor: "bg-purple-500"   },
   MEETING: { label: "Meeting", icon: Users,         color: "bg-amber-50 text-amber-700 border-amber-200",   dotColor: "bg-amber-500"    },
-  SMS:     { label: "SMS",     icon: MessageSquare, color: "bg-emerald-50 text-emerald-700 border-emerald-200", dotColor: "bg-emerald-500" },
-  OTHER:   { label: "Other",   icon: StickyNote,    color: "bg-gray-50 text-gray-700 border-gray-200",      dotColor: "bg-gray-400"     },
+  TASK:    { label: "Task",    icon: CheckSquare,   color: "bg-emerald-50 text-emerald-700 border-emerald-200", dotColor: "bg-emerald-500" },
 }
 
 interface Props {
@@ -128,8 +127,7 @@ export default function EntityCommunications({ entityId, entityType, initialLogs
                       <SelectItem value="CALL">📞 Call</SelectItem>
                       <SelectItem value="EMAIL">📧 Email</SelectItem>
                       <SelectItem value="MEETING">👥 Meeting</SelectItem>
-                      <SelectItem value="SMS">💬 SMS</SelectItem>
-                      <SelectItem value="OTHER">📌 Other</SelectItem>
+                      <SelectItem value="TASK">✅ Task</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

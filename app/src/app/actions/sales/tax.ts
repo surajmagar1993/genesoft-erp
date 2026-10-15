@@ -1,6 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
+import { toRow, toRows } from "@/lib/pg-row"
 import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -24,21 +25,14 @@ export interface TaxGroup {
 }
 
 export async function getTaxGroups() {
-  const supabase = await createClient()
-  const tenantId = await getTenantId()
-
-  const { data, error } = await supabase
-    .from("tax_groups")
-    .select("*, tax_rates(*)")
-    .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: false })
-
-  if (error) {
+  try {
+    const tenantId = await getTenantId()
+    const groups = await prisma.taxGroup.findMany({ where: { tenantId }, include: { taxRates: true }, orderBy: { createdAt: "desc" } })
+    return groups.map((g) => ({ ...toRow<TaxGroup>("TaxGroup", g), tax_rates: toRows<TaxRate>("TaxRate", g.taxRates) }))
+  } catch (error) {
     console.error("Error fetching tax groups:", error)
     return []
   }
-
-  return data as TaxGroup[]
 }
 
 export async function createTaxGroup(data: {
@@ -47,52 +41,36 @@ export async function createTaxGroup(data: {
   is_default: boolean
   rates: { name: string; rate: number }[]
 }) {
-  const supabase = await createClient()
   const tenantId = await getTenantManagerId()
-
-  // 1. Create the Group
-  const { data: group, error: groupError } = await supabase
-    .from("tax_groups")
-    .insert({
-      name: data.name,
-      country_code: data.country_code,
-      is_default: data.is_default,
-      tenant_id: tenantId,
-    })
-    .select()
-    .single()
-
-  if (groupError) throw new Error(groupError.message)
-
-  // 2. Create the Rates
-  if (data.rates.length > 0) {
-    const { error: ratesError } = await supabase
-      .from("tax_rates")
-      .insert(
-        data.rates.map((r) => ({
-          tax_group_id: group.id,
-          name: r.name,
-          rate: r.rate,
-        }))
-      )
-
-    if (ratesError) throw new Error(ratesError.message)
+  for (const r of data.rates) {
+    if (!Number.isFinite(Number(r.rate)) || Number(r.rate) < 0 || Number(r.rate) > 100) throw new Error(`${r.name || "Rate"}: must be between 0 and 100`)
   }
 
+  // The group and its rates together
+  const group = await prisma.taxGroup.create({
+    data: {
+      name: data.name,
+      countryCode: data.country_code,
+      isDefault: data.is_default,
+      tenantId,
+      taxRates: { create: data.rates.map((r) => ({ name: r.name, rate: Number(r.rate) })) },
+    },
+  })
+
   revalidatePath("/settings")
-  return group
+  return toRow<TaxGroup>("TaxGroup", group)
 }
 
 export async function deleteTaxGroup(id: string) {
-  const supabase = await createClient()
   const tenantId = await getTenantManagerId()
-  const { error } = await supabase
-    .from("tax_groups")
-    .delete()
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) throw new Error(error.message)
+  // Rates go with their group (the database won't delete a group that still has rates);
+  // products using it keep working with no tax group.
+  await prisma.$transaction(async (tx) => {
+    const group = await tx.taxGroup.findFirst({ where: { id, tenantId }, select: { id: true } })
+    if (!group) throw new Error("Tax group not found")
+    await tx.taxRate.deleteMany({ where: { taxGroupId: id } })
+    await tx.taxGroup.delete({ where: { id } })
+  })
   revalidatePath("/settings")
 }
 

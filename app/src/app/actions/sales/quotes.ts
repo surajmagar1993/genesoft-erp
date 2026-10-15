@@ -1,9 +1,12 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
-import { stamped } from "@/lib/db-row"
+import { fromRow, toRow, toRows } from "@/lib/pg-row"
+import { documentTotals } from "@/lib/document-totals"
+import { assertTenantRefs } from "@/lib/tenant-refs"
+import { isUuid } from "@/lib/utils"
+import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 
 /** Documents are always in the business's own currency (never a browser-sent or "INR" default). */
@@ -57,53 +60,31 @@ export async function getQuotes(
     limit: number = 10,
     filters?: { status?: QuoteStatus; search?: string }
 ) {
-  const supabase = await createClient()
-  const tenantId = await getTenantId()
-  const offset = (page - 1) * limit
-
-  let query = supabase
-    .from("quotes")
-    .select("*, quoteItem:quote_items(*)", { count: "exact" })
-    .eq("tenant_id", tenantId)
-
-  if (filters?.status) {
-    query = query.eq("status", filters.status)
-  }
-
-  if (filters?.search) {
-    query = query.or(`quote_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`)
-  }
-
-  const { data, count, error } = await query
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (error) {
-    console.error("getQuotes error:", error.message)
+  try {
+    const tenantId = await getTenantId()
+    const q = filters?.search?.trim()
+    const where: Prisma.QuoteWhereInput = {
+      tenantId,
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(q ? { OR: [{ quoteNumber: { contains: q, mode: "insensitive" } }, { customerName: { contains: q, mode: "insensitive" } }] } : {}),
+    }
+    const [rows, total] = await Promise.all([
+      prisma.quote.findMany({ where, include: { items: true }, orderBy: { createdAt: "desc" }, skip: (page - 1) * limit, take: limit }),
+      prisma.quote.count({ where }),
+    ])
+    return { data: rows.map((r) => ({ ...toRow<QuoteDB>("Quote", r), quoteItem: toRows<QuoteLineItemDB>("QuoteItem", r.items) })), total }
+  } catch (err) {
+    console.error("getQuotes error:", err)
     return { data: [], total: 0 }
   }
-
-  return { data: data || [], total: count || 0 }
 }
 
 /* ── Read One ── */
 export async function getQuoteById(id: string): Promise<QuoteDB | null> {
-  const supabase = await createClient()
+  if (!isUuid(id)) return null
   const tenantId = await getTenantId()
-
-  const { data, error } = await supabase
-    .from("quotes")
-    .select("*, quote_items(*)")
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (error) {
-    console.error("getQuoteById error:", error.message)
-    return null
-  }
-
-  return data
+  const row = await prisma.quote.findFirst({ where: { id, tenantId }, include: { items: true } })
+  return row ? { ...toRow<QuoteDB>("Quote", row), quote_items: toRows<QuoteLineItemDB>("QuoteItem", row.items) } : null
 }
 
 /* ── Create ── */
@@ -130,70 +111,35 @@ export interface CreateQuotePayload {
   }>
 }
 
+/** Header fields and line items, with totals worked out on the server. */
+async function quoteData(tenantId: string, payload: Omit<CreateQuotePayload, "currency_code"> & { currency_code?: string }) {
+  const { line_items, ...headerFields } = payload
+  const { items, subtotal, taxAmount, total } = documentTotals(line_items, headerFields.discount, headerFields.discount_type)
+  const header = fromRow("Quote", {
+    ...headerFields,
+    subtotal,
+    tax_amount: taxAmount,
+    total,
+    currency_code: await tenantCurrency(tenantId),
+    valid_until: headerFields.valid_until || null,
+  }) as Omit<Prisma.QuoteUncheckedCreateInput, "tenantId">
+  await assertTenantRefs(tenantId, { contact: header.contactId })
+  return { header, items: items.map((li) => fromRow("QuoteItem", li) as Omit<Prisma.QuoteItemCreateManyInput, "quoteId">) }
+}
+
 export async function createQuote(
   payload: CreateQuotePayload
 ): Promise<{ id: string | null; error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantWriterId()
-
-  const { line_items, ...headerFields } = payload
-
-  // Calculate Totals
-  let subtotal = 0
-  let taxAmount = 0
-  const processedItems = line_items.map((item) => {
-    const itemTotal = item.qty * item.unit_price
-    const itemTax = itemTotal * (item.tax_percent / 100)
-    subtotal += itemTotal
-    taxAmount += itemTax
-    return {
-      ...item,
-      line_total: itemTotal, // Base total for line_total? Or total with tax? Header total is better
-    }
-  })
-
-  const discountVal = headerFields.discount_type === "PERCENT" 
-    ? subtotal * (headerFields.discount / 100) 
-    : headerFields.discount
-  
-  const grandTotal = subtotal + taxAmount - discountVal
-
-  // Insert header
-  const { data: quote, error: headerError } = await supabase
-    .from("quotes")
-    .insert(stamped({
-      ...headerFields,
-      subtotal,
-      tax_amount: taxAmount,
-      total: grandTotal,
-      tenant_id: tenantId,
-      currency_code: await tenantCurrency(tenantId),
-      valid_until: headerFields.valid_until || null,
-    }))
-    .select("id")
-    .single()
-
-  if (headerError || !quote) {
-    console.error("createQuote header error:", headerError?.message)
-    return { id: null, error: headerError?.message ?? "Failed to create quote" }
+  try {
+    const tenantId = await getTenantWriterId()
+    const { header, items } = await quoteData(tenantId, payload)
+    const quote = await prisma.quote.create({ data: { ...header, tenantId, items: { create: items } }, select: { id: true } })
+    revalidatePath("/sales/quotes")
+    return { id: quote.id, error: null }
+  } catch (err) {
+    console.error("createQuote error:", err)
+    return { id: null, error: err instanceof Error ? err.message : "Failed to create quote" }
   }
-
-  // Insert line items
-  if (processedItems.length > 0) {
-    const { error: itemsError } = await supabase.from("quote_items").insert(
-      processedItems.map((li) => ({
-        ...li,
-        quote_id: quote.id,
-      }))
-    )
-    if (itemsError) {
-      console.error("createQuote items error:", itemsError.message)
-      return { id: null, error: itemsError.message }
-    }
-  }
-
-  revalidatePath("/sales/quotes")
-  return { id: quote.id, error: null }
 }
 
 /* ── Update ── */
@@ -204,104 +150,38 @@ export interface UpdateQuotePayload extends CreateQuotePayload {
 export async function updateQuote(
   payload: UpdateQuotePayload
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantWriterId()
+  try {
+    const tenantId = await getTenantWriterId()
+    const { id, ...fields } = payload
+    const { header, items } = await quoteData(tenantId, fields)
 
-  const { id, line_items, ...headerFields } = payload
-
-  // Recalculate totals
-  let subtotal = 0
-  let taxAmount = 0
-  const processedItems = line_items.map((item) => {
-    const itemTotal = item.qty * item.unit_price
-    const itemTax = itemTotal * (item.tax_percent / 100)
-    subtotal += itemTotal
-    taxAmount += itemTax
-    return {
-        product_name: item.product_name,
-        description: item.description,
-        qty: item.qty,
-        unit_price: item.unit_price,
-        tax_percent: item.tax_percent,
-        line_total: itemTotal,
-    }
-  })
-
-  const discountVal = headerFields.discount_type === "PERCENT" 
-    ? subtotal * (headerFields.discount / 100) 
-    : headerFields.discount
-  
-  const grandTotal = subtotal + taxAmount - discountVal
-
-  // Update header
-  const { error: headerError } = await supabase
-    .from("quotes")
-    .update({
-      ...headerFields,
-      currency_code: await tenantCurrency(tenantId),
-      subtotal,
-      tax_amount: taxAmount,
-      total: grandTotal,
-      valid_until: headerFields.valid_until || null,
-      updated_at: new Date().toISOString(),
+    // Header and lines together; nothing changes unless the quote is this business's
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.quote.updateMany({ where: { id, tenantId }, data: header })
+      if (count === 0) throw new Error("Quote not found")
+      await tx.quoteItem.deleteMany({ where: { quoteId: id } })
+      if (items.length > 0) await tx.quoteItem.createMany({ data: items.map((li) => ({ ...li, quoteId: id })) })
     })
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
 
-  if (headerError) {
-    console.error("updateQuote header error:", headerError.message)
-    return { error: headerError.message }
+    revalidatePath("/sales/quotes")
+    revalidatePath(`/sales/quotes/${id}/edit`)
+    return { error: null }
+  } catch (err) {
+    console.error("updateQuote error:", err)
+    return { error: err instanceof Error ? err.message : "Failed to update quote" }
   }
-
-  // Replace all line items: delete old → insert new
-  // 1. Verify existence of quote + items first or add tenant_id to delete filter
-  // Although quote_items doesn't have tenant_id, the DB RLS policy requires it.
-  const { error: deleteError } = await supabase
-    .from("quote_items")
-    .delete()
-    .eq("quote_id", id)
-    // Note: If quote_items has no tenant_id, RLS should still handle this via the parent quote.
-    // However, adding a check to the header delete first is technically what deleteQuote does.
-    // For update, the header update ABOVE already added .eq("tenant_id", tenantId).
-    // If that fails (0 rows), the items still shouldn't be deleted. 
-    // We'll check the header update was successful.
-  if (deleteError) {
-    console.error("updateQuote delete items error:", deleteError.message)
-    return { error: deleteError.message }
-  }
-
-  if (processedItems.length > 0) {
-    const { error: insertError } = await supabase.from("quote_items").insert(
-      processedItems.map((li) => ({
-        ...li,
-        quote_id: id,
-      }))
-    )
-    if (insertError) {
-      console.error("updateQuote insert items error:", insertError.message)
-      return { error: insertError.message }
-    }
-  }
-
-  revalidatePath("/sales/quotes")
-  revalidatePath(`/sales/quotes/${id}/edit`)
-  return { error: null }
 }
 
 /* ── Delete ── */
 export async function deleteQuote(id: string): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantManagerId()
-
-  const { error } = await supabase
-    .from("quotes")
-    .delete()
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) {
-    console.error("deleteQuote error:", error.message)
-    return { error: error.message }
+  try {
+    const tenantId = await getTenantManagerId()
+    const { count } = await prisma.quote.deleteMany({ where: { id, tenantId } })
+    if (count === 0) return { error: "Quote not found" }
+  } catch (err) {
+    console.error("deleteQuote error:", err)
+    if ((err as { code?: string })?.code === "P2003") return { error: "This quote has been turned into a sales order, so it can't be deleted." }
+    return { error: err instanceof Error ? err.message : "Failed to delete quote" }
   }
 
   revalidatePath("/sales/quotes")

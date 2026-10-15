@@ -1,6 +1,7 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
+import { formatCurrency } from "@/lib/utils"
 import { getTenantId } from "@/lib/get-tenant-id"
 
 export interface DashboardStats {
@@ -13,7 +14,6 @@ export interface DashboardStats {
 }
 
 export async function getDashboardStats() {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
 
   // Pre-calculate date filter
@@ -21,36 +21,25 @@ export async function getDashboardStats() {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   // Parallelize all queries for faster dashboard load
-  const [
-    { count: contactsCount },
-    { count: leadsCount },
-    { data: deals },
-    { data: acceptedQuotes },
-    { count: recentQuotesCount }
-  ] = await Promise.all([
-    supabase.from("contacts").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId),
-    supabase.from("leads").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId),
-    supabase.from("deals").select("value").eq("tenant_id", tenantId).not("stage", "in", '("CLOSED_WON","CLOSED_LOST")'),
-    supabase.from("quotes").select("total").eq("tenant_id", tenantId).eq("status", "ACCEPTED"),
-    supabase.from("quotes").select("*", { count: "exact", head: true }).eq("tenant_id", tenantId).gte("created_at", thirtyDaysAgo.toISOString())
+  const [contactsCount, leadsCount, deals, acceptedQuotes, recentQuotesCount] = await Promise.all([
+    prisma.contact.count({ where: { tenantId } }),
+    prisma.lead.count({ where: { tenantId } }),
+    prisma.deal.findMany({ where: { tenantId, stage: { notIn: ["CLOSED_WON", "CLOSED_LOST"] } }, select: { value: true } }),
+    prisma.quote.aggregate({ where: { tenantId, status: "ACCEPTED" }, _sum: { total: true } }),
+    prisma.quote.count({ where: { tenantId, createdAt: { gte: thirtyDaysAgo } } }),
   ])
 
-  const pipelineValue = deals?.reduce((sum, d) => sum + Number(d.value || 0), 0) || 0
-  const activeDeals = deals?.length || 0
-  const acceptedQuoteTotal = acceptedQuotes?.reduce((sum, q) => sum + Number(q.total || 0), 0) || 0
-
   return {
-    totalContacts: contactsCount || 0,
-    totalLeads: leadsCount || 0,
-    activeDeals,
-    pipelineValue,
-    acceptedQuoteTotal,
-    recentQuotesCount: recentQuotesCount || 0,
+    totalContacts: contactsCount,
+    totalLeads: leadsCount,
+    activeDeals: deals.length,
+    pipelineValue: deals.reduce((sum, d) => sum + Number(d.value || 0), 0),
+    acceptedQuoteTotal: Number(acceptedQuotes._sum.total || 0),
+    recentQuotesCount,
   } as DashboardStats
 }
 
 export async function getDashboardTrends() {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
 
   // Last 6 months
@@ -67,68 +56,46 @@ export async function getDashboardTrends() {
     })
   }
 
-  // In a real scenario, we'd do a group by in SQL. 
-  // For P1 MVP, we'll fetch accepted quotes and group them.
-  const { data: quotes } = await supabase
-    .from("quotes")
-    .select("total, created_at")
-    .eq("tenant_id", tenantId)
-    .eq("status", "ACCEPTED")
-    .gte("created_at", new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString())
-
-  const { data: leads } = await supabase
-    .from("leads")
-    .select("created_at")
-    .eq("tenant_id", tenantId)
-    .gte("created_at", new Date(new Date().setMonth(new Date().getMonth() - 6)).toISOString())
+  const since = new Date(new Date().setMonth(new Date().getMonth() - 6))
+  const [quotes, leads] = await Promise.all([
+    prisma.quote.findMany({ where: { tenantId, status: "ACCEPTED", createdAt: { gte: since } }, select: { total: true, createdAt: true } }),
+    prisma.lead.findMany({ where: { tenantId, createdAt: { gte: since } }, select: { createdAt: true } }),
+  ])
 
   months.forEach(m => {
-    m.turnover = quotes?.filter(q => {
-      const qd = new Date(q.created_at)
-      return qd.getMonth() + 1 === m.month && qd.getFullYear() === m.year
-    }).reduce((sum, q) => sum + Number(q.total), 0) || 0
-
-    m.leads = leads?.filter(l => {
-      const ld = new Date(l.created_at)
-      return ld.getMonth() + 1 === m.month && ld.getFullYear() === m.year
-    }).length || 0
+    const inMonth = (d: Date) => d.getMonth() + 1 === m.month && d.getFullYear() === m.year
+    m.turnover = quotes.filter((q) => inMonth(q.createdAt)).reduce((sum, q) => sum + Number(q.total), 0)
+    m.leads = leads.filter((l) => inMonth(l.createdAt)).length
   })
 
   return months
 }
 
 export async function getRecentActivities() {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
 
-  // For P1 MVP, we fetch the most recent records from major tables
-  // In P2, we'll create a dedicated AuditLog table
-  const { data: recentLeads } = await supabase
-    .from("leads")
-    .select("title, created_at, contact_name")
-    .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: false })
-    .limit(3)
-
-  const { data: recentQuotes } = await supabase
-    .from("quotes")
-    .select("quote_number, customer_name, total, created_at")
-    .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: false })
-    .limit(3)
+  // The most recent records from the main tables
+  const [recentLeads, recentQuotes, tenant] = await Promise.all([
+    prisma.lead.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" }, take: 3, select: { title: true, createdAt: true, contactName: true } }),
+    prisma.quote.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" }, take: 3, select: { quoteNumber: true, customerName: true, total: true, currencyCode: true, createdAt: true } }),
+    prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } }),
+  ])
 
   const activities = [
-    ...(recentLeads?.map(l => ({
+    ...recentLeads.map((l) => ({
       type: "lead",
-      message: `New Lead: ${l.title} (from ${l.contact_name})`,
-      time: new Date(l.created_at).toLocaleString()
-    })) || []),
-    ...(recentQuotes?.map(q => ({
+      message: `New Lead: ${l.title}${l.contactName ? ` (from ${l.contactName})` : ""}`,
+      at: l.createdAt,
+    })),
+    ...recentQuotes.map((q) => ({
       type: "quote",
-      message: `Quote Created: ${q.quote_number} for ${q.customer_name} (₹${Number(q.total).toLocaleString()})`,
-      time: new Date(q.created_at).toLocaleString()
-    })) || [])
+      message: `Quote Created: ${q.quoteNumber} for ${q.customerName} (${formatCurrency(Number(q.total), q.currencyCode || tenant?.currencyCode || "INR")})`,
+      at: q.createdAt,
+    })),
   ]
 
-  return activities.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 5)
+  return activities
+    .sort((a, b) => b.at.getTime() - a.at.getTime())
+    .slice(0, 5)
+    .map(({ at, ...a }) => ({ ...a, time: at.toLocaleString() }))
 }

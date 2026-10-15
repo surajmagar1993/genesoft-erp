@@ -1,9 +1,10 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
+import { fromRow, toRow, toRows } from "@/lib/pg-row"
+import { isUuid } from "@/lib/utils"
 
 export interface Company {
   id: string
@@ -31,28 +32,17 @@ export async function getCompanies(
   search?: string
 ): Promise<{ data: Company[]; total: number }> {
   try {
-    const supabase = await createClient()
     const tenantId = await getTenantId()
-    const offset = (page - 1) * limit
-
-    let query = supabase
-      .from("companies")
-      .select("*", { count: "exact" })
-      .eq("tenant_id", tenantId)
-
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,industry.ilike.%${search}%,email.ilike.%${search}%`)
+    const q = search?.trim()
+    const where = {
+      tenantId,
+      ...(q ? { OR: (["name", "industry", "email"] as const).map((f) => ({ [f]: { contains: q, mode: "insensitive" as const } })) } : {}),
     }
-
-    const { data, count, error } = await query
-      .range(offset, offset + limit - 1)
-      .order("created_at", { ascending: false })
-
-    if (error) {
-      console.error("Error fetching companies:", error.message)
-      return { data: [], total: 0 }
-    }
-    return { data: (data as Company[]) ?? [], total: count || 0 }
+    const [rows, total] = await Promise.all([
+      prisma.company.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * limit, take: limit }),
+      prisma.company.count({ where }),
+    ])
+    return { data: toRows<Company>("Company", rows), total }
   } catch (err: any) {
     console.error("Exception fetching companies:", err)
     return { data: [], total: 0 }
@@ -61,28 +51,21 @@ export async function getCompanies(
 
 export async function getCompanyById(id: string): Promise<Company | null> {
   try {
-    const supabase = await createClient()
+    if (!isUuid(id)) return null
     const tenantId = await getTenantId()
-
-    const { data, error } = await supabase
-      .from("companies")
-      .select("*")
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-      .single()
-
-    if (error) return null
-    return data as Company
+    const row = await prisma.company.findFirst({ where: { id, tenantId } })
+    return row ? toRow<Company>("Company", row) : null
   } catch {
     return null
   }
 }
 
+const num = (v: unknown) => (v === undefined ? undefined : v ? Number(v) : null)
+
 export async function createCompany(
   formData: Omit<Company, "id" | "created_at" | "tenant_id">
 ): Promise<{ error: string | null; data?: Company }> {
   try {
-    const supabase = await createClient()
     const tenantId = await getTenantWriterId()
 
     if (!tenantId) {
@@ -93,37 +76,28 @@ export async function createCompany(
       return { error: "Company name is required." }
     }
 
-    const payload = {
-      name: formData.name.trim(),
-      industry: formData.industry || null,
-      website: formData.website || null,
-      phone: formData.phone || null,
-      email: formData.email || null,
-      address: formData.address || null,
-      city: formData.city || null,
-      state: formData.state || null,
-      country: formData.country || null,
-      country_code: formData.country_code || "IN",
-      gstin: formData.gstin || null,
-      employee_count: formData.employee_count ? Number(formData.employee_count) : null,
-      annual_revenue: formData.annual_revenue ? Number(formData.annual_revenue) : null,
-      is_active: formData.is_active ?? true,
-      tenant_id: tenantId,
-    }
-
-    const { data, error } = await supabase
-      .from("companies")
-      .insert([payload])
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error creating company:", error)
-      return { error: error.message }
-    }
+    const row = await prisma.company.create({
+      data: {
+        name: formData.name.trim(),
+        industry: formData.industry || null,
+        website: formData.website || null,
+        phone: formData.phone || null,
+        email: formData.email || null,
+        address: formData.address || null,
+        city: formData.city || null,
+        state: formData.state || null,
+        country: formData.country || null,
+        countryCode: formData.country_code || "IN",
+        gstin: formData.gstin || null,
+        employeeCount: num(formData.employee_count) ?? null,
+        annualRevenue: num(formData.annual_revenue) ?? null,
+        isActive: formData.is_active ?? true,
+        tenantId,
+      },
+    })
 
     revalidatePath("/crm/companies")
-    return { error: null, data: data as Company }
+    return { error: null, data: toRow<Company>("Company", row) }
   } catch (err: any) {
     console.error("Exception in createCompany:", err)
     return { error: err.message || "Failed to create company" }
@@ -135,32 +109,20 @@ export async function updateCompany(
   formData: Partial<Omit<Company, "id" | "created_at" | "tenant_id">>
 ): Promise<{ error: string | null }> {
   try {
-    const supabase = await createClient()
     const tenantId = await getTenantWriterId()
 
     if (!tenantId) {
       return { error: "Authentication required or tenant not identified." }
     }
 
-    const payload: Record<string, any> = { ...formData }
-    if (payload.name) payload.name = payload.name.trim()
-    if (payload.employee_count !== undefined) {
-      payload.employee_count = payload.employee_count ? Number(payload.employee_count) : null
-    }
-    if (payload.annual_revenue !== undefined) {
-      payload.annual_revenue = payload.annual_revenue ? Number(payload.annual_revenue) : null
-    }
-
-    const { error } = await supabase
-      .from("companies")
-      .update(payload)
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-
-    if (error) {
-      console.error("Error updating company:", error)
-      return { error: error.message }
-    }
+    const data = fromRow("Company", {
+      ...formData,
+      ...(formData.name !== undefined ? { name: formData.name.trim() } : {}),
+      employee_count: num(formData.employee_count),
+      annual_revenue: num(formData.annual_revenue),
+    })
+    const { count } = await prisma.company.updateMany({ where: { id, tenantId }, data })
+    if (count === 0) return { error: "Company not found" }
 
     revalidatePath("/crm/companies")
     return { error: null }
@@ -172,16 +134,9 @@ export async function updateCompany(
 
 export async function deleteCompany(id: string): Promise<{ error: string | null }> {
   try {
-    const supabase = await createClient()
     const tenantId = await getTenantManagerId()
-
-    const { error } = await supabase
-      .from("companies")
-      .delete()
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-
-    if (error) return { error: error.message }
+    const { count } = await prisma.company.deleteMany({ where: { id, tenantId } })
+    if (count === 0) return { error: "Company not found" }
     revalidatePath("/crm/companies")
     return { error: null }
   } catch (err: any) {
@@ -202,17 +157,10 @@ export interface CompanyRelationsData {
 }
 
 export async function getCompanyWithRelations(id: string): Promise<CompanyRelationsData> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
+  const company = await getCompanyById(id)
 
-  const { data: company, error } = await supabase
-    .from("companies")
-    .select("*")
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (error || !company) {
+  if (!company) {
     return {
       company: null,
       contacts: [],
@@ -222,12 +170,9 @@ export async function getCompanyWithRelations(id: string): Promise<CompanyRelati
   }
 
   const [contactsRes, dealsRes] = await Promise.all([
-    supabase
-      .from("contacts")
-      .select("*")
-      .eq("tenant_id", tenantId)
-      .eq("company_name", company.name)
-      .order("created_at", { ascending: false }),
+    prisma.contact
+      .findMany({ where: { tenantId, companyName: company.name }, orderBy: { createdAt: "desc" } })
+      .then((rows) => ({ data: toRows("Contact", rows) })),
     // Deals don't store a company; they belong to a contact at this company
     prisma.deal
       .findMany({

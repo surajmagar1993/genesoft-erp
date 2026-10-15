@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/current-user"
 import { revalidatePath } from "next/cache"
 import {
     SYSTEM_EMAIL_TEMPLATES,
@@ -15,19 +15,11 @@ import { Resend } from "resend"
  * Ensures current caller has SUPER_ADMIN permissions.
  */
 async function ensureSuperAdmin() {
-    const supabase = await createClient()
-
-    const { data } = await supabase.auth.getUser()
-    const user = data?.user
+    const user = await getCurrentUser()
     if (!user) throw new Error("Unauthorized: Please sign in")
 
-    const { data: profile } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single()
-
-    if (!profile || (profile as any).role !== "SUPER_ADMIN" || (profile as any).is_active === false) {
+    const profile = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true, isActive: true } })
+    if (!profile || profile.role !== "SUPER_ADMIN" || profile.isActive === false) {
         throw new Error("Forbidden: Super Admin access required")
     }
 

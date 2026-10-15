@@ -1,8 +1,9 @@
 "use server"
 
-import { prisma } from "@/lib/prisma"
 import type { BillStatus, InvoiceStatus, Prisma } from "@prisma/client"
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
+import { pick, toRow, toRows } from "@/lib/pg-row"
+import { isRecordId } from "@/lib/utils"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
@@ -51,41 +52,34 @@ export async function getPayments(
   page: number = 1, 
   limit: number = 10
 ): Promise<{ data: PaymentDB[]; total: number }> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
   const offset = (page - 1) * limit
 
-  const { data, count, error } = await supabase
-    .from("payments")
-    .select("*, invoices(invoice_number, total, currency_code), bills(bill_number, total, currency_code), contacts(display_name, company_name)", { count: "exact" })
-    .eq("tenant_id", tenantId)
-    .order("payment_date", { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (error) {
-    console.error("getPayments error:", error.message)
+  try {
+    const [rows, total] = await Promise.all([
+      prisma.payment.findMany({ where: { tenantId }, include: { invoice: true, bill: true, contact: true }, orderBy: { paymentDate: "desc" }, skip: offset, take: limit }),
+      prisma.payment.count({ where: { tenantId } }),
+    ])
+    const data = rows.map((p) => ({
+      ...toRow<PaymentDB>("Payment", p),
+      invoices: p.invoice ? (pick(toRow("Invoice", p.invoice), ["invoice_number", "total", "currency_code"]) as PaymentDB["invoices"]) : null,
+      bills: p.bill ? (pick(toRow("Bill", p.bill), ["bill_number", "total", "currency_code"]) as PaymentDB["bills"]) : null,
+      contacts: pick(toRow("Contact", p.contact), ["display_name", "company_name"]) as PaymentDB["contacts"],
+    }))
+    return { data, total }
+  } catch (err) {
+    console.error("getPayments error:", err)
     return { data: [], total: 0 }
   }
-  return { data: data ?? [], total: count || 0 }
 }
 
 /* ── Read By Invoice ── */
 export async function getPaymentsByInvoice(invoiceId: string): Promise<PaymentDB[]> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
 
-  const { data, error } = await supabase
-    .from("payments")
-    .select("*")
-    .eq("tenant_id", tenantId)
-    .eq("invoice_id", invoiceId)
-    .order("payment_date", { ascending: false })
-
-  if (error) {
-    console.error("getPaymentsByInvoice error:", error.message)
-    return []
-  }
-  return data ?? []
+  if (!isRecordId(invoiceId)) return []
+  const rows = await prisma.payment.findMany({ where: { tenantId, invoiceId }, orderBy: { paymentDate: "desc" } })
+  return toRows("Payment", rows)
 }
 
 /* ── Create Payment ── */

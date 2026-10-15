@@ -28,21 +28,16 @@ const getTenantContext = cache(async (): Promise<{ tenantId: string; role: strin
 
   if (!user) redirect("/login")
 
-  // profiles links auth.users → tenants (Prisma model User). "*" so a
-  // database without the is_active column still works.
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single()
+  // profiles links auth.users → tenants (Prisma model User)
+  const profile = await prisma.user.findUnique({ where: { id: user.id }, select: { tenantId: true, role: true, isActive: true } })
 
-  if (error || !profile?.tenant_id) {
-    console.error("Critical: User has no profile or tenant_id", user.id, error?.message)
+  if (!profile?.tenantId) {
+    console.error("Critical: User has no profile or tenant_id", user.id)
     // In SaaS mode, we cannot continue without a tenantId
     redirect("/login?error=Session+configuration+error.+Please+contact+support.")
   }
 
-  if (profile.is_active === false) {
+  if (profile.isActive === false) {
     await supabase.auth.signOut()
     redirect("/login?error=Your+account+has+been+deactivated.+Please+contact+your+administrator.")
   }
@@ -53,7 +48,7 @@ const getTenantContext = cache(async (): Promise<{ tenantId: string; role: strin
   // Platform admins keep theirs so they can still reach /admin.
   if (role !== "SUPER_ADMIN") {
     const tenant = await prisma.tenant.findUnique({
-      where: { id: profile.tenant_id },
+      where: { id: profile.tenantId },
       select: { isActive: true, settings: true },
     })
     if (tenant && !tenant.isActive) {
@@ -65,7 +60,7 @@ const getTenantContext = cache(async (): Promise<{ tenantId: string; role: strin
     }
   }
 
-  return { tenantId: profile.tenant_id, role }
+  return { tenantId: profile.tenantId, role }
 })
 
 /**

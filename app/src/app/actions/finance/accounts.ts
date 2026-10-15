@@ -1,11 +1,14 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
+import type { Prisma } from "@prisma/client"
+import { fromRow, toRow, toRows } from "@/lib/pg-row"
+import { assertTenantRefs } from "@/lib/tenant-refs"
+import { isUuid } from "@/lib/utils"
 import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { adaptTaxAccounts } from "@/lib/default-accounts"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
-import { stamped } from "@/lib/db-row"
 
 export type AccountType = "ASSET" | "LIABILITY" | "EQUITY" | "REVENUE" | "EXPENSE"
 
@@ -31,37 +34,32 @@ export interface Account {
 
 /* ── Read All ── */
 export async function getAccounts(page: number = 1, limit: number = 100): Promise<{ data: Account[]; total: number }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantId()
-  const offset = (page - 1) * limit
-
-  const { data, count, error } = await supabase
-    .from("accounts")
-    .select("*", { count: "exact" })
-    .eq("tenant_id", tenantId)
-    .range(offset, offset + limit - 1)
-    .order("code", { ascending: true })
-
-  if (error) {
-    console.error("Error fetching accounts:", error.message)
+  try {
+    const tenantId = await getTenantId()
+    const [rows, total] = await Promise.all([
+      prisma.account.findMany({ where: { tenantId }, orderBy: { code: "asc" }, skip: (page - 1) * limit, take: limit }),
+      prisma.account.count({ where: { tenantId } }),
+    ])
+    return { data: toRows<Account>("Account", rows), total }
+  } catch (err) {
+    console.error("Error fetching accounts:", err)
     return { data: [], total: 0 }
   }
-  return { data: data ?? [], total: count || 0 }
 }
 
 /* ── Get By ID ── */
 export async function getAccountById(id: string): Promise<Account | null> {
-  const supabase = await createClient()
+  if (!isUuid(id)) return null
   const tenantId = await getTenantId()
+  const row = await prisma.account.findFirst({ where: { id, tenantId } })
+  return row ? toRow<Account>("Account", row) : null
+}
 
-  const { data, error } = await supabase
-    .from("accounts")
-    .select("*")
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (error) return null
+/** Form fields → Prisma data. The balance only changes through journal entries (General Ledger). */
+async function accountData(tenantId: string, formData: object) {
+  const { balance: _ignored, ...rest } = formData as Record<string, unknown> & { balance?: unknown }
+  const data = fromRow("Account", rest) as Prisma.AccountUncheckedUpdateManyInput
+  if (typeof data.parentId === "string") await assertTenantRefs(tenantId, { account: data.parentId })
   return data
 }
 
@@ -69,15 +67,14 @@ export async function getAccountById(id: string): Promise<Account | null> {
 export async function createAccount(
   formData: Omit<Account, "id" | "created_at" | "updated_at" | "tenant_id" | "children" | "depth">
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantManagerId()
-
-  const { error } = await supabase
-    .from("accounts")
-    // The balance only changes through journal entries (General Ledger)
-    .insert([stamped({ ...formData, balance: 0, tenant_id: tenantId })])
-
-  if (error) return { error: error.message }
+  try {
+    const tenantId = await getTenantManagerId()
+    const data = (await accountData(tenantId, formData)) as Omit<Prisma.AccountUncheckedCreateInput, "tenantId">
+    await prisma.account.create({ data: { ...data, balance: 0, tenantId } })
+  } catch (err) {
+    if ((err as { code?: string })?.code === "P2002") return { error: "An account with this code already exists" }
+    return { error: err instanceof Error ? err.message : "Failed to create account" }
+  }
   revalidatePath("/finance/accounts")
   return { error: null }
 }
@@ -87,73 +84,51 @@ export async function updateAccount(
   id: string,
   formData: Partial<Omit<Account, "id" | "created_at" | "updated_at" | "tenant_id" | "children" | "depth">>
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantManagerId()
-
-  const { error } = await supabase
-    .from("accounts")
-    // The balance only changes through journal entries (General Ledger)
-    .update((({ balance: _ignored, ...rest }) => rest)(formData as Record<string, unknown> & { balance?: unknown }))
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) return { error: error.message }
+  try {
+    const tenantId = await getTenantManagerId()
+    const data = await accountData(tenantId, formData)
+    if (data.parentId === id) return { error: "An account can't be its own parent" }
+    const { count } = await prisma.account.updateMany({ where: { id, tenantId }, data })
+    if (count === 0) return { error: "Account not found" }
+  } catch (err) {
+    if ((err as { code?: string })?.code === "P2002") return { error: "An account with this code already exists" }
+    return { error: err instanceof Error ? err.message : "Failed to update account" }
+  }
   revalidatePath("/finance/accounts")
   return { error: null }
 }
 
 /* ── Delete ── */
 export async function deleteAccount(id: string): Promise<{ error: string | null }> {
-  const supabase = await createClient()
   const tenantId = await getTenantManagerId()
 
   // Check if system account
-  const { data: account } = await supabase
-    .from("accounts")
-    .select("is_system, is_group, balance")
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (account?.is_system) return { error: "Cannot delete system accounts" }
-  if (Number(account?.balance || 0) !== 0) return { error: "Cannot delete account with a non-zero balance" }
+  const account = isUuid(id) ? await prisma.account.findFirst({ where: { id, tenantId }, select: { isSystem: true, balance: true } }) : null
+  if (!account) return { error: "Account not found" }
+  if (account.isSystem) return { error: "Cannot delete system accounts" }
+  if (Number(account.balance || 0) !== 0) return { error: "Cannot delete account with a non-zero balance" }
 
   // Check if has children
-  const { data: children } = await supabase
-    .from("accounts")
-    .select("id")
-    .eq("parent_id", id)
-    .eq("tenant_id", tenantId)
-    .limit(1)
-
-  if (children && children.length > 0) {
+  if (await prisma.account.count({ where: { parentId: id, tenantId } })) {
     return { error: "Cannot delete account with sub-accounts. Delete children first." }
   }
 
-  const { error } = await supabase
-    .from("accounts")
-    .delete()
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) return { error: error.message }
+  try {
+    await prisma.account.deleteMany({ where: { id, tenantId } })
+  } catch (err) {
+    if ((err as { code?: string })?.code === "P2003") return { error: "This account has journal entries or is used by other records, so it can't be deleted. Mark it inactive instead." }
+    return { error: err instanceof Error ? err.message : "Failed to delete account" }
+  }
   revalidatePath("/finance/accounts")
   return { error: null }
 }
 
 /* ── Seed Default Indian CoA ── */
 export async function seedDefaultAccounts(): Promise<{ error: string | null; count: number }> {
-  const supabase = await createClient()
   const tenantId = await getTenantManagerId()
 
   // Check if already seeded
-  const { data: existing } = await supabase
-    .from("accounts")
-    .select("id")
-    .eq("tenant_id", tenantId)
-    .limit(1)
-
-  if (existing && existing.length > 0) {
+  if (await prisma.account.count({ where: { tenantId } })) {
     return { error: "Accounts already exist. Seed skipped.", count: 0 }
   }
 
@@ -209,11 +184,11 @@ export async function seedDefaultAccounts(): Promise<{ error: string | null; cou
     { tenant_id: tenantId, code: "5950", name: "Miscellaneous Expenses", type: "EXPENSE", parent_id: null, is_group: false, description: null, balance: 0, currency_code: taxCtx.currency, is_active: true, is_system: false },
   ], taxCtx.regime)
 
-  const { error } = await supabase
-    .from("accounts")
-    .insert(defaultAccounts.map(stamped))
-
-  if (error) return { error: error.message, count: 0 }
+  try {
+    await prisma.account.createMany({ data: defaultAccounts.map((a) => ({ ...(fromRow("Account", a) as Omit<Prisma.AccountCreateManyInput, "tenantId">), tenantId })) })
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Failed to create accounts", count: 0 }
+  }
   
   revalidatePath("/finance/accounts")
   return { error: null, count: defaultAccounts.length }

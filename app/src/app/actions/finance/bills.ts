@@ -1,12 +1,15 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { getCurrentUser } from "@/lib/current-user"
 import { postToLedger } from "@/lib/ledger"
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
-import { stamped } from "@/lib/db-row"
+import { pick, toRow, toRows, type PgRow } from "@/lib/pg-row"
+import { computeInvoiceGstSummary, computeLineItemGst } from "@/lib/gst-engine"
+import { assertTenantRefs } from "@/lib/tenant-refs"
+import { isUuid } from "@/lib/utils"
 
 export type BillStatus = "DRAFT" | "OPEN" | "PARTIALLY_PAID" | "PAID" | "VOID"
 
@@ -41,73 +44,81 @@ export interface BillData {
  * Fetch all bills for the current tenant
  */
 export async function getBills(page: number = 1, limit: number = 10) {
-  const supabase = await createClient()
-  const tenantId = await getTenantId()
-  const offset = (page - 1) * limit
-
-  const { data, count, error } = await supabase
-    .from("bills")
-    .select("*, bill_items(*)", { count: "exact" })
-    .eq("tenant_id", tenantId)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1)
-
-  if (error) {
-    console.error("Error fetching bills:", error.message)
+  try {
+    const tenantId = await getTenantId()
+    const [rows, total] = await Promise.all([
+      prisma.bill.findMany({ where: { tenantId }, include: { items: true }, orderBy: { createdAt: "desc" }, skip: (page - 1) * limit, take: limit }),
+      prisma.bill.count({ where: { tenantId } }),
+    ])
+    return { data: rows.map((b) => ({ ...toRow("Bill", b), bill_items: toRows("BillItem", b.items) })), total }
+  } catch (err) {
+    console.error("Error fetching bills:", err)
     return { data: [], total: 0 }
   }
-  return { data: data ?? [], total: count || 0 }
 }
 
 /* ── Read Single Bill ── */
-export async function getBill(id: string): Promise<any | null> {
-  const supabase = await createClient()
+export async function getBill(id: string): Promise<PgRow | null> {
+  if (!isUuid(id)) return null
   const tenantId = await getTenantId()
-
-  const { data, error } = await supabase
-    .from("bills")
-    .select(`
-      *,
-      bill_items (*),
-      contacts (display_name, email, phone, company_name, billing_address),
-      payments (*)
-    `)
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (error) {
-    console.error("getBill error:", error.message)
-    return null
+  const b = await prisma.bill.findFirst({ where: { id, tenantId }, include: { items: true, contact: true, payments: true } })
+  if (!b) return null
+  return {
+    ...toRow("Bill", b),
+    bill_items: toRows("BillItem", b.items),
+    contacts: pick(toRow("Contact", b.contact), ["display_name", "email", "phone", "company_name", "billing_address"]),
+    payments: toRows("Payment", b.payments),
   }
-  return data
 }
 
 /**
  * Fetch a single bill by ID with its items
  */
 export async function getBillById(id: string) {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
-
-  const { data: bill, error: billError } = await supabase
-    .from("bills")
-    .select(`
-      *,
-      contact:contacts(*),
-      items:bill_items(*)
-    `)
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (billError) {
-    console.error("Error fetching bill:", billError)
-    throw new Error("Failed to fetch bill")
-  }
-
-  return bill
+  const b = isUuid(id) ? await prisma.bill.findFirst({ where: { id, tenantId }, include: { items: true, contact: true } }) : null
+  if (!b) throw new Error("Failed to fetch bill")
+  return { ...toRow<PgRow>("Bill", b), contact: toRow("Contact", b.contact), items: toRows("BillItem", b.items) }
 }
+
+/**
+ * Bill lines and totals worked out on the server (the GST engine the form
+ * uses). The form doesn't send its supply type, and intra/inter-state
+ * rounding can differ by a paisa, so the variant closest to the form's total
+ * is kept.
+ */
+function billFigures(items: BillItem[], discount: number, formTotal?: number) {
+  const variants = (["intra", "inter"] as const).map((supply) => {
+    const lines = items.map((it, i) => {
+      const q = Number(it.quantity), p = Number(it.unitPrice), t = Number(it.taxPercent ?? 0)
+      if (!Number.isFinite(q) || q <= 0) throw new Error(`Line ${i + 1}: quantity must be more than 0`)
+      if (!Number.isFinite(p) || p < 0) throw new Error(`Line ${i + 1}: price must be zero or more`)
+      if (!Number.isFinite(t) || t < 0 || t > 100) throw new Error(`Line ${i + 1}: tax must be between 0 and 100%`)
+      const g = computeLineItemGst(q, p, t, supply)
+      return { ...it, quantity: q, unitPrice: p, taxPercent: t, taxAmount: g.totalTaxAmount, lineTotal: g.lineTotal }
+    })
+    const d = Number(discount || 0)
+    if (!Number.isFinite(d) || d < 0) throw new Error("Discount must be zero or more")
+    const sum = computeInvoiceGstSummary(lines.map((l) => ({ qty: l.quantity, unitPrice: l.unitPrice, gstRate: l.taxPercent })), supply, d, "FIXED")
+    return { lines, subtotal: sum.subtotal, taxAmount: sum.totalTax, discount: d, total: sum.grandTotal }
+  })
+  return variants.reduce((best, v) => (Math.abs(v.total - Number(formTotal ?? v.total)) < Math.abs(best.total - Number(formTotal ?? best.total)) ? v : best))
+}
+
+const billItemRows = (billId: string, lines: BillItem[]) =>
+  lines.map((item) => ({
+    billId,
+    productId: item.productId || null,
+    description: item.description,
+    hsnSacCode: item.hsnSacCode || null,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    taxPercent: item.taxPercent,
+    taxAmount: item.taxAmount,
+    lineTotal: item.lineTotal,
+    // bill_items has no default id in the live database
+    id: crypto.randomUUID(),
+  }))
 
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { createNotification } from "@/app/actions/notifications"
@@ -116,40 +127,41 @@ import { createNotification } from "@/app/actions/notifications"
  * Create a new vendor bill
  */
 export async function createBill(data: BillData) {
-  const supabase = await createClient()
   const tenantId = await getTenantWriterId()
 
   if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
     throw new Error("Vendor not found")
   }
+  await assertTenantRefs(tenantId, { product: data.items.map((i) => i.productId) })
+  const fig = billFigures(data.items, data.discount, data.total)
+  data = { ...data, subtotal: fig.subtotal, taxAmount: fig.taxAmount, discount: fig.discount, total: fig.total }
 
-  const { data: bill, error: billError } = await supabase
-    .from("bills")
-    .insert(stamped({
-      tenant_id: tenantId,
-      contact_id: data.contactId,
-      bill_number: data.billNumber,
-      status: data.status,
-      bill_date: data.billDate.toISOString(),
-      due_date: data.dueDate?.toISOString(),
-      subtotal: data.subtotal,
-      tax_amount: data.taxAmount,
-      discount: data.discount,
-      total: data.total,
-      currency_code: data.currencyCode,
-      notes: data.notes
-    }))
-    .select()
-    .single()
-
-  if (billError) {
-    console.error("Error creating bill:", billError)
-    throw new Error(billError.message)
-  }
+  // Header and lines together
+  const created = await prisma.$transaction(async (tx) => {
+    const b = await tx.bill.create({
+      data: {
+        tenantId,
+        contactId: data.contactId,
+        billNumber: data.billNumber,
+        status: data.status,
+        billDate: data.billDate,
+        dueDate: data.dueDate ?? null,
+        subtotal: fig.subtotal,
+        taxAmount: fig.taxAmount,
+        discount: fig.discount,
+        total: fig.total,
+        currencyCode: data.currencyCode,
+        notes: data.notes ?? null,
+      },
+    })
+    await tx.billItem.createMany({ data: billItemRows(b.id, fig.lines) })
+    return b
+  })
+  const bill = toRow<PgRow>("Bill", created)
 
   // Create notification for bill creation
   try {
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     if (user) {
         await createNotification({
             type: "bill",
@@ -162,31 +174,6 @@ export async function createBill(data: BillData) {
     }
   } catch (e) {
     console.error("Failed to notify:", e)
-  }
-
-  // 2. Insert bill items
-  const billItems = data.items.map(item => ({
-    bill_id: bill.id,
-    product_id: item.productId,
-    description: item.description,
-    hsn_sac_code: item.hsnSacCode,
-    quantity: item.quantity,
-    unit_price: item.unitPrice,
-    tax_percent: item.taxPercent,
-    tax_amount: item.taxAmount,
-    line_total: item.lineTotal,
-    // bill_items has no tenant_id (it belongs to the bill) and no default id
-    id: crypto.randomUUID(),
-  }))
-
-  const { error: itemsError } = await supabase
-    .from("bill_items")
-    .insert(billItems)
-
-  if (itemsError) {
-    console.error("Error creating bill items:", itemsError)
-    await supabase.from("bills").delete().eq("id", bill.id).eq("tenant_id", tenantId)
-    throw new Error("Failed to create bill items")
   }
 
   // 3. LEDGER INTEGRATION (AP)
@@ -216,76 +203,37 @@ export async function createBill(data: BillData) {
  * Update an existing bill
  */
 export async function updateBill(id: string, data: Partial<BillData>) {
-  const supabase = await createClient()
   const tenantId = await getTenantWriterId()
 
   if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
     throw new Error("Vendor not found")
   }
+  if (data.items) await assertTenantRefs(tenantId, { product: data.items.map((i) => i.productId) })
 
-  // Update header
-  const { error: updateError } = await supabase
-    .from("bills")
-    .update({
-      contact_id: data.contactId,
-      bill_number: data.billNumber,
-      status: data.status,
-      bill_date: data.billDate?.toISOString(),
-      due_date: data.dueDate?.toISOString(),
-      subtotal: data.subtotal,
-      tax_amount: data.taxAmount,
-      discount: data.discount,
-      total: data.total,
-      currency_code: data.currencyCode,
-      notes: data.notes,
-      updated_at: new Date().toISOString()
+  await prisma.$transaction(async (tx) => {
+    const existing = await tx.bill.findFirst({ where: { id, tenantId }, select: { discount: true } })
+    if (!existing) throw new Error("Bill not found")
+    // New lines → totals from the server; header-only edits keep the saved totals
+    const fig = data.items ? billFigures(data.items, data.discount ?? Number(existing.discount), data.total) : null
+    if (fig) Object.assign(data, { subtotal: fig.subtotal, taxAmount: fig.taxAmount, discount: fig.discount, total: fig.total })
+    await tx.bill.update({
+      where: { id },
+      data: {
+        contactId: data.contactId,
+        billNumber: data.billNumber,
+        status: data.status,
+        billDate: data.billDate,
+        dueDate: data.dueDate,
+        notes: data.notes,
+        currencyCode: data.currencyCode,
+        ...(fig ? { subtotal: fig.subtotal, taxAmount: fig.taxAmount, discount: fig.discount, total: fig.total } : {}),
+      },
     })
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (updateError) {
-    console.error("Error updating bill:", updateError)
-    throw new Error("Failed to update bill")
-  }
-
-  // Update items if provided (Delete and recreate is safest IF ownership is verified)
-  if (data.items) {
-    // 1. Verify existence/ownership to prevent IDOR on items
-    const { data: existingBill, error: verifyError } = await supabase
-      .from("bills")
-      .select("id")
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-      .single()
-
-    if (verifyError || !existingBill) {
-      throw new Error("Unauthorized: Bill not found or access denied")
+    if (fig) {
+      await tx.billItem.deleteMany({ where: { billId: id } })
+      await tx.billItem.createMany({ data: billItemRows(id, fig.lines) })
     }
-
-    // 2. Safely delete items
-    await supabase.from("bill_items").delete().eq("bill_id", id)
-    
-    const billItems = data.items.map(item => ({
-      bill_id: id,
-      product_id: item.productId,
-      description: item.description,
-      hsn_sac_code: item.hsnSacCode,
-      quantity: item.quantity,
-      unit_price: item.unitPrice,
-      tax_percent: item.taxPercent,
-      tax_amount: item.taxAmount,
-      line_total: item.lineTotal,
-      id: crypto.randomUUID(),
-    }))
-
-    const { error: itemsError } = await supabase
-      .from("bill_items")
-      .insert(billItems)
-
-    if (itemsError) {
-      throw new Error("Failed to update bill items")
-    }
-  }
+  })
 
   await postToLedger(tenantId, { kind: "bill", id })
 
@@ -354,21 +302,12 @@ export async function updateBill(id: string, data: Partial<BillData>) {
  */
 export async function deleteBill(id: string): Promise<{ error: string | null }> {
   try {
-    const supabase = await createClient()
     const tenantId = await getTenantManagerId()
     // Its payments are deleted with it (cascade); their journals are voided after
     const paymentIds: string[] = (await prisma.payment.findMany({ where: { billId: id, tenantId }, select: { id: true } })).map((p: { id: string }) => p.id)
 
-    const { error } = await supabase
-      .from("bills")
-      .delete()
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-
-    if (error) {
-      console.error("Error deleting bill:", error)
-      return { error: error.message }
-    }
+    const { count } = await prisma.bill.deleteMany({ where: { id, tenantId } })
+    if (count === 0) return { error: "Bill not found" }
 
     // ─── LEDGER INTEGRATION (AP) ───
     try {
@@ -407,16 +346,10 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
  * Update bill status manually
  */
 export async function updateBillStatus(id: string, status: BillStatus) {
-  const supabase = await createClient()
   const tenantId = await getTenantManagerId()
 
-  const { error } = await supabase
-    .from("bills")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) {
+  const { count } = await prisma.bill.updateMany({ where: { id, tenantId }, data: { status } })
+  if (count === 0) {
     throw new Error("Failed to update bill status")
   }
   await postToLedger(tenantId, { kind: "bill", id })
@@ -429,20 +362,13 @@ export async function updateBillStatus(id: string, status: BillStatus) {
  * Fetch vendors for the bill form
  */
 export async function getVendors(limit: number = 100) {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
-
-  const { data, count, error } = await supabase
-    .from("contacts")
-    .select("id, display_name, company_name, pan, type", { count: "exact" })
-    .eq("tenant_id", tenantId)
-    // .eq("type", "VENDOR") // Optional: filtering by type if enforced
-    .eq("is_active", true)
-    .order("display_name")
-    .limit(limit)
-
-  if (error) throw new Error("Failed to fetch vendors")
-  return { data: data ?? [], total: count || 0 }
+  const where = { tenantId, isActive: true }
+  const [rows, total] = await Promise.all([
+    prisma.contact.findMany({ where, orderBy: { displayName: "asc" }, take: limit }),
+    prisma.contact.count({ where }),
+  ])
+  return { data: rows.map((c) => pick(toRow("Contact", c), ["id", "display_name", "company_name", "pan", "type"])), total }
 }
 
 /**

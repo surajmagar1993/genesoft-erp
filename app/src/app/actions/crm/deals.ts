@@ -1,6 +1,6 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { pick, toRow } from "@/lib/pg-row"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
@@ -251,7 +251,6 @@ export interface DealRelationsData {
 }
 
 export async function getDealWithRelations(id: string): Promise<DealRelationsData> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
   if (!UUID_RE.test(id)) return { deal: null, contact: null, company: null }
   const row = await prisma.deal.findFirst({ where: { id, tenantId }, select: DEAL_SELECT })
@@ -259,19 +258,17 @@ export async function getDealWithRelations(id: string): Promise<DealRelationsDat
   const deal = toDeal(row as DealRow)
 
   const [contactRes, companyRes] = await Promise.all([
-    supabase
-      .from("contacts")
-      .select("id, display_name, email, phone, mobile, customer_group, balance, currency_code")
-      .eq("tenant_id", tenantId)
-      .eq("id", (row as DealRow).contactId)
-      .maybeSingle(),
+    prisma.contact
+      .findFirst({ where: { tenantId, id: (row as DealRow).contactId } })
+      .then((c) => ({
+        data: c ? pick(toRow("Contact", c), ["id", "display_name", "email", "phone", "mobile", "customer_group", "balance", "currency_code"]) : null,
+      })),
     deal.company
-      ? supabase
-          .from("companies")
-          .select("id, name, industry, website, phone, email, city, country, country_code, is_active")
-          .eq("tenant_id", tenantId)
-          .eq("name", deal.company)
-          .maybeSingle()
+      ? prisma.company
+          .findFirst({ where: { tenantId, name: deal.company } })
+          .then((c) => ({
+            data: c ? pick(toRow("Company", c), ["id", "name", "industry", "website", "phone", "email", "city", "country", "country_code", "is_active"]) : null,
+          }))
       : Promise.resolve({ data: null }),
   ])
 

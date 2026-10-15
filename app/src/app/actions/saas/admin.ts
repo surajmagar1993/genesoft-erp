@@ -26,15 +26,8 @@ async function ensureSuperAdmin() {
 
     if (!user) throw new Error("Unauthorized")
 
-    // Use Supabase client for simple role check (works over HTTPS, more resilient than TCP).
-    // "*" so a database without the is_active column still works.
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-    if (!profile || (profile as any).role !== "SUPER_ADMIN" || (profile as any).is_active === false) {
+    const profile = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true, isActive: true } })
+    if (!profile || profile.role !== "SUPER_ADMIN" || profile.isActive === false) {
         throw new Error("Forbidden: Super Admin access required")
     }
 

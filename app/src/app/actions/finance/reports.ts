@@ -1,6 +1,5 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { convertAmount } from "@/lib/exchange-rates"
 import { prisma } from "@/lib/prisma"
@@ -9,6 +8,18 @@ import { computeMonthlyProfitAndLoss, computeProfitAndLoss } from "@/lib/profit-
 /* ─────────────────────────────────────────
    Types
 ───────────────────────────────────────── */
+
+/**
+ * Payment amounts in a period. Dates are the "YYYY-MM-DD" strings the report
+ * screen sends, compared like PostgREST did (the end day counts from its start).
+ */
+async function amountsInPeriod(tenantId: string, type: "INBOUND" | "OUTBOUND", startDate: string, endDate: string) {
+  const rows = await prisma.payment.findMany({
+    where: { tenantId, type, paymentDate: { gte: new Date(startDate), lte: new Date(endDate) } },
+    select: { amount: true, currencyCode: true },
+  })
+  return rows.map((p) => ({ amount: Number(p.amount), currency_code: p.currencyCode }))
+}
 
 export interface PnlReport {
   period: { start: string; end: string }
@@ -100,7 +111,6 @@ export async function getCashFlowSummary(
   startDate: string,
   endDate: string
 ): Promise<CashFlowSummary> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
 
   // Fetch Tenant Base Currency
@@ -112,22 +122,10 @@ export async function getCashFlowSummary(
   const baseCurrency = tenant.currencyCode
 
   // Payments received (inbound) in period
-  const { data: inbound } = await supabase
-    .from("payments")
-    .select("amount, currency_code")
-    .eq("tenant_id", tenantId)
-    .eq("type", "INBOUND")
-    .gte("payment_date", startDate)
-    .lte("payment_date", endDate)
+  const inbound = await amountsInPeriod(tenantId, "INBOUND", startDate, endDate)
 
   // Payments made (outbound) in period
-  const { data: outbound } = await supabase
-    .from("payments")
-    .select("amount, currency_code")
-    .eq("tenant_id", tenantId)
-    .eq("type", "OUTBOUND")
-    .gte("payment_date", startDate)
-    .lte("payment_date", endDate)
+  const outbound = await amountsInPeriod(tenantId, "OUTBOUND", startDate, endDate)
 
   let cashIn = 0
   for (const p of inbound ?? []) {
@@ -144,18 +142,12 @@ export async function getCashFlowSummary(
   }
 
   // Outstanding AR (all time — snapshot)
-  const { data: unpaidInvoices } = await supabase
-    .from("invoices")
-    .select("total, currency_code")
-    .eq("tenant_id", tenantId)
-    .in("status", ["SENT", "PARTIALLY_PAID"])
+  const unpaidInvoices = (await prisma.invoice.findMany({ where: { tenantId, status: { in: ["SENT", "PARTIALLY_PAID"] } }, select: { total: true, currencyCode: true } }))
+    .map((i) => ({ total: Number(i.total), currency_code: i.currencyCode }))
 
   // Outstanding AP (all time — snapshot)
-  const { data: unpaidBills } = await supabase
-    .from("bills")
-    .select("total, currency_code")
-    .eq("tenant_id", tenantId)
-    .in("status", ["OPEN", "PARTIALLY_PAID"])
+  const unpaidBills = (await prisma.bill.findMany({ where: { tenantId, status: { in: ["OPEN", "PARTIALLY_PAID"] } }, select: { total: true, currencyCode: true } }))
+    .map((b) => ({ total: Number(b.total), currency_code: b.currencyCode }))
 
   let openingAR = 0
   for (const inv of unpaidInvoices ?? []) {
@@ -186,7 +178,6 @@ export async function getCashFlowSummary(
 ───────────────────────────────────────── */
 
 export async function getTopRevenueContacts(limit = 5): Promise<TopRevenueContact[]> {
-  const supabase = await createClient()
   const tenantId = await getTenantId()
 
   // Fetch Tenant Base Currency
@@ -197,11 +188,10 @@ export async function getTopRevenueContacts(limit = 5): Promise<TopRevenueContac
   if (!tenant) throw new Error("Tenant not found")
   const baseCurrency = tenant.currencyCode
 
-  const { data: invoices } = await supabase
-    .from("invoices")
-    .select("contact_id, subtotal, total, currency_code, contacts(display_name)")
-    .eq("tenant_id", tenantId)
-    .in("status", ["SENT", "PARTIALLY_PAID", "PAID"])
+  const invoices = (await prisma.invoice.findMany({
+    where: { tenantId, status: { in: ["SENT", "PARTIALLY_PAID", "PAID"] } },
+    select: { contactId: true, subtotal: true, total: true, currencyCode: true, contact: { select: { displayName: true } } },
+  })).map((i) => ({ contact_id: i.contactId, subtotal: Number(i.subtotal), total: Number(i.total), currency_code: i.currencyCode, contacts: { display_name: i.contact.displayName } }))
 
   const contactMap = new Map<string, TopRevenueContact>()
 

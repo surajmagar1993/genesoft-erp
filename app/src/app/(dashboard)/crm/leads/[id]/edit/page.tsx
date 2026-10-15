@@ -1,19 +1,17 @@
+import { prisma } from "@/lib/prisma"
+import { getTenantId } from "@/lib/get-tenant-id"
+import { toRow, type PgRow } from "@/lib/pg-row"
 import { isUuid } from "@/lib/utils"
-import { createClient } from "@/lib/supabase/server"
 import { LeadForm, defaultLeadForm, type LeadFormData } from "@/components/crm/lead-form"
 import { notFound } from "next/navigation"
 
 export default async function EditLeadPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     if (!isUuid(id)) notFound()
-    const supabase = await createClient()
-    const { data, error } = await supabase
-        .from("leads")
-        .select("*")
-        .eq("id", id)
-        .single()
-
-    if (error || !data) notFound()
+    const tenantId = await getTenantId()
+    const record = await prisma.lead.findFirst({ where: { id, tenantId } })
+    if (!record) notFound()
+    const data = toRow<PgRow>("Lead", record)
 
     const initialData: LeadFormData = {
         ...defaultLeadForm,

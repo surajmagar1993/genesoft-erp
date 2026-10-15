@@ -1,9 +1,12 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
-import { stamped } from "@/lib/db-row"
+import { fromRow, toRow, toRows } from "@/lib/pg-row"
+import { documentTotals } from "@/lib/document-totals"
+import { assertTenantRefs } from "@/lib/tenant-refs"
+import { isUuid } from "@/lib/utils"
+import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { buildInvoiceLines, contactPlaceOfSupply } from "@/lib/invoice-lines"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
@@ -60,52 +63,35 @@ export async function getOrders(
     limit: number = 10,
     filters?: { status?: SalesOrderStatus; search?: string }
 ): Promise<{ data: SalesOrderDB[]; total: number }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantId()
-  const offset = (page - 1) * limit
-
-  let query = supabase
-    .from("sales_orders")
-    .select("*, sales_order_items(*)", { count: "exact" })
-    .eq("tenant_id", tenantId)
-
-  if (filters?.status) {
-    query = query.eq("status", filters.status)
-  }
-
-  if (filters?.search) {
-    query = query.or(`order_number.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%`)
-  }
-
-  const { data, count, error } = await query
-    .range(offset, offset + limit - 1)
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error("getOrders error:", error.message)
+  try {
+    const tenantId = await getTenantId()
+    const q = filters?.search?.trim()
+    const where: Prisma.SalesOrderWhereInput = {
+      tenantId,
+      ...(filters?.status ? { status: filters.status } : {}),
+      ...(q ? { OR: [{ orderNumber: { contains: q, mode: "insensitive" } }, { customerName: { contains: q, mode: "insensitive" } }] } : {}),
+    }
+    const [rows, total] = await Promise.all([
+      prisma.salesOrder.findMany({ where, include: { items: true }, orderBy: { createdAt: "desc" }, skip: (page - 1) * limit, take: limit }),
+      prisma.salesOrder.count({ where }),
+    ])
+    return { data: rows.map(orderRow), total }
+  } catch (err) {
+    console.error("getOrders error:", err)
     return { data: [], total: 0 }
   }
-  return { data: data ?? [], total: count || 0 }
+}
+
+function orderRow(r: Prisma.SalesOrderGetPayload<{ include: { items: true } }>): SalesOrderDB {
+  return { ...toRow<SalesOrderDB>("SalesOrder", r), sales_order_items: toRows<SalesOrderLineItemDB>("SalesOrderItem", r.items) }
 }
 
 /* ── Read One ── */
 export async function getOrderById(id: string): Promise<SalesOrderDB | null> {
-  const supabase = await createClient()
+  if (!isUuid(id)) return null
   const tenantId = await getTenantId()
-
-  const { data, error } = await supabase
-    .from("sales_orders")
-    .select("*, sales_order_items(*)")
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (error) {
-    console.error("getOrderById error:", error.message)
-    return null
-  }
-
-  return data
+  const row = await prisma.salesOrder.findFirst({ where: { id, tenantId }, include: { items: true } })
+  return row ? orderRow(row) : null
 }
 
 /* ── Create ── */
@@ -133,71 +119,35 @@ export interface CreateOrderPayload {
   }>
 }
 
+/** Header fields and line items, with totals worked out on the server. */
+async function orderData(tenantId: string, payload: Omit<CreateOrderPayload, "currency_code"> & { currency_code?: string }) {
+  const { line_items, ...headerFields } = payload
+  const { items, subtotal, taxAmount, total } = documentTotals(line_items, headerFields.discount, headerFields.discount_type)
+  const header = fromRow("SalesOrder", {
+    ...headerFields,
+    subtotal,
+    tax_amount: taxAmount,
+    total,
+    currency_code: await tenantCurrency(tenantId),
+    expected_date: headerFields.expected_date || null,
+  }) as Omit<Prisma.SalesOrderUncheckedCreateInput, "tenantId">
+  await assertTenantRefs(tenantId, { contact: header.contactId, quote: header.quoteId })
+  return { header, items: items.map((li) => fromRow("SalesOrderItem", li) as Omit<Prisma.SalesOrderItemCreateManyInput, "orderId">) }
+}
+
 export async function createOrder(
   payload: CreateOrderPayload
 ): Promise<{ id: string | null; error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantWriterId()
-
-  const { line_items, ...headerFields } = payload
-
-  // Calculate Totals
-  let subtotal = 0
-  let taxAmount = 0
-  const processedItems = line_items.map((item) => {
-    const itemTotal = item.qty * item.unit_price
-    const itemTax = itemTotal * (item.tax_percent / 100)
-    subtotal += itemTotal
-    taxAmount += itemTax
-    return {
-      ...item,
-      line_total: itemTotal,
-    }
-  })
-
-  const discountVal = headerFields.discount_type === "PERCENT" 
-    ? subtotal * (headerFields.discount / 100) 
-    : headerFields.discount
-  
-  const grandTotal = subtotal + taxAmount - discountVal
-
-  // Insert header
-  const { data: order, error: headerError } = await supabase
-    .from("sales_orders")
-    .insert(stamped({
-      ...headerFields,
-      subtotal,
-      tax_amount: taxAmount,
-      total: grandTotal,
-      tenant_id: tenantId,
-      currency_code: await tenantCurrency(tenantId),
-      expected_date: headerFields.expected_date || null,
-      quote_id: headerFields.quote_id || null,
-    }))
-    .select("id")
-    .single()
-
-  if (headerError || !order) {
-    console.error("createOrder header error:", headerError?.message)
-    return { id: null, error: headerError?.message ?? "Failed to create order" }
+  try {
+    const tenantId = await getTenantWriterId()
+    const { header, items } = await orderData(tenantId, payload)
+    const order = await prisma.salesOrder.create({ data: { ...header, tenantId, items: { create: items } }, select: { id: true } })
+    revalidatePath("/sales/orders")
+    return { id: order.id, error: null }
+  } catch (err) {
+    console.error("createOrder error:", err)
+    return { id: null, error: err instanceof Error ? err.message : "Failed to create order" }
   }
-
-  // Insert line items
-  if (processedItems.length > 0) {
-    const { error: itemsError } = await supabase.from("sales_order_items").insert(
-      processedItems.map((li) => ({
-        ...li,
-        order_id: order.id,
-      }))
-    )
-    if (itemsError) {
-      console.error("createOrder items error:", itemsError.message)
-      return { id: null, error: itemsError.message }
-    }
-  }
-
-  revalidatePath("/sales/orders")
-  return { id: order.id, error: null }
 }
 
 /* ── Update ── */
@@ -208,100 +158,38 @@ export interface UpdateOrderPayload extends CreateOrderPayload {
 export async function updateOrder(
   payload: UpdateOrderPayload
 ): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantWriterId()
+  try {
+    const tenantId = await getTenantWriterId()
+    const { id, ...fields } = payload
+    const { header, items } = await orderData(tenantId, fields)
 
-  const { id, line_items, ...headerFields } = payload
-
-  // Recalculate totals
-  let subtotal = 0
-  let taxAmount = 0
-  const processedItems = line_items.map((item) => {
-    const itemTotal = item.qty * item.unit_price
-    const itemTax = itemTotal * (item.tax_percent / 100)
-    subtotal += itemTotal
-    taxAmount += itemTax
-    return {
-        product_name: item.product_name,
-        description: item.description,
-        qty: item.qty,
-        unit_price: item.unit_price,
-        tax_percent: item.tax_percent,
-        line_total: itemTotal,
-    }
-  })
-
-  const discountVal = headerFields.discount_type === "PERCENT" 
-    ? subtotal * (headerFields.discount / 100) 
-    : headerFields.discount
-  
-  const grandTotal = subtotal + taxAmount - discountVal
-
-  // Update header
-  const { error: headerError } = await supabase
-    .from("sales_orders")
-    .update({
-      ...headerFields,
-      currency_code: await tenantCurrency(tenantId),
-      subtotal,
-      tax_amount: taxAmount,
-      total: grandTotal,
-      expected_date: headerFields.expected_date || null,
-      quote_id: headerFields.quote_id || null,
-      updated_at: new Date().toISOString(),
+    // Header and lines together; nothing changes unless the order is this business's
+    await prisma.$transaction(async (tx) => {
+      const { count } = await tx.salesOrder.updateMany({ where: { id, tenantId }, data: header })
+      if (count === 0) throw new Error("Order not found")
+      await tx.salesOrderItem.deleteMany({ where: { orderId: id } })
+      if (items.length > 0) await tx.salesOrderItem.createMany({ data: items.map((li) => ({ ...li, orderId: id })) })
     })
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
 
-  if (headerError) {
-    console.error("updateOrder header error:", headerError.message)
-    return { error: headerError.message }
+    revalidatePath("/sales/orders")
+    revalidatePath(`/sales/orders/${id}/edit`)
+    return { error: null }
+  } catch (err) {
+    console.error("updateOrder error:", err)
+    return { error: err instanceof Error ? err.message : "Failed to update order" }
   }
-
-  // Replace all line items: delete old → insert new
-  const { error: deleteError } = await supabase
-    .from("sales_order_items")
-    .delete()
-    .eq("order_id", id)
-
-  if (deleteError) {
-    console.error("updateOrder delete items error:", deleteError.message)
-    return { error: deleteError.message }
-  }
-
-  if (processedItems.length > 0) {
-    const { error: insertError } = await supabase.from("sales_order_items").insert(
-      processedItems.map((li) => ({
-        ...li,
-        order_id: id,
-      }))
-    )
-    if (insertError) {
-      console.error("updateOrder insert items error:", insertError.message)
-      return { error: insertError.message }
-    }
-  }
-
-  revalidatePath("/sales/orders")
-  revalidatePath(`/sales/orders/${id}/edit`)
-  revalidatePath(`/sales/orders/${id}`)
-  return { error: null }
 }
 
 /* ── Delete ── */
 export async function deleteOrder(id: string): Promise<{ error: string | null }> {
-  const supabase = await createClient()
-  const tenantId = await getTenantManagerId()
-
-  const { error } = await supabase
-    .from("sales_orders")
-    .delete()
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-
-  if (error) {
-    console.error("deleteOrder error:", error.message)
-    return { error: error.message }
+  try {
+    const tenantId = await getTenantManagerId()
+    const { count } = await prisma.salesOrder.deleteMany({ where: { id, tenantId } })
+    if (count === 0) return { error: "Order not found" }
+  } catch (err) {
+    console.error("deleteOrder error:", err)
+    if ((err as { code?: string })?.code === "P2003") return { error: "This order has been invoiced or delivered, so it can't be deleted. Cancel it instead." }
+    return { error: err instanceof Error ? err.message : "Failed to delete order" }
   }
 
   revalidatePath("/sales/orders")
@@ -310,58 +198,42 @@ export async function deleteOrder(id: string): Promise<{ error: string | null }>
 
 /* ── Convert Quote to Order ── */
 export async function convertQuoteToOrder(quoteId: string): Promise<{ orderId: string | null; error: string | null }> {
-  const supabase = await createClient()
   const tenantId = await getTenantWriterId()
 
   // 1. Fetch the quote
-  const { data: quote, error: quoteError } = await supabase
-    .from("quotes")
-    .select("*, quote_items(*)")
-    .eq("id", quoteId)
-    .eq("tenant_id", tenantId)
-    .single()
-
-  if (quoteError || !quote) {
-    return { orderId: null, error: quoteError?.message || "Quote not found" }
-  }
+  const quote = isUuid(quoteId) ? await prisma.quote.findFirst({ where: { id: quoteId, tenantId }, include: { items: true } }) : null
+  if (!quote) return { orderId: null, error: "Quote not found" }
 
   // 2. Map payload
-  const line_items = quote.quote_items.map((item: any) => ({
-    product_name: item.product_name,
-    description: item.description,
-    qty: item.qty,
-    unit_price: item.unit_price,
-    tax_percent: item.tax_percent,
-  }))
-
   const payload: CreateOrderPayload = {
     order_number: await nextSequence(prisma, "salesOrder", tenantId, `SO-${new Date().getFullYear()}-`),
-    customer_name: quote.customer_name,
-    customer_email: quote.customer_email,
+    customer_name: quote.customerName,
+    customer_email: quote.customerEmail,
     order_date: new Date().toISOString().split("T")[0],
-    reference: quote.quote_number, // Use quote number as reference
+    reference: quote.quoteNumber, // Use quote number as reference
     status: "DRAFT",
-    discount: quote.discount,
-    discount_type: quote.discount_type,
-    notes: quote.notes,
-    terms_and_conditions: quote.terms_and_conditions,
-    contact_id: quote.contact_id,
+    discount: Number(quote.discount),
+    discount_type: quote.discountType,
+    notes: quote.notes ?? undefined,
+    terms_and_conditions: quote.termsAndConditions ?? undefined,
+    contact_id: quote.contactId,
     quote_id: quote.id,
-    currency_code: quote.currency_code || (await tenantCurrency(tenantId)),
-    line_items,
+    currency_code: quote.currencyCode || (await tenantCurrency(tenantId)),
+    line_items: quote.items.map((item) => ({
+      product_name: item.productName,
+      description: item.description ?? undefined,
+      qty: Number(item.qty),
+      unit_price: Number(item.unitPrice),
+      tax_percent: Number(item.taxPercent),
+    })),
   }
 
   // 3. Create the order
   const result = await createOrder(payload)
-  
+
   // 4. Update the quote status to ACCEPTED
   if (result.id && !result.error) {
-    await supabase
-      .from("quotes")
-      .update({ status: "ACCEPTED", updated_at: new Date().toISOString() })
-      .eq("id", quoteId)
-      .eq("tenant_id", tenantId)
-    
+    await prisma.quote.updateMany({ where: { id: quoteId, tenantId }, data: { status: "ACCEPTED" } })
     revalidatePath("/sales/quotes")
   }
 

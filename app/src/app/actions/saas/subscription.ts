@@ -1,8 +1,8 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { getCurrentUser } from "@/lib/current-user"
 import { getTenantId } from "@/lib/get-tenant-id"
-import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { quotePlanChange, applyPlanChange } from "@/lib/plan-change"
 import { getEffectivePricing, type EffectivePricing } from "@/lib/plan-pricing"
@@ -19,19 +19,15 @@ import {
  * everyone else is confined to their own tenant.
  */
 async function getCallerContext(targetTenantId?: string) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     if (!user) throw new Error("Authentication required")
 
-    const { data: profile } = await supabase
-        .from("profiles")
-        .select("role, tenant_id")
-        .eq("id", user.id)
-        .single()
+    const profile = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true, tenantId: true, isActive: true } })
+    if (profile?.isActive === false) throw new Error("Your account has been deactivated")
 
     const role: string | undefined = profile?.role
     const isSuperAdmin = role === "SUPER_ADMIN"
-    const effectiveTenantId = targetTenantId && isSuperAdmin ? targetTenantId : profile?.tenant_id
+    const effectiveTenantId = targetTenantId && isSuperAdmin ? targetTenantId : profile?.tenantId
 
     return {
         userId: user.id,
