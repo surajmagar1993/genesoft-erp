@@ -1,6 +1,6 @@
 # Genesoft Infotech website overhaul: plan
 
-> **Status (15 Oct 2026):** Phase 1 live. Phase 2 built: content tables (run on live), Super Admin → Website (settings, pages with draft/publish/history, lists, media, leads inbox), forms save leads, careers applications with private CVs. Next: Phase 5 legal pages editor + IT Rental Terms, then go-live (domain). Owner decisions are in §2, open items in §14.
+> **Status (15 Oct 2026):** Phase 1 live. Phase 2 built: content tables (run on live), Super Admin → Website (settings, pages with draft/publish/history, lists, media, leads inbox), forms save leads, careers applications with private CVs. Phase 5 legal editor built: every legal page is editable in Super Admin → Website → Pages → Legal (draft/publish/history, "last updated" on publish); Privacy now covers website enquiries, quote requests and job applications; Cookie Policy lists the website theme setting; IT Rental Terms is a draft with 9 `[OWNER: …]` rules to fill in and stays hidden until published. Next: owner fills rental rules, legal review, structured data, Turnstile, welcome email, then go-live (domain). Owner decisions are in §2, open items in §14.
 > **Started:** 15 October 2026 · **Owner:** Genesoft Infotech · **Built in:** this repo (`app/`, Next.js), deployed on Vercel.
 
 ---

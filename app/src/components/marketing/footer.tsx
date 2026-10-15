@@ -2,13 +2,12 @@ import Link from "next/link"
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react"
 import { BrandLogo } from "@/components/brand-logo"
 import { SITE_CONTAINER } from "@/components/marketing/container"
-import { LEGAL_LINKS } from "@/components/marketing/legal-links"
 import { PLATFORM, telHref, whatsappHref } from "@/lib/constants/platform"
-import { getSiteSettings } from "@/lib/site-cms"
+import { getLegalLinks, getSiteSettings } from "@/lib/site-cms"
 import { SocialIcon } from "@/components/marketing/social-icon"
 import { SERVICES } from "@/lib/site-content"
 
-const COLUMNS = [
+const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
     { title: "Services", links: SERVICES.map((s) => ({ href: `/services/${s.slug}`, label: s.name })) },
     {
         title: "Genesoft ERP",
@@ -28,13 +27,13 @@ const COLUMNS = [
             { href: "/contact", label: "Contact" },
         ],
     },
-    { title: "Legal", links: [...LEGAL_LINKS] },
 ]
 
 /** Always dark (charcoal), so it uses the white-lettered logo in both themes. */
 export async function PublicFooter() {
     const year = new Date().getFullYear()
-    const site = await getSiteSettings()
+    const [site, legalLinks] = await Promise.all([getSiteSettings(), getLegalLinks()])
+    const columns = [...COLUMNS, { title: "Legal", links: legalLinks }]
 
     return (
         <footer className="bg-s-footer text-[#D9D4CC]">
@@ -80,7 +79,7 @@ export async function PublicFooter() {
                     )}
                 </div>
 
-                {COLUMNS.map((col) => (
+                {columns.map((col) => (
                     <div key={col.title}>
                         <h3 className="text-sm font-bold text-[#F6F3EE]">{col.title}</h3>
                         <ul className="mt-3 space-y-2.5">

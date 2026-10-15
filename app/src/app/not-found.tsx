@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
-import { LEGAL_LINKS } from "@/components/marketing/legal-links"
 
 export const metadata = {
     title: "Page not found | Genesoft ERP",
@@ -34,7 +33,7 @@ export default function NotFound() {
                     <p className="mt-8 text-sm text-slate-500">
                         Need help? <Link href="/contact" className="text-blue-700 hover:underline">Contact us</Link> ·{" "}
                         <Link href="/sitemap" className="text-blue-700 hover:underline">All pages</Link> ·{" "}
-                        <Link href={LEGAL_LINKS[1].href} className="text-blue-700 hover:underline">{LEGAL_LINKS[1].label}</Link>
+                        <Link href="/privacy" className="text-blue-700 hover:underline">Privacy Policy</Link>
                     </p>
                 </div>
             </main>

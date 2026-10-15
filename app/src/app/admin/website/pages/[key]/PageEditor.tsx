@@ -75,7 +75,11 @@ export function PageEditor({ page }: { page: Page }) {
                     </Link>
                     <h1 className="text-2xl font-bold tracking-tight">{page.label}</h1>
                     <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        {page.publishedAt ? `Published ${new Date(page.publishedAt).toLocaleString()}` : "Not published yet: the website shows the built-in text"}
+                        {page.publishedAt
+                            ? `Published ${new Date(page.publishedAt).toLocaleString()}`
+                            : page.draftOnly
+                              ? "Not published yet: this page is hidden from the website until you publish it"
+                              : "Not published yet: the website shows the built-in text"}
                         {(page.unpublished || dirty) && <Badge variant="secondary">Unpublished changes</Badge>}
                     </div>
                 </div>

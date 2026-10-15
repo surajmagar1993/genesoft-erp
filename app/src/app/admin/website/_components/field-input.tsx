@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { listMedia, uploadMedia } from "@/app/actions/website"
 import { unwrap } from "@/lib/action-result"
 import type { FieldDef } from "@/lib/site-cms-shared"
+import { OWNER_TODO, parseLegal } from "@/lib/legal-markdown"
 import { cn } from "@/lib/utils"
 
 type Media = Awaited<ReturnType<typeof listMedia>>[number]
@@ -115,10 +116,38 @@ function ImagePicker({ value, onChange, label }: { value: string; onChange: (v: 
     )
 }
 
+/** Live check of a legal page's text: its sections, or why it can't be shown. */
+function LegalCheck({ text }: { text: string }) {
+    let sections: string[] = []
+    let error = ""
+    try {
+        sections = parseLegal(text).map((s) => s.title)
+    } catch (err) {
+        error = err instanceof Error ? err.message : "This text can't be shown."
+    }
+    const todos = text.split(OWNER_TODO).length - 1
+    return (
+        <div className="space-y-1 rounded-md border bg-muted/30 p-3 text-xs">
+            {error ? (
+                <p className="text-destructive">{error}</p>
+            ) : (
+                <p className="text-muted-foreground">
+                    {sections.length} sections: {sections.map((t, i) => `${i + 1}. ${t}`).join(" · ")}
+                </p>
+            )}
+            {todos > 0 && (
+                <p className="text-amber-700 dark:text-amber-400">
+                    {todos} {todos === 1 ? "note" : "notes"} still to fill in ({OWNER_TODO} …]). Save as a draft until they&apos;re done; publishing is blocked.
+                </p>
+            )}
+        </div>
+    )
+}
+
 /** One editable field, as defined in src/lib/site-cms-shared.ts. Values are form text. */
 export function FieldInput({ field, value, onChange }: { field: FieldDef; value: string; onChange: (v: string) => void }) {
     const id = `f-${field.name}`
-    const multi = field.type === "textarea" || field.type === "lines" || field.type === "pairs" || field.type === "faqs"
+    const multi = field.type === "textarea" || field.type === "lines" || field.type === "pairs" || field.type === "faqs" || field.type === "legalInline"
     return (
         <div className="space-y-1.5">
             <Label htmlFor={id} className="text-sm font-medium">
@@ -134,6 +163,11 @@ export function FieldInput({ field, value, onChange }: { field: FieldDef; value:
                         <option key={o}>{o}</option>
                     ))}
                 </select>
+            ) : field.type === "legal" ? (
+                <>
+                    <Textarea id={id} value={value} onChange={(e) => onChange(e.target.value)} rows={28} spellCheck className="font-mono text-[13px] leading-relaxed" />
+                    <LegalCheck text={value} />
+                </>
             ) : multi ? (
                 <Textarea id={id} value={value} onChange={(e) => onChange(e.target.value)} rows={field.type === "textarea" ? 4 : 6} className="text-sm" />
             ) : (

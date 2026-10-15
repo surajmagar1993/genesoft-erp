@@ -23,6 +23,7 @@ import {
     type LeadStatus,
     type SiteSettingsData,
 } from "@/lib/site-cms"
+import { OWNER_TODO } from "@/lib/legal-markdown"
 
 /**
  * Super Admin → Website. Every action checks for a super admin and is written
@@ -137,6 +138,8 @@ export async function listPagesAdmin() {
             key: p.key,
             label: p.label,
             path: p.path,
+            group: p.group ?? "Pages",
+            draftOnly: !!p.draftOnly,
             publishedAt: r?.publishedAt?.toISOString() ?? null,
             unpublished: !!r && JSON.stringify(r.draft) !== JSON.stringify(r.published ?? {}),
             customised: !!r?.published,
@@ -158,6 +161,7 @@ export async function getPageAdmin(key: string) {
         key,
         label: def.label,
         path: def.path,
+        draftOnly: !!def.draftOnly,
         fields: def.fields,
         values,
         publishedAt: row?.publishedAt?.toISOString() ?? null,
@@ -189,6 +193,9 @@ export async function savePageDraft(key: string, values: Record<string, string>)
 async function _publishPage(key: string, values: Record<string, string>) {
     const admin = await requireSuperAdmin()
     const data = parsePage(key, values)
+    if (key.startsWith("legal:") && JSON.stringify(data).includes(OWNER_TODO)) {
+        throw new Error(`Fill in every "${OWNER_TODO} …]" note before publishing. You can save it as a draft meanwhile.`)
+    }
     const now = new Date()
     await prisma.$transaction([
         prisma.siteContent.upsert({

@@ -11,6 +11,8 @@ import {
     type OfficeHours,
     type SiteSettingsData,
 } from "@/lib/site-cms-shared"
+import { LEGAL_DEFS, legalDef, type LegalDef } from "@/lib/legal-content"
+import { parseInline, parseLegal, type Inline, type LegalDocSection } from "@/lib/legal-markdown"
 
 export * from "@/lib/site-cms-shared"
 
@@ -132,3 +134,58 @@ export async function getServiceShorts(slugs: string[]): Promise<Record<string, 
     const entries = await Promise.all(slugs.map(async (slug) => [slug, text((await getPageContent(`service:${slug}`)).short)] as const))
     return Object.fromEntries(entries)
 }
+
+// ---------------------------------------------------------------- legal pages
+
+export interface LegalPageContent {
+    def: LegalDef
+    summary: Inline[]
+    sections: LegalDocSection[]
+    /** "15 October 2026" */
+    updated: string
+}
+
+const LEGAL_DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Kolkata" })
+
+/**
+ * A legal page as visitors see it: the published text over the built-in one,
+ * "last updated" from the publish date. null when the page is draft-only and
+ * not published yet. If saved text can't be read, the built-in text is shown.
+ */
+export const getLegalPage = cache(async (key: string): Promise<LegalPageContent | null> => {
+    const def = legalDef(key)
+    if (!def) return null
+    let row: { published: unknown; publishedAt: Date | null } | null = null
+    try {
+        row = await prisma.siteContent.findUnique({ where: { key }, select: { published: true, publishedAt: true } })
+    } catch (err) {
+        console.error(`getLegalPage(${key}): using built-in text`, err)
+    }
+    const published = asObject(row?.published)
+    if (def.draftOnly && !row?.publishedAt) return null
+    const pick = (name: "summary" | "body") => (typeof published[name] === "string" && (published[name] as string).trim() ? (published[name] as string) : def[name])
+    let summary: Inline[]
+    let sections: LegalDocSection[]
+    try {
+        summary = parseInline(pick("summary"))
+        sections = parseLegal(pick("body"))
+    } catch (err) {
+        console.error(`getLegalPage(${key}): saved text can't be read, using built-in text`, err)
+        summary = parseInline(def.summary)
+        sections = parseLegal(def.body)
+    }
+    return { def, summary, sections, updated: row?.publishedAt ? LEGAL_DATE.format(row.publishedAt) : def.builtInUpdated }
+})
+
+/** Legal pages visitors can open (draft-only ones once published), for the footer, sitemap and "Related policies". */
+export const getLegalLinks = cache(async (): Promise<{ href: string; label: string }[]> => {
+    const draftKeys = LEGAL_DEFS.filter((d) => d.draftOnly).map((d) => d.key)
+    let live = new Set<string>()
+    try {
+        const rows = await prisma.siteContent.findMany({ where: { key: { in: draftKeys }, publishedAt: { not: null } }, select: { key: true } })
+        live = new Set(rows.map((r) => r.key))
+    } catch (err) {
+        console.error("getLegalLinks: draft-only pages left out", err)
+    }
+    return LEGAL_DEFS.filter((d) => !d.draftOnly || live.has(d.key)).map((d) => ({ href: d.path, label: d.label }))
+})

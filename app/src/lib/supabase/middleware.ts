@@ -64,6 +64,7 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
         request.nextUrl.pathname === '/delivery-policy' ||
         request.nextUrl.pathname === '/cookie-policy' ||
         request.nextUrl.pathname === '/dpa' ||
+        request.nextUrl.pathname === '/rental-terms' || // 404 until published in Super Admin → Website
         request.nextUrl.pathname === '/about' ||
         request.nextUrl.pathname === '/robots.txt' || // for search engines
         request.nextUrl.pathname === '/sitemap.xml' ||

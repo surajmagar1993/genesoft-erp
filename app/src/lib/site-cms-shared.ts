@@ -5,6 +5,8 @@
  */
 import { PLATFORM } from "@/lib/constants/platform"
 import { SERVICES, RENTAL_CATEGORIES } from "@/lib/site-content"
+import { LEGAL_DEFS } from "@/lib/legal-content"
+import { parseInline, parseLegal } from "@/lib/legal-markdown"
 
 // ---------------------------------------------------------------- fields
 
@@ -23,6 +25,10 @@ export type FieldType =
     | "select"
     /** An image from the Media library (stores its public URL) */
     | "image"
+    /** A whole legal page in the format of src/lib/legal-markdown.ts */
+    | "legal"
+    /** One paragraph in that format (bold, links, {tokens}) */
+    | "legalInline"
 
 export interface FieldDef {
     name: string
@@ -91,7 +97,16 @@ export interface PageDef {
     path: string
     fields: FieldDef[]
     defaults: Record<string, FieldValue>
+    /** Pages list group */
+    group?: "Pages" | "Legal"
+    /** Shown on the website only once published */
+    draftOnly?: boolean
 }
+
+const LEGAL_HELP =
+    'Start each section with "## Heading". Blank line = new paragraph, "- " = bullet, **bold**, [text](/privacy) = link. ' +
+    "{legalName}, {email}, {phone}, {address}, {website}, {jurisdiction} fill in the company details. " +
+    "{cookieTable} and {subprocessorTable} on their own line show the tables kept in the code."
 
 const serviceFields = (slug: string): FieldDef[] => [
     { name: "short", label: "One line for cards and menus", type: "textarea", required: true, max: 200 },
@@ -158,6 +173,20 @@ export const PAGE_DEFS: PageDef[] = [
             ...(s.tech ? { tech: s.tech } : {}),
         } as Record<string, FieldValue>,
     })),
+    ...LEGAL_DEFS.map(
+        (d): PageDef => ({
+            key: d.key,
+            label: d.title,
+            path: d.path,
+            group: "Legal",
+            draftOnly: d.draftOnly,
+            fields: [
+                { name: "summary", label: "\"In short\" box", type: "legalInline", required: true, max: 800, help: "**bold**, [links](/terms) and {email} work here too." },
+                { name: "body", label: "Sections", type: "legal", required: true, max: 60000, help: LEGAL_HELP },
+            ],
+            defaults: { summary: d.summary, body: d.body },
+        }),
+    ),
 ]
 
 export function pageDef(key: string): PageDef | undefined {
@@ -391,6 +420,16 @@ export function textToValue(field: FieldDef, raw: unknown, isAllowedImage: (url:
             return text
         case "image":
             if (!isAllowedImage(text)) throw new Error(`${field.label}: pick an image from the Media library.`)
+            return text
+        case "legal":
+        case "legalInline":
+            if (text.length > max) throw new Error(`${field.label} is too long (${max} characters at most).`)
+            try {
+                if (field.type === "legal") parseLegal(text)
+                else parseInline(text)
+            } catch (err) {
+                throw new Error(`${field.label}: ${err instanceof Error ? err.message : "can't be read"}`)
+            }
             return text
         default:
             if (text.length > max) throw new Error(`${field.label} is too long (${max} characters at most).`)
