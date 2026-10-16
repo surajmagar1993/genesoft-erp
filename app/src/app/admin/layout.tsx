@@ -205,9 +205,9 @@ function AdminSidebar() {
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
-                                    <Link href="/reports" className="flex items-center">
+                                    <Link href="/crm/contacts" className="flex items-center">
                                         <LayoutDashboard className="mr-2 h-4 w-4" />
-                                        Back to App
+                                        Open my workspace
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -242,9 +242,10 @@ function AdminTopBar() {
                     className="h-8 gap-1 hidden md:flex border-primary/20 hover:bg-primary/5 hover:text-primary"
                     asChild
                 >
-                    <Link href="/reports">
-                        <Globe className="h-3.5 w-3.5" />
-                        Live Site
+                    {/* The ERP itself, as the Super Admin's own business workspace (not the public website) */}
+                    <Link href="/crm/contacts" title="Open the ERP as your own business workspace">
+                        <LayoutDashboard className="h-3.5 w-3.5" />
+                        Open my workspace
                     </Link>
                 </Button>
 

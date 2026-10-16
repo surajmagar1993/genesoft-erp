@@ -198,12 +198,14 @@ interface AppSidebarProps {
     countryCode: string
     multiJurisdiction: boolean
     tenantName?: string
+    /** The platform Super Admin, in their own workspace: show the way back to the console */
+    isSuperAdmin?: boolean
 }
 
 /** Parts of Sales a plan can leave out */
 const PLAN_ROUTES: Record<string, string> = { "/sales/pos": "pos", "/sales/rental": "rentals" }
 
-function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJurisdiction, tenantName }: AppSidebarProps) {
+function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJurisdiction, tenantName, isSuperAdmin = false }: AppSidebarProps) {
     const pathname = usePathname()
     const jurisdiction = getTaxJurisdiction(countryCode)
 
@@ -331,7 +333,7 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
                                     </Avatar>
                                     <div className="grid flex-1 text-left text-sm leading-tight">
                                         <span className="truncate font-semibold uppercase">
-                                            {pathname.includes("/admin") || pathname.includes("/saas") ? "SaaS Admin" : "User Profile"}
+                                            {isSuperAdmin ? "Super Admin" : "User Profile"}
                                         </span>
                                         <span className="truncate text-xs text-muted-foreground opacity-70">
                                             <UserProfileEmail />
@@ -348,6 +350,14 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
                             >
                                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
+                                {isSuperAdmin && (
+                                    <DropdownMenuItem asChild>
+                                        <Link href="/admin/dashboard" className="flex items-center cursor-pointer w-full">
+                                            <ShieldCheck className="mr-2 h-4 w-4" />
+                                            Super Admin console
+                                        </Link>
+                                    </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem asChild>
                                     <Link href="/settings" className="flex items-center cursor-pointer w-full">
                                         <Settings className="mr-2 h-4 w-4" />
@@ -459,9 +469,6 @@ export default function DashboardLayout({
                 setRole(role)
                 setAccess(access)
                 setPlanModules(planModules)
-                if (role === 'SUPER_ADMIN' && !pathname.startsWith('/admin') && !pathname.startsWith('/saas')) {
-                    window.location.href = '/admin/dashboard'
-                }
             })
             .catch((err) => console.error("Error loading access:", err))
         return () => {
@@ -484,6 +491,7 @@ export default function DashboardLayout({
                 countryCode={tenantCountry}
                 multiJurisdiction={multiJurisdiction}
                 tenantName={tenantName}
+                isSuperAdmin={role === "SUPER_ADMIN"}
             />
             <SidebarInset>
                 <TopBar />
