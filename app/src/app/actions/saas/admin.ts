@@ -64,7 +64,7 @@ async function assertDomainFree(domain: string, exceptTenantId?: string) {
 /**
  * Internal helper to log high-impact admin actions.
  */
-async function logAdminAction(action: string, targetId?: string, targetType?: string, metadata: any = {}) {
+async function logAdminAction(action: string, targetId?: string, targetType?: string, metadata: Record<string, unknown> = {}) {
     try {
         const user = await ensureSuperAdmin()
         await prisma.adminAuditLog.create({
@@ -74,7 +74,7 @@ async function logAdminAction(action: string, targetId?: string, targetType?: st
                 action,
                 targetId,
                 targetType,
-                metadata: metadata || {}
+                metadata: (metadata || {}) as Prisma.InputJsonObject
             }
         })
     } catch (error) {
@@ -160,7 +160,7 @@ export async function getTenants(params: {
     const { page = 1, limit = 25, search, plan, status } = params
     await ensureSuperAdmin()
 
-    const where: any = {}
+    const where: Prisma.TenantWhereInput = {}
 
     if (search) {
         where.OR = [
@@ -169,7 +169,8 @@ export async function getTenants(params: {
         ]
     }
     if (plan && plan !== "ALL") {
-        where.plan = plan as any
+        assertPlan(plan)
+        where.plan = plan
     }
     if (status && status !== "ALL") {
         where.isActive = status === "ACTIVE"
@@ -211,7 +212,7 @@ export async function getAdminAuditLogs(page: number = 1, limit: number = 50) {
     })
 }
 
-async function _updateTenantPlan(tenantId: string, plan: any) {
+async function _updateTenantPlan(tenantId: string, plan: string) {
     await ensureSuperAdmin()
     assertPlan(plan)
 
@@ -233,7 +234,7 @@ async function _extendTenantTrial(tenantId: string, days: number) {
         throw new Error("Extend the trial by 1 to 365 days")
     }
 
-    const tenant: any = await prisma.tenant.findUnique({
+    const tenant = await prisma.tenant.findUnique({
         where: { id: tenantId },
         select: { trialEndsAt: true }
     })
@@ -388,7 +389,7 @@ async function _createTenant(data: {
     phone?: string
     countryCode?: string
     currencyCode?: string
-    plan?: any
+    plan?: string
     trialDays?: number
     seedAccounts?: boolean
 }) {
@@ -528,7 +529,7 @@ async function _updateTenantDetails(
         email?: string
         phone?: string
         website?: string
-        plan?: any
+        plan?: string
         currencyCode?: string
         countryCode?: string
         billingRegion?: string
@@ -544,7 +545,7 @@ async function _updateTenantDetails(
     if (data.email !== undefined) assertEmail(data.email)
     if (data.domain) await assertDomainFree(data.domain.trim().toLowerCase(), tenantId)
 
-    const updatePayload: any = {}
+    const updatePayload: Prisma.TenantUpdateInput = {}
     if (data.name !== undefined) updatePayload.name = data.name.trim()
     if (data.domain !== undefined) updatePayload.domain = data.domain ? data.domain.trim().toLowerCase() : null
     if (data.email !== undefined) updatePayload.email = data.email ? data.email.trim().toLowerCase() : null
@@ -564,7 +565,7 @@ async function _updateTenantDetails(
             if (closure?.status === "CLOSED" && !current?.isActive) {
                 const settings = { ...((current?.settings || {}) as Record<string, unknown>) }
                 delete settings.closure
-                updatePayload.settings = settings
+                updatePayload.settings = settings as Prisma.InputJsonObject
             }
         }
     }
@@ -1088,7 +1089,7 @@ export async function getSecurityOverview() {
             const ip = log.targetId
             if (!ip) return
             if (log.action === "SECURITY_IP_BLOCK") {
-                const meta = (log.metadata as any) || {}
+                const meta = (log.metadata as { reason?: string } | null) || {}
                 blockedIpMap.set(ip, {
                     ip,
                     reason: meta.reason || "Suspicious traffic pattern",
@@ -1099,7 +1100,7 @@ export async function getSecurityOverview() {
             }
         })
 
-        const savedPolicy = (latestPolicyLog?.metadata as any) || {}
+        const savedPolicy = (latestPolicyLog?.metadata as Partial<SecuritySettings> | null) || {}
         // Maintenance mode and signups live in global_settings, which is what the proxy enforces
         const globalSettings = await prisma.globalSettings.findUnique({ where: { id: "system_config" } })
 
@@ -1432,9 +1433,10 @@ async function _toggleUserStatus(userId: string, isActive: boolean) {
     return updated
 }
 
-async function _updateUserRole(userId: string, role: any) {
+async function _updateUserRole(userId: string, role: string) {
     const caller = await ensureSuperAdmin()
-    if (!ROLES.includes(role)) throw new Error("Invalid role")
+    if (!(ROLES as readonly string[]).includes(role)) throw new Error("Invalid role")
+    const newRole = role as (typeof ROLES)[number]
     // A business's own admin decides its users' roles and access (Settings → Team);
     // here only the platform's own team can be changed.
     const [me, target] = await Promise.all([
@@ -1443,11 +1445,11 @@ async function _updateUserRole(userId: string, role: any) {
     ])
     if (!target) throw new Error("User not found")
     if (target.tenantId !== me?.tenantId) throw new Error("A business's admin manages its users' roles and access in Settings → Team.")
-    await assertSafeUserChange(caller.id, userId, role !== "SUPER_ADMIN")
+    await assertSafeUserChange(caller.id, userId, newRole !== "SUPER_ADMIN")
 
     const updated = await prisma.user.update({
         where: { id: userId },
-        data: { role }
+        data: { role: newRole }
     })
 
     // prisma.user is the profiles table, so the middleware sees the new role immediately
@@ -1489,15 +1491,15 @@ export async function getPlatformSubscriptions() {
         // MRR (INR) from paying, active tenants at live prices; trials and suspended tenants don't count
         const { mrr: totalMrr, payingTenants, byCurrency: mrrByCurrency } = await calculatePlatformMrr(tenants)
         const planCounts: Record<string, number> = { FREE: 0, BASIC: 0, PRO: 0, ENTERPRISE: 0 }
-        const allInvoices: any[] = []
+        const allInvoices: (Record<string, unknown> & { date?: string; tenantId: string; tenantName: string })[] = []
 
-        tenants.forEach((t: any) => {
+        tenants.forEach((t) => {
             const planKey = (t.plan || "FREE") as string
             planCounts[planKey] = (planCounts[planKey] || 0) + 1
 
-            const subMeta = (t.settings as any)?.subscription || {}
+            const subMeta = ((t.settings as { subscription?: { invoices?: unknown } } | null)?.subscription || {}) as { invoices?: unknown }
             if (Array.isArray(subMeta.invoices)) {
-                subMeta.invoices.forEach((inv: any) => {
+                (subMeta.invoices as Record<string, unknown>[]).forEach((inv) => {
                     allInvoices.push({
                         ...inv,
                         tenantId: t.id,

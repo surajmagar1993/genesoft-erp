@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
+import { mapPrismaInvoiceToDB, type InvoiceWithRelations } from "@/lib/invoice-mapper"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
 import { decodeZatcaTlv } from "@/lib/ksa-zatca-engine"
 import { computeLineItemGst } from "@/lib/gst-engine"
 import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
 
+/** Test rows carry only the fields the mapper reads */
+const asInvoice = (row: unknown) => row as InvoiceWithRelations
 const prismaInvoice = (country: string, currency: string, settings: Record<string, unknown>, item: Record<string, number>) => ({
     id: "inv-1",
     tenantId: "t1",
@@ -24,7 +26,7 @@ const prismaInvoice = (country: string, currency: string, settings: Record<strin
 
 describe("invoices by country", () => {
     it("India: CGST+SGST split, GSTIN label, no QR", async () => {
-        const db = mapPrismaInvoiceToDB(prismaInvoice("IN", "INR", { gstin: "29ABCDE1234F1Z5" }, { cgstRate: 9, sgstRate: 9, cgstAmount: 90, sgstAmount: 90, tax: 180 }))
+        const db = mapPrismaInvoiceToDB(asInvoice(prismaInvoice("IN", "INR", { gstin: "29ABCDE1234F1Z5" }, { cgstRate: 9, sgstRate: 9, cgstAmount: 90, sgstAmount: 90, tax: 180 })))
         expect(db.supply_type).toBe("intra")
         expect(db.supplier_state).toBe("Karnataka") // from the GSTIN prefix
         expect(db.tax_id_label).toBe("GSTIN")
@@ -34,7 +36,7 @@ describe("invoices by country", () => {
     }, 30000)
 
     it("Saudi Arabia: single VAT line and a ZATCA phase 1 QR with the right values", async () => {
-        const db = mapPrismaInvoiceToDB(prismaInvoice("SA", "SAR", { vat_number: "300000000000003" }, { vatRate: 15, vatAmount: 150, tax: 150 }))
+        const db = mapPrismaInvoiceToDB(asInvoice(prismaInvoice("SA", "SAR", { vat_number: "300000000000003" }, { vatRate: 15, vatAmount: 150, tax: 150 })))
         expect(db.supply_type).toBe("single")
         expect(db.tax_label).toBe("VAT")
         expect(db.currency_code).toBe("SAR")
@@ -61,7 +63,7 @@ describe("invoices by country", () => {
     it("draws the business logo when it is in our storage, and ignores outside addresses", async () => {
         const logo = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAEklEQVQImWN4Xy/1HxkzkC4AAGEXKHFX160TAAAAAElFTkSuQmCC"
         const withLogo = mapPrismaInvoiceToDB({ ...prismaInvoice("IN", "INR", { gstin: "29ABCDE1234F1Z5" }, { cgstRate: 9, sgstRate: 9, cgstAmount: 90, sgstAmount: 90, tax: 180 }), tenant: { id: "t1", name: "Seller Co", countryCode: "IN", settings: {}, logoUrl: logo } } as never)
-        const plain = mapPrismaInvoiceToDB(prismaInvoice("IN", "INR", { gstin: "29ABCDE1234F1Z5" }, { cgstRate: 9, sgstRate: 9, cgstAmount: 90, sgstAmount: 90, tax: 180 }))
+        const plain = mapPrismaInvoiceToDB(asInvoice(prismaInvoice("IN", "INR", { gstin: "29ABCDE1234F1Z5" }, { cgstRate: 9, sgstRate: 9, cgstAmount: 90, sgstAmount: 90, tax: 180 })))
         const a = await renderInvoicePdf(withLogo)
         const b = await renderInvoicePdf(plain)
         expect(a.subarray(0, 4).toString()).toBe("%PDF")

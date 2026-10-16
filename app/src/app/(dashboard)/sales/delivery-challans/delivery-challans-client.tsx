@@ -1143,14 +1143,14 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                             <div className="grid grid-cols-2 gap-4 border p-3 rounded text-[11px]">
                                 <div>
                                     <span className="font-bold text-gray-500 uppercase text-[9px] block">Dispatch From (Consignor):</span>
-                                    <div className="font-bold text-sm">GENESOFT ENTERPRISE TECHNOLOGIES</div>
-                                    <div className="text-gray-600 mt-0.5">{selectedChallan.dispatchAddress?.address || "Main Logistics Depot, Mumbai"}</div>
-                                    <div className="mt-1"><strong>GSTIN:</strong> 27AABCG1234F1Z9</div>
+                                    <div className="font-bold text-sm">{initialData.supplier.name}</div>
+                                    <div className="text-gray-600 mt-0.5">{String(selectedChallan.dispatchAddress?.address || "") || initialData.supplier.address}</div>
+                                    {initialData.supplier.taxId && <div className="mt-1"><strong>{initialData.supplier.taxIdLabel}:</strong> {initialData.supplier.taxId}</div>}
                                 </div>
                                 <div>
                                     <span className="font-bold text-gray-500 uppercase text-[9px] block">Deliver To (Consignee):</span>
                                     <div className="font-bold text-sm">{selectedChallan.recipientName}</div>
-                                    <div className="text-gray-600 mt-0.5">{selectedChallan.deliveryAddress?.address || "Destination Address"}</div>
+                                    <div className="text-gray-600 mt-0.5">{String(selectedChallan.deliveryAddress?.address || "")}</div>
                                     <div className="mt-1"><strong>GSTIN:</strong> {selectedChallan.recipientGstin || "Unregistered / Consumer"}</div>
                                     {selectedChallan.recipientPhone && <div><strong>Phone:</strong> {selectedChallan.recipientPhone}</div>}
                                 </div>
@@ -1214,7 +1214,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                     <p className="text-[10px] text-gray-500">(Received goods in good condition)</p>
                                 </div>
                                 <div className="border-t pt-2 text-center">
-                                    <p className="font-bold">For GENESOFT ENTERPRISE TECHNOLOGIES</p>
+                                    <p className="font-bold">For {initialData.supplier.name}</p>
                                     <p className="text-[10px] text-gray-500">Authorized Signatory</p>
                                 </div>
                             </div>

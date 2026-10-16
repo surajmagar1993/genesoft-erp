@@ -1,3 +1,4 @@
+import type { Contact, Invoice, InvoiceItem, Tenant } from "@prisma/client"
 import { COMPANY } from "@/lib/constants/company"
 import { getStateNameFromCode } from "@/lib/gst-returns-engine"
 import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
@@ -11,9 +12,16 @@ import type {
 } from "@/app/actions/sales/invoices"
 
 /* ── Helper: Map Prisma Model to InvoiceDB ── */
-export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB } {
-  const billTo = (inv.billTo as Record<string, any>) || {}
-  const tenantSettings = (inv.tenant?.settings as Record<string, any>) || {}
+/** An invoice row with whichever relations the caller loaded */
+export type InvoiceWithRelations = Invoice & {
+  items?: InvoiceItem[]
+  contact?: Pick<Contact, "displayName" | "email" | "taxNumber"> | null
+  tenant?: Tenant | null
+}
+
+export function mapPrismaInvoiceToDB(inv: InvoiceWithRelations): InvoiceDB & { tenants?: TenantDB } {
+  const billTo = ((inv.billTo as Record<string, unknown> | null) || {}) as Record<string, string | undefined>
+  const tenantSettings = ((inv.tenant?.settings as Record<string, unknown> | null) || {}) as Record<string, string | undefined>
   // A GSTIN starts with the 2-digit state code, so it gives the state when Settings has none
   const supplierGstin: string =
     tenantSettings.gstin || tenantSettings.vat_number || tenantSettings.ksa_vat_number || tenantSettings.trn ||
@@ -75,12 +83,12 @@ export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB
     contact_id: inv.contactId,
     currency_code: inv.currencyCode || regime.currencyCode,
     template_id: (billTo.templateId as InvoiceTemplateId) || (tenantSettings.invoice_template as InvoiceTemplateId) || "MODERN",
-    is_tax_exempt: (inv as any).isTaxExempt || false,
-    tax_exemption_reason: (inv as any).taxExemptionReason || null,
-    tax_exemption_certificate: (inv as any).taxExemptionCertificate || null,
+    is_tax_exempt: inv.isTaxExempt || false,
+    tax_exemption_reason: inv.taxExemptionReason || null,
+    tax_exemption_certificate: inv.taxExemptionCertificate || null,
     created_at: inv.createdAt ? new Date(inv.createdAt).toISOString() : new Date().toISOString(),
     updated_at: inv.updatedAt ? new Date(inv.updatedAt).toISOString() : new Date().toISOString(),
-    invoice_line_items: (inv.items || []).map((li: any) => {
+    invoice_line_items: (inv.items || []).map((li) => {
       // Lines are stored as "Product — details" (see lineDescription in invoices.ts)
       const text = String(li.description || "Item")
       const sep = text.indexOf(" — ")
@@ -114,12 +122,12 @@ export function mapPrismaInvoiceToDB(inv: any): InvoiceDB & { tenants?: TenantDB
           name: inv.tenant.name,
           subdomain: inv.tenant.domain,
           logo_url: inv.tenant.logoUrl,
-          address: inv.tenant.address,
+          address: (inv.tenant.address ?? null) as TenantDB["address"],
           phone: inv.tenant.phone,
           email: inv.tenant.email,
           website: inv.tenant.website,
           fiscal_year_start: inv.tenant.fiscalYearStart || 4,
-          settings: inv.tenant.settings || {},
+          settings: (inv.tenant.settings || {}) as Record<string, unknown>,
         }
       : undefined,
   }

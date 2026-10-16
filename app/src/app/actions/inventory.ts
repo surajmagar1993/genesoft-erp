@@ -104,14 +104,10 @@ async function ensureDefaultWarehouse(tenantId: string) {
     const defaultWarehouse = await prisma.warehouse.create({
         data: {
             tenantId,
-            name: "Central Logistics Hub",
+            // The business fills in its own details; nothing invented
+            name: "Main warehouse",
             code: "WH-MAIN",
-            address: "Main Logistics Facility, Sector 4",
-            city: "Mumbai",
-            state: "Maharashtra",
-            country: "India",
-            contactName: "Warehouse Supervisor",
-            contactPhone: "+91 98200 12345",
+            country: null, // the schema's default would say India for every business
             isDefault: true,
             isActive: true
         }

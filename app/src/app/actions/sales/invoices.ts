@@ -1,6 +1,6 @@
 "use server"
 
-import type { Prisma } from "@prisma/client"
+import type { InvoiceStatus as DbInvoiceStatus, InvoiceType, Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantAdminId, getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
@@ -54,12 +54,13 @@ export interface TenantDB {
   name: string
   subdomain: string | null
   logo_url: string | null
-  address: any
+  /** Stored JSON: street, city, state, pincode/zip, country */
+  address: { street?: string; city?: string; state?: string; pincode?: string; zip?: string; country?: string; [key: string]: unknown } | null
   phone: string | null
   email: string | null
   website: string | null
   fiscal_year_start: number
-  settings: any
+  settings: Record<string, unknown> | null
 }
 
 export interface InvoiceDB {
@@ -122,10 +123,10 @@ export async function getInvoices(
   const tenantId = await getTenantId(MODULE)
   const offset = (page - 1) * limit
 
-  const whereClause: any = { tenantId }
+  const whereClause: Prisma.InvoiceWhereInput = { tenantId }
 
   if (filters?.status) {
-    whereClause.status = filters.status
+    whereClause.status = filters.status as DbInvoiceStatus
   }
   if (filters?.type) {
     whereClause.type = filters.type
@@ -164,7 +165,7 @@ export async function getInvoices(
 }
 
 /* ── Read One ── */
-export async function getInvoiceById(id: string): Promise<(InvoiceDB & { tenants?: any }) | null> {
+export async function getInvoiceById(id: string): Promise<(InvoiceDB & { tenants?: TenantDB }) | null> {
   const tenantId = await getTenantId(MODULE)
 
   try {
@@ -361,8 +362,8 @@ export async function createInvoice(
         tenantId,
         contactId: payload.contact_id,
         invoiceNumber: payload.invoice_number,
-        type: finalType as any,
-        status: (payload.status as any) || "DRAFT",
+        type: finalType as InvoiceType,
+        status: (payload.status as DbInvoiceStatus) || "DRAFT",
         invoiceDate: new Date(payload.invoice_date || Date.now()),
         dueDate: payload.valid_until ? new Date(payload.valid_until) : null,
         billTo: billToPayload,
@@ -372,7 +373,7 @@ export async function createInvoice(
         discount: summary.discountAmount,
         total: summary.grandTotal,
         currencyCode: taxCtx.currency,
-        taxSummary: summary as any,
+        taxSummary: summary as unknown as Prisma.InputJsonObject,
         isTaxExempt,
         taxExemptionReason: taxExemptionReason || null,
         taxExemptionCertificate: taxExemptionCertificate || null,
@@ -502,8 +503,8 @@ export async function updateInvoice(
         where: { id: payload.id, tenantId },
         data: {
           invoiceNumber: payload.invoice_number,
-          type: finalType as any,
-          status: (payload.status as any) || "DRAFT",
+          type: finalType as InvoiceType,
+          status: (payload.status as DbInvoiceStatus) || "DRAFT",
           invoiceDate: new Date(payload.invoice_date || Date.now()),
           dueDate: payload.valid_until ? new Date(payload.valid_until) : null,
           billTo: billToPayload,
@@ -512,7 +513,7 @@ export async function updateInvoice(
           taxAmount: summary.totalTax,
           discount: summary.discountAmount,
           total: summary.grandTotal,
-          taxSummary: summary as any,
+          taxSummary: summary as unknown as Prisma.InputJsonObject,
           isTaxExempt,
           taxExemptionReason: taxExemptionReason || null,
           taxExemptionCertificate: taxExemptionCertificate || null,
@@ -616,7 +617,7 @@ export async function convertProformaToInvoice(
     // Generate next official Tax Invoice sequence
     const newInvoiceNumber = await getNextInvoiceNumber("TAX_INVOICE")
 
-    const existingBillTo = (proforma.billTo as Record<string, any>) || {}
+    const existingBillTo = (proforma.billTo as Prisma.JsonObject | null) || {}
     const updatedBillTo = {
       ...existingBillTo,
       convertedFromProforma: proforma.invoiceNumber,
@@ -793,7 +794,7 @@ export async function sendInvoiceEmail(
   // Update status in Prisma
   await prisma.invoice.updateMany({
     where: { id, tenantId, status: "DRAFT" },
-    data: { status: "SENT" as any },
+    data: { status: "SENT" },
   })
   await postToLedger(tenantId, { kind: "invoice", id })
   await postInvoiceStock(tenantId, { invoiceId: id })
@@ -821,7 +822,7 @@ export async function updateInvoiceTemplate(
       return { success: false, error: "Invoice not found" }
     }
 
-    const currentBillTo = (invoice.billTo as Record<string, any>) || {}
+    const currentBillTo = (invoice.billTo as Prisma.JsonObject | null) || {}
     const updatedBillTo = { ...currentBillTo, templateId }
 
     await prisma.invoice.update({
@@ -855,7 +856,7 @@ export async function updateTenantDefaultTemplate(
       return { success: false, error: "Tenant not found" }
     }
 
-    const currentSettings = (tenant.settings as Record<string, any>) || {}
+    const currentSettings = (tenant.settings as Prisma.JsonObject | null) || {}
     const updatedSettings = { ...currentSettings, invoice_template: templateId }
 
     await prisma.tenant.update({

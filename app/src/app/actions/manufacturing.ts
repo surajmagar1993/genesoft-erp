@@ -188,7 +188,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
     ])
 
     // Format BOMs
-    const boms: BOMRecord[] = (bomsRaw as any[]).map((b: any) => ({
+    const boms: BOMRecord[] = (bomsRaw).map((b) => ({
         id: b.id,
         bomNumber: b.bomNumber,
         name: b.name,
@@ -204,7 +204,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
         estimatedTotalCost: Number(b.estimatedTotalCost),
         notes: b.notes,
         itemsCount: b.items.length,
-        items: b.items.map((item: any) => ({
+        items: b.items.map((item) => ({
             id: item.id,
             bomId: item.bomId,
             productId: item.productId,
@@ -221,7 +221,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
     }))
 
     // Format Work Orders
-    const workOrders: WorkOrderRecord[] = (workOrdersRaw as any[]).map((w) => ({
+    const workOrders: WorkOrderRecord[] = (workOrdersRaw).map((w) => ({
         id: w.id,
         orderNumber: w.orderNumber,
         bomId: w.bomId,
@@ -251,7 +251,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
     }))
 
     // Format Inspections
-    const inspections: QualityInspectionRecord[] = (inspectionsRaw as any[]).map((qc) => ({
+    const inspections: QualityInspectionRecord[] = (inspectionsRaw).map((qc) => ({
         id: qc.id,
         workOrderId: qc.workOrderId,
         workOrderNumber: qc.workOrder.orderNumber,
@@ -292,7 +292,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
         workOrders,
         boms,
         inspections,
-        availableProducts: (productsRaw as any[]).map((p) => ({
+        availableProducts: (productsRaw).map((p) => ({
             id: p.id,
             name: p.name,
             sku: p.sku,
@@ -300,7 +300,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
             unitPrice: Number(p.unitPrice),
             stockQty: Number(p.stockQty)
         })),
-        availableWarehouses: (warehousesRaw as any[]).map((wh) => ({
+        availableWarehouses: (warehousesRaw).map((wh) => ({
             id: wh.id,
             name: wh.name,
             code: wh.code

@@ -180,8 +180,8 @@ export async function getRecruitmentOverview(): Promise<RecruitmentOverviewData>
         orderBy: { displayName: "asc" }
     })
 
-    const jobOpeningRecords: JobOpeningRecord[] = (openings as any[]).map((job: any) => {
-        const hired = job.applicants.filter((a: any) => a.stage === ApplicantStage.HIRED).length
+    const jobOpeningRecords: JobOpeningRecord[] = (openings).map((job) => {
+        const hired = job.applicants.filter((a) => a.stage === ApplicantStage.HIRED).length
         return {
             id: job.id,
             jobCode: job.jobCode,
@@ -206,7 +206,7 @@ export async function getRecruitmentOverview(): Promise<RecruitmentOverviewData>
         }
     })
 
-    const applicantRecords: JobApplicantRecord[] = (applicants as any[]).map((app) => ({
+    const applicantRecords: JobApplicantRecord[] = (applicants).map((app) => ({
         id: app.id,
         applicantNumber: app.applicantNumber,
         jobOpeningId: app.jobOpeningId,
@@ -234,7 +234,7 @@ export async function getRecruitmentOverview(): Promise<RecruitmentOverviewData>
         createdAt: app.createdAt
     }))
 
-    const interviewRecords: ApplicantInterviewRecord[] = (interviews as any[]).map((inv) => ({
+    const interviewRecords: ApplicantInterviewRecord[] = (interviews).map((inv) => ({
         id: inv.id,
         applicantId: inv.applicantId,
         applicantName: inv.applicant.fullName,
@@ -277,7 +277,7 @@ export async function getRecruitmentOverview(): Promise<RecruitmentOverviewData>
         interviews: interviewRecords,
         departments,
         designations,
-        employees: (employees as any[]).map((e) => ({
+        employees: (employees).map((e) => ({
             id: e.id,
             displayName: e.displayName,
             email: e.email,

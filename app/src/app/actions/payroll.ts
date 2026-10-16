@@ -188,7 +188,7 @@ export async function getPayrollOverview(month?: number, year?: number): Promise
     ])
 
     // Format pay runs
-    const payRuns: PayrollRunRecord[] = (payRunsRaw as any[]).map((r) => ({
+    const payRuns: PayrollRunRecord[] = (payRunsRaw).map((r) => ({
         id: r.id,
         runNumber: r.runNumber,
         periodMonth: r.periodMonth,
@@ -208,7 +208,7 @@ export async function getPayrollOverview(month?: number, year?: number): Promise
     }))
 
     // Format structures
-    const salaryStructures: SalaryStructureRecord[] = (structuresRaw as any[]).map((s) => ({
+    const salaryStructures: SalaryStructureRecord[] = (structuresRaw).map((s) => ({
         id: s.id,
         name: s.name,
         code: s.code,
@@ -230,7 +230,7 @@ export async function getPayrollOverview(month?: number, year?: number): Promise
     }))
 
     // Format payslips
-    const recentPayslips: PayslipRecord[] = (payslipsRaw as any[]).map((p) => ({
+    const recentPayslips: PayslipRecord[] = (payslipsRaw).map((p) => ({
         id: p.id,
         payrollRunId: p.payrollRunId,
         employeeId: p.employeeId,
@@ -288,7 +288,7 @@ export async function getPayrollOverview(month?: number, year?: number): Promise
         recentPayslips,
         salaryStructures,
         pfWageCeiling: await getPfWageCeiling(tenantId),
-        activeEmployees: (employeesRaw as any[]).map((e) => ({
+        activeEmployees: (employeesRaw).map((e) => ({
             id: e.id,
             displayName: e.displayName,
             employeeNumber: e.employeeNumber,

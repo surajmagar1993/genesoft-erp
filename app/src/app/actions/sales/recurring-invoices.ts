@@ -14,6 +14,7 @@ import {
     RecurringExecutionStatus
 } from "@prisma/client"
 import { errorMessage } from "@/lib/utils";
+import type { AddressJson } from "@/lib/json-types"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -41,7 +42,7 @@ export interface RecurringProfileItemRecord {
     product?: {
         id: string
         name: string
-        sku: string
+        sku: string | null
     } | null
 }
 
@@ -75,7 +76,7 @@ export interface RecurringProfileRecord {
         email?: string | null
         phone?: string | null
         gstin?: string | null
-        billingAddress?: any
+        billingAddress?: AddressJson
     }
     frequency: RecurringFrequency
     startDate: string
@@ -118,12 +119,12 @@ export interface RecurringInvoicesOverview {
         displayName: string
         companyName?: string | null
         email?: string | null
-        billingAddress?: any
+        billingAddress?: AddressJson
     }>
     products: Array<{
         id: string
         name: string
-        sku: string
+        sku: string | null
         unitPrice: number
         hsnSacCode?: string | null
     }>
@@ -233,14 +234,14 @@ export async function getRecurringInvoicesOverview(
         orderBy: [{ status: "asc" }, { nextRunDate: "asc" }],
     })
 
-    const profiles: RecurringProfileRecord[] = rawProfiles.map((p: any) => ({
+    const profiles: RecurringProfileRecord[] = rawProfiles.map((p) => ({
         id: p.id,
         tenantId: p.tenantId,
         profileNumber: p.profileNumber,
         title: p.title,
         description: p.description,
         contactId: p.contactId,
-        contact: p.contact,
+        contact: { ...p.contact, billingAddress: p.contact.billingAddress as AddressJson },
         frequency: p.frequency,
         startDate: p.startDate.toISOString().split("T")[0],
         endDate: p.endDate ? p.endDate.toISOString().split("T")[0] : null,
@@ -260,7 +261,7 @@ export async function getRecurringInvoicesOverview(
         terms: p.terms,
         createdAt: p.createdAt.toISOString(),
         updatedAt: p.updatedAt.toISOString(),
-        items: p.items.map((i: any) => ({
+        items: p.items.map((i) => ({
             id: i.id,
             recurringProfileId: i.recurringProfileId,
             productId: i.productId,
@@ -278,7 +279,7 @@ export async function getRecurringInvoicesOverview(
             lineTotal: Number(i.lineTotal),
             product: i.product,
         })),
-        executions: p.executions.map((e: any) => ({
+        executions: p.executions.map((e) => ({
             id: e.id,
             recurringProfileId: e.recurringProfileId,
             invoiceId: e.invoiceId,
@@ -312,7 +313,7 @@ export async function getRecurringInvoicesOverview(
         orderBy: { name: "asc" },
     })
 
-    const products = rawProducts.map((p: any) => ({
+    const products = rawProducts.map((p) => ({
         id: p.id,
         name: p.name,
         sku: p.sku,
@@ -330,7 +331,7 @@ export async function getRecurringInvoicesOverview(
         take: 25,
     })
 
-    const executions: RecurringExecutionRecord[] = rawExecutions.map((e: any) => ({
+    const executions: RecurringExecutionRecord[] = rawExecutions.map((e) => ({
         id: e.id,
         recurringProfileId: e.recurringProfileId,
         invoiceId: e.invoiceId,
@@ -371,7 +372,7 @@ export async function getRecurringInvoicesOverview(
 
     return {
         profiles,
-        customers: rawCustomers,
+        customers: rawCustomers.map((c) => ({ ...c, billingAddress: c.billingAddress as AddressJson })),
         products,
         executions,
         kpis: {
@@ -504,7 +505,7 @@ export async function updateRecurringProfile(
         const tenantId = await getTenantWriterId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
-        const updateData: any = {}
+        const updateData: Prisma.RecurringProfileUncheckedUpdateInput = {}
         if (data.title !== undefined) updateData.title = data.title.trim()
         if (data.description !== undefined) updateData.description = data.description?.trim() || null
         if (data.contactId !== undefined) updateData.contactId = data.contactId
@@ -517,8 +518,8 @@ export async function updateRecurringProfile(
         if (data.notes !== undefined) updateData.notes = data.notes?.trim() || null
         if (data.terms !== undefined) updateData.terms = data.terms?.trim() || null
 
-        if (updateData.contactId) {
-            const ownsContact = await prisma.contact.count({ where: { id: updateData.contactId, tenantId } })
+        if (data.contactId) {
+            const ownsContact = await prisma.contact.count({ where: { id: data.contactId, tenantId } })
             if (!ownsContact) return { error: "Customer contact not found" }
         }
 

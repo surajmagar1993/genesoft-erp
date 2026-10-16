@@ -654,7 +654,7 @@ export async function updateBankAccount(
             })
         }
 
-        const updateData: any = {}
+        const updateData: Prisma.BankAccountUncheckedUpdateInput = {}
         if (data.accountName !== undefined) updateData.accountName = data.accountName.trim()
         if (data.accountNumber !== undefined) updateData.accountNumber = data.accountNumber.trim()
         if (data.bankName !== undefined) updateData.bankName = data.bankName.trim()
@@ -667,7 +667,7 @@ export async function updateBankAccount(
         if (data.isPrimary !== undefined) updateData.isPrimary = data.isPrimary
         if (data.notes !== undefined) updateData.notes = data.notes?.trim() || null
 
-        if (!(await isTenantAccount(tenantId, updateData.chartOfAccountId))) {
+        if (!(await isTenantAccount(tenantId, data.chartOfAccountId || null))) {
             return { error: "Linked ledger account not found" }
         }
 
@@ -831,13 +831,13 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
         const account = await prisma.bankAccount.findFirst({ where: { id: bankAccountId, tenantId }, select: { currencyCode: true } })
         const systemPayments = await prisma.payment.findMany({
             where: { tenantId, paymentMethod: { not: "CASH" }, ...(account?.currencyCode ? { currencyCode: account.currencyCode } : {}) },
-            include: { bankTransactions: true },
+            include: { bankTransactions: { select: { id: true } } },
         })
 
         // Fetch candidate expenses
         const systemExpenses = await prisma.expense.findMany({
             where: { tenantId, status: ExpenseStatus.PAID },
-            include: { bankTransactions: true },
+            include: { bankTransactions: { select: { id: true } } },
         })
 
         let matchCount = 0
@@ -873,7 +873,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                 })
                 // Only "same amount within 14 days"? Keep it only if nothing else fits
                 if (matchingPayment && !refMatches(usableRef(matchingPayment.reference), bRef, bDesc) && ambiguousAmountMatch(
-                    (systemPayments as any[]).filter((x) => x.bankTransactions.length === 0 && x.type === "INBOUND"),
+                    systemPayments.filter((x) => x.bankTransactions.length === 0 && x.type === "INBOUND"),
                     bAmount, bTxn.transactionDate, (x) => Number(x.amount), (x) => x.paymentDate
                 )) matchingPayment = undefined
 
@@ -889,7 +889,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                         },
                     })
                     // Remove from candidates pool
-                    matchingPayment.bankTransactions.push({ id: bTxn.id } as any)
+                    matchingPayment.bankTransactions.push({ id: bTxn.id })
                     matchCount++
                 }
             } else if (bTxn.type === BankTransactionType.WITHDRAWAL) {
@@ -914,7 +914,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                 })
                 // Only "same amount within 14 days"? Keep it only if nothing else fits
                 if (matchingExpense && !refMatches(usableRef(matchingExpense.paymentReference) || String(matchingExpense.expenseNumber || "").toLowerCase(), "", bDesc) && ambiguousAmountMatch(
-                    (systemExpenses as any[]).filter((x) => x.bankTransactions.length === 0),
+                    systemExpenses.filter((x) => x.bankTransactions.length === 0),
                     bAmount, bTxn.transactionDate, (x) => Number(x.totalAmount), (x) => x.expenseDate
                 )) matchingExpense = undefined
 
@@ -929,7 +929,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                             matchConfidence: "RULE",
                         },
                     })
-                    matchingExpense.bankTransactions.push({ id: bTxn.id } as any)
+                    matchingExpense.bankTransactions.push({ id: bTxn.id })
                     matchCount++
                     continue
                 }
@@ -952,7 +952,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                 })
                 // Only "same amount within 14 days"? Keep it only if nothing else fits
                 if (matchingOutboundPayment && !refMatches(usableRef(matchingOutboundPayment.reference), bRef, bDesc) && ambiguousAmountMatch(
-                    (systemPayments as any[]).filter((x) => x.bankTransactions.length === 0 && x.type === "OUTBOUND"),
+                    systemPayments.filter((x) => x.bankTransactions.length === 0 && x.type === "OUTBOUND"),
                     bAmount, bTxn.transactionDate, (x) => Number(x.amount), (x) => x.paymentDate
                 )) matchingOutboundPayment = undefined
 
@@ -967,7 +967,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                             matchConfidence: "RULE",
                         },
                     })
-                    matchingOutboundPayment.bankTransactions.push({ id: bTxn.id } as any)
+                    matchingOutboundPayment.bankTransactions.push({ id: bTxn.id })
                     matchCount++
                 }
             }
@@ -994,7 +994,7 @@ export async function matchTransactionManual(
         const tenantId = await getTenantManagerId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
-        const dataToUpdate: any = {
+        const dataToUpdate: Prisma.BankTransactionUncheckedUpdateInput = {
             status: BankReconcileStatus.MATCHED,
             matchedType: matchType as BankMatchedType,
             matchedAt: new Date(),

@@ -4,7 +4,7 @@ import { DeliveryChallansClient } from "./delivery-challans-client"
 export const dynamic = "force-dynamic"
 
 export const metadata = {
-    title: "Delivery Challans | Logistics & Sales | Genesys ERP",
+    title: "Delivery Challans | Genesoft ERP",
     description: "Rule 55 statutory Delivery Challans management, dispatch tracking, and invoice conversion.",
 }
 

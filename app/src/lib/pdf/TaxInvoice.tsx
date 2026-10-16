@@ -437,7 +437,7 @@ export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoicePr
     if (typeof tenant?.address === "string") {
       addressObj = JSON.parse(tenant.address)
     } else if (tenant?.address && typeof tenant.address === "object") {
-      addressObj = tenant.address
+      addressObj = tenant.address as Record<string, string>
     }
   } catch {}
 
@@ -485,7 +485,14 @@ export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoicePr
   )
 
   // Bank Info from tenant.settings
-  const bank = tenant?.settings?.bank_details || {}
+  const bank = (tenant?.settings?.bank_details || {}) as {
+    bank_name?: string
+    account_name?: string
+    account_number?: string
+    ifsc_code?: string
+    branch_name?: string
+    [key: string]: unknown
+  }
   const hasBank = bank.bank_name && bank.account_number
 
   const isProforma = invoice.type === "PROFORMA"

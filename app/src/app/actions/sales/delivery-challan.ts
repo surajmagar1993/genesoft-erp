@@ -2,7 +2,6 @@
 
 import { toActionResult } from "@/lib/action-result"
 import { assertWithinLimit } from "@/lib/plan-limits"
-import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
@@ -22,6 +21,8 @@ import {
     InvoiceType,
     InvoiceStatus
 } from "@prisma/client"
+import type { AddressJson } from "@/lib/json-types"
+import type { Prisma } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -51,8 +52,8 @@ export interface DeliveryChallanRecord {
     recipientEmail: string | null
     recipientPhone: string | null
     recipientGstin: string | null
-    dispatchAddress: any
-    deliveryAddress: any
+    dispatchAddress: AddressJson
+    deliveryAddress: AddressJson
     placeOfSupply: string | null
     reason: ChallanReason
     status: ChallanStatus
@@ -80,6 +81,8 @@ export interface DeliveryChallanRecord {
 }
 
 export interface DeliveryChallansOverviewData {
+    /** The business itself, printed as the consignor */
+    supplier: { name: string; taxId: string; taxIdLabel: string; address: string }
     stats: {
         totalChallansCount: number
         inTransitCount: number
@@ -94,8 +97,8 @@ export interface DeliveryChallansOverviewData {
         email: string | null
         phone: string | null
         gstin: string | null
-        billingAddress: any
-        shippingAddress: any
+        billingAddress: AddressJson
+        shippingAddress: AddressJson
     }[]
     products: {
         id: string
@@ -133,6 +136,19 @@ export interface DeliveryChallansOverviewData {
  */
 export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOverviewData> {
     const tenantId = await getTenantId(MODULE)
+
+    // The business's own details for the printed challan (never sample values)
+    const [tenantRow, taxCtx] = await Promise.all([
+        prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true, address: true } }),
+        getTenantTaxContext(tenantId),
+    ])
+    const addr = (tenantRow?.address ?? null) as AddressJson
+    const supplier = {
+        name: tenantRow?.name ?? "",
+        taxId: taxCtx.supplierTaxId,
+        taxIdLabel: taxCtx.regime.taxIdLabel,
+        address: addr ? [addr.line1 ?? addr.street, addr.line2, addr.city, addr.state, addr.pincode ?? addr.zip ?? addr.postalCode, addr.country].filter(Boolean).join(", ") : "",
+    }
 
     const challansRaw = await prisma.deliveryChallan.findMany({
         where: { tenantId },
@@ -206,7 +222,7 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
         take: 30
     })
 
-    const challans: DeliveryChallanRecord[] = (challansRaw as unknown[]).map((dc: any) => ({
+    const challans: DeliveryChallanRecord[] = challansRaw.map((dc) => ({
         id: dc.id,
         challanNumber: dc.challanNumber,
         challanDate: dc.challanDate,
@@ -215,8 +231,8 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
         recipientEmail: dc.recipientEmail,
         recipientPhone: dc.recipientPhone,
         recipientGstin: dc.recipientGstin,
-        dispatchAddress: dc.dispatchAddress,
-        deliveryAddress: dc.deliveryAddress,
+        dispatchAddress: dc.dispatchAddress as AddressJson,
+        deliveryAddress: dc.deliveryAddress as AddressJson,
         placeOfSupply: dc.placeOfSupply,
         reason: dc.reason,
         status: dc.status,
@@ -239,7 +255,7 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
         notes: dc.notes,
         terms: dc.terms,
         itemsCount: dc.items.length,
-        items: dc.items.map((item: any) => ({
+        items: dc.items.map((item) => ({
             id: item.id,
             challanId: item.challanId,
             productId: item.productId,
@@ -274,17 +290,18 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
             convertedCount,
             totalDispatchedValue
         },
+        supplier,
         challans,
-        contacts: (contactsRaw as any[]).map((c) => ({
+        contacts: (contactsRaw).map((c) => ({
             id: c.id,
             displayName: c.displayName,
             email: c.email,
             phone: c.phone,
             gstin: c.gstin,
-            billingAddress: c.billingAddress,
-            shippingAddress: c.shippingAddress
+            billingAddress: c.billingAddress as AddressJson,
+            shippingAddress: c.shippingAddress as AddressJson
         })),
-        products: (productsRaw as any[]).map((p) => ({
+        products: (productsRaw).map((p) => ({
             id: p.id,
             name: p.name,
             sku: p.sku,
@@ -292,7 +309,7 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
             unit: p.unit,
             unitPrice: Number(p.unitPrice)
         })),
-        warehouses: (warehousesRaw as any[]).map((wh) => ({
+        warehouses: (warehousesRaw).map((wh) => ({
             id: wh.id,
             name: wh.name,
             code: wh.code,
@@ -300,12 +317,12 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
             city: wh.city,
             state: wh.state
         })),
-        salesOrders: (salesOrdersRaw as any[]).map((so) => ({
+        salesOrders: (salesOrdersRaw).map((so) => ({
             id: so.id,
             orderNumber: so.orderNumber,
             customerName: so.customerName,
             total: Number(so.total),
-            items: (so.items as any[]).map((item) => ({
+            items: (so.items).map((item) => ({
                 productName: item.productName,
                 qty: Number(item.qty),
                 unitPrice: Number(item.unitPrice),
@@ -334,8 +351,8 @@ export interface CreateDeliveryChallanInput {
     recipientEmail?: string
     recipientPhone?: string
     recipientGstin?: string
-    dispatchAddress: any
-    deliveryAddress: any
+    dispatchAddress: AddressJson
+    deliveryAddress: AddressJson
     placeOfSupply?: string
     reason: ChallanReason
     transportMode: TransportMode
@@ -410,8 +427,8 @@ async function _createDeliveryChallan(input: CreateDeliveryChallanInput) {
             recipientEmail: input.recipientEmail?.trim() || null,
             recipientPhone: input.recipientPhone?.trim() || null,
             recipientGstin: input.recipientGstin?.trim() || null,
-            dispatchAddress: input.dispatchAddress || {},
-            deliveryAddress: input.deliveryAddress || {},
+            dispatchAddress: (input.dispatchAddress || {}) as Prisma.InputJsonObject,
+            deliveryAddress: (input.deliveryAddress || {}) as Prisma.InputJsonObject,
             placeOfSupply: input.placeOfSupply?.trim() || null,
             reason: input.reason,
             status: ChallanStatus.ISSUED,
