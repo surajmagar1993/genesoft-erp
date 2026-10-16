@@ -2,7 +2,7 @@ import { Zip, ZipDeflate, strToU8 } from "fflate"
 import Papa from "papaparse"
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
-import { SKIP_TABLES, planTenantData, q, type FkEdge, type TenantDataPlan } from "@/lib/tenant-data-plan"
+import { KEEP_ON_PURGE, SKIP_TABLES, planTenantData, q, type FkEdge, type TenantDataPlan } from "@/lib/tenant-data-plan"
 
 /**
  * Everything one business (tenant) owns in the database, found from the live
@@ -150,7 +150,8 @@ export interface PurgeResult {
 /**
  * Permanently deletes a workspace's business data and its users' logins, in
  * one transaction (all or nothing). The tenants row stays, anonymised, with
- * its Genesoft subscription receipts (kept for tax law) and the closure record.
+ * its Genesoft subscription receipts (kept for tax law), the closure record
+ * and its activity log (KEEP_ON_PURGE).
  * Refuses a workspace that has a platform super admin in it.
  */
 export async function purgeTenantData(tenantId: string): Promise<PurgeResult> {
@@ -166,6 +167,7 @@ export async function purgeTenantData(tenantId: string): Promise<PurgeResult> {
 
             let rows = 0
             for (const table of plan.deleteOrder) {
+                if (KEEP_ON_PURGE.has(table)) continue
                 rows += await tx.$executeRawUnsafe(`delete from ${q(table)} where ${plan.predicates.get(table)}`, tenantId)
             }
 

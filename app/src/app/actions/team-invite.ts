@@ -89,6 +89,6 @@ export async function acceptInvite(formData: FormData) {
         back(err instanceof Error && err.message.includes("cancelled") ? err.message : "Couldn't finish joining. Please try again or contact your admin.")
     }
 
-    await logTenantAudit(tenantId, "TEAM_INVITE_ACCEPTED", { target: { type: "INVITE", id: invite.id }, actor: { id: null, email: invite.email }, metadata: { role: invite.role } })
+    await logTenantAudit(tenantId, "TEAM_INVITE_ACCEPTED", { target: { type: "INVITE", id: invite.id }, actor: { id: userId, email: invite.email }, metadata: { role: invite.role } })
     redirect("/login?message=You've+joined+the+team.+Confirm+your+email+if+asked,+then+sign+in.")
 }

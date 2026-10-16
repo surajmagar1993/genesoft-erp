@@ -496,9 +496,10 @@ export async function testSmtpConnection(params: {
 export async function deleteEmailAccount(id: string): Promise<{ success?: boolean; error?: string }> {
     try {
         const tenantId = await getTenantAdminId()
+        const account = await prisma.emailAccount.findFirst({ where: { id, tenantId }, select: { email: true } })
         const { count } = await prisma.emailAccount.deleteMany({ where: { id, tenantId } })
         if (count === 0) return { error: "Mailbox not found" }
-        await logTenantAudit(tenantId, "EMAIL_ACCOUNT_REMOVED", { target: { type: "EMAIL_ACCOUNT", id } })
+        await logTenantAudit(tenantId, "EMAIL_ACCOUNT_REMOVED", { target: { type: "EMAIL_ACCOUNT", id }, metadata: { address: account?.email ?? null } })
         revalidatePath("/crm/emails")
         return { success: true }
     } catch (err: any) {

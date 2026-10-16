@@ -307,6 +307,7 @@ export async function updateBill(id: string, data: Partial<BillData>) {
 export async function deleteBill(id: string): Promise<{ error: string | null }> {
   try {
     const tenantId = await getTenantManagerId(MODULE)
+    const billInfo = await prisma.bill.findFirst({ where: { id, tenantId }, select: { billNumber: true } })
     // Its payments are deleted with it (cascade); their journals are voided after
     const paymentIds: string[] = (await prisma.payment.findMany({ where: { billId: id, tenantId }, select: { id: true } })).map((p: { id: string }) => p.id)
 
@@ -337,7 +338,7 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
 
     await postToLedger(tenantId, { kind: "bill", id })
     for (const paymentId of paymentIds) await postToLedger(tenantId, { kind: "payment", id: paymentId })
-    await logTenantAudit(tenantId, "BILL_DELETED", { target: { type: "BILL", id }, metadata: { paymentsRemoved: paymentIds.length } })
+    await logTenantAudit(tenantId, "BILL_DELETED", { target: { type: "BILL", id }, metadata: { billNumber: billInfo?.billNumber ?? null, paymentsRemoved: paymentIds.length } })
 
     revalidatePath("/finance/bills")
     revalidatePath("/finance/payable")

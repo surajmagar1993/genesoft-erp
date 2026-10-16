@@ -91,6 +91,21 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
       payload.settings = merged
     }
 
+    // What actually changes (for the activity log), compared before saving
+    const before = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { name: true, email: true, phone: true, website: true, currencyCode: true, countryCode: true, address: true, settings: true },
+    })
+    const beforeSettings = ((before?.settings as Record<string, unknown>) || {})
+    const beforeValues: Record<string, unknown> = {
+      name: before?.name, email: before?.email, phone: before?.phone, website: before?.website,
+      currency_code: before?.currencyCode, country_code: before?.countryCode, address: before?.address,
+      gstin: beforeSettings.gstin ?? null,
+    }
+    const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+    const changedFields = Object.keys(payload).filter((k) => k !== "settings" && !same(beforeValues[k], payload[k]))
+    if (data.tax_settings !== undefined && payload.settings && !same(beforeSettings.tax, (payload.settings as Record<string, unknown>).tax)) changedFields.push("tax_settings")
+
     await prisma.tenant.update({ where: { id: tenantId }, data: fromRow("Tenant", payload) })
 
     revalidatePath("/settings")
@@ -98,8 +113,10 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
     revalidatePath("/crm")
     revalidatePath("/sales/invoices")
 
-    // Which fields changed (names only)
-    await logTenantAudit(tenantId, "SETTINGS_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { fields: Object.keys(data).sort() } })
+    // Which fields changed (names only); nothing logged when nothing changed
+    if (changedFields.length) {
+      await logTenantAudit(tenantId, "SETTINGS_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { fields: changedFields.sort() } })
+    }
     return { success: true }
   } catch (err: any) {
     console.error("Exception updating tenant settings:", err)

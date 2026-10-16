@@ -3,8 +3,10 @@
 export const TENANT_ACTION_LABEL: Record<string, string> = {
     TENANT_PLAN_UPGRADE: "Plan upgraded",
     TENANT_PLAN_DOWNGRADE: "Plan downgraded",
+    TENANT_PLAN_RENEWED: "Plan renewed or billing cycle changed",
     TENANT_PLAN_DOWNGRADE_SCHEDULED: "Downgrade scheduled",
-    TENANT_SUBSCRIPTION_CANCELLED: "Subscription cancelled",
+    TENANT_SUBSCRIPTION_CANCELLED: "Subscription ended (moved to Free)",
+    TENANT_PLAN_CHANGED_BY_STRIPE: "Plan changed by Stripe",
     TENANT_CLOSED_BY_OWNER: "Workspace closed",
     DATA_EXPORT: "Data exported",
     TEAM_INVITE_SENT: "Team member invited",

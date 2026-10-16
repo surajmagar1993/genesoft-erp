@@ -208,7 +208,7 @@ export async function inviteTeamMember(input: {
     fullName: string
     role: TeamRole
     access?: ModuleAccess
-}): Promise<{ success: boolean; error?: string; inviteUrl?: string; emailSent?: boolean; emailError?: string }> {
+}, opts: { resend?: boolean } = {}): Promise<{ success: boolean; error?: string; inviteUrl?: string; emailSent?: boolean; emailError?: string }> {
     try {
         const tenantId = await getTenantAdminId()
         const caller = await getCurrentUser()
@@ -265,7 +265,7 @@ export async function inviteTeamMember(input: {
 
         revalidatePath("/settings")
         revalidatePath("/admin/users")
-        await logTenantAudit(tenantId, "TEAM_INVITE_SENT", { target: { type: "INVITE", id }, metadata: { email, role: input.role, emailSent: mail.sent } })
+        await logTenantAudit(tenantId, opts.resend ? "TEAM_INVITE_RESENT" : "TEAM_INVITE_SENT", { target: { type: "INVITE", id }, metadata: { email, role: input.role, emailSent: mail.sent } })
         return { success: true, inviteUrl: url, emailSent: mail.sent, emailError: mail.reason }
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : "Failed to send the invite" }
@@ -280,7 +280,7 @@ export async function resendInvite(inviteId: string): Promise<{ success: boolean
         const invite = readTeam(tenant?.settings).invites.find((i) => i.id === inviteId)
         if (!invite) return { success: false, error: "Invite not found" }
         await updateTeam(tenantId, (t) => ({ ...t, invites: t.invites.filter((i) => i.id !== inviteId) }))
-        return inviteTeamMember({ email: invite.email, fullName: invite.fullName, role: invite.role, access: invite.access })
+        return inviteTeamMember({ email: invite.email, fullName: invite.fullName, role: invite.role, access: invite.access }, { resend: true })
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : "Failed to resend the invite" }
     }
@@ -291,12 +291,14 @@ export async function revokeInvite(inviteId: string): Promise<{ success: boolean
     try {
         const tenantId = await getTenantAdminId()
         let found = false
+        let revokedEmail: string | null = null
         await updateTeam(tenantId, (t) => {
             found = t.invites.some((i) => i.id === inviteId)
+            revokedEmail = t.invites.find((i) => i.id === inviteId)?.email ?? null
             return { ...t, invites: t.invites.filter((i) => i.id !== inviteId) }
         })
         if (!found) return { success: false, error: "Invite not found" }
-        await logTenantAudit(tenantId, "TEAM_INVITE_REVOKED", { target: { type: "INVITE", id: inviteId } })
+        await logTenantAudit(tenantId, "TEAM_INVITE_REVOKED", { target: { type: "INVITE", id: inviteId }, metadata: { email: revokedEmail } })
         revalidatePath("/settings")
         revalidatePath("/admin/users")
         return { success: true }

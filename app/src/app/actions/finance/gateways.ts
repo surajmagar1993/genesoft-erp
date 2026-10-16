@@ -83,6 +83,17 @@ export async function saveTenantPaymentGateways(
             paypalClientSecret: cleanPaypalClientSecret,
         }
 
+        // What actually changed, for the activity log: secrets only when a new value was typed
+        const SECRET_FIELDS = ["stripeSecretKey", "stripeWebhookSecret", "paypalClientSecret"] as const
+        const before = { ...DEFAULT_PAYMENT_GATEWAY_CONFIG, ...existingGateways } as Record<string, unknown>
+        const changedFields = Object.keys(newConfig).filter((k) => {
+            const v = (newConfig as Record<string, unknown>)[k]
+            if ((SECRET_FIELDS as readonly string[]).includes(k)) {
+                return typeof v === "string" && !!v.trim() && !v.includes("•") && v.trim() !== openSecret(String(before[k] ?? ""))
+            }
+            return JSON.stringify(before[k] ?? null) !== JSON.stringify(v ?? null)
+        })
+
         // Validate if live credentials requested
         if (mergedGateways.stripeEnabled && mergedGateways.stripeMode === "live") {
             const stripeValidation = validateStripeKeys(
@@ -120,8 +131,10 @@ export async function saveTenantPaymentGateways(
         })
 
         revalidatePath("/settings")
-        // Which settings were sent, never their values
-        await logTenantAudit(tenantId, "PAYMENT_GATEWAY_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { fields: Object.keys(newConfig ?? {}).sort() } })
+        // Which settings changed (names only, never values)
+        if (changedFields.length) {
+            await logTenantAudit(tenantId, "PAYMENT_GATEWAY_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { fields: changedFields.sort() } })
+        }
         return { success: true, message: "Payment gateway credentials saved successfully" }
     } catch (error: any) {
         console.error("Error saving payment gateways:", error)

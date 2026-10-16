@@ -66,6 +66,8 @@ export async function applyPlanChange(
         amountPaid?: number
         paymentMethod?: string
         actor?: { id: string; email: string }
+        /** A Super Admin's manual change: also recorded in the Super Admin log */
+        actorIsSuperAdmin?: boolean
     }
 ): Promise<{ alreadyApplied: boolean; invoice?: SaaSPlatformInvoice; quote: ProrationQuote }> {
     const { quote, pricing, tenant } = await quotePlanChange(tenantId, params.targetPlan, params.billingCycle)
@@ -112,19 +114,29 @@ export async function applyPlanChange(
         },
     })
 
-    // The business's activity log (not the Super Admin's): who changed the plan, or the gateway
-    await logTenantAudit(tenantId, quote.isUpgrade ? "TENANT_PLAN_UPGRADE" : "TENANT_PLAN_DOWNGRADE", {
+    // Same plan again (renewal or a switch between monthly and yearly) isn't a downgrade
+    const action = quote.isUpgrade ? "TENANT_PLAN_UPGRADE" : tenant.plan === params.targetPlan ? "TENANT_PLAN_RENEWED" : "TENANT_PLAN_DOWNGRADE"
+    const metadata = {
+        fromPlan: tenant.plan,
+        toPlan: params.targetPlan,
+        billingCycle: params.billingCycle,
+        amountPaid: params.amountPaid ?? null,
+        paymentRef: params.paymentRef ?? null,
+        invoiceNumber: invoice?.invoiceNumber ?? null,
+        ...(params.actorIsSuperAdmin ? { byPlatformAdmin: true } : {}),
+    }
+    // The business's activity log: who changed the plan, or the payment gateway
+    await logTenantAudit(tenantId, action, {
         target: { type: "TENANT_SUBSCRIPTION", id: tenantId },
         actor: params.actor ? { id: params.actor.id, email: params.actor.email ?? null } : BILLING_SYSTEM,
-        metadata: {
-            fromPlan: tenant.plan,
-            toPlan: params.targetPlan,
-            billingCycle: params.billingCycle,
-            amountPaid: params.amountPaid ?? null,
-            paymentRef: params.paymentRef ?? null,
-            invoiceNumber: invoice?.invoiceNumber ?? null,
-        },
+        metadata,
     })
+    // A Super Admin's manual change (possibly free) also goes to the Super Admin log
+    if (params.actorIsSuperAdmin && params.actor) {
+        await prisma.adminAuditLog
+            .create({ data: { adminId: params.actor.id, adminEmail: params.actor.email, action, targetId: tenantId, targetType: "TENANT_SUBSCRIPTION", metadata } })
+            .catch((err: unknown) => console.error("applyPlanChange: Super Admin audit failed", err))
+    }
 
     return { alreadyApplied: false, invoice, quote }
 }

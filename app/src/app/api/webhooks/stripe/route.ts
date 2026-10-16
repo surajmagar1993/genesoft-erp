@@ -7,6 +7,7 @@ import Stripe from "stripe"
 import { fromSmallestCurrencyUnit } from "@/lib/payment-gateway-engine"
 import { planForSubscription, subscriptionStanding, type PaidPlan } from "@/lib/stripe-plans"
 import { applyPlanChange } from "@/lib/plan-change"
+import { BILLING_SYSTEM, logTenantAudit } from "@/lib/tenant-audit"
 
 export const dynamic = "force-dynamic"
 
@@ -143,10 +144,15 @@ export async function POST(req: Request) {
       // (isActive) is an admin decision, never a billing side effect.
       const standing = subscriptionStanding(subscription.status)
       const plan = standing === "paid" ? planForSubscription(subscription) : standing === "ended" ? "FREE" : null
-      if (plan) {
+      if (plan && plan !== tenant.plan) {
         await prisma.tenant.update({
           where: { id: tenant.id },
           data: { plan },
+        })
+        await logTenantAudit(tenant.id, plan === "FREE" ? "TENANT_SUBSCRIPTION_CANCELLED" : "TENANT_PLAN_CHANGED_BY_STRIPE", {
+          target: { type: "TENANT_SUBSCRIPTION", id: tenant.id },
+          actor: BILLING_SYSTEM,
+          metadata: { fromPlan: tenant.plan, toPlan: plan, stripeStatus: subscription.status, stripeEvent: event.id },
         })
       }
     }
@@ -168,6 +174,13 @@ export async function POST(req: Request) {
           isActive: true, // They can still use the free tier
         },
       })
+      if (tenant.plan !== "FREE") {
+        await logTenantAudit(tenant.id, "TENANT_SUBSCRIPTION_CANCELLED", {
+          target: { type: "TENANT_SUBSCRIPTION", id: tenant.id },
+          actor: BILLING_SYSTEM,
+          metadata: { fromPlan: tenant.plan, toPlan: "FREE", stripeEvent: event.id },
+        })
+      }
     }
   }
 

@@ -39,11 +39,21 @@ async function getCallerContext(targetTenantId?: string) {
     }
 }
 
-/** The business's activity log; when the Super Admin does it, the Super Admin log too. */
-async function logAudit(action: string, targetId: string, metadata: any = {}) {
+/**
+ * A business's own subscription changes go to its activity log. The Super
+ * Admin's go to the Super Admin log, and plan changes (which affect the
+ * business) to the business's log as well, marked as done by the platform.
+ */
+async function logAudit(action: string, targetId: string, metadata: any = {}, caller?: { userId: string; email: string; isSuperAdmin: boolean }) {
     try {
-        const caller = await getCallerContext()
-        await logTenantAudit(targetId, action, { target: { type: "TENANT_SUBSCRIPTION", id: targetId }, metadata, actor: { id: caller.userId, email: caller.email } })
+        caller ??= await getCallerContext()
+        if (!caller.isSuperAdmin || action.startsWith("TENANT_PLAN")) {
+            await logTenantAudit(targetId, action, {
+                target: { type: "TENANT_SUBSCRIPTION", id: targetId },
+                metadata: caller.isSuperAdmin ? { ...metadata, byPlatformAdmin: true } : metadata,
+                actor: { id: caller.userId, email: caller.email },
+            })
+        }
         if (!caller.isSuperAdmin) return
         await prisma.adminAuditLog.create({
             data: {
@@ -236,7 +246,7 @@ export async function executePlanChange(params: {
                 fromPlan: currentPlan,
                 toPlan: targetPlan,
                 effectiveDate: quote.nextBillingDate,
-            })
+            }, caller)
 
             revalidatePath("/settings")
             revalidatePath(`/admin/tenants/${tenantId}`)
@@ -255,6 +265,7 @@ export async function executePlanChange(params: {
             amountPaid: caller.isSuperAdmin ? undefined : 0,
             paymentMethod: caller.isSuperAdmin ? "Manual (platform admin)" : "No charge",
             actor: { id: caller.userId, email: caller.email },
+            actorIsSuperAdmin: caller.isSuperAdmin,
         })
 
         revalidatePath("/settings")
@@ -339,7 +350,7 @@ export async function generateSaaSInvoice(params: {
             plan,
             totalAmount: invoice.totalAmount,
             currency: invoice.currency,
-        })
+        }, caller)
 
         revalidatePath(`/admin/tenants/${tenantId}`)
         revalidatePath("/settings")

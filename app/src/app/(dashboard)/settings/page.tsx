@@ -42,7 +42,7 @@ export default async function SettingsPage({
     const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN"
     const teamMembers = isAdmin ? await getTeamMembers() : []
     const teamInvites = isAdmin ? await getPendingInvites() : []
-    const activity = isAdmin ? await getMyActivityLog().catch(() => []) : []
+    const activity = isAdmin ? await getMyActivityLog() : { rows: [], timeZone: "UTC" }
     const siteUrl = appUrl()
     const emailPrefs = await getEmailPreferences()
     const regime = resolveTaxRegime(settings?.country_code, null, settings?.currency_code)
@@ -192,7 +192,7 @@ export default async function SettingsPage({
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="p-0">
-                                <ActivityLogTable rows={activity} emptyText="No changes recorded yet. New activity appears here from now on." />
+                                <ActivityLogTable rows={activity.rows} timeZone={activity.timeZone} emptyText="No changes recorded yet. New activity appears here from now on." />
                             </CardContent>
                         </Card>
                     </TabsContent>

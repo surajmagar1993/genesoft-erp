@@ -41,7 +41,7 @@ select a.target_id::uuid,
        a.target_type,
        a.target_id,
        coalesce(a.metadata, '{}'::jsonb) || jsonb_build_object('movedFromAdminAudit', a.id),
-       a.created_at at time zone current_setting('TimeZone')
+       a.created_at at time zone 'UTC' -- Prisma writes these as UTC
 from public.admin_audit_logs a
 where (a.target_type = 'TENANT_SUBSCRIPTION' or a.action = 'TENANT_CLOSED_BY_OWNER')
   and a.target_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'

@@ -18,6 +18,13 @@ export const q = (ident: string) => `"${ident.replace(/"/g, '""')}"`
 /** The tenants table itself is handled separately (kept, anonymised). */
 export const SKIP_TABLES = new Set(["tenants", "_prisma_migrations"])
 
+/**
+ * Exported with the workspace's data but kept when it is purged, like the
+ * subscription receipts: the activity log is the record of who closed the
+ * workspace and of its plan payments.
+ */
+export const KEEP_ON_PURGE = new Set(["tenant_audit_logs"])
+
 /** Builds the per-table row conditions and a children-first delete order. */
 export function planTenantData(tenantTables: string[], edges: FkEdge[]): TenantDataPlan {
     const predicates = new Map<string, string>()

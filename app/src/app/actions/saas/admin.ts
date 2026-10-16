@@ -21,6 +21,7 @@ import { readClosure } from "@/lib/workspace-closure"
 // import { type Role } from "@prisma/client"
 import { createClient } from "../../../lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { toActivityRow } from "@/lib/activity-row"
 
 /**
  * Ensures the current user is a SUPER_ADMIN.
@@ -355,30 +356,13 @@ export async function getTenantById(tenantId: string) {
 
         if (!tenant) return null
 
-        // Calculate revenue estimate from invoices
-        const revenueAgg = await prisma.invoice.aggregate({
-            where: { tenantId },
-            _sum: { total: true }
-        })
-
-        // Super Admin actions on this tenant, and the tenant's own activity log
-        const auditLogs = await prisma.adminAuditLog.findMany({
-            where: { targetId: tenantId },
-            orderBy: { createdAt: "desc" },
-            take: 50
-        })
-        const activityLogs = (
-            await prisma.tenantAuditLog.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" }, take: 200 })
-        ).map((r) => ({
-            id: r.id,
-            createdAt: r.createdAt.toISOString(),
-            actorEmail: r.actorEmail,
-            action: r.action,
-            targetType: r.targetType,
-            targetId: r.targetId,
-            metadata: (r.metadata && typeof r.metadata === "object" ? r.metadata : {}) as Record<string, unknown>,
-            tenantId: r.tenantId,
-        }))
+        // Revenue, Super Admin actions on this tenant, and the tenant's own activity log
+        const [revenueAgg, auditLogs, activity] = await Promise.all([
+            prisma.invoice.aggregate({ where: { tenantId }, _sum: { total: true } }),
+            prisma.adminAuditLog.findMany({ where: { targetId: tenantId }, orderBy: { createdAt: "desc" }, take: 50 }),
+            prisma.tenantAuditLog.findMany({ where: { tenantId }, orderBy: { createdAt: "desc" }, take: 200 }),
+        ])
+        const activityLogs = activity.map(toActivityRow)
 
         return {
             ...tenant,

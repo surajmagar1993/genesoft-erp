@@ -145,7 +145,7 @@ export async function saveWhatsAppConfig(payload: {
         })
 
         revalidatePath("/crm/whatsapp")
-        await logTenantAudit(tenantId, "WHATSAPP_CONFIG_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { mode: payload.mode, credentialsChanged: !!(payload.appSecret || payload.accessToken) } })
+        await logTenantAudit(tenantId, "WHATSAPP_CONFIG_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { mode: payload.mode, credentialsChanged: isNewSecret(payload.appSecret) || isNewSecret(payload.accessToken) } })
         return { success: true, verifyToken: updatedWa.verifyToken }
     } catch (err: any) {
         console.error("Failed to save WhatsApp config:", err)
