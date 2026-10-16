@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache"
 import { pick, toRow, toRows, type PgRow } from "@/lib/pg-row"
 import { computeInvoiceGstSummary, computeLineItemGst } from "@/lib/gst-engine"
 import { assertTenantRefs } from "@/lib/tenant-refs"
-import { isUuid } from "@/lib/utils"
+import { isUuid, errorMessage } from "@/lib/utils"
 
 export type BillStatus = "DRAFT" | "OPEN" | "PARTIALLY_PAID" | "PAID" | "VOID"
 
@@ -346,8 +346,8 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
     revalidatePath("/finance/bills")
     revalidatePath("/finance/payable")
     return { error: null }
-  } catch (err: any) {
-    return { error: err.message || "Failed to delete bill" }
+  } catch (err) {
+    return { error: errorMessage(err) || "Failed to delete bill" }
   }
 }
 

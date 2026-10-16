@@ -6,19 +6,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import {
     CreditCard,
     CheckCircle2,
-    AlertCircle,
     Copy,
     RefreshCw,
     Shield,
     Sparkles,
     Globe,
     Zap,
-    ExternalLink,
     Lock,
 } from "lucide-react"
 import {
@@ -30,6 +27,7 @@ import {
     testPaymentGatewayConnection,
 } from "@/app/actions/finance/gateways"
 import { toast } from "sonner"
+import { errorMessage } from "@/lib/utils";
 
 interface PaymentGatewaysTabProps {
     initialConfig: PaymentGatewayConfig
@@ -75,8 +73,8 @@ export default function PaymentGatewaysTab({
             } else {
                 toast.error(res.message)
             }
-        } catch (err: any) {
-            toast.error(err.message || "Connection test failed")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Connection test failed")
         } finally {
             if (gateway === "STRIPE") setTestingStripe(false)
             if (gateway === "PAYPAL") setTestingPayPal(false)

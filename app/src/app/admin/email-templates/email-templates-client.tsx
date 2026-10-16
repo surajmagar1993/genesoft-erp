@@ -45,9 +45,9 @@ import {
     Tag,
     FileText,
     Sparkles,
-    ShieldAlert,
-    ExternalLink,
+    ShieldAlert
 } from "lucide-react"
+import { errorMessage } from "@/lib/utils";
 
 interface Props {
     initialData: SystemEmailTemplatesOverview
@@ -124,10 +124,10 @@ export function EmailTemplatesClient({ initialData }: Props) {
                 customBodyHtml: editBodyHtml,
                 customBodyText: editBodyText,
             })
-        } catch (err: any) {
+        } catch (err) {
             return {
                 subject: editSubject,
-                html: `<div style="padding:20px; color:red;">Template compilation error: ${err.message}</div>`,
+                html: `<div style="padding:20px; color:red;">Template compilation error: ${errorMessage(err)}</div>`,
                 text: editBodyText,
                 renderedVariables: {},
             }
@@ -182,8 +182,8 @@ export function EmailTemplatesClient({ initialData }: Props) {
             } else {
                 setFeedbackMessage({ type: "error", text: res.error || "Failed to save template" })
             }
-        } catch (err: any) {
-            setFeedbackMessage({ type: "error", text: err.message || "An unexpected error occurred" })
+        } catch (err) {
+            setFeedbackMessage({ type: "error", text: errorMessage(err) || "An unexpected error occurred" })
         } finally {
             setIsSaving(false)
         }
@@ -217,8 +217,8 @@ export function EmailTemplatesClient({ initialData }: Props) {
             } else {
                 setFeedbackMessage({ type: "error", text: res.error || "Failed to reset template" })
             }
-        } catch (err: any) {
-            setFeedbackMessage({ type: "error", text: err.message || "Reset failed" })
+        } catch (err) {
+            setFeedbackMessage({ type: "error", text: errorMessage(err) || "Reset failed" })
         } finally {
             setIsResetting(false)
         }
@@ -248,10 +248,10 @@ export function EmailTemplatesClient({ initialData }: Props) {
                     message: res.error || res.message || "Failed to dispatch test email",
                 })
             }
-        } catch (err: any) {
+        } catch (err) {
             setTestResult({
                 success: false,
-                message: err.message || "Test dispatch failed",
+                message: errorMessage(err) || "Test dispatch failed",
             })
         } finally {
             setIsSendingTest(false)

@@ -1,3 +1,5 @@
+import { errorMessage } from "@/lib/utils";
+
 /**
  * ksa-zatca-engine.ts
  * Pure TypeScript Statutory Engine for Saudi Arabia (KSA) VAT (15%),
@@ -243,11 +245,11 @@ export function decodeZatcaTlv(base64String: string): ZatcaDecodedTlv {
         ? "Seller VAT Number in Tag 2 does not meet 15-digit 3...3 statutory rules." 
         : undefined,
     }
-  } catch (err: any) {
+  } catch (err) {
     return {
       isValid: false,
       tags: [],
-      error: `Failed to decode Base64 TLV: ${err.message}`,
+      error: `Failed to decode Base64 TLV: ${errorMessage(err)}`,
     }
   }
 }

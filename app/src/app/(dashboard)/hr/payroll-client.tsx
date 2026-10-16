@@ -7,26 +7,19 @@ import {
     DollarSign,
     Users,
     Clock,
-    CheckCircle2,
     Calendar,
     FileText,
     Printer,
     Search,
     Plus,
     RefreshCw,
-    AlertCircle,
-    Building2,
-    Briefcase,
     CreditCard,
     Check,
-    X,
     Loader2,
     Eye,
     TrendingUp,
     Shield,
-    Trash2,
-    ArrowUpRight,
-    Download
+    Trash2
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -51,22 +44,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { format } from "date-fns"
 import { toast } from "sonner"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import {
     PayrollOverviewData,
     PayrollRunRecord,
-    PayslipRecord,
-    SalaryStructureRecord,
     generatePayRun,
     approvePayRun,
     processPayRun,
@@ -92,8 +75,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
             if (res.success) toast.success(res.data.pfWageCeiling > 0 ? `PF will be worked out on basic pay up to ${res.data.pfWageCeiling}` : "PF will be worked out on full basic pay")
             else toast.error(res.error)
         })
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
-    const appLocale = moneyRegime?.locale
+    const { formatMoney } = useTaxRegime()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [activeTab, setActiveTab] = useState<"payruns" | "slips" | "structures">("payruns")
@@ -128,16 +110,16 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
     // Structure form state
     const [structName, setStructName] = useState("")
     const [structCode, setStructCode] = useState("")
-    const [structDesc, setStructDesc] = useState("")
+    const [structDesc, ] = useState("")
     const [structBasicPct, setStructBasicPct] = useState("50")
     const [structHraPct, setStructHraPct] = useState("20")
-    const [structConveyance, setStructConveyance] = useState("1600")
-    const [structMedical, setStructMedical] = useState("1250")
+    const [structConveyance, ] = useState("1600")
+    const [structMedical, ] = useState("1250")
     const [structSpecialPct, setStructSpecialPct] = useState("15")
     const [structPfRate, setStructPfRate] = useState("12")
     const [structEsiRate, setStructEsiRate] = useState("0.75")
     const [structPt, setStructPt] = useState("200")
-    const [structTdsPct, setStructTdsPct] = useState("0")
+    const [structTdsPct, ] = useState("0")
 
     // Filtered payslips
     const filteredPayslips = useMemo(() => {
@@ -170,8 +152,8 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                     setIsRunWizardOpen(false)
                     router.refresh()
                 }
-            } catch (err: any) {
-                toast.error(err.message || "Failed to generate payroll run")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to generate payroll run")
             }
         })
     }
@@ -185,8 +167,8 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                     toast.success("Payroll run approved successfully!")
                     router.refresh()
                 }
-            } catch (err: any) {
-                toast.error(err.message || "Approval failed")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Approval failed")
             }
         })
     }
@@ -209,8 +191,8 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                     setSelectedRunForDisburse(null)
                     router.refresh()
                 }
-            } catch (err: any) {
-                toast.error(err.message || "Disbursement processing failed")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Disbursement processing failed")
             }
         })
     }
@@ -225,8 +207,8 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                     toast.success("Draft payroll run deleted")
                     router.refresh()
                 }
-            } catch (err: any) {
-                toast.error(err.message || "Failed to delete run")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to delete run")
             }
         })
     }
@@ -255,8 +237,8 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                     setIsStructureModalOpen(false)
                     router.refresh()
                 }
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create structure")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to create structure")
             }
         })
     }
@@ -268,8 +250,8 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                 const data = await getPayslipDetails(payslipId)
                 setSelectedPayslip(data)
                 setIsPayslipSlipOpen(true)
-            } catch (err: any) {
-                toast.error(err.message || "Failed to fetch payslip details")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to fetch payslip details")
             }
         })
     }

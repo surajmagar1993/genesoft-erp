@@ -13,10 +13,10 @@ import {
   getIndianFinancialYear,
   getIndianTaxQuarter,
   IndianTaxQuarter,
-  getQuarterDateRange,
   getTdsMonthlyDepositDueDate,
   getForm26QDueDate,
 } from "@/lib/tds-engine"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "finance" as const
@@ -170,7 +170,7 @@ export async function getTdsOverview(
   )
 
   // Also query bills and payments to automatically discover TDS recorded on bills
-  const [billsWithTds, vendors] = await Promise.all([
+  const [billsWithTds, ] = await Promise.all([
     prisma.bill.findMany({
       where: { tenantId },
       include: { contact: true },
@@ -228,9 +228,9 @@ export async function getTdsOverview(
             })
           }
         }
-      } catch (e) {
-        // Ignore parse errors on unstructured notes
-      }
+      } catch {
+                // Ignore parse errors on unstructured notes
+              }
     }
   })
 
@@ -432,9 +432,9 @@ export async function recordTdsDeduction(input: {
     revalidatePath("/finance/tds")
     revalidatePath("/finance/bills")
     return { success: true, deduction: newRecord }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error recording TDS deduction:", err)
-    return { success: false, error: err.message || "Failed to record TDS deduction." }
+    return { success: false, error: errorMessage(err) || "Failed to record TDS deduction." }
   }
 }
 
@@ -551,9 +551,9 @@ export async function recordTdsChallan(input: {
 
     revalidatePath("/finance/tds")
     return { success: true, challan: newChallan }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error recording TDS challan:", err)
-    return { success: false, error: err.message || "Failed to record Challan 281 deposit." }
+    return { success: false, error: errorMessage(err) || "Failed to record Challan 281 deposit." }
   }
 }
 
@@ -612,9 +612,9 @@ export async function updateTdsProfile(
 
     revalidatePath("/finance/tds")
     return { success: true }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error updating TDS profile:", err)
-    return { success: false, error: err.message || "Failed to update Deductor profile." }
+    return { success: false, error: errorMessage(err) || "Failed to update Deductor profile." }
   }
 }
 
@@ -720,8 +720,8 @@ export async function exportForm26QSummary(
         },
       },
     }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error exporting Form 26Q:", err)
-    return { success: false, error: err.message || "Failed to generate Form 26Q return data." }
+    return { success: false, error: errorMessage(err) || "Failed to generate Form 26Q return data." }
   }
 }

@@ -1,10 +1,9 @@
 "use client"
 
 import { LogoutMenuItem } from '@/components/auth/logout-button'
-import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import Image from "next/image"
+import "next/image"
 import {
     LayoutDashboard,
     Globe2,
@@ -19,7 +18,6 @@ import {
     Terminal,
     Settings,
     ChevronDown,
-    Search,
     Moon,
     Sun,
     Bell,
@@ -51,7 +49,6 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
     DropdownMenu,
     DropdownMenuContent,

@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Calendar, Loader2, CheckCircle2, Clock } from "lucide-react"
+import { Plus, Calendar, Loader2, Clock } from "lucide-react"
 import { createTask, type Task, type TaskStatus, type TaskPriority } from "@/app/actions/crm/tasks"
 
 interface Props {

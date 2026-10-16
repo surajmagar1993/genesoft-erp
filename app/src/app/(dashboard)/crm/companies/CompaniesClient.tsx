@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
     DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Plus, Search, MoreHorizontal, Globe, MapPin, Users, Pencil, Trash2, Eye, Loader2, Building2 } from "lucide-react"
+import { Plus, Search, MoreHorizontal, Globe, MapPin, Pencil, Trash2, Eye, Loader2 } from "lucide-react"
 import { deleteCompany, type Company } from "@/app/actions/crm/companies"
 import { RequireRole } from "@/components/auth/role-context"
 
@@ -22,7 +22,7 @@ export default function CompaniesClient({ initialCompanies, total }: Props) {
     const router = useRouter()
     const [searchQuery, setSearchQuery] = useState("")
     const [deletingId, setDeletingId] = useState<string | null>(null)
-    const [isPending, startTransition] = useTransition()
+    const [, startTransition] = useTransition()
 
     // Server-side search handler
     const handleSearch = (query: string) => {

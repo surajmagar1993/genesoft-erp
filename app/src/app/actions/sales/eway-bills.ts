@@ -5,14 +5,12 @@ import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import {
-  EWAY_BILL_CONSIGNMENT_THRESHOLD,
   EwaySupplyType,
   EwaySubSupplyCode,
   EwayDocType,
   EwayTransportModeCode,
   EwayVehicleTypeCode,
   EwayItemPayload,
-  EwayBillInput,
   validateVehicleNumber,
   validateTransporterId,
   validatePinCode,

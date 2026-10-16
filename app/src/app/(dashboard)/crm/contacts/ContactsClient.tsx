@@ -37,7 +37,7 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
     const [isExporting, setIsExporting] = useState(false)
     const [isImporting, setIsImporting] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [isPending, startTransition] = useTransition()
+    const [, startTransition] = useTransition()
 
     // Server-side search handler
     const handleSearch = (query: string) => {

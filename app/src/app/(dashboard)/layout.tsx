@@ -31,8 +31,6 @@ import {
     Home,
     FileMinus,
     ChevronDown,
-
-    Bell,
     Search,
     Moon,
     Sun,
@@ -59,7 +57,6 @@ import {
     Zap,
     BookOpen,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import {
     Sidebar,
     SidebarContent,
@@ -87,7 +84,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
 import { useTheme } from "next-themes"
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import Script from "next/script"

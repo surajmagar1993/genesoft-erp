@@ -20,7 +20,6 @@ import {
   Search,
   ShieldCheck,
   Building2,
-  Copy,
   Receipt,
   Users,
 } from "lucide-react"
@@ -32,7 +31,7 @@ interface Props {
 
 export function AustraliaTaxClient({ initialData }: Props) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   const [activeTab, setActiveTab] = useState<"bas" | "abn_validator" | "payg" | "tax_invoice">("bas")
   const [selectedStartYear, setSelectedStartYear] = useState<number>(initialData.startYear)

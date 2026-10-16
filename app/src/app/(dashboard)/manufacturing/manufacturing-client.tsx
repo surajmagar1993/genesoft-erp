@@ -7,23 +7,15 @@ import {
     Boxes,
     CheckCircle2,
     Clock,
-    AlertCircle,
     Search,
     Plus,
     RefreshCw,
-    Play,
-    Check,
-    X,
     Eye,
     Percent,
     ShieldCheck,
-    Truck,
-    Calendar,
-    ChevronRight,
     ArrowRight,
     Loader2,
     Layers,
-    FileText,
     Wrench,
     Sliders,
     Trash2
@@ -53,24 +45,20 @@ import {
 } from "@/components/ui/select"
 import { format } from "date-fns"
 import { toast } from "sonner"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import { unwrap } from "@/lib/action-result"
 import {
     ManufacturingOverviewData,
     WorkOrderRecord,
     BOMRecord,
-    QualityInspectionRecord,
     createBOM,
-    updateBOMStatus,
     createWorkOrder,
     updateWorkOrderStatus,
     recordQualityInspection
 } from "@/app/actions/manufacturing"
 import {
     WorkOrderStatus,
-    WorkOrderPriority,
-    BOMStatus,
-    QCStatus
+    WorkOrderPriority
 } from "@prisma/client"
 
 export function ManufacturingClient({ initialData }: { initialData: ManufacturingOverviewData }) {
@@ -92,7 +80,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
     // Filters
     const [orderSearch, setOrderSearch] = useState("")
     const [orderStatusFilter, setOrderStatusFilter] = useState("ALL")
-    const [bomSearch, setBOMSearch] = useState("")
+    const [bomSearch, ] = useState("")
 
     // Advance Status Form
     const [nextStatus, setNextStatus] = useState<WorkOrderStatus>("IN_PROGRESS")
@@ -118,7 +106,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
     const [bomVersion, setBomVersion] = useState("1.0")
     const [bomLaborCost, setBomLaborCost] = useState("0")
     const [bomOverheadCost, setBomOverheadCost] = useState("0")
-    const [bomNotes, setBomNotes] = useState("")
+    const [bomNotes, ] = useState("")
     const [bomComponents, setBomComponents] = useState<
         { productId: string; quantity: string; unit: string; unitCost: string; scrapPercentage: string }[]
     >([
@@ -183,8 +171,8 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                     setIsNewOrderModalOpen(false)
                     router.refresh()
                 }
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create work order")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to create work order")
             }
         })
     }
@@ -214,8 +202,8 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                     setSelectedOrder(null)
                     router.refresh()
                 }
-            } catch (err: any) {
-                toast.error(err.message || "Failed to update work order")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to update work order")
             }
         })
     }
@@ -248,8 +236,8 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                     setIsNewBOMModalOpen(false)
                     router.refresh()
                 }
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create BOM")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to create BOM")
             }
         })
     }
@@ -273,8 +261,8 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                     setIsQCModalOpen(false)
                     router.refresh()
                 }
-            } catch (err: any) {
-                toast.error(err.message || "Failed to record quality inspection")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to record quality inspection")
             }
         })
     }

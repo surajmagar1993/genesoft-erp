@@ -20,8 +20,6 @@ export function TemplateClassic({ invoice }: TemplateProps) {
         taxIdLabel,
         docTitle: summaryDocTitle
     } = getInvoiceSummary(invoice)
-
-    const isProforma = invoice.type === "PROFORMA"
     const docTitle = summaryDocTitle
 
     return (

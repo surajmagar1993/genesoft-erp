@@ -1,10 +1,10 @@
 "use client"
-import { localeForCurrency } from "@/lib/utils"
+import { localeForCurrency, errorMessage } from "@/lib/utils"
 import { COMPLIANCE_MODULES_ENABLED } from "@/lib/features"
 
-import { useState, useTransition, useMemo } from "react"
+import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, ArrowLeft, Download, Send, CreditCard, Pencil, Trash2, Calendar, FileText, CheckCircle2, IndianRupee, ArrowRightLeft, Stamp, ShieldCheck, Scale, Truck, MessageSquare, ExternalLink, Loader2, Link2, Copy, Check, Palette } from "lucide-react"
+import { ArrowLeft, Download, CreditCard, Pencil, Trash2, FileText, CheckCircle2, IndianRupee, ArrowRightLeft, Stamp, ShieldCheck, Scale, Truck, MessageSquare, ExternalLink, Loader2, Link2, Copy, Check, Palette } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -22,7 +22,6 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
     DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -30,7 +29,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 
-import { InvoiceDB, InvoiceTemplateId, deleteInvoice, sendInvoiceEmail, convertProformaToInvoice } from "@/app/actions/sales/invoices"
+import { InvoiceDB, InvoiceTemplateId, deleteInvoice, convertProformaToInvoice } from "@/app/actions/sales/invoices"
 import { PaymentDB, createPayment, deletePayment, CreatePaymentPayload, PaymentMethod } from "@/app/actions/finance/payments"
 import { sendInvoiceViaWhatsApp } from "@/app/actions/crm/whatsapp"
 import { generateWhatsAppDirectLink } from "@/lib/whatsapp-engine"
@@ -65,7 +64,7 @@ interface Props {
 
 export default function InvoiceDetailsClient({ invoice, payments: initialPayments }: Props) {
     const router = useRouter()
-    const [payments, setPayments] = useState<PaymentDB[]>(initialPayments)
+    const [payments, ] = useState<PaymentDB[]>(initialPayments)
     const [isPending, startTransition] = useTransition()
 
     // Invoice presentation template state
@@ -134,8 +133,8 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
             } else {
                 toast.error(res.error || "Failed to dispatch WhatsApp message")
             }
-        } catch (err: any) {
-            toast.error(err.message || "WhatsApp dispatch error")
+        } catch (err) {
+            toast.error(errorMessage(err) || "WhatsApp dispatch error")
         } finally {
             setIsSendingWhatsApp(false)
         }

@@ -63,7 +63,7 @@ if (!profile) return { error: "Recurring profile not found" }
     }
 
     const now = new Date()
-    const year = now.getFullYear()
+    now.getFullYear();
 
     // Same single numbering series as invoices created by hand
     const invoiceNumber = await nextInvoiceNumber(tenantId, "TAX_INVOICE", now)

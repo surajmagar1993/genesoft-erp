@@ -1,9 +1,9 @@
 import { getSupportTickets } from "@/app/actions/saas/admin"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MessageSquare, Clock, User, Building2, ChevronRight, AlertCircle, CheckCircle2, Inbox } from "lucide-react"
+import { Clock, Building2, ChevronRight, CheckCircle2, Inbox } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import Link from "next/link"
 

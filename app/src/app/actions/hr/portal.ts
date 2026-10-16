@@ -15,7 +15,8 @@ import {
     ProjectPriority,
     PayslipStatus
 } from "@prisma/client"
-import { differenceInBusinessDays, startOfDay, endOfDay, subDays, format } from "date-fns"
+import { differenceInBusinessDays, startOfDay, endOfDay, subDays } from "date-fns"
+import { errorMessage } from "@/lib/utils";
 
 export interface EmployeeProfileRecord {
     id: string
@@ -412,7 +413,7 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
             payslips,
             tasks
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to load employee portal data:", err)
         return null
     }
@@ -466,9 +467,9 @@ export async function clockInEmployee(
         revalidatePath("/hr/portal")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Clock In failed:", err)
-        return { success: false, error: err.message || "Failed to clock in" }
+        return { success: false, error: errorMessage(err) || "Failed to clock in" }
     }
 }
 
@@ -528,9 +529,9 @@ export async function clockOutEmployee(
         revalidatePath("/hr/portal")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Clock Out failed:", err)
-        return { success: false, error: err.message || "Failed to clock out" }
+        return { success: false, error: errorMessage(err) || "Failed to clock out" }
     }
 }
 
@@ -580,9 +581,9 @@ export async function applyEmployeeLeave(input: {
         revalidatePath("/hr/portal")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to apply for leave:", err)
-        return { success: false, error: err.message || "Failed to submit leave request" }
+        return { success: false, error: errorMessage(err) || "Failed to submit leave request" }
     }
 }
 
@@ -619,8 +620,8 @@ export async function updatePortalTaskStatus(
         revalidatePath("/hr/portal")
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to update task status:", err)
-        return { success: false, error: err.message || "Failed to update task" }
+        return { success: false, error: errorMessage(err) || "Failed to update task" }
     }
 }

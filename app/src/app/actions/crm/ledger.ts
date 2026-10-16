@@ -3,8 +3,6 @@
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
-import { Prisma } from "@prisma/client"
-import { convertAmount } from "@/lib/exchange-rates"
 import { recordContactTransaction, type RecordTransactionPayload } from "@/lib/contact-ledger"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */

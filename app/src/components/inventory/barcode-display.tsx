@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { generateCode128Svg } from "@/lib/barcode/code128"
-import { generateQrCodeSvg, generateQrCodeDataUrl } from "@/lib/barcode/qrcode"
+import { generateQrCodeSvg } from "@/lib/barcode/qrcode"
 import { Button } from "@/components/ui/button"
 import { Copy, Check, Download, ZoomIn, QrCode as QrIcon, Barcode as BarcodeIcon } from "lucide-react"
 import { toast } from "sonner"
@@ -10,8 +10,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  DialogTitle
 } from "@/components/ui/dialog"
 
 export interface BarcodeDisplayProps {

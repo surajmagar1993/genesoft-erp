@@ -15,6 +15,7 @@ import {
     DATASET_DEFINITIONS,
     PREBUILT_TEMPLATES
 } from "@/types/report-builder"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "reports" as const
@@ -395,9 +396,9 @@ export async function saveCustomReport(input: {
             revalidatePath("/reports/builder")
             return { success: true, id: created.id }
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Save custom report failed:", err)
-        return { success: false, error: err.message || "Failed to save report" }
+        return { success: false, error: errorMessage(err) || "Failed to save report" }
     }
 }
 
@@ -418,8 +419,8 @@ export async function deleteCustomReport(id: string): Promise<{ success: boolean
 
         revalidatePath("/reports/builder")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Delete custom report failed:", err)
-        return { success: false, error: err.message || "Failed to delete report" }
+        return { success: false, error: errorMessage(err) || "Failed to delete report" }
     }
 }

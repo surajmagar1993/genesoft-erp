@@ -7,8 +7,7 @@ import { replyToTicket } from "@/app/actions/saas/admin"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { MessageSquare, Send, Clock, User, Building2 } from "lucide-react"
+import { MessageSquare, Send } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { toast } from "sonner"
 
@@ -18,7 +17,7 @@ interface AdminChatViewProps {
 }
 
 export function AdminChatView({ ticketId, initialMessages }: AdminChatViewProps) {
-  const { messages, setMessages } = useChatMessages(ticketId, initialMessages)
+  const { messages } = useChatMessages(ticketId, initialMessages)
   const [reply, setReply] = useState("")
   const [isSending, setIsSending] = useState(false)
 

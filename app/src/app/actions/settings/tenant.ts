@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache"
 import { clearFolder, uploadPublicFile } from "@/lib/storage"
 import { toActionResult, type ActionResult } from "@/lib/action-result"
 import { logTenantAudit } from "@/lib/tenant-audit"
+import { errorMessage } from "@/lib/utils";
 
 export interface TenantAddress {
   street?: string
@@ -118,9 +119,9 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
       await logTenantAudit(tenantId, "SETTINGS_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { fields: changedFields.sort() } })
     }
     return { success: true }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Exception updating tenant settings:", err)
-    return { success: false, error: err.message || "Failed to update settings" }
+    return { success: false, error: errorMessage(err) || "Failed to update settings" }
   }
 }
 

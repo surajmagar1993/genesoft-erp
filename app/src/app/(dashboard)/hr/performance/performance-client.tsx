@@ -8,34 +8,15 @@ import {
     Star,
     Target,
     GraduationCap,
-    TrendingUp,
-    CheckCircle2,
-    Clock,
     Calendar,
     Users,
     BookOpen,
     Plus,
     Search,
     SlidersHorizontal,
-    Filter,
-    ExternalLink,
-    ShieldCheck,
-    Sparkles,
     BadgeCheck,
     RefreshCw,
-    UserCheck,
-    ChevronRight,
-    FileText,
-    MoreHorizontal,
-    PlayCircle,
-    Check,
-    X,
-    AlertCircle,
-    BarChart3,
-    ArrowUpRight,
-    Lightbulb,
-    Smile,
-    Briefcase
+    UserCheck
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -65,31 +46,23 @@ import { format } from "date-fns"
 import { toast } from "sonner"
 import {
     PerformanceOverviewData,
-    AppraisalCycleRecord,
     PerformanceReviewRecord,
-    EmployeeGoalRecord,
-    TrainingProgramRecord,
     TrainingEnrollmentRecord,
     createAppraisalCycle,
-    updateAppraisalCycleStatus,
     createPerformanceReview,
     submitReviewSelfEvaluation,
     submitReviewManagerEvaluation,
     createEmployeeGoal,
     updateGoalProgress,
     createTrainingProgram,
-    updateTrainingProgramStatus,
     enrollEmployeeInTraining,
     updateEnrollmentStatus
 } from "@/app/actions/hr/performance"
 import {
-    AppraisalCycleStatus,
     ReviewStatus,
     GoalCategory,
-    GoalStatus,
     TrainingCategory,
     TrainingMode,
-    TrainingProgramStatus,
     EnrollmentStatus
 } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
@@ -110,10 +83,10 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
 
     const [goalSearch, setGoalSearch] = useState("")
     const [goalCategoryFilter, setGoalCategoryFilter] = useState<string>("all")
-    const [goalStatusFilter, setGoalStatusFilter] = useState<string>("all")
+    const [goalStatusFilter, ] = useState<string>("all")
 
     const [trainingSearch, setTrainingSearch] = useState("")
-    const [trainingCategoryFilter, setTrainingCategoryFilter] = useState<string>("all")
+    const [trainingCategoryFilter, ] = useState<string>("all")
 
     // Modals
     const [isNewCycleOpen, setIsNewCycleOpen] = useState(false)

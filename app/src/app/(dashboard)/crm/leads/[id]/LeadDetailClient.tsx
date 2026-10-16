@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
-    Phone, Mail, Building2, User, Globe, Calendar, 
-    ArrowLeft, Pencil, MoreVertical, Sparkles, PhoneCall, 
-    Target, CheckCircle2, XCircle, DollarSign, Clock
+    Phone, Mail, User, Globe, Calendar, 
+    ArrowLeft, Pencil, Sparkles, PhoneCall, 
+    Target, CheckCircle2, XCircle, Clock
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { Lead, LeadStatus } from "@/app/actions/crm/leads"
@@ -19,6 +19,7 @@ import EntityTasks from "@/components/crm/EntityTasks"
 import EntityCommunications from "@/components/crm/EntityCommunications"
 import type { Task } from "@/app/actions/crm/tasks"
 import type { CommunicationLog } from "@/app/actions/crm/communications"
+import { errorMessage } from "@/lib/utils";
 
 const statusConfig: Record<LeadStatus, { label: string; color: string; icon: React.ElementType }> = {
     NEW: { label: "New", color: "bg-blue-500/10 text-blue-500 border-blue-500/20", icon: Sparkles },
@@ -54,8 +55,8 @@ export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Pr
         toast.success(`Lead rank successfully upgraded to ${nextScore} points!`)
         router.refresh()
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to upgrade lead rank")
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to upgrade lead rank")
     } finally {
       setIsUpgradingScore(false)
     }
@@ -67,8 +68,8 @@ export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Pr
       const result = unwrap(await convertLeadToDeal(lead.id))
       toast.success("Lead successfully converted to a Deal!")
       router.push(`/crm/deals/${result.dealId}`)
-    } catch (error: any) {
-      toast.error(error.message || "Failed to convert lead")
+    } catch (error) {
+      toast.error(errorMessage(error) || "Failed to convert lead")
     } finally {
       setIsConverting(false)
     }

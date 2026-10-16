@@ -19,7 +19,7 @@ const prismaClientSingleton = (): PrismaClient => {
             if (typeof prop === 'symbol') return (target as any)[prop];
             return createRecursiveProxy(path ? `${path}.${String(prop)}` : String(prop));
           },
-          apply: (target, thisArg, args) => {
+          apply: () => {
             throw new Error(`❌ [Prisma] DATABASE_URL missing. Action attempted on 'prisma.${path}()' during build or runtime.`);
           }
         });

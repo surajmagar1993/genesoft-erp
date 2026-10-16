@@ -9,22 +9,10 @@ import {
     Search,
     RotateCcw,
     Receipt,
-    DollarSign,
-    Package,
-    Warehouse,
     TrendingDown,
-    CheckCircle2,
-    Clock,
-    AlertCircle,
-    Building2,
-    Calendar,
-    ArrowUpRight,
-    Ban,
     Loader2,
     Trash2,
-    Coins,
-    ShieldCheck,
-    CreditCard,
+    Coins
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -82,11 +70,10 @@ interface NewCreditNoteItemState {
 }
 
 export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
-    const appLocale = moneyRegime?.locale
+    const { formatMoney } = useTaxRegime()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [data, setData] = useState<CreditNotesOverviewData>(initialData)
+    const [data, ] = useState<CreditNotesOverviewData>(initialData)
 
     // Active tab
     const [activeTab, setActiveTab] = useState("all")

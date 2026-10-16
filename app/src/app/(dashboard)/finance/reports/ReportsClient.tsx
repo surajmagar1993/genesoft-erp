@@ -7,8 +7,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   TrendingUp, TrendingDown, DollarSign, Wallet, ArrowUpRight,
-  ArrowDownRight, BarChart3, FileText, Droplets, Users,
-  RefreshCw, Download, FileSpreadsheet, ArrowRight
+  ArrowDownRight, BarChart3, FileText, Droplets, Users, FileSpreadsheet, ArrowRight
 } from "lucide-react"
 import { getTaxJurisdiction } from "@/lib/tax-jurisdiction"
 import { getTenantSettings } from "@/app/actions/settings/tenant"

@@ -17,6 +17,7 @@ import {
     MilestoneStatus,
     ProjectTaskStatus
 } from "@prisma/client"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "projects" as const
@@ -858,9 +859,9 @@ export async function createProject(input: CreateProjectInput): Promise<{ succes
 
         revalidatePath("/projects")
         return { success: true, projectId: project.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to create project:", err)
-        return { success: false, error: err.message || "Failed to create project" }
+        return { success: false, error: errorMessage(err) || "Failed to create project" }
     }
 }
 
@@ -891,9 +892,9 @@ export async function updateProject(id: string, input: UpdateProjectInput): Prom
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to update project:", err)
-        return { success: false, error: err.message || "Failed to update project" }
+        return { success: false, error: errorMessage(err) || "Failed to update project" }
     }
 }
 
@@ -910,9 +911,9 @@ export async function deleteProject(id: string): Promise<{ success: boolean; err
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to delete project:", err)
-        return { success: false, error: err.message || "Failed to delete project" }
+        return { success: false, error: errorMessage(err) || "Failed to delete project" }
     }
 }
 
@@ -944,9 +945,9 @@ export async function createProjectTask(input: CreateProjectTaskInput): Promise<
 
         revalidatePath("/projects")
         return { success: true, taskId: task.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to create project task:", err)
-        return { success: false, error: err.message || "Failed to create task" }
+        return { success: false, error: errorMessage(err) || "Failed to create task" }
     }
 }
 
@@ -967,9 +968,9 @@ export async function updateProjectTaskStatus(id: string, newStatus: ProjectTask
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to update task status:", err)
-        return { success: false, error: err.message || "Failed to update task status" }
+        return { success: false, error: errorMessage(err) || "Failed to update task status" }
     }
 }
 
@@ -1000,9 +1001,9 @@ export async function updateProjectTask(id: string, input: UpdateProjectTaskInpu
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to update task:", err)
-        return { success: false, error: err.message || "Failed to update task" }
+        return { success: false, error: errorMessage(err) || "Failed to update task" }
     }
 }
 
@@ -1019,9 +1020,9 @@ export async function deleteProjectTask(id: string): Promise<{ success: boolean;
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to delete task:", err)
-        return { success: false, error: err.message || "Failed to delete task" }
+        return { success: false, error: errorMessage(err) || "Failed to delete task" }
     }
 }
 
@@ -1047,9 +1048,9 @@ export async function createMilestone(input: CreateMilestoneInput): Promise<{ su
 
         revalidatePath("/projects")
         return { success: true, milestoneId: milestone.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to create milestone:", err)
-        return { success: false, error: err.message || "Failed to create milestone" }
+        return { success: false, error: errorMessage(err) || "Failed to create milestone" }
     }
 }
 
@@ -1074,9 +1075,9 @@ export async function updateMilestone(id: string, input: Partial<CreateMilestone
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to update milestone:", err)
-        return { success: false, error: err.message || "Failed to update milestone" }
+        return { success: false, error: errorMessage(err) || "Failed to update milestone" }
     }
 }
 
@@ -1093,9 +1094,9 @@ export async function deleteMilestone(id: string): Promise<{ success: boolean; e
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to delete milestone:", err)
-        return { success: false, error: err.message || "Failed to delete milestone" }
+        return { success: false, error: errorMessage(err) || "Failed to delete milestone" }
     }
 }
 
@@ -1119,9 +1120,9 @@ export async function addProjectMember(projectId: string, employeeId: string, ro
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to add project member:", err)
-        return { success: false, error: err.message || "Failed to allocate team member" }
+        return { success: false, error: errorMessage(err) || "Failed to allocate team member" }
     }
 }
 
@@ -1138,9 +1139,9 @@ export async function removeProjectMember(memberId: string): Promise<{ success: 
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to remove project member:", err)
-        return { success: false, error: err.message || "Failed to remove member" }
+        return { success: false, error: errorMessage(err) || "Failed to remove member" }
     }
 }
 
@@ -1183,9 +1184,9 @@ export async function logProjectTime(input: LogTimeInput): Promise<{ success: bo
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to log work time:", err)
-        return { success: false, error: err.message || "Failed to log time" }
+        return { success: false, error: errorMessage(err) || "Failed to log time" }
     }
 }
 
@@ -1223,9 +1224,9 @@ export async function deleteProjectTime(id: string): Promise<{ success: boolean;
 
         revalidatePath("/projects")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to delete time entry:", err)
-        return { success: false, error: err.message || "Failed to delete time entry" }
+        return { success: false, error: errorMessage(err) || "Failed to delete time entry" }
     }
 }
 

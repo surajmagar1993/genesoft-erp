@@ -3,6 +3,7 @@ import crypto from "crypto"
 import { prisma } from "@/lib/prisma"
 import { openSecret } from "@/lib/secret-box"
 import { parseMetaWebhookEvent, verifyMetaWebhookChallenge } from "@/lib/whatsapp-engine"
+import { errorMessage } from "@/lib/utils";
 
 export const dynamic = "force-dynamic"
 
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({ status: "success", processedStatuses, processedMessages })
-    } catch (err: any) {
+    } catch (err) {
         console.error("Meta WhatsApp Webhook error:", err)
         return NextResponse.json({ status: "error", error: "Webhook processing failed" }, { status: 500 })
     }

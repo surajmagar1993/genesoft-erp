@@ -10,6 +10,7 @@ import {
     SystemTemplateDefinition,
 } from "@/lib/email-template-engine"
 import { Resend } from "resend"
+import { errorMessage } from "@/lib/utils";
 
 /**
  * Ensures current caller has SUPER_ADMIN permissions.
@@ -190,9 +191,9 @@ export async function updateSystemEmailTemplate(input: {
 
         revalidatePath("/admin/email-templates")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("updateSystemEmailTemplate error:", err)
-        return { success: false, error: err.message || "Failed to update email template" }
+        return { success: false, error: errorMessage(err) || "Failed to update email template" }
     }
 }
 
@@ -216,9 +217,9 @@ export async function resetSystemEmailTemplate(templateKey: SystemTemplateKey): 
 
         revalidatePath("/admin/email-templates")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("resetSystemEmailTemplate error:", err)
-        return { success: false, error: err.message || "Failed to reset template" }
+        return { success: false, error: errorMessage(err) || "Failed to reset template" }
     }
 }
 
@@ -312,11 +313,11 @@ export async function sendTestSystemEmail(input: {
                 message: `[Simulated Dispatch] Email compiled and validated successfully for ${recipientEmail.trim()}. (Configure RESEND_API_KEY for live delivery).`,
             }
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("sendTestSystemEmail error:", err)
         return {
             success: false,
-            error: err.message || "Failed to dispatch test email",
+            error: errorMessage(err) || "Failed to dispatch test email",
             message: "",
         }
     }

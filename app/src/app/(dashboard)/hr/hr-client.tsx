@@ -14,9 +14,6 @@ import {
     Briefcase,
     Calendar,
     Clock,
-    CheckCircle2,
-    XCircle,
-    AlertCircle,
     Search,
     Plus,
     RefreshCw,
@@ -29,12 +26,8 @@ import {
     Loader2,
     Eye,
     Pencil,
-    Shield,
-    BadgePercent,
-    ArrowUpRight,
     UserCheck,
     CalendarDays,
-    FileText,
     Award,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -67,9 +60,6 @@ import { toast } from "sonner"
 import {
     HROverviewData,
     EmployeeRecord,
-    DepartmentRecord,
-    DesignationRecord,
-    AttendanceRecord,
     LeaveRecord,
     createEmployee,
     updateEmployee,
@@ -77,10 +67,9 @@ import {
     createDesignation,
     recordAttendance,
     submitLeaveRequest,
-    updateLeaveStatus,
-    CreateEmployeeInput,
+    updateLeaveStatus
 } from "@/app/actions/hr"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import {
     EmployeeStatus,
     EmploymentType,
@@ -129,7 +118,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
 
     // Selected items
     const [selectedEmployee, setSelectedEmployee] = useState<EmployeeRecord | null>(null)
-    const [selectedLeave, setSelectedLeave] = useState<LeaveRecord | null>(null)
+    const [, ] = useState<LeaveRecord | null>(null)
 
     // Form state: Employee
     const [empFirstName, setEmpFirstName] = useState("")
@@ -298,8 +287,8 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to register employee")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to register employee")
         } finally {
             setIsSubmittingEmployee(false)
         }
@@ -355,8 +344,8 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to update employee")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to update employee")
         } finally {
             setIsSubmittingEmployee(false)
         }
@@ -403,8 +392,8 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to record attendance")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to record attendance")
         } finally {
             setIsSubmittingAttendance(false)
         }
@@ -440,8 +429,8 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to submit leave request")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to submit leave request")
         } finally {
             setIsSubmittingLeave(false)
         }
@@ -457,8 +446,8 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to update leave status")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to update leave status")
         }
     }
 
@@ -490,8 +479,8 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to create department")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to create department")
         } finally {
             setIsSubmittingDept(false)
         }
@@ -523,8 +512,8 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to create designation")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to create designation")
         } finally {
             setIsSubmittingDesig(false)
         }

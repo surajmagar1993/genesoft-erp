@@ -10,33 +10,18 @@ import {
     FileText,
     Plus,
     Search,
-    Filter,
     Printer,
-    ArrowRight,
-    Building2,
-    Calendar,
-    MapPin,
     DollarSign,
     MoreHorizontal,
-    Package,
-    Shield,
     Trash2,
-    Loader2,
-    ExternalLink,
-    AlertCircle,
-    ArrowUpRight,
-    RefreshCw,
-    X,
-    Check
+    Loader2
 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Dialog,
     DialogContent,
@@ -62,7 +47,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { format } from "date-fns"
 import { toast } from "sonner"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import {
     ChallanReason,
@@ -121,11 +106,11 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
     const [vehicleNumber, setVehicleNumber] = useState("")
     const [lrNumber, setLrNumber] = useState("")
     const [lrDate, setLrDate] = useState("")
-    const [placeOfSupply, setPlaceOfSupply] = useState("27-Maharashtra")
+    const [placeOfSupply, ] = useState("27-Maharashtra")
     const [dispatchAddressText, setDispatchAddressText] = useState("")
     const [deliveryAddressText, setDeliveryAddressText] = useState("")
-    const [notes, setNotes] = useState("")
-    const [terms, setTerms] = useState("")
+    const [notes, ] = useState("")
+    const [terms, ] = useState("")
 
     // Line items for creation
     const [lineItems, setLineItems] = useState<CreateChallanItemInput[]>([
@@ -311,8 +296,8 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                 setIsCreateModalOpen(false)
                 resetCreateForm()
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create delivery challan.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to create delivery challan.")
             }
         })
     }
@@ -345,8 +330,8 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                 toast.success(`Challan status updated to ${statusConfig[targetStatus].label}.`)
                 setIsStatusModalOpen(false)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to update challan status.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to update challan status.")
             }
         })
     }
@@ -361,8 +346,8 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                 setIsConvertModalOpen(false)
                 router.refresh()
                 router.push(`/sales/invoices/${res.invoice.id}`)
-            } catch (err: any) {
-                toast.error(err.message || "Failed to convert challan to invoice.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to convert challan to invoice.")
             }
         })
     }

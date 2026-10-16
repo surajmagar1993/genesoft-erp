@@ -18,8 +18,7 @@ import {
     DialogDescription,
     DialogFooter,
     DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+    DialogTitle
 } from "@/components/ui/dialog"
 import {
     Select,
@@ -32,7 +31,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
     Plus, Search, MoreHorizontal, Pencil, Trash2,
-    Calendar, AlertCircle, CheckCircle2, Clock, Loader2,
+    Calendar, CheckCircle2, Clock, Loader2,
     CheckSquare, ListTodo, Activity, History
 } from "lucide-react"
 import { createTask, updateTask, deleteTask, type Task, type TaskStatus, type TaskPriority } from "@/app/actions/crm/tasks"
@@ -65,7 +64,7 @@ export default function TasksClient({ initialTasks, total }: Props) {
     const [editingId, setEditingId] = useState<string | null>(null)
     const [pendingId, setPendingId] = useState<string | null>(null)
     const [isSaving, setIsSaving] = useState(false)
-    const [isPending, startTransition] = useTransition()
+    const [, startTransition] = useTransition()
 
     // Sync with server data
     useState(() => {
@@ -318,10 +317,7 @@ export default function TasksClient({ initialTasks, total }: Props) {
                                 </TableCell>
                             </TableRow>
                         ) : initialTasks.map((task) => {
-                                const status = statusConfig[task.status]
                                 const priority = priorityConfig[task.priority]
-                                const StatusIcon = status.icon
-                                
                                 return (
                                     <TableRow key={task.id} className="group hover:bg-muted/30">
                                         <TableCell className="pl-6">

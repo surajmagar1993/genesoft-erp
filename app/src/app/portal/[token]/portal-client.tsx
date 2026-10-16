@@ -1,6 +1,6 @@
 "use client"
 
-import { localeForCurrency } from "@/lib/utils"
+import { localeForCurrency, errorMessage } from "@/lib/utils"
 import { useState, useEffect, useCallback } from "react"
 import {
   getPortalDashboard,
@@ -484,12 +484,7 @@ function OverviewTab({
 // INVOICES TAB
 // ════════════════════════════════════════════
 
-function InvoicesTab({
-  invoices,
-  currency,
-  token,
-  onRefresh,
-}: {
+function InvoicesTab({ invoices, token, onRefresh }: {
   invoices: PortalInvoiceRecord[]
   currency: string
   token: string
@@ -516,8 +511,8 @@ function InvoicesTab({
       } else {
         toast.error(res.error || res.message)
       }
-    } catch (err: any) {
-      toast.error(err.message || "Payment failed")
+    } catch (err) {
+      toast.error(errorMessage(err) || "Payment failed")
     } finally {
       setPaying(false)
     }
@@ -733,10 +728,7 @@ function InvoicesTab({
 // PAYMENTS TAB
 // ════════════════════════════════════════════
 
-function PaymentsTab({
-  payments,
-  currency,
-}: {
+function PaymentsTab({ payments }: {
   payments: PortalPaymentRecord[]
   currency: string
 }) {

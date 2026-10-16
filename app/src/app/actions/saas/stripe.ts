@@ -3,8 +3,6 @@
 import { stripe } from "@/lib/stripe"
 import { getTenantAdminId } from "@/lib/get-tenant-id"
 import { prisma } from "@/lib/prisma"
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
 import { ensureStripePrice, type PaidPlan } from "@/lib/stripe-plans"
 import { getEffectivePricing } from "@/lib/plan-pricing"
 import { appUrl } from "@/lib/app-url"

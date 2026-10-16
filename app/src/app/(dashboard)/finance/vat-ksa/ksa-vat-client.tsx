@@ -4,7 +4,6 @@ import React, { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
   KsaVatOverviewResult,
-  KsaInvoiceListItem,
   exportKsaVatReturnJson,
   exportKsaVatReturnCsv,
   generateZatcaInvoicePayload,
@@ -12,7 +11,6 @@ import {
 import {
   encodeZatcaTlv,
   decodeZatcaTlv,
-  validateKsaVatNumber,
   calculateZakatBase,
   ZakatCalculationInputs,
   ZakatCalculationResult,
@@ -28,16 +26,12 @@ import {
   Building2,
   CheckCircle2,
   AlertCircle,
-  Clock,
-  Sparkles,
   Search,
-  Eye,
   FileCode,
-  Copy,
-  Check,
-  RefreshCw,
+  Copy
 } from "lucide-react"
 import { toast } from "sonner"
+import { errorMessage } from "@/lib/utils";
 
 interface Props {
   initialData: KsaVatOverviewResult
@@ -45,7 +39,7 @@ interface Props {
 
 export function KsaVatClient({ initialData }: Props) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   const [activeTab, setActiveTab] = useState<"fatoora" | "qr_studio" | "vat_return" | "zakat">("fatoora")
   const [selectedYear, setSelectedYear] = useState<number>(initialData.year)
@@ -53,10 +47,10 @@ export function KsaVatClient({ initialData }: Props) {
 
   // Invoice Inspection Modals
   const [inspectingPayload, setInspectingPayload] = useState<any | null>(null)
-  const [isInspectingLoading, setIsInspectingLoading] = useState(false)
+  const [, setIsInspectingLoading] = useState(false)
   const [isXmlModalOpen, setIsXmlModalOpen] = useState(false)
   const [isPrintInvoiceModalOpen, setIsPrintInvoiceModalOpen] = useState(false)
-  const [copiedText, setCopiedText] = useState<string | null>(null)
+  const [, setCopiedText] = useState<string | null>(null)
 
   // Interactive QR Studio State
   const [qrSellerName, setQrSellerName] = useState("")
@@ -113,8 +107,8 @@ export function KsaVatClient({ initialData }: Props) {
       setInspectingPayload(payload)
       if (mode === "xml") setIsXmlModalOpen(true)
       else setIsPrintInvoiceModalOpen(true)
-    } catch (err: any) {
-      toast.error(err.message || "Failed to fetch invoice details")
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to fetch invoice details")
     } finally {
       setIsInspectingLoading(false)
     }
@@ -135,9 +129,9 @@ export function KsaVatClient({ initialData }: Props) {
       a.click()
       URL.revokeObjectURL(url)
       toast.success("ZATCA VAT Return JSON exported successfully")
-    } catch (err) {
-      toast.error("Failed to export ZATCA JSON")
-    }
+    } catch {
+            toast.error("Failed to export ZATCA JSON")
+          }
   }
 
   // Export CSV
@@ -155,9 +149,9 @@ export function KsaVatClient({ initialData }: Props) {
       a.click()
       URL.revokeObjectURL(url)
       toast.success("ZATCA VAT Return CSV exported successfully")
-    } catch (err) {
-      toast.error("Failed to export CSV")
-    }
+    } catch {
+            toast.error("Failed to export CSV")
+          }
   }
 
   // Run TLV Generator

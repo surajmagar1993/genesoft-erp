@@ -27,27 +27,16 @@ import {
     BookOpen,
     Plus,
     Search,
-    Filter,
-    ArrowUpRight,
-    ArrowDownRight,
-    TrendingDown,
     Clock,
     CheckCircle2,
     XCircle,
     Ban,
-    DollarSign,
     ShieldCheck,
-    CreditCard,
-    FileText,
     ExternalLink,
     AlertCircle,
     Layers,
     PieChart,
-    Building2,
     User,
-    Calendar,
-    ChevronRight,
-    Info,
     Trash2,
     Eye,
 } from "lucide-react"
@@ -64,7 +53,6 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
 import { Progress } from "@/components/ui/progress"
 import { RequireRole } from "@/components/auth/role-context"
 import { toast } from "sonner"
@@ -239,7 +227,7 @@ export default function ExpensesClient({
             reference: string | null
         }[] = []
 
-        const running = Number(selectedAccount.balance) // Current or baseline
+        Number(selectedAccount.balance); // Current or baseline
 
         // Find all lines across journal entries that reference this account
         for (const je of journalEntries) {

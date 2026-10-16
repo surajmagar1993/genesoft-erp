@@ -1,10 +1,10 @@
 import { getRecentSystemLogs } from "@/app/actions/saas/admin"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Terminal, Database, ShieldAlert, Activity, Clock, Filter, AlertTriangle, AlertCircle, Building2, CheckCircle2 as CheckCircleIcon } from "lucide-react"
-import { formatDistanceToNow, format } from "date-fns"
+import { Terminal, Activity, Filter, AlertTriangle, Building2, CheckCircle2 as CheckCircleIcon } from "lucide-react"
+import { format } from "date-fns"
 import { PruneLogsButton } from "@/components/admin/prune-logs-button"
 
 export default async function SystemLogsPage() {
@@ -180,24 +180,4 @@ function cn(...classes: any[]) {
 
 function Separator({ className }: { className?: string }) {
     return <div className={cn("h-px w-full bg-border", className)} />
-}
-
-function CheckCircle2(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M20 6 9 17l-5-5" />
-            <circle cx="12" cy="12" r="10" />
-        </svg>
-    )
 }

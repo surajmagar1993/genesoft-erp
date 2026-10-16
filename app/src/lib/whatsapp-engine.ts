@@ -1,3 +1,5 @@
+import { errorMessage } from "@/lib/utils";
+
 /**
  * WHATSAPP BUSINESS API ENGINE
  * 
@@ -339,11 +341,11 @@ export async function dispatchMetaCloudApiMessage(params: {
             directLink,
             simulated: false,
         }
-    } catch (err: any) {
+    } catch (err) {
         return {
             success: false,
             status: "FAILED",
-            error: err.message || "Failed to communicate with Meta Cloud API",
+            error: errorMessage(err) || "Failed to communicate with Meta Cloud API",
             directLink,
         }
     }

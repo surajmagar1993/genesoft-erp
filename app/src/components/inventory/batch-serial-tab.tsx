@@ -4,7 +4,6 @@ import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
-    Package,
     Warehouse as WarehouseIcon,
     Layers,
     AlertTriangle,
@@ -14,7 +13,6 @@ import {
     Plus,
     RefreshCw,
     Download,
-    Eye,
     SlidersHorizontal,
     CheckCircle2,
     XCircle,
@@ -22,26 +20,16 @@ import {
     Check,
     Barcode as BarcodeIcon,
     QrCode as QrIcon,
-    FileSpreadsheet,
     Printer,
     History,
     ArrowUpRight,
     ArrowDownLeft,
-    Tag,
-    Pencil,
     Ban,
-    AlertCircle,
-    Calendar,
-    ChevronRight,
-    ExternalLink,
     Hash,
-    Truck,
-    Info,
-    SearchCheck,
-    ShieldCheck
+    SearchCheck
 } from "lucide-react"
 import Papa from "papaparse"
-import { format, isBefore, addDays } from "date-fns"
+import { format } from "date-fns"
 import { toast } from "sonner"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -51,7 +39,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Dialog,
     DialogContent,
@@ -74,17 +62,16 @@ import {
     SerialItem,
     TraceabilityAuditResult,
     createBatch,
-    updateBatch,
     adjustBatchQty,
     recallBatch,
-    createSerial,
     createSerialsBulk,
     updateSerialStatus,
     getTraceabilityAudit,
 } from "@/app/actions/batch-serial"
-import { BatchStatus, SerialStatus } from "@prisma/client"
+import { SerialStatus } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
+import { errorMessage } from "@/lib/utils";
 
 interface BatchSerialTabProps {
     data: BatchSerialOverviewData
@@ -92,8 +79,7 @@ interface BatchSerialTabProps {
 }
 
 export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
-    const appLocale = moneyRegime?.locale
+    const { formatMoney } = useTaxRegime()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
@@ -270,8 +256,8 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                 })
                 router.refresh()
                 onRefresh?.()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create batch")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to create batch")
             }
         })
     }
@@ -335,8 +321,8 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                 })
                 router.refresh()
                 onRefresh?.()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to register serials")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to register serials")
             }
         })
     }
@@ -359,8 +345,8 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                 setAdjustQty(0)
                 router.refresh()
                 onRefresh?.()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to adjust batch quantity")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to adjust batch quantity")
             }
         })
     }
@@ -381,8 +367,8 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                 setRecallReason("")
                 router.refresh()
                 onRefresh?.()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to recall batch")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to recall batch")
             }
         })
     }
@@ -394,8 +380,8 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                 toast.success(`Serial status updated to ${status}`)
                 router.refresh()
                 onRefresh?.()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to update serial status")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to update serial status")
             }
         })
     }
@@ -416,8 +402,8 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
             } else {
                 toast.success(`Loaded full provenance audit for ${traceQuery.toUpperCase()}!`)
             }
-        } catch (err: any) {
-            toast.error(err.message || "Error running traceability investigation")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Error running traceability investigation")
         } finally {
             setIsSearchingTrace(false)
         }
@@ -451,9 +437,9 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
             link.click()
             document.body.removeChild(link)
             toast.success("Batches exported to CSV.")
-        } catch (e) {
-            toast.error("Failed to export batches CSV")
-        }
+        } catch {
+                    toast.error("Failed to export batches CSV")
+                }
     }
 
     const exportSerialsCsv = () => {
@@ -480,9 +466,9 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
             link.click()
             document.body.removeChild(link)
             toast.success("Serials exported to CSV.")
-        } catch (e) {
-            toast.error("Failed to export serials CSV")
-        }
+        } catch {
+                    toast.error("Failed to export serials CSV")
+                }
     }
 
     return (
@@ -712,7 +698,6 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                         </TableRow>
                                     ) : (
                                         filteredBatches.map((b) => {
-                                            const isDepleted = b.currentQty === 0
                                             const isExpired = b.daysToExpiry !== null && b.daysToExpiry <= 0
                                             const isExpiringSoon = b.daysToExpiry !== null && b.daysToExpiry > 0 && b.daysToExpiry <= 30
 

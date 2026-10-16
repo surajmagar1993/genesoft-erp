@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
+import "next/link"
 import {
     FileSpreadsheet,
     Play,
@@ -10,14 +10,12 @@ import {
     Download,
     Printer,
     FolderOpen,
-    Filter,
     Plus,
     Trash2,
     BarChart3,
     LineChart as LineChartIcon,
     PieChart as PieChartIcon,
     AreaChart as AreaChartIcon,
-    Layers,
     Receipt,
     Warehouse,
     DollarSign,
@@ -25,15 +23,10 @@ import {
     FolderKanban,
     ChevronDown,
     ChevronRight,
-    RefreshCw,
     SlidersHorizontal,
-    ArrowUpDown,
     Check,
     X,
-    Sparkles,
-    FileText,
-    TrendingUp,
-    LayoutDashboard
+    FileText
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -71,8 +64,7 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    Tooltip,
-    Legend
+    Tooltip
 } from "recharts"
 import Papa from "papaparse"
 import { toast } from "sonner"
@@ -91,6 +83,7 @@ import {
     saveCustomReport,
     deleteCustomReport
 } from "@/app/actions/reports/builder"
+import { errorMessage } from "@/lib/utils";
 
 const CHART_COLORS = ["#4f46e5", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#64748b"]
 
@@ -219,8 +212,8 @@ export function ReportBuilderClient({
                 setReportResult(res)
                 setCurrentPage(1)
                 toast.success(`Report generated: ${res.totalCount} records`)
-            } catch (err: any) {
-                toast.error(err.message || "Failed to generate report")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to generate report")
             }
         })
     }
@@ -237,8 +230,8 @@ export function ReportBuilderClient({
                 const res = await runCustomReportQuery(saved.config)
                 setReportResult(res)
                 toast.success(`Loaded report: ${saved.name}`)
-            } catch (err: any) {
-                toast.error(err.message || "Failed to load report")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to load report")
             }
         })
     }

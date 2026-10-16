@@ -1,8 +1,5 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
-import { getTenantId } from "@/lib/get-tenant-id"
-
 /**
  * Exchange Rate Engine for Multi-Currency Consolidation
  * Standardized for Phase 1 (MVP) with static base rates

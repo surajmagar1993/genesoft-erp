@@ -49,9 +49,9 @@ export default function EditQuotePage() {
                 discountType: data.discount_type,
                 currencyCode: data.currency_code
             })
-        } catch (error) {
-            toast.error("Failed to fetch quote")
-        } finally {
+        } catch {
+                    toast.error("Failed to fetch quote")
+                } finally {
             setLoading(false)
         }
     }

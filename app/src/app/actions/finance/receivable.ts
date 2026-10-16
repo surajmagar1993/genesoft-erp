@@ -1,7 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { pick, toRow, toRows } from "@/lib/pg-row"
+import { pick, toRow } from "@/lib/pg-row"
 import { getTenantId } from "@/lib/get-tenant-id"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */

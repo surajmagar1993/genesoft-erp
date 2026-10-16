@@ -1,6 +1,6 @@
 "use server"
 
-import { localeForCurrency } from "@/lib/utils"
+import { localeForCurrency, errorMessage } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
 import { appUrl } from "@/lib/app-url"
 import { getTenantAdminId, getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -16,7 +16,6 @@ import {
     WHATSAPP_TEMPLATES,
     dispatchMetaCloudApiMessage,
     interpolateWhatsAppTemplate,
-    generateWhatsAppDirectLink,
     normalizeE164Phone,
 } from "@/lib/whatsapp-engine"
 
@@ -147,16 +146,16 @@ export async function saveWhatsAppConfig(payload: {
         revalidatePath("/crm/whatsapp")
         await logTenantAudit(tenantId, "WHATSAPP_CONFIG_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { mode: payload.mode, credentialsChanged: isNewSecret(payload.appSecret) || isNewSecret(payload.accessToken) } })
         return { success: true, verifyToken: updatedWa.verifyToken }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to save WhatsApp config:", err)
-        return { success: false, error: err.message || "Failed to update configuration" }
+        return { success: false, error: errorMessage(err) || "Failed to update configuration" }
     }
 }
 
 /**
  * Tests connection to Meta Cloud API or validates credentials.
  */
-export async function testWhatsAppConnection(testPhone?: string) {
+export async function testWhatsAppConnection(_testPhone?: string) {
     try {
         const tenantId = await getTenantAdminId()
         if (!tenantId) return { success: false, error: "Unauthorized" }
@@ -211,8 +210,8 @@ export async function testWhatsAppConnection(testPhone?: string) {
             simulated: false,
             message: `Connected successfully! Display Name: ${data.verified_name || wa.senderDisplayName || "Verified Account"} (${data.display_phone_number || wa.phoneNumberId})`,
         }
-    } catch (err: any) {
-        return { success: false, error: err.message || "Connection test failed" }
+    } catch (err) {
+        return { success: false, error: errorMessage(err) || "Connection test failed" }
     }
 }
 
@@ -323,9 +322,9 @@ export async function sendWhatsAppMessage(payload: {
             simulated: dispatchResult.simulated,
             error: dispatchResult.error,
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("sendWhatsAppMessage error:", err)
-        return { success: false, error: err.message || "Failed to dispatch message" }
+        return { success: false, error: errorMessage(err) || "Failed to dispatch message" }
     }
 }
 
@@ -393,9 +392,9 @@ export async function sendInvoiceViaWhatsApp(params: {
             templateKey,
             variables,
         })
-    } catch (err: any) {
+    } catch (err) {
         console.error("sendInvoiceViaWhatsApp error:", err)
-        return { success: false, error: err.message || "Failed to send invoice via WhatsApp" }
+        return { success: false, error: errorMessage(err) || "Failed to send invoice via WhatsApp" }
     }
 }
 

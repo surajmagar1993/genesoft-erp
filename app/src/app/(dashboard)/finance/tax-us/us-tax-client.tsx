@@ -26,25 +26,15 @@ import {
   AlertCircle,
   Download,
   Printer,
-  Calendar,
   DollarSign,
   Search,
   ShieldCheck,
-  Building2,
-  Copy,
-  Receipt,
   Users,
   TrendingUp,
   AlertTriangle,
-  ArrowUpRight,
-  Filter,
-  FileCheck,
   Plus,
-  RefreshCw,
   HelpCircle,
-  SlidersHorizontal,
   FileText,
-  BadgePercent,
   Calculator,
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -70,6 +60,7 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { unwrap } from "@/lib/action-result"
+import { errorMessage } from "@/lib/utils";
 
 interface Props {
   initialData: UsTaxOverviewReport
@@ -77,7 +68,7 @@ interface Props {
 
 export function UsTaxClient({ initialData }: Props) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   // Selected Period Filters
   const [selectedYear, setSelectedYear] = useState<number>(initialData.taxYear)
@@ -100,7 +91,7 @@ export function UsTaxClient({ initialData }: Props) {
 
   // Filters for Certificates
   const [certSearch, setCertSearch] = useState("")
-  const [certFilter, setCertFilter] = useState<"ALL" | "ACTIVE" | "EXPIRING">("ALL")
+  const [certFilter, ] = useState<"ALL" | "ACTIVE" | "EXPIRING">("ALL")
 
   // 1099 Official Slip Modal State
   const [selected1099Record, setSelected1099Record] = useState<Us1099VendorRecord | null>(null)
@@ -255,8 +246,8 @@ export function UsTaxClient({ initialData }: Props) {
       startTransition(() => {
         router.refresh()
       })
-    } catch (err: any) {
-      toast.error(err.message || "Failed to register exemption certificate")
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to register exemption certificate")
     }
   }
 
@@ -282,8 +273,8 @@ export function UsTaxClient({ initialData }: Props) {
       startTransition(() => {
         router.refresh()
       })
-    } catch (err: any) {
-      toast.error(err.message || "Failed to update vendor EIN")
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to update vendor EIN")
     }
   }
 

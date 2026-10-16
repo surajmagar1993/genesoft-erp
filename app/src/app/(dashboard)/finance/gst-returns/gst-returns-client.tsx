@@ -11,15 +11,11 @@ import {
   AlertTriangle,
   Clock,
   Printer,
-  FileText,
   Search,
-  ArrowRight,
-  TrendingUp,
   Receipt,
   Scale,
   Percent,
-  Layers,
-  HelpCircle,
+  Layers
 } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -44,15 +40,13 @@ import {
 } from "@/components/ui/select"
 import {
   Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
+  DialogContent
 } from "@/components/ui/dialog"
 
 import type { GstReturnsOverviewResult } from "@/app/actions/finance/gst-returns"
 import { exportGstr1Json, exportGstr1Csv, exportGstr3bJson } from "@/app/actions/finance/gst-returns"
 import { toast } from "sonner"
+import { errorMessage } from "@/lib/utils";
 
 const fmtInr = (n: number) =>
   new Intl.NumberFormat("en-IN", {
@@ -108,8 +102,8 @@ export default function GstReturnsClient({ initialData }: Props) {
       setIsExporting(true)
       const res = await exportGstr1Json({ year: parseInt(year, 10), month: parseInt(month, 10) })
       downloadFile(res.json, res.filename, "application/json")
-    } catch (err: any) {
-      toast.error("Failed to export GSTR-1 JSON: " + (err?.message || "Unknown error"))
+    } catch (err) {
+      toast.error("Failed to export GSTR-1 JSON: " + (errorMessage(err) || "Unknown error"))
     } finally {
       setIsExporting(false)
     }
@@ -124,8 +118,8 @@ export default function GstReturnsClient({ initialData }: Props) {
         table,
       })
       downloadFile(res.csv, res.filename, "text/csv")
-    } catch (err: any) {
-      toast.error("Failed to export CSV: " + (err?.message || "Unknown error"))
+    } catch (err) {
+      toast.error("Failed to export CSV: " + (errorMessage(err) || "Unknown error"))
     } finally {
       setIsExporting(false)
     }
@@ -136,8 +130,8 @@ export default function GstReturnsClient({ initialData }: Props) {
       setIsExporting(true)
       const res = await exportGstr3bJson({ year: parseInt(year, 10), month: parseInt(month, 10) })
       downloadFile(res.json, res.filename, "application/json")
-    } catch (err: any) {
-      toast.error("Failed to export GSTR-3B JSON: " + (err?.message || "Unknown error"))
+    } catch (err) {
+      toast.error("Failed to export GSTR-3B JSON: " + (errorMessage(err) || "Unknown error"))
     } finally {
       setIsExporting(false)
     }

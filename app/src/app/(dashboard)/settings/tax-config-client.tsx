@@ -10,6 +10,7 @@ import { getTaxGroups, createTaxGroup, deleteTaxGroup, TaxGroup } from "@/app/ac
 import { toast } from "sonner"
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
+import { errorMessage } from "@/lib/utils";
 
 export default function TaxConfigClient() {
     const [taxGroups, setTaxGroups] = useState<TaxGroup[]>([])
@@ -30,9 +31,9 @@ export default function TaxConfigClient() {
         try {
             const data = await getTaxGroups()
             setTaxGroups(data)
-        } catch (error) {
-            toast.error("Failed to load tax groups")
-        } finally {
+        } catch {
+                    toast.error("Failed to load tax groups")
+                } finally {
             setLoading(false)
         }
     }
@@ -45,8 +46,8 @@ export default function TaxConfigClient() {
             setIsAdding(false)
             setNewGroup({ name: "", country_code: "IN", is_default: false, rates: [{ name: "GST", rate: 18 }] })
             loadTaxGroups()
-        } catch (error: any) {
-            toast.error(error.message)
+        } catch (error) {
+            toast.error(errorMessage(error))
         }
     }
 
@@ -56,8 +57,8 @@ export default function TaxConfigClient() {
             unwrap(await deleteTaxGroup(id))
             toast.success("Tax group deleted")
             loadTaxGroups()
-        } catch (error: any) {
-            toast.error(error.message)
+        } catch (error) {
+            toast.error(errorMessage(error))
         }
     }
 

@@ -2,7 +2,6 @@
 
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import React, { useState, useEffect, useTransition } from "react"
-import { useRouter } from "next/navigation"
 import {
     EmployeePortalData,
     clockInEmployee,
@@ -11,32 +10,23 @@ import {
     updatePortalTaskStatus,
     getEmployeePortalData
 } from "@/app/actions/hr/portal"
-import { LeaveType, ProjectTaskStatus, ProjectPriority } from "@prisma/client"
+import { LeaveType, ProjectTaskStatus } from "@prisma/client"
 import { format, differenceInBusinessDays } from "date-fns"
 import {
     Clock,
-    Calendar,
-    User,
-    CheckCircle2,
     CalendarDays,
     FileText,
     CheckSquare,
     DollarSign,
     LogOut,
     LogIn,
-    AlertCircle,
     Building2,
     Briefcase,
     Mail,
     Phone,
-    Download,
     Printer,
     Plus,
-    Flame,
     Sparkles,
-    Shield,
-    Users,
-    ChevronRight,
     Loader2
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -65,7 +55,6 @@ interface PortalClientProps {
 export function PortalClient({ initialData }: PortalClientProps) {
     const { formatMoney, regime: moneyRegime } = useTaxRegime()
     const appLocale = moneyRegime?.locale
-    const router = useRouter()
     const [data, setData] = useState<EmployeePortalData>(initialData)
     const [activeTab, setActiveTab] = useState("attendance")
     const [isPending, startTransition] = useTransition()
@@ -97,7 +86,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
     }
 
     // Clock In / Clock Out Handlers
-    const [clockNotes, setClockNotes] = useState("")
+    const [clockNotes, ] = useState("")
 
     const handleClockIn = () => {
         startTransition(async () => {

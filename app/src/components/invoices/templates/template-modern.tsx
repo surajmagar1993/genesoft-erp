@@ -3,25 +3,10 @@
 import React from "react"
 import { TemplateProps, formatCurrency, formatDate, getInvoiceSummary } from "./template-common"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle2, ShieldCheck, Stamp, Building2, User, Calendar, Hash, MapPin } from "lucide-react"
+import { Building2, User, MapPin } from "lucide-react"
 
 export function TemplateModern({ invoice }: TemplateProps) {
-    const {
-        items,
-        gstSummary,
-        hsnSummary,
-        companyName,
-        companyLogo,
-        companyGstin,
-        companyAddress,
-        companyPhone,
-        companyEmail,
-        isInterState,
-        isSingle,
-        taxLabel,
-        taxIdLabel,
-        docTitle: summaryDocTitle
-    } = getInvoiceSummary(invoice)
+    const { items, gstSummary, hsnSummary, companyName, companyLogo, companyGstin, companyAddress, isInterState, isSingle, taxLabel, taxIdLabel, docTitle: summaryDocTitle } = getInvoiceSummary(invoice)
 
     const isProforma = invoice.type === "PROFORMA"
     const docTitle = summaryDocTitle

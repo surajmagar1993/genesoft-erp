@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
 import { openSecret } from "@/lib/secret-box"
 import { NextResponse } from "next/server"
+import { errorMessage } from "@/lib/utils";
 
 export const dynamic = "force-dynamic"
 
@@ -132,8 +133,8 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ status: "success", received: true }, { status: 200 })
-    } catch (err: any) {
-        console.error("PayPal Webhook Error:", err.message)
+    } catch (err) {
+        console.error("PayPal Webhook Error:", errorMessage(err))
         return NextResponse.json({ status: "error", message: "Webhook processing failed" }, { status: 400 })
     }
 }

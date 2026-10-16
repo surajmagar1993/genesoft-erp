@@ -8,7 +8,6 @@ import {
     EmailAccountRecord,
     EmailMessageRecord,
     EmailTemplateRecord,
-    EmailThreadSummary,
     EmailProvider,
     EmailTemplateCategory,
     EmailStatus,
@@ -16,7 +15,6 @@ import {
 } from "@/app/actions/crm/email-types"
 import {
     sendEmail,
-    saveEmailDraft,
     toggleStarEmail,
     markEmailAsRead,
     deleteEmailMessage,
@@ -37,34 +35,22 @@ import {
     RefreshCw,
     Plus,
     Search,
-    Filter,
     CheckCircle2,
     Clock,
     AlertCircle,
     Eye,
-    MousePointerClick,
     FileText,
     Settings,
     User,
-    Building2,
     Target,
     Handshake,
     ArrowUpRight,
     ArrowDownLeft,
     CornerUpLeft,
-    Paperclip,
     ExternalLink,
     ShieldCheck,
     Sparkles,
-    ChevronRight,
-    Check,
-    X,
     Layers,
-    Calendar,
-    Key,
-    Server,
-    Lock,
-    Shield,
     Info,
     Loader2,
 } from "lucide-react"
@@ -84,6 +70,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
 import { useIsClient } from "@/hooks/use-is-client"
+import { errorMessage } from "@/lib/utils";
 
 interface EmailsClientProps {
     initialData: EmailsOverview
@@ -154,7 +141,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
     const [newAccountPort, setNewAccountPort] = useState(993)
     const [newAccountUser, setNewAccountUser] = useState("")
     const [newAccountImapPass, setNewAccountImapPass] = useState("")
-    const [newAccountImapSecure, setNewAccountImapSecure] = useState(true)
+    const [newAccountImapSecure, ] = useState(true)
     const [showImapSettings, setShowImapSettings] = useState(false)
     // SMTP Outbound
     const [newAccountSmtpHost, setNewAccountSmtpHost] = useState("smtp.gmail.com")
@@ -288,12 +275,12 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
         )
         try {
             await toggleStarEmail(msgId)
-        } catch (err: any) {
-            toast.error("Failed to star email")
-            setMessages((prev) =>
-                prev.map((m) => (m.id === msgId ? { ...m, isStarred: currentStarred } : m))
-            )
-        }
+        } catch {
+                    toast.error("Failed to star email")
+                    setMessages((prev) =>
+                        prev.map((m) => (m.id === msgId ? { ...m, isStarred: currentStarred } : m))
+                    )
+                }
     }
 
     // Handler: Select Thread & Mark Read
@@ -330,8 +317,8 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                 setMessages((prev) => prev.filter((m) => m.id !== msgId))
                 toast.success("Email message deleted")
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to delete email")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to delete email")
             }
         })
     }
@@ -352,8 +339,8 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                 }
                 toast.success(res.syncedCount ? `Synced ${res.syncedCount} new message${res.syncedCount === 1 ? "" : "s"}.` : "Inbox is up to date.")
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Mailbox sync failed")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Mailbox sync failed")
             }
         })
     }
@@ -472,8 +459,8 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                 setComposeCc("")
 
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to send email")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to send email")
             }
         })
     }
@@ -523,8 +510,8 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                 setReplyBody("")
                 toast.success("Reply dispatched and thread updated!")
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to send reply")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to send reply")
             }
         })
     }
@@ -551,8 +538,8 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
             } else {
                 toast.error(res.message)
             }
-        } catch (err: any) {
-            const msg = err.message || "Failed to test SMTP connection"
+        } catch (err) {
+            const msg = errorMessage(err) || "Failed to test SMTP connection"
             setSmtpTestResult({ success: false, message: msg })
             toast.error(msg)
         } finally {
@@ -599,8 +586,8 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                 setNewAccountImapPass("")
                 setSmtpTestResult(null)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to add account")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to add account")
             }
         })
     }
@@ -616,8 +603,8 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                 }
                 toast.success("Mailbox disconnected")
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to remove mailbox")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to remove mailbox")
             }
         })
     }
@@ -649,8 +636,8 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                 setNewTemplateSubject("")
                 setNewTemplateBody("")
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create template")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to create template")
             }
         })
     }
@@ -666,8 +653,8 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                 }
                 toast.success("Template deleted")
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to delete template")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to delete template")
             }
         })
     }

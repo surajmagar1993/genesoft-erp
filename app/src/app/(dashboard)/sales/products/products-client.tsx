@@ -27,7 +27,7 @@ interface ProductsClientProps {
     total: number
 }
 
-export function ProductsClient({ initialProducts, total }: ProductsClientProps) {
+export function ProductsClient({ initialProducts }: ProductsClientProps) {
     const router = useRouter()
     const [products, setProducts] = useState<ProductDB[]>(initialProducts)
     const [searchQuery, setSearchQuery] = useState("")
@@ -36,7 +36,7 @@ export function ProductsClient({ initialProducts, total }: ProductsClientProps) 
     const [isExporting, setIsExporting] = useState(false)
     const [isImporting, setIsImporting] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const [, startTransition] = useTransition()
+    const [, ] = useTransition()
 
     const filteredProducts = products.filter((p) => {
         const matchesSearch =

@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
@@ -20,9 +19,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Printer, X, Plus, Minus, Settings2, Barcode as BarcodeIcon, QrCode as QrIcon, Check, Copy } from "lucide-react"
+import { Printer, Plus, Minus, Barcode as BarcodeIcon, QrCode as QrIcon } from "lucide-react"
 import { generateCode128Svg } from "@/lib/barcode/code128"
-import { generateQrCodeSvg } from "@/lib/barcode/qrcode"
 import { formatCurrency } from "@/lib/utils"
 
 export interface LabelProduct {

@@ -4,7 +4,7 @@ import { COMPLIANCE_MODULES_ENABLED } from "@/lib/features"
 
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, CreditCard, Pencil, Trash2, FileText, Wallet, Calendar, User, Percent, ExternalLink } from "lucide-react"
+import { ArrowLeft, CreditCard, Pencil, Trash2, FileText, Wallet, Calendar, User, Percent } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -27,8 +27,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-
 import { deleteBill } from "@/app/actions/finance/bills"
 import { createPayment, deletePayment, CreatePaymentPayload, PaymentMethod } from "@/app/actions/finance/payments"
 import { RequireRole } from "@/components/auth/role-context"

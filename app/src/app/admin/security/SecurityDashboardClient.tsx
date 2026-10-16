@@ -5,13 +5,9 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { 
     Shield, 
-    ShieldAlert, 
     ShieldCheck, 
-    Lock, 
     KeyRound, 
-    Globe, 
     AlertTriangle, 
-    CheckCircle2, 
     Clock, 
     Ban, 
     Plus, 
@@ -19,7 +15,6 @@ import {
     Loader2, 
     Save, 
     Activity, 
-    User, 
     Server
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -36,6 +31,7 @@ import {
     removeBlockedIp, 
     type SecuritySettings 
 } from "@/app/actions/saas/admin"
+import { errorMessage } from "@/lib/utils";
 
 interface SecurityDashboardClientProps {
     data: {
@@ -81,9 +77,9 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
             unwrap(await updateSecurityPolicy(policyForm))
             toast.success("Security policies updated successfully")
             router.refresh()
-        } catch (error: any) {
+        } catch (error) {
             console.error(error)
-            toast.error(error?.message || "Failed to update security policy")
+            toast.error(errorMessage(error) || "Failed to update security policy")
         } finally {
             setIsLoading(false)
         }
@@ -103,9 +99,9 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
             setIpForm({ ip: "", reason: "" })
             setIsAddIpOpen(false)
             router.refresh()
-        } catch (error: any) {
+        } catch (error) {
             console.error(error)
-            toast.error(error?.message || "Failed to block IP")
+            toast.error(errorMessage(error) || "Failed to block IP")
         } finally {
             setIsLoading(false)
         }
@@ -117,9 +113,9 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
             unwrap(await removeBlockedIp(ip))
             toast.success(`IP ${ip} removed from blocklist`)
             router.refresh()
-        } catch (error: any) {
+        } catch (error) {
             console.error(error)
-            toast.error(error?.message || "Failed to unblock IP")
+            toast.error(errorMessage(error) || "Failed to unblock IP")
         } finally {
             setIsLoading(false)
         }

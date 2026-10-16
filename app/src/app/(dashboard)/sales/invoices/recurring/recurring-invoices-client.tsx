@@ -7,7 +7,6 @@ import Link from "next/link"
 import {
     RecurringInvoicesOverview,
     RecurringProfileRecord,
-    RecurringProfileItemRecord,
     createRecurringProfile,
     updateRecurringProfile,
     deleteRecurringProfile,
@@ -19,7 +18,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Dialog,
@@ -40,22 +38,15 @@ import {
     Play,
     Pause,
     Trash2,
-    Edit3,
     Search,
-    Filter,
-    ArrowUpRight,
     FileText,
     Receipt,
     Building2,
-    User,
     Sparkles,
-    Check,
     X,
     ExternalLink,
     PieChart,
-    BarChart3,
-    Layers,
-    ChevronRight,
+    BarChart3
 } from "lucide-react"
 import { RequireRole } from "@/components/auth/role-context"
 
@@ -64,13 +55,13 @@ interface RecurringInvoicesClientProps {
 }
 
 export default function RecurringInvoicesClient({ initialData }: RecurringInvoicesClientProps) {
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const { regime: moneyRegime } = useTaxRegime()
     const appLocale = moneyRegime?.locale
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
     // State
-    const [data, setData] = useState<RecurringInvoicesOverview>(initialData)
+    const [data, ] = useState<RecurringInvoicesOverview>(initialData)
     const [activeTab, setActiveTab] = useState("profiles")
     const [statusFilter, setStatusFilter] = useState<string>("ALL")
     const [searchQuery, setSearchQuery] = useState("")

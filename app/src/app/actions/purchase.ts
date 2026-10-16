@@ -10,7 +10,7 @@ import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { planLimitError } from "@/lib/plan-limits"
-import { PurchaseOrderStatus, StockMovementType } from "@prisma/client"
+import { PurchaseOrderStatus } from "@prisma/client"
 import { safeAction } from "@/lib/safe-action"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */

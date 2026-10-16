@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation"
 import {
   ShieldCheck,
   Building2,
-  Calendar,
-  CreditCard,
   Download,
   FileSpreadsheet,
   FileText,
@@ -16,20 +14,11 @@ import {
   Clock,
   Plus,
   Search,
-  Filter,
-  ArrowUpDown,
   RefreshCw,
-  HelpCircle,
-  Layers,
   Calculator,
   Percent,
   Landmark,
-  BadgeAlert,
-  SlidersHorizontal,
-  ExternalLink,
-  ChevronRight,
-  Printer,
-  Copy,
+  Printer
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -38,7 +27,6 @@ import { Input } from "@/components/ui/input"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCities, searchStates } from "@/lib/constants/geo-locations"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Table,
   TableBody,
@@ -64,18 +52,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import {
   TDS_SECTIONS,
   calculateTds,
-  validatePan,
-  validateTan,
   IndianTaxQuarter,
 } from "@/lib/tds-engine"
 import {
   TdsOverviewData,
   TdsDeductionRecord,
-  TdsChallanRecord,
   recordTdsChallan,
   updateTdsProfile,
   exportForm26QSummary,
@@ -88,7 +73,7 @@ interface TdsClientProps {
 
 export function TdsClient({ initialData }: TdsClientProps) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   // Period filters
   const [selectedFy, setSelectedFy] = useState<string>(initialData.fiscalYear)
@@ -110,14 +95,14 @@ export function TdsClient({ initialData }: TdsClientProps) {
   const [majorHead, setMajorHead] = useState<"0020" | "0021">("0020")
   const [minorHead, setMinorHead] = useState<"200" | "400">("200")
   const [bankName, setBankName] = useState("State Bank of India")
-  const [tenderDate, setTenderDate] = useState(new Date().toISOString().split("T")[0])
+  const [tenderDate, ] = useState(new Date().toISOString().split("T")[0])
   const [taxAmount, setTaxAmount] = useState("")
-  const [surcharge, setSurcharge] = useState("0")
-  const [cess, setCess] = useState("0")
+  const [surcharge, ] = useState("0")
+  const [cess, ] = useState("0")
   const [interest, setInterest] = useState("0")
   const [penalty, setPenalty] = useState("0")
   const [chequeRefNo, setChequeRefNo] = useState("")
-  const [challanNotes, setChallanNotes] = useState("")
+  const [challanNotes, ] = useState("")
   const [isSubmittingChallan, setIsSubmittingChallan] = useState(false)
 
   // Modal: Form 16A Certificate Preview
@@ -141,7 +126,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
   const [calcGross, setCalcGross] = useState("100000")
   const [calcSection, setCalcSection] = useState("194J_PROF")
   const [calcPan, setCalcPan] = useState("ABCDE1234F")
-  const [calcApply206AA, setCalcApply206AA] = useState(true)
+  const [calcApply206AA, ] = useState(true)
 
   // Live Calculator Calculation
   const calcResult = useMemo(() => {
@@ -222,8 +207,8 @@ export function TdsClient({ initialData }: TdsClientProps) {
       } else {
         toast.error("Failed to record Challan", { description: res.error })
       }
-    } catch (err: any) {
-      toast.error("Error saving challan", { description: err.message })
+    } catch (err) {
+      toast.error("Error saving challan", { description: errorMessage(err) })
     } finally {
       setIsSubmittingChallan(false)
     }
@@ -252,8 +237,8 @@ export function TdsClient({ initialData }: TdsClientProps) {
       } else {
         toast.error("Failed to update profile", { description: res.error })
       }
-    } catch (err: any) {
-      toast.error("Error updating profile", { description: err.message })
+    } catch (err) {
+      toast.error("Error updating profile", { description: errorMessage(err) })
     } finally {
       setIsSubmittingProfile(false)
     }
@@ -316,8 +301,8 @@ export function TdsClient({ initialData }: TdsClientProps) {
         a.click()
         toast.success("Form 26Q Deductee Annexure CSV downloaded!")
       }
-    } catch (err: any) {
-      toast.error("Export error", { description: err.message })
+    } catch (err) {
+      toast.error("Export error", { description: errorMessage(err) })
     }
   }
 

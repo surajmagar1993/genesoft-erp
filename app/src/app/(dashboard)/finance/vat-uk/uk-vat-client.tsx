@@ -30,7 +30,7 @@ interface Props {
 
 export function UkVatClient({ initialData }: Props) {
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
 
   const [activeTab, setActiveTab] = useState<"mtd_return" | "vrn_validator" | "rate_breakdown" | "certificate">("mtd_return")
   const [selectedYear, setSelectedYear] = useState<number>(initialData.year)

@@ -19,16 +19,10 @@ import {
     User, 
     Boxes, 
     CheckCircle2, 
-    XCircle, 
     History, 
     AlertCircle, 
-    Filter, 
-    ArrowUpRight, 
-    ArrowDownLeft, 
     Loader2,
     MoveRight,
-    SlidersHorizontal,
-    Tag,
     Pencil,
     Printer,
     ScanLine,
@@ -36,8 +30,6 @@ import {
     QrCode as QrIcon,
     BarChart3,
     Download,
-    FileSpreadsheet,
-    DollarSign,
     Percent,
     Flame,
     CircleDollarSign,
@@ -77,8 +69,7 @@ import { toast } from "sonner"
 import { 
     InventoryOverviewData, 
     InventoryProduct, 
-    WarehouseItem, 
-    StockMovementRecord,
+    WarehouseItem,
     InventoryReportsResult,
     getInventoryReportsData,
     createWarehouse, 
@@ -88,7 +79,7 @@ import {
 } from "@/app/actions/inventory"
 import { BatchSerialOverviewData } from "@/app/actions/batch-serial"
 import { BatchSerialTab } from "@/components/inventory/batch-serial-tab"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import { StockMovementType } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
 
@@ -101,7 +92,7 @@ interface InventoryClientProps {
 
 export function InventoryClient({ initialData, initialReportsData, initialBatchSerialData, initialTab }: InventoryClientProps) {
     const router = useRouter()
-    const [isPending, startTransition] = useTransition()
+    const [, startTransition] = useTransition()
     const [activeTab, setActiveTab] = useState<"stocks" | "warehouses" | "movements" | "alerts" | "barcodes" | "reports" | "batch-serial">((initialTab as any) || "stocks")
 
     const [batchSerialData, setBatchSerialData] = useState<BatchSerialOverviewData>(initialBatchSerialData || {
@@ -303,7 +294,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
     const [isAdjustOpen, setIsAdjustOpen] = useState(false)
     const [isTransferOpen, setIsTransferOpen] = useState(false)
     const [isWarehouseOpen, setIsWarehouseOpen] = useState(false)
-    const [selectedProductForAdjust, setSelectedProductForAdjust] = useState<InventoryProduct | null>(null)
+    const [, setSelectedProductForAdjust] = useState<InventoryProduct | null>(null)
     const [selectedWarehouseForEdit, setSelectedWarehouseForEdit] = useState<WarehouseItem | null>(null)
 
     // Form states: Adjust Stock
@@ -444,8 +435,8 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to adjust stock")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to adjust stock")
         } finally {
             setIsSubmittingAdjust(false)
         }
@@ -486,8 +477,8 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to transfer stock")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to transfer stock")
         } finally {
             setIsSubmittingTransfer(false)
         }
@@ -534,8 +525,8 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
             startTransition(() => {
                 router.refresh()
             })
-        } catch (err: any) {
-            toast.error(err.message || "Failed to save warehouse")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to save warehouse")
         } finally {
             setIsSubmittingWh(false)
         }
@@ -543,7 +534,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
 
     // Helper for selected product in adjust modal
     const activeAdjustProduct = initialData.products.find(p => p.id === adjustProductId)
-    const activeAdjustWarehouse = initialData.warehouses.find(w => w.id === adjustWarehouseId)
+    initialData.warehouses.find(w => w.id === adjustWarehouseId);
     const currentWarehouseStock = activeAdjustProduct?.warehouseBreakdown.find(wb => wb.warehouseId === adjustWarehouseId)?.quantity || 0
 
     // Preview calculations for adjust dialog

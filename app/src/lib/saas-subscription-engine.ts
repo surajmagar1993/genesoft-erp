@@ -389,7 +389,7 @@ export function calculateSubscriptionProration(params: CalculateProrationParams)
 
     // Determine elapsed and remaining days
     const now = new Date()
-    const start = cycleStartDate ? new Date(cycleStartDate) : new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000)
+    cycleStartDate ? new Date(cycleStartDate) : new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
     const end = cycleEndDate ? new Date(cycleEndDate) : new Date(now.getTime() + 20 * 24 * 60 * 60 * 1000)
 
     const diffTime = Math.max(0, end.getTime() - now.getTime())

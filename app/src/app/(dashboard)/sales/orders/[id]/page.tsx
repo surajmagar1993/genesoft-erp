@@ -2,7 +2,7 @@
 import { use, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { ArrowLeft, FileText, Loader2 } from "lucide-react"
+import { FileText, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { OrderForm, OrderFormData } from "@/components/sales/order-form"

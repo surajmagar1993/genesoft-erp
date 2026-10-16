@@ -12,6 +12,7 @@ import type {
     WorkflowExecutionItem
 } from "@/types/workflows"
 import { PREBUILT_RECIPES } from "@/types/workflows"
+import { errorMessage } from "@/lib/utils";
 
 export async function getWorkflowsOverview(): Promise<{
     rules: WorkflowRuleItem[]
@@ -144,9 +145,9 @@ export async function createWorkflowRule(input: {
                 updatedAt: created.updatedAt
             }
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to create workflow rule:", err)
-        return { success: false, error: err.message || "Failed to create workflow rule" }
+        return { success: false, error: errorMessage(err) || "Failed to create workflow rule" }
     }
 }
 
@@ -197,9 +198,9 @@ export async function updateWorkflowRule(
                 updatedAt: updated.updatedAt
             }
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to update workflow rule:", err)
-        return { success: false, error: err.message || "Failed to update workflow rule" }
+        return { success: false, error: errorMessage(err) || "Failed to update workflow rule" }
     }
 }
 
@@ -217,9 +218,9 @@ export async function toggleWorkflowRuleActive(
 
         revalidatePath("/settings/workflows")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to toggle workflow rule status:", err)
-        return { success: false, error: err.message || "Failed to toggle status" }
+        return { success: false, error: errorMessage(err) || "Failed to toggle status" }
     }
 }
 
@@ -233,9 +234,9 @@ export async function deleteWorkflowRule(id: string): Promise<{ success: boolean
 
         revalidatePath("/settings/workflows")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to delete workflow rule:", err)
-        return { success: false, error: err.message || "Failed to delete workflow rule" }
+        return { success: false, error: errorMessage(err) || "Failed to delete workflow rule" }
     }
 }
 
@@ -259,9 +260,9 @@ export async function installPrebuiltRecipe(recipeName: string): Promise<{
             actions: recipe.actions,
             isActive: true
         })
-    } catch (err: any) {
+    } catch (err) {
         console.error("Failed to install prebuilt recipe:", err)
-        return { success: false, error: err.message || "Failed to install recipe" }
+        return { success: false, error: errorMessage(err) || "Failed to install recipe" }
     }
 }
 
@@ -422,7 +423,7 @@ export async function runWorkflowSimulator(
             executedActions,
             durationMs
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error running workflow simulator:", err)
         return {
             success: false,
@@ -430,7 +431,7 @@ export async function runWorkflowSimulator(
             status: "FAILED",
             executedActions: [],
             durationMs: Date.now() - startTime,
-            error: err.message || "Failed to execute workflow simulation"
+            error: errorMessage(err) || "Failed to execute workflow simulation"
         }
     }
 }

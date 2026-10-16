@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
-  Landmark,
   Download,
   Calendar,
   Building2,
@@ -12,12 +11,10 @@ import {
   Clock,
   Printer,
   FileText,
-  Search,
   Scale,
   Receipt,
   Percent,
   Layers,
-  ArrowUpRight,
   ShieldCheck,
 } from "lucide-react"
 
@@ -43,15 +40,14 @@ import {
 } from "@/components/ui/select"
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+  DialogContent
 } from "@/components/ui/dialog"
 
 import type { UaeVatOverviewResult } from "@/app/actions/finance/uae-vat"
 import { exportUaeVat201Json, exportUaeVat201Csv } from "@/app/actions/finance/uae-vat"
 import { validateUaeTrn } from "@/lib/uae-vat-engine"
 import { toast } from "sonner"
+import { errorMessage } from "@/lib/utils";
 
 const fmtAed = (n: number) =>
   new Intl.NumberFormat("en-AE", {
@@ -103,8 +99,8 @@ export default function UaeVatClient({ initialData }: Props) {
       setIsExporting(true)
       const res = await exportUaeVat201Json({ year: parseInt(year, 10), quarter })
       downloadFile(res.json, res.filename, "application/json")
-    } catch (err: any) {
-      toast.error("Failed to export FTA JSON: " + (err?.message || "Unknown error"))
+    } catch (err) {
+      toast.error("Failed to export FTA JSON: " + (errorMessage(err) || "Unknown error"))
     } finally {
       setIsExporting(false)
     }
@@ -115,8 +111,8 @@ export default function UaeVatClient({ initialData }: Props) {
       setIsExporting(true)
       const res = await exportUaeVat201Csv({ year: parseInt(year, 10), quarter })
       downloadFile(res.csv, res.filename, "text/csv")
-    } catch (err: any) {
-      toast.error("Failed to export Form 201 CSV: " + (err?.message || "Unknown error"))
+    } catch (err) {
+      toast.error("Failed to export Form 201 CSV: " + (errorMessage(err) || "Unknown error"))
     } finally {
       setIsExporting(false)
     }

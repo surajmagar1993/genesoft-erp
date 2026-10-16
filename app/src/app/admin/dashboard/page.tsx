@@ -1,6 +1,6 @@
 import { getPlatformStats, getRecentSystemLogs, getDashboardCharts, getDatabaseHealth } from "@/app/actions/saas/admin"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Users, CreditCard, MessageSquare, AlertCircle, ArrowUpRight, ArrowDownRight, Activity, Zap, Shield, Database, Settings, Receipt, Globe } from "lucide-react"
+import { Building2, Users, CreditCard, MessageSquare, AlertCircle, ArrowUpRight, Activity, Zap, Database, Settings, Receipt, Globe } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { DashboardCharts } from "./DashboardCharts"

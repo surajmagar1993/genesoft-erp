@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation"
 import {
     BankReconciliationOverview,
     BankAccountRecord,
-    BankStatementRecord,
     BankTransactionRecord,
     CandidateSystemRecord,
     createBankAccount,
@@ -42,11 +41,9 @@ import {
     AlertTriangle,
     ArrowUpRight,
     ArrowDownLeft,
-    RefreshCw,
     Plus,
     FileSpreadsheet,
     Search,
-    Filter,
     ShieldCheck,
     Sparkles,
     Trash2,
@@ -54,11 +51,9 @@ import {
     Check,
     X,
     Receipt,
-    ExternalLink,
     Clock,
     Lock,
     HelpCircle,
-    SlidersHorizontal,
     FileText,
 } from "lucide-react"
 import { RequireRole } from "@/components/auth/role-context"
@@ -72,7 +67,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
     const [isPending, startTransition] = useTransition()
 
     // State
-    const [data, setData] = useState<BankReconciliationOverview>(initialData)
+    const [data, ] = useState<BankReconciliationOverview>(initialData)
     const [selectedAccountId, setSelectedAccountId] = useState<string>(
         initialData.selectedAccount?.id || ""
     )

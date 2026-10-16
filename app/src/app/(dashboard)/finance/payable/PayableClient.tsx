@@ -5,13 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { 
-  ArrowUpRight, 
   Clock, 
   AlertCircle, 
-  TrendingUp, 
   ExternalLink,
   ChevronRight,
-  Filter,
   Download,
   Wallet,
   Calendar

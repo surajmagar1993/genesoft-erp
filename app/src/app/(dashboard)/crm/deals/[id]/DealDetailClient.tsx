@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   ArrowLeft, Pencil, Trash2, Building2, User, Phone, Mail,
   Calendar, DollarSign, TrendingUp, CheckCircle2, XCircle,
-  FileText, Briefcase, ChevronRight, Clock, Loader2, Sparkles, ExternalLink
+  FileText, Briefcase, Loader2, Sparkles, ExternalLink
 } from "lucide-react"
 import { toast } from "sonner"
 import type { Deal, DealStage } from "@/app/actions/crm/deals"
@@ -64,7 +64,7 @@ interface Props {
 }
 
 export default function DealDetailClient({ deal: initialDeal, contact, company, initialTasks, initialLogs }: Props) {
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const { regime: moneyRegime } = useTaxRegime()
     const appLocale = moneyRegime?.locale
   const router = useRouter()
   const [deal, setDeal] = useState<Deal>(initialDeal)

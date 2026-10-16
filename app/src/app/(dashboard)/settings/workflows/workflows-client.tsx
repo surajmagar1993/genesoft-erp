@@ -8,7 +8,6 @@ import {
     RotateCcw,
     CheckCircle2,
     XCircle,
-    Clock,
     AlertCircle,
     Activity,
     Settings2,
@@ -16,8 +15,6 @@ import {
     Trash2,
     Edit,
     Search,
-    Filter,
-    ArrowRight,
     Mail,
     Bell,
     CheckSquare,
@@ -25,14 +22,9 @@ import {
     RefreshCw,
     Sparkles,
     ShieldAlert,
-    ExternalLink,
-    ChevronRight,
     Layers,
     Terminal,
-    Eye,
-    Copy,
-    Share2,
-    FileText
+    Eye
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -406,10 +398,10 @@ export function WorkflowsClient({
         let parsedPayload: any = {}
         try {
             parsedPayload = JSON.parse(simPayloadJson)
-        } catch (e) {
-            toast.error("Invalid JSON payload in simulator")
-            return
-        }
+        } catch {
+                    toast.error("Invalid JSON payload in simulator")
+                    return
+                }
 
         startTransition(async () => {
             const res = await runWorkflowSimulator(simSelectedWorkflowId, parsedPayload)

@@ -15,6 +15,7 @@ import {
     ExpenseStatus,
     PaymentMethod,
 } from "@prisma/client"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "finance" as const
@@ -632,9 +633,9 @@ export async function createBankAccount(data: CreateBankAccountInput): Promise<{
                 updatedAt: created.updatedAt.toISOString(),
             },
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("createBankAccount error:", err)
-        return { error: err.message || "Failed to create bank account" }
+        return { error: errorMessage(err) || "Failed to create bank account" }
     }
 }
 
@@ -678,9 +679,9 @@ export async function updateBankAccount(
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("updateBankAccount error:", err)
-        return { error: err.message || "Failed to update bank account" }
+        return { error: errorMessage(err) || "Failed to update bank account" }
     }
 }
 
@@ -704,9 +705,9 @@ export async function deleteBankAccount(id: string): Promise<{ success?: boolean
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("deleteBankAccount error:", err)
-        return { error: err.message || "Failed to delete bank account" }
+        return { error: errorMessage(err) || "Failed to delete bank account" }
     }
 }
 
@@ -776,9 +777,9 @@ export async function importBankStatement(data: ImportBankStatementInput): Promi
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true, statementId: result.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("importBankStatement error:", err)
-        return { error: err.message || "Failed to import bank statement" }
+        return { error: errorMessage(err) || "Failed to import bank statement" }
     }
 }
 
@@ -974,9 +975,9 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true, matchedCount: matchCount }
-    } catch (err: any) {
+    } catch (err) {
         console.error("autoMatchTransactions error:", err)
-        return { error: err.message || "Failed to auto-match transactions" }
+        return { error: errorMessage(err) || "Failed to auto-match transactions" }
     }
 }
 
@@ -1031,9 +1032,9 @@ export async function matchTransactionManual(
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("matchTransactionManual error:", err)
-        return { error: err.message || "Failed to link transaction" }
+        return { error: errorMessage(err) || "Failed to link transaction" }
     }
 }
 
@@ -1062,9 +1063,9 @@ export async function unmatchTransaction(transactionId: string): Promise<{
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("unmatchTransaction error:", err)
-        return { error: err.message || "Failed to unmatch transaction" }
+        return { error: errorMessage(err) || "Failed to unmatch transaction" }
     }
 }
 
@@ -1194,9 +1195,9 @@ export async function createQuickExpenseAndReconcile(
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true, expenseId: result.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("createQuickExpenseAndReconcile error:", err)
-        return { error: err.message || "Failed to record expense and reconcile" }
+        return { error: errorMessage(err) || "Failed to record expense and reconcile" }
     }
 }
 
@@ -1254,9 +1255,9 @@ export async function finalizeReconciliation(statementId: string): Promise<{
 
         revalidatePath("/finance/bank-reconciliation")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("finalizeReconciliation error:", err)
-        return { error: err.message || "Failed to finalize reconciliation statement" }
+        return { error: errorMessage(err) || "Failed to finalize reconciliation statement" }
     }
 }
 

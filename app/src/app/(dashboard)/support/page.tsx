@@ -48,9 +48,9 @@ export default function SupportPage() {
       setSubject("")
       setInitialMsg("")
       await loadTickets()
-    } catch (err) {
-      toast.error("Failed to create ticket")
-    } finally {
+    } catch {
+            toast.error("Failed to create ticket")
+          } finally {
       setIsSubmitting(false)
     }
   }
@@ -63,9 +63,9 @@ export default function SupportPage() {
       // No need to manually refresh messages - the useChatMessages hook will catch the 'INSERT' event
       // However, we update the ticket list to refresh the 'updatedAt' timestamp in the sidebar
       await loadTickets()
-    } catch (err) {
-      toast.error("Failed to send message")
-    }
+    } catch {
+            toast.error("Failed to send message")
+          }
   }
 
   const getStatusBadge = (status: TicketStatus) => {

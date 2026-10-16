@@ -10,8 +10,7 @@ import {
     BOMStatus,
     WorkOrderStatus,
     WorkOrderPriority,
-    QCStatus,
-    StockMovementType
+    QCStatus
 } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
@@ -705,20 +704,20 @@ export async function recordQualityInspection(workOrderId: string, input: {
         status = "FAILED"
     }
 
-    const inspection = await prisma.qualityInspection.create({
-        data: {
-            tenantId,
-            workOrderId,
-            inspectionNumber,
-            inspectedQuantity: input.inspectedQuantity,
-            passedQuantity: input.passedQuantity,
-            failedQuantity: input.failedQuantity,
-            status,
-            defectReason: input.defectReason,
-            inspectorName: input.inspectorName || "QA Specialist",
-            notes: input.notes
-        }
-    })
+    await prisma.qualityInspection.create({
+            data: {
+                tenantId,
+                workOrderId,
+                inspectionNumber,
+                inspectedQuantity: input.inspectedQuantity,
+                passedQuantity: input.passedQuantity,
+                failedQuantity: input.failedQuantity,
+                status,
+                defectReason: input.defectReason,
+                inspectorName: input.inspectorName || "QA Specialist",
+                notes: input.notes
+            }
+        });
 
     revalidatePath("/manufacturing")
     return { success: true, inspectionNumber, status }

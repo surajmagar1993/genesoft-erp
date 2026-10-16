@@ -2,7 +2,7 @@ import React from "react"
 import { getEmployeePortalData } from "@/app/actions/hr/portal"
 import { PortalClient } from "./portal-client"
 import { Card, CardContent } from "@/components/ui/card"
-import { AlertCircle, UserX } from "lucide-react"
+import { UserX } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 

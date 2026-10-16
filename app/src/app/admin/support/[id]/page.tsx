@@ -51,7 +51,3 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
         </div>
     )
 }
-
-function cn(...classes: any[]) {
-    return classes.filter(Boolean).join(' ')
-}

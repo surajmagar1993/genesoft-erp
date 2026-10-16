@@ -13,7 +13,7 @@ import {
 import {
   ArrowLeft, Pencil, Trash2, Building2, Globe, Phone, Mail, MapPin,
   Users, DollarSign, TrendingUp, Plus, ExternalLink, Calendar,
-  Briefcase, CheckCircle2, ShieldCheck, Loader2
+  Briefcase, ShieldCheck, Loader2
 } from "lucide-react"
 import { toast } from "sonner"
 import type { Company } from "@/app/actions/crm/companies"
@@ -48,10 +48,10 @@ interface Props {
 }
 
 export default function CompanyDetailClient({ company, contacts, deals, metrics }: Props) {
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const { regime: moneyRegime } = useTaxRegime()
     const appLocale = moneyRegime?.locale
   const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const [, startTransition] = useTransition()
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleDelete = () => {

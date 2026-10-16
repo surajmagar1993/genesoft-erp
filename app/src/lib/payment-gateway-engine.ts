@@ -1,16 +1,3 @@
-/**
- * 💳 Payment Gateway Engine — Stripe & PayPal Multi-Currency Integration
- * 
- * Provides unified abstractions for Stripe and PayPal:
- * - Currency subunit conversion (cents, fils, paise).
- * - Stripe Checkout Session and PaymentIntent payload compilation.
- * - PayPal Orders v2 API request compiler and capture handlers.
- * - Webhook event payload normalization and signature verification.
- * - Graceful simulation and sandbox fallbacks for testing environments.
- */
-
-import { formatCurrency } from "@/lib/utils"
-
 export type GatewayProvider = "STRIPE" | "PAYPAL" | "RAZORPAY"
 export type GatewayMode = "LIVE" | "SANDBOX" | "SIMULATION"
 

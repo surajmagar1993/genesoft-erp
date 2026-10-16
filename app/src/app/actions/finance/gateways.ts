@@ -10,11 +10,11 @@ import {
     validateStripeKeys,
     validatePayPalCredentials,
     simulateOnlinePayment,
-    GatewayProvider,
-    OnlinePaymentResult,
+    GatewayProvider
 } from "@/lib/payment-gateway-engine"
 import { createPayment } from "./payments"
 import { logTenantAudit } from "@/lib/tenant-audit"
+import { errorMessage } from "@/lib/utils";
 
 /**
  * Retrieves the tenant's payment gateway configuration from tenant settings.
@@ -136,9 +136,9 @@ export async function saveTenantPaymentGateways(
             await logTenantAudit(tenantId, "PAYMENT_GATEWAY_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { fields: changedFields.sort() } })
         }
         return { success: true, message: "Payment gateway credentials saved successfully" }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error saving payment gateways:", error)
-        return { success: false, message: "Failed to save payment gateway settings", error: error.message }
+        return { success: false, message: "Failed to save payment gateway settings", error: errorMessage(error) }
     }
 }
 
@@ -191,8 +191,8 @@ export async function testPaymentGatewayConnection(gateway: "STRIPE" | "PAYPAL")
         }
 
         return { success: false, message: "Unknown gateway provider", isSimulated: false }
-    } catch (error: any) {
-        return { success: false, message: error.message || "Gateway connection failed", isSimulated: false }
+    } catch (error) {
+        return { success: false, message: errorMessage(error) || "Gateway connection failed", isSimulated: false }
     }
 }
 
@@ -274,9 +274,9 @@ export async function initiateInvoicePaymentSession(params: {
         }
 
         return { success: false, simulated: false, error: "Unsupported gateway selected" }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error creating invoice payment session:", error)
-        return { success: false, simulated: false, error: error.message || "Failed to initiate payment session" }
+        return { success: false, simulated: false, error: errorMessage(error) || "Failed to initiate payment session" }
     }
 }
 
@@ -335,8 +335,8 @@ export async function recordOnlineInvoicePayment(params: {
             success: true,
             paymentId: result.id,
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error recording online invoice payment:", error)
-        return { success: false, error: error.message || "Failed to record online invoice payment" }
+        return { success: false, error: errorMessage(error) || "Failed to record online invoice payment" }
     }
 }

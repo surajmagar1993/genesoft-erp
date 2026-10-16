@@ -1,6 +1,4 @@
 "use client"
-
-import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,13 +7,12 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table"
 import {
-  ArrowLeft, Pencil, Phone, Mail, Building2, Globe,
-  IndianRupee, TrendingUp, TrendingDown, AlertTriangle,
-  FileText, CreditCard, Download, Calendar, Banknote
+  ArrowLeft, Pencil, Phone, Mail, Building2, Globe, TrendingUp, AlertTriangle,
+  FileText, CreditCard, Calendar, Banknote
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { Contact } from "@/app/actions/crm/contacts"
-import type { CustomerLedgerData, LedgerEntry } from "@/app/actions/crm/ledger"
+import type { CustomerLedgerData } from "@/app/actions/crm/ledger"
 import type { Task } from "@/app/actions/crm/tasks"
 import type { CommunicationLog } from "@/app/actions/crm/communications"
 import EntityTasks from "@/components/crm/EntityTasks"

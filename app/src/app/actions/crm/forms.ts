@@ -15,12 +15,12 @@ import type {
     FormFieldConfig,
     WebFormRecord,
     FormSubmissionRecord,
-    WebFormsOverviewKPIs,
     WebFormsOverview,
     CreateWebFormInput,
     UpdateWebFormInput,
     SubmitPublicFormPayload,
 } from "./form-types"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -205,9 +205,9 @@ export async function createWebForm(data: CreateWebFormInput): Promise<{
                 updatedAt: created.updatedAt.toISOString(),
             },
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("createWebForm error:", err)
-        return { error: err.message || "Failed to create web form" }
+        return { error: errorMessage(err) || "Failed to create web form" }
     }
 }
 
@@ -242,9 +242,9 @@ export async function updateWebForm(
 
         revalidatePath("/crm/forms")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("updateWebForm error:", err)
-        return { error: err.message || "Failed to update web form" }
+        return { error: errorMessage(err) || "Failed to update web form" }
     }
 }
 
@@ -257,9 +257,9 @@ export async function deleteWebForm(id: string): Promise<{ success?: boolean; er
         if (count === 0) return { error: "Form not found" }
         revalidatePath("/crm/forms")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("deleteWebForm error:", err)
-        return { error: err.message || "Failed to delete web form" }
+        return { error: errorMessage(err) || "Failed to delete web form" }
     }
 }
 
@@ -277,9 +277,9 @@ export async function toggleWebFormStatus(
 
         revalidatePath("/crm/forms")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("toggleWebFormStatus error:", err)
-        return { error: err.message || "Failed to update form status" }
+        return { error: errorMessage(err) || "Failed to update form status" }
     }
 }
 
@@ -550,12 +550,12 @@ export async function submitPublicForm(payload: SubmitPublicFormPayload): Promis
             message: form.successMessage,
             redirectUrl: form.redirectUrl,
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("submitPublicForm error:", err)
         return {
             success: false,
             message: "An unexpected error occurred while processing your request.",
-            error: err.message || "Submission failed",
+            error: errorMessage(err) || "Submission failed",
         }
     }
 }

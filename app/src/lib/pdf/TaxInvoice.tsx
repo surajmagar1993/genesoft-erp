@@ -10,7 +10,6 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
   Image,
 } from "@react-pdf/renderer"
 import type { InvoiceDB, InvoiceLineItemDB } from "@/app/actions/sales/invoices"
@@ -440,7 +439,7 @@ export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoicePr
     } else if (tenant?.address && typeof tenant.address === "object") {
       addressObj = tenant.address
     }
-  } catch(e) {}
+  } catch {}
 
   const supplierName = tenant?.name || COMPANY.name
   // Only logos in our own storage (or an embedded PNG/JPEG) are drawn: the renderer fetches the

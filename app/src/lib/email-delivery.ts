@@ -5,6 +5,7 @@ import { checkSmtpTarget } from "@/lib/smtp-guard"
 import { CommunicationType } from "@prisma/client"
 import { EmailDirection, EmailStatus } from "@/app/actions/crm/email-types"
 import type { SendEmailInput } from "@/app/actions/crm/email-types"
+import { errorMessage } from "@/lib/utils";
 
 /**
  * Rejects caller-supplied record IDs that belong to another tenant.
@@ -102,9 +103,9 @@ export async function deliverTenantEmail(tenantId: string, data: SendEmailInput)
                     text: finalBodyText,
                     html: finalBodyHtml,
                 })
-            } catch (smtpErr: any) {
+            } catch (smtpErr) {
                 console.error("Live SMTP dispatch error:", smtpErr)
-                return { error: `SMTP Dispatch failed: ${smtpErr.message || "Could not connect to SMTP server"}` }
+                return { error: `SMTP Dispatch failed: ${errorMessage(smtpErr) || "Could not connect to SMTP server"}` }
             }
         }
 
@@ -168,8 +169,8 @@ export async function deliverTenantEmail(tenantId: string, data: SendEmailInput)
         })
 
         return { success: true, messageId: createdMessage.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("deliverTenantEmail error:", err)
-        return { error: err.message || "Failed to send email" }
+        return { error: errorMessage(err) || "Failed to send email" }
     }
 }

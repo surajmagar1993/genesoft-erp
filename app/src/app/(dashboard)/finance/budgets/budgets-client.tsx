@@ -5,35 +5,18 @@ import { useRouter } from "next/navigation"
 import {
     Target,
     Calculator,
-    PieChart,
-    BarChart3,
-    TrendingUp,
-    TrendingDown,
     AlertTriangle,
     CheckCircle2,
-    Clock,
     Plus,
     RefreshCw,
     Search,
     Download,
-    Eye,
     SlidersHorizontal,
     Trash2,
-    Calendar,
     Building2,
-    Landmark,
     ReceiptText,
-    ArrowUpRight,
-    ArrowDownLeft,
-    Check,
-    X,
-    ChevronRight,
     ShieldAlert,
-    Wallet,
-    HelpCircle,
-    Copy,
-    Percent,
-    ExternalLink
+    Wallet
 } from "lucide-react"
 import Papa from "papaparse"
 import { format } from "date-fns"
@@ -66,16 +49,14 @@ import {
 import {
     BudgetsOverviewData,
     BudgetSummary,
-    BudgetItemDetail,
     BudgetDetailData,
     createBudget,
-    updateBudget,
     changeBudgetStatus,
     deleteBudget,
     getBudgetDetail,
 } from "@/app/actions/finance/budgets"
 import { BudgetPeriodType, BudgetStatus } from "@prisma/client"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
 
@@ -98,7 +79,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
 
     // Modals
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-    const [editingBudget, setEditingBudget] = useState<BudgetSummary | null>(null)
+    const [, ] = useState<BudgetSummary | null>(null)
     const [statusModalBudget, setStatusModalBudget] = useState<BudgetSummary | null>(null)
     const [newStatus, setNewStatus] = useState<BudgetStatus>(BudgetStatus.APPROVED)
 
@@ -176,9 +157,9 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
         try {
             const detail = await getBudgetDetail(budgetId)
             setDetailedBudgetData(detail)
-        } catch (e: any) {
-            toast.error("Failed to load budget details")
-        } finally {
+        } catch {
+                    toast.error("Failed to load budget details")
+                } finally {
             setIsLoadingDetail(false)
         }
     }
@@ -241,8 +222,8 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                 toast.success(`Budget plan "${newPlan.name}" created successfully!`)
                 setIsCreateModalOpen(false)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create budget plan")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to create budget plan")
             }
         })
     }
@@ -256,8 +237,8 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                 toast.success(`Budget status updated to ${newStatus}`)
                 setStatusModalBudget(null)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to update budget status")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to update budget status")
             }
         })
     }
@@ -270,8 +251,8 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                 unwrap(await deleteBudget(id))
                 toast.success("Budget plan deleted successfully")
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to delete budget")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to delete budget")
             }
         })
     }
@@ -303,9 +284,9 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
             link.click()
             document.body.removeChild(link)
             toast.success("Variance report exported to CSV.")
-        } catch (e) {
-            toast.error("Failed to export variance CSV")
-        }
+        } catch {
+                    toast.error("Failed to export variance CSV")
+                }
     }
 
     // Departmental Aggregation

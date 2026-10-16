@@ -4,20 +4,7 @@ import React from "react"
 import { TemplateProps, formatCurrency, formatDate, getInvoiceSummary } from "./template-common"
 
 export function TemplateMinimalist({ invoice }: TemplateProps) {
-    const {
-        items,
-        gstSummary,
-        companyName,
-        companyLogo,
-        companyGstin,
-        companyAddress,
-        companyEmail,
-        isInterState,
-        isSingle,
-        taxLabel,
-        taxIdLabel,
-        docTitle: summaryDocTitle
-    } = getInvoiceSummary(invoice)
+    const { items, gstSummary, companyName, companyLogo, companyGstin, companyAddress, isInterState, isSingle, taxLabel, taxIdLabel } = getInvoiceSummary(invoice)
 
     const isProforma = invoice.type === "PROFORMA"
     const docTitle = isProforma ? "Proforma" : "Invoice"

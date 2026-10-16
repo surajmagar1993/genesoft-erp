@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { fromRow, toRow, toRows } from "@/lib/pg-row"
 import { assertTenantRefs } from "@/lib/tenant-refs"
-import { isUuid } from "@/lib/utils"
+import { isUuid, errorMessage } from "@/lib/utils"
 import type { Prisma } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
@@ -78,8 +78,8 @@ export async function createCommunicationLog(
     if (formData.deal_id) revalidatePath(`/crm/deals/${formData.deal_id}`)
 
     return { error: null, data: toRow<CommunicationLog>("CommunicationLog", row) }
-  } catch (err: any) {
-    return { error: err.message || "Failed to save the log entry" }
+  } catch (err) {
+    return { error: errorMessage(err) || "Failed to save the log entry" }
   }
 }
 
@@ -89,7 +89,7 @@ export async function deleteCommunicationLog(id: string): Promise<{ error: strin
     const { count } = await prisma.communicationLog.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Log entry not found" }
     return { error: null }
-  } catch (err: any) {
-    return { error: err.message || "Failed to delete the log entry" }
+  } catch (err) {
+    return { error: errorMessage(err) || "Failed to delete the log entry" }
   }
 }

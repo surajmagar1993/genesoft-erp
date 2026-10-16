@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import {
   getPOSProducts,
-  searchPOSProducts,
   createPOSSale,
   getActivePOSSession,
   openPOSSession,
@@ -17,7 +16,6 @@ import type {
   POSSessionRecord,
   POSSaleResult,
 } from "@/app/actions/sales/pos-types"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -40,12 +38,10 @@ import {
   Smartphone,
   User,
   UserPlus,
-  X,
   CheckCircle2,
   Clock,
   Package,
   Monitor,
-  Printer,
   ScanLine,
 } from "lucide-react"
 import { BarcodeScannerModal } from "@/components/inventory/barcode-scanner-modal"

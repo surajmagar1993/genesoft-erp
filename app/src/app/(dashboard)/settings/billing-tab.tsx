@@ -22,14 +22,12 @@ import {
     Shield,
     Crown,
     ArrowRight,
-    Calendar,
     Receipt,
     Printer,
     AlertTriangle,
     RotateCcw,
     CheckCircle2,
-    Clock,
-    Lock,
+    Clock
 } from "lucide-react"
 import {
     PlanTier,
@@ -42,13 +40,13 @@ import {
     getTierRank,
 } from "@/lib/saas-subscription-engine"
 import {
-    executePlanChange,
-    getTenantSubscriptionDetails,
+    executePlanChange
 } from "@/app/actions/saas/subscription"
 import { createPlanCheckout, verifyRazorpayPayment } from "@/app/actions/saas/razorpay"
 import type { EffectivePricing } from "@/lib/plan-pricing"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { errorMessage } from "@/lib/utils";
 
 interface BillingTabProps {
     settings: any
@@ -163,9 +161,9 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
             } else {
                 toast.error(res.error || "Failed to update plan")
             }
-        } catch (err: any) {
+        } catch (err) {
             console.error(err)
-            toast.error(err.message || "An unexpected error occurred")
+            toast.error(errorMessage(err) || "An unexpected error occurred")
         } finally {
             setIsProcessing(false)
         }
@@ -402,8 +400,6 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
                     const currentRank = getTierRank(currentPlan)
                     const thisRank = getTierRank(tier)
                     const isUpgrade = thisRank > currentRank
-                    const isDowngrade = thisRank < currentRank
-
                     const price = billingCycle === "ANNUAL" ? catalog.annual[tier] : catalog.monthly[tier]
                     const priceLabel =
                         price === 0

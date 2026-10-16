@@ -13,11 +13,7 @@ import {
     Plus,
     Search,
     RefreshCw,
-    Filter,
     CheckCircle2,
-    AlertCircle,
-    XCircle,
-    Eye,
     Send,
     Award,
     Printer,
@@ -25,27 +21,21 @@ import {
     ArrowUpRight,
     ArrowDownRight,
     Sparkles,
-    ShieldCheck,
     Check,
     Boxes,
     Mail,
     Phone,
     SlidersHorizontal,
-    ChevronRight,
-    DollarSign,
-    Layers,
-    BadgePercent,
-    ExternalLink,
-    Percent,
+    ExternalLink
 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
     Dialog,
     DialogContent,
@@ -73,7 +63,6 @@ import { format, differenceInDays } from "date-fns"
 import { toast } from "sonner"
 import {
     RfqOverviewData,
-    RfqRecord,
     RfqVendorRecord,
     createRfq,
     updateRfqStatus,
@@ -84,7 +73,7 @@ import {
     CreateRfqItemInput,
     RecordVendorQuoteItemInput,
 } from "@/app/actions/rfq"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import { RfqStatus, RfqVendorStatus } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
@@ -302,8 +291,8 @@ export function RfqClient({ initialData }: RfqClientProps) {
                 setIsCreateOpen(false)
                 router.refresh()
                 setActiveRfqId(res.rfqId)
-            } catch (err: any) {
-                toast.error(err?.message || "Failed to create RFQ")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to create RFQ")
             }
         })
     }
@@ -378,8 +367,8 @@ export function RfqClient({ initialData }: RfqClientProps) {
                 toast.success(`Quotation recorded for ${biddingVendorQuote.vendorCompanyName || biddingVendorQuote.vendorName}`)
                 setIsBidModalOpen(false)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err?.message || "Failed to record vendor quote")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to record vendor quote")
             }
         })
     }
@@ -399,8 +388,8 @@ export function RfqClient({ initialData }: RfqClientProps) {
                         },
                     })
                     router.refresh()
-                } catch (err: any) {
-                    toast.error(err?.message || "Failed to award quote")
+                } catch (err) {
+                    toast.error(errorMessage(err) || "Failed to award quote")
                 }
             })
         }
@@ -414,8 +403,8 @@ export function RfqClient({ initialData }: RfqClientProps) {
                 unwrap(await updateRfqStatus(activeRfq.id, status))
                 toast.success(`RFQ status updated to ${status.replace("_", " ")}`)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err?.message || "Failed to update status")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to update status")
             }
         })
     }
@@ -429,8 +418,8 @@ export function RfqClient({ initialData }: RfqClientProps) {
                     toast.success("RFQ deleted successfully")
                     if (activeRfqId === rfqId) setActiveRfqId(null)
                     router.refresh()
-                } catch (err: any) {
-                    toast.error(err?.message || "Failed to delete RFQ")
+                } catch (err) {
+                    toast.error(errorMessage(err) || "Failed to delete RFQ")
                 }
             })
         }
@@ -446,8 +435,8 @@ export function RfqClient({ initialData }: RfqClientProps) {
                 setIsInviteOpen(false)
                 setInviteVendorIds([])
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err?.message || "Failed to invite vendors")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to invite vendors")
             }
         })
     }

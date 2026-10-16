@@ -9,29 +9,19 @@ import {
     Search,
     CheckCircle2,
     Clock,
-    DollarSign,
     Users,
     Calendar,
-    ArrowUpRight,
-    ArrowRight,
     Check,
-    AlertCircle,
-    Building2,
-    Briefcase,
     Milestone,
     Layers,
     Timer,
-    Pencil,
     Trash2,
-    Filter,
-    ChevronRight,
     Coins,
     UserCheck,
-    ListTodo,
     Loader2,
     FileText,
 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -59,13 +49,9 @@ import { format } from "date-fns"
 import { toast } from "sonner"
 import {
     ProjectsOverviewData,
-    ProjectRecord,
-    ProjectMemberRecord,
     ProjectMilestoneRecord,
     ProjectTaskRecord,
-    ProjectTimeEntryRecord,
     createProject,
-    updateProject,
     deleteProject,
     createProjectTask,
     updateProjectTask,
@@ -95,8 +81,7 @@ interface ProjectsClientProps {
 }
 
 export function ProjectsClient({ initialData }: ProjectsClientProps) {
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
-    const appLocale = moneyRegime?.locale
+    const { formatMoney } = useTaxRegime()
     const router = useRouter()
     // Project billing
     const [isBillOpen, setIsBillOpen] = useState(false)
@@ -105,7 +90,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     const [billAmount, setBillAmount] = useState("")
     const [billing, setBilling] = useState(false)
     const [isPending, startTransition] = useTransition()
-    const [data, setData] = useState<ProjectsOverviewData>(initialData)
+    const [data, ] = useState<ProjectsOverviewData>(initialData)
 
     // Active project filter ("all" or projectId)
     const [selectedProjectId, setSelectedProjectId] = useState<string>(
@@ -298,11 +283,11 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     }
 
     // Refresh action
-    const handleRefresh = () => {
-        startTransition(() => {
-            router.refresh()
-        })
-    }
+    () => {
+            startTransition(() => {
+                router.refresh()
+            })
+        };
 
     // Handlers
     const handleCreateProject = async (e: React.FormEvent) => {

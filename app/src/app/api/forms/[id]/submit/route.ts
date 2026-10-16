@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { submitPublicForm } from "@/app/actions/crm/forms"
+import { errorMessage } from "@/lib/utils";
 
 // Cross-Origin Resource Sharing (CORS) headers to allow embedded forms from any client website
 const corsHeaders = {
@@ -79,13 +80,13 @@ export async function POST(
         }
 
         return NextResponse.json(result, { status: 200, headers: corsHeaders })
-    } catch (err: any) {
+    } catch (err) {
         console.error("Public Form Submission API error:", err)
         return NextResponse.json(
             {
                 success: false,
                 error: "Failed to process form submission",
-                message: err.message || "Internal server error",
+                message: errorMessage(err) || "Internal server error",
             },
             { status: 500, headers: corsHeaders }
         )

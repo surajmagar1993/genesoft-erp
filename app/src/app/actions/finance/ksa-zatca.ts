@@ -3,7 +3,6 @@
 import { prisma } from "@/lib/prisma"
 import { requireTaxId } from "@/lib/tax-identity"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
-import { COMPANY } from "@/lib/constants/company"
 import {
   compileKsaVatReturn,
   encodeZatcaTlv,

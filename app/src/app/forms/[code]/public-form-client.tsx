@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { errorMessage as messageOf } from "@/lib/utils";
 
 interface PublicFormClientProps {
     form: {
@@ -73,8 +74,8 @@ export function PublicFormClient({ form }: PublicFormClientProps) {
                     setErrorMessage(res.error || res.message || "Failed to submit form")
                     toast.error(res.error || res.message || "Failed to submit form")
                 }
-            } catch (err: any) {
-                setErrorMessage(err.message || "An unexpected network error occurred.")
+            } catch (err) {
+                setErrorMessage(messageOf(err) || "An unexpected network error occurred.")
                 toast.error("Submission failed")
             }
         })

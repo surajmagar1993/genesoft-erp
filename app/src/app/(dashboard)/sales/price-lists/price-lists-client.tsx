@@ -10,7 +10,6 @@ import {
     ProductPricingMatrixRow,
     CalculatePriceResult,
     createPriceList,
-    updatePriceList,
     deletePriceList,
     upsertPriceListItem,
     deletePriceListItem,
@@ -25,20 +24,11 @@ import {
     Users,
     Plus,
     Search,
-    Filter,
     Calculator,
     CheckCircle2,
-    Calendar,
-    ArrowRight,
     Sparkles,
     Trash2,
-    Edit,
     AlertCircle,
-    Building2,
-    Package,
-    Shield,
-    Sliders,
-    Eye,
     Percent,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -54,7 +44,6 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog"
-import { Progress } from "@/components/ui/progress"
 import { RequireRole } from "@/components/auth/role-context"
 import { toast } from "sonner"
 
@@ -75,14 +64,14 @@ export default function PriceListsClient({
     customers,
     initialMatrixData,
 }: PriceListsClientProps) {
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const { regime: moneyRegime } = useTaxRegime()
     const appLocale = moneyRegime?.locale
     const [isPending, startTransition] = useTransition()
 
     // Data State
-    const [priceLists, setPriceLists] = useState<PriceListRecord[]>(initialPriceLists)
-    const [stats, setStats] = useState<PriceListsOverviewStats>(initialStats)
-    const [matrixData, setMatrixData] = useState<ProductPricingMatrixRow[]>(initialMatrixData)
+    const [priceLists, ] = useState<PriceListRecord[]>(initialPriceLists)
+    const [stats, ] = useState<PriceListsOverviewStats>(initialStats)
+    const [matrixData, ] = useState<ProductPricingMatrixRow[]>(initialMatrixData)
 
     // Filter & Search State
     const [activeTab, setActiveTab] = useState("directory")
@@ -93,7 +82,7 @@ export default function PriceListsClient({
     const [isCreatePriceListOpen, setIsCreatePriceListOpen] = useState(false)
     const [isCreateItemOverrideOpen, setIsCreateItemOverrideOpen] = useState(false)
     const [isAssignCustomerOpen, setIsAssignCustomerOpen] = useState(false)
-    const [selectedPriceList, setSelectedPriceList] = useState<PriceListRecord | null>(null)
+    const [, ] = useState<PriceListRecord | null>(null)
     const [formError, setFormError] = useState<string | null>(null)
 
     // Form State: Create/Edit Price List
@@ -285,18 +274,18 @@ export default function PriceListsClient({
     }
 
     // Handlers: Delete Price List Item Override
-    const handleDeleteOverride = (itemId: string) => {
-        if (!confirm("Are you sure you want to delete this volume price override?")) return
+    (itemId: string) => {
+            if (!confirm("Are you sure you want to delete this volume price override?")) return
 
-        startTransition(async () => {
-            const res = await deletePriceListItem(itemId)
-            if (res.error) {
-                toast.error(res.error)
-            } else {
-                window.location.reload()
-            }
-        })
-    }
+            startTransition(async () => {
+                const res = await deletePriceListItem(itemId)
+                if (res.error) {
+                    toast.error(res.error)
+                } else {
+                    window.location.reload()
+                }
+            })
+        };
 
     // Simulator Calculation
     const handleRunSimulation = async () => {

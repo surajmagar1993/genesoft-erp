@@ -13,9 +13,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { InvoiceDB, InvoiceTemplateId, updateInvoiceTemplate, updateTenantDefaultTemplate } from "@/app/actions/sales/invoices"
-import { INVOICE_TEMPLATES, InvoiceTemplateMeta } from "./templates/invoice-templates"
+import { INVOICE_TEMPLATES } from "./templates/invoice-templates"
 import { InvoiceTemplateRenderer } from "./templates/invoice-template-renderer"
-import { Printer, Download, Check, Palette, Sparkles, Building2, Layout, Receipt, Sliders } from "lucide-react"
+import { Printer, Download, Check, Palette, Sparkles, Building2, Layout, Receipt } from "lucide-react"
 import { toast } from "sonner"
 
 interface InvoiceTemplateDialogProps {

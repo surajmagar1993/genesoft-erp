@@ -18,6 +18,7 @@ import {
     AccountType,
     Prisma,
 } from "@prisma/client"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "finance" as const
@@ -619,9 +620,9 @@ export async function getExpensesOverview(): Promise<{
                 employees,
             },
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in getExpensesOverview:", err)
-        return { error: err.message || "Failed to load expenses overview" }
+        return { error: errorMessage(err) || "Failed to load expenses overview" }
     }
 }
 
@@ -801,9 +802,9 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
         revalidatePath("/finance/expenses")
         revalidatePath("/finance/accounts")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in createExpense:", err)
-        return { error: err.message || "Failed to create expense" }
+        return { error: errorMessage(err) || "Failed to create expense" }
     }
 }
 
@@ -919,9 +920,9 @@ export async function updateExpenseStatus(
         revalidatePath("/finance/expenses")
         revalidatePath("/finance/accounts")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in updateExpenseStatus:", err)
-        return { error: err.message || "Failed to update expense status" }
+        return { error: errorMessage(err) || "Failed to update expense status" }
     }
 }
 
@@ -1045,9 +1046,9 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
         revalidatePath("/finance/expenses")
         revalidatePath("/finance/accounts")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in createJournalEntry:", err)
-        return { error: err.message || "Failed to create journal entry" }
+        return { error: errorMessage(err) || "Failed to create journal entry" }
     }
 }
 
@@ -1110,8 +1111,8 @@ export async function voidExpense(id: string): Promise<{ success?: boolean; erro
         revalidatePath("/finance/accounts")
         await logTenantAudit(tenantId, "EXPENSE_VOIDED", { target: { type: "EXPENSE", id }, metadata: { title: expense.title, amount: Number(expense.totalAmount) } })
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in voidExpense:", err)
-        return { error: err.message || "Failed to void expense" }
+        return { error: errorMessage(err) || "Failed to void expense" }
     }
 }

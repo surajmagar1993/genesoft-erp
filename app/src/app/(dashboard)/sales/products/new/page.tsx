@@ -29,7 +29,7 @@ export default function NewProductPage() {
             tax_group_id: data.taxGroupId || null
         }
 
-        const { id, error } = await createProduct(payload)
+        const { error } = await createProduct(payload)
         
         if (error) {
             toast.error("Error creating product: " + error)

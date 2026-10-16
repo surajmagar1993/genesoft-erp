@@ -3,25 +3,9 @@
 import { useState, useMemo, useRef, useEffect } from "react"
 import {
     Calendar as CalendarIcon,
-    ChevronLeft,
-    ChevronRight,
     Search,
-    Filter,
     Download,
-    ZoomIn,
-    ZoomOut,
-    CheckCircle2,
-    Clock,
-    AlertTriangle,
-    Layers,
     Milestone as MilestoneIcon,
-    Users,
-    Sparkles,
-    MoveRight,
-    SlidersHorizontal,
-    Flag,
-    Check,
-    X,
     CalendarDays,
     Flame,
     RefreshCw
@@ -29,27 +13,22 @@ import {
 import {
     format,
     addDays,
-    differenceInDays,
     differenceInCalendarDays,
     startOfDay,
     endOfDay,
     isBefore,
     isAfter,
     isToday,
-    startOfWeek,
-    endOfWeek,
     eachDayOfInterval,
     eachWeekOfInterval,
     eachMonthOfInterval,
-    startOfMonth,
     endOfMonth,
-    addMonths,
     subDays
 } from "date-fns"
 import Papa from "papaparse"
 import { toast } from "sonner"
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -75,7 +54,8 @@ import {
     ProjectMilestoneRecord,
     ProjectMemberRecord
 } from "@/app/actions/projects"
-import { ProjectTaskStatus, ProjectPriority, MilestoneStatus } from "@prisma/client"
+import { ProjectTaskStatus, ProjectPriority } from "@prisma/client"
+import { errorMessage } from "@/lib/utils";
 
 type ZoomScale = "DAY" | "WEEK" | "MONTH"
 
@@ -346,8 +326,8 @@ export function GanttChartView({
             } else {
                 toast.error(res.error || "Failed to update task")
             }
-        } catch (e: any) {
-            toast.error(e.message || "Failed to update task")
+        } catch (e) {
+            toast.error(errorMessage(e) || "Failed to update task")
         } finally {
             setIsSaving(false)
         }
@@ -399,9 +379,9 @@ export function GanttChartView({
             link.click()
             document.body.removeChild(link)
             toast.success("Schedule exported to CSV")
-        } catch (e) {
-            toast.error("Failed to export schedule CSV")
-        }
+        } catch {
+                    toast.error("Failed to export schedule CSV")
+                }
     }
 
     return (

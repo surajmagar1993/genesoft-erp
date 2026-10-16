@@ -14,17 +14,11 @@ import {
     Users, 
     FileText, 
     Receipt, 
-    Clock, 
-    Globe, 
-    Phone, 
-    Mail, 
     Edit3, 
     Shield, 
     Sparkles, 
     Layers, 
     Activity,
-    CheckCircle2,
-    AlertCircle,
     Loader2
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,6 +42,7 @@ import { readClosure } from "@/lib/workspace-closure"
 import { TenantClosureCard } from "./TenantClosureCard"
 import { ActivityLogTable } from "@/components/activity-log-table"
 import { inZone } from "@/lib/dates"
+import { errorMessage } from "@/lib/utils";
 
 export function TenantDetailClient({ tenant }: { tenant: any }) {
     const router = useRouter()
@@ -106,8 +101,8 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
             } else {
                 toast.error(res.error || "Failed to generate invoice")
             }
-        } catch (err: any) {
-            toast.error(err.message || "Invoice generation failed")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Invoice generation failed")
         } finally {
             setIsIssuingInvoice(false)
         }
@@ -173,9 +168,9 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
             toast.success("Tenant profile updated successfully")
             setIsEditOpen(false)
             router.refresh()
-        } catch (error: any) {
+        } catch (error) {
             console.error(error)
-            toast.error(error?.message || "Failed to update tenant")
+            toast.error(errorMessage(error) || "Failed to update tenant")
         } finally {
             setIsLoading(false)
         }

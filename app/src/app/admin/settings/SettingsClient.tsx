@@ -4,14 +4,12 @@ import { unwrap } from "@/lib/action-result"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { 
-    Settings, 
     Megaphone, 
     AlertTriangle, 
     UserPlus, 
     ShieldCheck, 
     Save, 
     Loader2, 
-    CheckCircle2, 
     Globe, 
     Mail, 
     Database, 
@@ -27,6 +25,7 @@ import { toast } from "sonner"
 import { updateGlobalSettings } from "@/app/actions/saas/admin"
 import { format } from "date-fns"
 import { inZone } from "@/lib/dates"
+import { errorMessage } from "@/lib/utils";
 
 interface SettingsClientProps {
     initialSettings: {
@@ -56,9 +55,9 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
             }))
             toast.success("System settings and broadcast message updated successfully")
             router.refresh()
-        } catch (error: any) {
+        } catch (error) {
             console.error("Failed to save global settings:", error)
-            toast.error(error?.message || "Failed to update system settings")
+            toast.error(errorMessage(error) || "Failed to update system settings")
         } finally {
             setIsLoading(false)
         }

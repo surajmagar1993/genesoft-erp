@@ -8,7 +8,7 @@ import {
     InvoiceDB,
     updateTenantDefaultTemplate
 } from "@/app/actions/sales/invoices"
-import { INVOICE_TEMPLATES, InvoiceTemplateMeta } from "@/components/invoices/templates/invoice-templates"
+import { INVOICE_TEMPLATES } from "@/components/invoices/templates/invoice-templates"
 import { InvoiceTemplateRenderer } from "@/components/invoices/templates/invoice-template-renderer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -16,13 +16,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import {
     ArrowLeft,
     Palette,
-    CheckCircle2,
     Check,
     Sparkles,
     Building2,
     Layout,
     Receipt,
-    ExternalLink,
     FileText,
     Eye
 } from "lucide-react"
@@ -33,7 +31,7 @@ interface TemplatesClientProps {
     tenantName: string
 }
 
-export function TemplatesClient({ defaultTemplate: initialDefault, tenantName }: TemplatesClientProps) {
+export function TemplatesClient({ defaultTemplate: initialDefault }: TemplatesClientProps) {
     const router = useRouter()
     const [currentDefault, setCurrentDefault] = useState<InvoiceTemplateId>(initialDefault)
     const [previewTemplate, setPreviewTemplate] = useState<InvoiceTemplateId>(initialDefault)

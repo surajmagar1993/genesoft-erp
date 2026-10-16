@@ -1,6 +1,4 @@
 "use client"
-
-import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
@@ -49,8 +47,6 @@ interface DealFormProps {
 }
 
 export function DealForm({ initialData, mode }: DealFormProps) {
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
-    const appLocale = moneyRegime?.locale
     const router = useRouter()
     const [form, setForm] = useState<DealFormData>(initialData || defaultDealForm)
     const [isSubmitting, setIsSubmitting] = useState(false)

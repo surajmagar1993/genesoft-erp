@@ -140,7 +140,7 @@ export default function AccountsClient({ initialAccounts }: Props) {
   const handleSeed = () => {
     setSeeding(true)
     startTransition(async () => {
-      const { error, count } = await seedDefaultAccounts()
+      const { error } = await seedDefaultAccounts()
       if (!error) {
         router.refresh()
       } else {

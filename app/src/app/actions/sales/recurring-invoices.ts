@@ -11,10 +11,9 @@ import { revalidatePath } from "next/cache"
 import {
     RecurringFrequency,
     RecurringStatus,
-    RecurringExecutionStatus,
-    InvoiceStatus,
-    InvoiceType,
+    RecurringExecutionStatus
 } from "@prisma/client"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -487,9 +486,9 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
 
         revalidatePath("/sales/invoices/recurring")
         return { success: true, profileId: result.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("createRecurringProfile error:", err)
-        return { error: err.message || "Failed to create recurring profile" }
+        return { error: errorMessage(err) || "Failed to create recurring profile" }
     }
 }
 
@@ -531,9 +530,9 @@ export async function updateRecurringProfile(
 
         revalidatePath("/sales/invoices/recurring")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("updateRecurringProfile error:", err)
-        return { error: err.message || "Failed to update recurring profile" }
+        return { error: errorMessage(err) || "Failed to update recurring profile" }
     }
 }
 
@@ -557,9 +556,9 @@ export async function toggleRecurringProfileStatus(
 
         revalidatePath("/sales/invoices/recurring")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("toggleRecurringProfileStatus error:", err)
-        return { error: err.message || "Failed to change profile status" }
+        return { error: errorMessage(err) || "Failed to change profile status" }
     }
 }
 
@@ -590,9 +589,9 @@ export async function deleteRecurringProfile(id: string): Promise<{ success?: bo
 
         revalidatePath("/sales/invoices/recurring")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("deleteRecurringProfile error:", err)
-        return { error: err.message || "Failed to delete recurring profile" }
+        return { error: errorMessage(err) || "Failed to delete recurring profile" }
     }
 }
 
@@ -621,9 +620,9 @@ export async function triggerGenerateInvoice(profileId: string): Promise<{
             invoiceId: result.invoice.id,
             invoiceNumber: result.invoice.invoiceNumber,
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("triggerGenerateInvoice error:", err)
-        return { error: err.message || "Failed to trigger recurring invoice generation" }
+        return { error: errorMessage(err) || "Failed to trigger recurring invoice generation" }
     }
 }
 
@@ -660,9 +659,9 @@ export async function batchRunDueRecurringProfiles(): Promise<{
 
         revalidatePath("/sales/invoices/recurring")
         return { success: true, executedCount }
-    } catch (err: any) {
+    } catch (err) {
         console.error("batchRunDueRecurringProfiles error:", err)
-        return { error: err.message || "Failed to execute due profiles" }
+        return { error: errorMessage(err) || "Failed to execute due profiles" }
     }
 }
 

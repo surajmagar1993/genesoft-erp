@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Search, Plus, Trash2, IndianRupee, CreditCard, Banknote, Calendar, Receipt } from "lucide-react"
+import { Search, Trash2, CreditCard, Banknote, Calendar, Receipt } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -34,7 +34,7 @@ interface Props {
     total: number
 }
 
-export default function PaymentsClient({ initialPayments, total }: Props) {
+export default function PaymentsClient({ initialPayments }: Props) {
     const router = useRouter()
     const [payments, setPayments] = useState<PaymentDB[]>(initialPayments)
     const [searchQuery, setSearchQuery] = useState("")

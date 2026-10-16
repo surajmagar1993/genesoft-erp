@@ -184,8 +184,8 @@ export async function getBudgetsOverview(filters?: {
     }
 
     const budgets: BudgetSummary[] = rawBudgets.map((b: any) => {
-        const budgetStart = new Date(b.startDate)
-        const budgetEnd = new Date(b.endDate)
+        new Date(b.startDate);
+        new Date(b.endDate);
 
         // Actuals for the budgeted accounts in this plan's window (from the ledger)
         const spend = spendByBudget.get(b.id) || new Map<string, number>()

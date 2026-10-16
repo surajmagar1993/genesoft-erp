@@ -1,7 +1,5 @@
 import { getExpensesOverview } from "@/app/actions/finance/expenses"
 import ExpensesClient from "./expenses-client"
-import { redirect } from "next/navigation"
-
 export const metadata = {
     title: "Expense Management & General Ledger | Genesoft ERP",
     description: "Track operational business expenses, vendor reimbursements, and double-entry General Ledger bookkeeping.",

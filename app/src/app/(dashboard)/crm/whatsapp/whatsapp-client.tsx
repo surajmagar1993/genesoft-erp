@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
 import {
     MessageSquare,
     Send,
@@ -9,25 +8,19 @@ import {
     Check,
     ExternalLink,
     Clock,
-    FileText,
     AlertCircle,
     CheckCircle2,
     Settings2,
     Search,
     User,
-    Building2,
     Phone,
     RefreshCw,
     Shield,
     Sparkles,
     Copy,
     Receipt,
-    Calendar,
-    ArrowUpRight,
     Loader2,
-    Info,
-    Key,
-    Lock,
+    Info
 } from "lucide-react"
 import { PasswordInput } from "@/components/ui/password-input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -86,7 +79,6 @@ export default function WhatsAppClient({
     companyName,
     currencyCode,
 }: Props) {
-    const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
     // Active Navigation Tab

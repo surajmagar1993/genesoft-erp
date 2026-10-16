@@ -19,20 +19,16 @@ import {
   Zap,
   PlusCircle,
   MinusCircle,
-  ClipboardCheck,
-  CheckCircle2,
   AlertTriangle,
   Package,
   Warehouse,
   Volume2,
   VolumeX,
-  RefreshCw,
-  ArrowRight,
   Loader2,
 } from "lucide-react"
 import { toast } from "sonner"
 import { getProductByBarcode, quickScanAdjustStock } from "@/app/actions/inventory"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 
 // Web Audio API scan beep sound synthesizer
 function playScanSound() {
@@ -55,9 +51,9 @@ function playScanSound() {
 
     osc.start(ctx.currentTime)
     osc.stop(ctx.currentTime + 0.15)
-  } catch (e) {
-    // Audio context may be restricted before interaction
-  }
+  } catch {
+        // Audio context may be restricted before interaction
+      }
 }
 
 export interface BarcodeScannerModalProps {
@@ -126,8 +122,8 @@ export function BarcodeScannerModal({
           description: `No item matching barcode / SKU "${clean}"`,
         })
       }
-    } catch (err: any) {
-      toast.error("Lookup failed", { description: err.message })
+    } catch (err) {
+      toast.error("Lookup failed", { description: errorMessage(err) })
     } finally {
       setIsLoading(false)
     }
@@ -206,17 +202,17 @@ export function BarcodeScannerModal({
                 return
               }
             }
-          } catch (e) {
-            // Ignore continuous frame processing errors
-          }
+          } catch {
+                        // Ignore continuous frame processing errors
+                      }
           if (cameraActive) {
             requestAnimationFrame(detectFrame)
           }
         }
         requestAnimationFrame(detectFrame)
       }
-    } catch (err: any) {
-      setCameraError(err.message || "Unable to access camera device.")
+    } catch (err) {
+      setCameraError(errorMessage(err) || "Unable to access camera device.")
       setCameraActive(false)
     }
   }
@@ -272,8 +268,8 @@ export function BarcodeScannerModal({
         // Refresh scanned product telemetry
         handleLookup(scannedProduct.sku || scannedProduct.id)
       }
-    } catch (err: any) {
-      toast.error("Error executing adjustment", { description: err.message })
+    } catch (err) {
+      toast.error("Error executing adjustment", { description: errorMessage(err) })
     } finally {
       setIsSubmittingAction(false)
     }

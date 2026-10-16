@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { StockMovementType } from "@prisma/client"
 import { safeAction } from "@/lib/safe-action"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "inventory" as const
@@ -1026,7 +1027,7 @@ export async function getInventoryReportsData(
                 rows: matrixRows
             }
         }
-    } catch (error: any) {
+    } catch (error) {
         console.error("Error in getInventoryReportsData:", error)
         return {
             kpis: {

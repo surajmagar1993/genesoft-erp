@@ -2,7 +2,6 @@
 
 import { prisma } from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/current-user"
-import { getTenantId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { quotePlanChange, applyPlanChange } from "@/lib/plan-change"
 import { getEffectivePricing, type EffectivePricing } from "@/lib/plan-pricing"
@@ -14,6 +13,7 @@ import {
     SaaSPlatformInvoice,
     ProrationQuote,
 } from "@/lib/saas-subscription-engine"
+import { errorMessage } from "@/lib/utils";
 
 /**
  * Resolves the signed-in caller. Super Admins may act on targetTenantId;
@@ -280,9 +280,9 @@ export async function executePlanChange(params: {
                 : `Successfully updated plan to ${targetPlan}.`,
             invoice: generatedInvoice,
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("executePlanChange error:", err)
-        return { success: false, message: "", error: err.message || "Failed to execute plan change" }
+        return { success: false, message: "", error: errorMessage(err) || "Failed to execute plan change" }
     }
 }
 
@@ -356,8 +356,8 @@ export async function generateSaaSInvoice(params: {
         revalidatePath("/settings")
 
         return { success: true, invoice }
-    } catch (err: any) {
+    } catch (err) {
         console.error("generateSaaSInvoice error:", err)
-        return { success: false, error: err.message || "Failed to generate invoice" }
+        return { success: false, error: errorMessage(err) || "Failed to generate invoice" }
     }
 }

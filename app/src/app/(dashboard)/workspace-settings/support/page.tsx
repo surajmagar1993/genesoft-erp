@@ -1,9 +1,8 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { getTickets, addMessage, updateTicketStatus, TicketStatus } from "@/app/actions/support/tickets"
+import { getTickets, addMessage, updateTicketStatus } from "@/app/actions/support/tickets"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -41,9 +40,9 @@ export default function SupportAdminPage() {
       const t = updated.find((x: any) => x.id === selectedTicket.id)
       setSelectedTicket(t)
       toast.success("Reply sent to customer")
-    } catch (err) {
-      toast.error("Failed to send reply")
-    }
+    } catch {
+            toast.error("Failed to send reply")
+          }
   }
 
   const handleResolve = async () => {
@@ -53,9 +52,9 @@ export default function SupportAdminPage() {
       toast.success("Ticket resolved")
       await loadAllTickets()
       setSelectedTicket({ ...selectedTicket, status: "RESOLVED" })
-    } catch (e) {
-      toast.error("Status update failed")
-    }
+    } catch {
+            toast.error("Status update failed")
+          }
   }
 
   return (

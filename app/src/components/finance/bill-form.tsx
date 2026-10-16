@@ -22,7 +22,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 import {
-  GST_RATES,
   GstRate,
   SupplyType,
   computeLineItemGst,
@@ -32,6 +31,7 @@ import { TDS_SECTIONS, calculateTds } from "@/lib/tds-engine"
 import { createBill, updateBill, BillStatus, BillItem } from "@/app/actions/finance/bills"
 import { toast } from "sonner"
 import { unwrap } from "@/lib/action-result"
+import { errorMessage } from "@/lib/utils";
 
 interface BillFormProps {
   initialData?: any
@@ -39,7 +39,7 @@ interface BillFormProps {
   products: any[]
 }
 
-export function BillForm({ initialData, vendors, products }: BillFormProps) {
+export function BillForm({ initialData, vendors }: BillFormProps) {
   const { regime, formatMoney, taxLabel, rates, defaultRate } = useTaxRegime()
   const isIndia = (regime?.mode ?? "IN_GST") === "IN_GST"
   const router = useRouter()
@@ -62,7 +62,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
   })) || [])
 
   const [discount, setDiscount] = useState(initialData?.discount || 0)
-  const [supplyType, setSupplyType] = useState<SupplyType>("intra") // Default to intra for now
+  const [supplyType, ] = useState<SupplyType>("intra") // Default to intra for now
 
   // Parse existing TDS deduction from notes if in edit mode
   const initialTds = (() => {
@@ -185,8 +185,8 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
         toast.success("Bill updated successfully")
       }
       router.push("/finance/bills")
-    } catch (err: any) {
-      toast.error(err.message || "Failed to save bill")
+    } catch (err) {
+      toast.error(errorMessage(err) || "Failed to save bill")
     }
   }
 

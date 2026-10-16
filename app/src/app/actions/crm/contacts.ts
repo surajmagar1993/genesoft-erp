@@ -5,6 +5,7 @@ import { recordContactTransaction } from "@/lib/contact-ledger"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { planLimitError } from "@/lib/plan-limits"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -117,7 +118,7 @@ export async function getContacts(
     }))
 
     return { data: formatted, total }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Error in getContacts with Prisma:", err)
     return { data: [], total: 0 }
   }
@@ -238,9 +239,9 @@ export async function createContact(
 
     revalidatePath("/crm/contacts")
     return { error: null, id: created.id }
-  } catch (err: any) {
+  } catch (err) {
     console.error("createContact failed:", err)
-    return { error: err.message || "Failed to create contact" }
+    return { error: errorMessage(err) || "Failed to create contact" }
   }
 }
 
@@ -302,9 +303,9 @@ export async function updateContact(
 
     revalidatePath("/crm/contacts")
     return { error: null }
-  } catch (err: any) {
+  } catch (err) {
     console.error("updateContact failed:", err)
-    return { error: err.message || "Failed to update contact" }
+    return { error: errorMessage(err) || "Failed to update contact" }
   }
 }
 
@@ -332,10 +333,10 @@ export async function deleteContact(id: string): Promise<{ error: string | null 
 
     revalidatePath("/crm/contacts")
     return { error: null }
-  } catch (err: any) {
+  } catch (err) {
     console.error("deleteContact failed:", err)
-    if (err?.code === "P2003") return { error: "This contact is still used by other records (deals, quotes, orders…), so it can't be deleted. Mark it inactive instead." }
-    return { error: err.message || "Failed to delete contact" }
+    if ((err as { code?: unknown }).code === "P2003") return { error: "This contact is still used by other records (deals, quotes, orders…), so it can't be deleted. Mark it inactive instead." }
+    return { error: errorMessage(err) || "Failed to delete contact" }
   }
 }
 
@@ -396,8 +397,8 @@ export async function importContacts(
 
     revalidatePath("/crm/contacts")
     return { error: null, count: created.length, skipped }
-  } catch (err: any) {
+  } catch (err) {
     console.error("importContacts error:", err)
-    return { error: err.message || "Failed to import contacts", count: 0 }
+    return { error: errorMessage(err) || "Failed to import contacts", count: 0 }
   }
 }

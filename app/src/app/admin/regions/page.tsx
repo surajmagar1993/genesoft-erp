@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Globe, MapPin, Server, Activity, Users, Building2, CheckCircle2, ShieldCheck, Wifi } from "lucide-react"
+import { Globe, Server, Activity, Users, Building2, ShieldCheck, Wifi } from "lucide-react"
 import { getPlatformRegions } from "@/app/actions/saas/admin"
 
 export const dynamic = "force-dynamic"

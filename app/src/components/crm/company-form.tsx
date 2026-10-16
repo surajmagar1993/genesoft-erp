@@ -6,13 +6,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, Save, X, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { createCompany, updateCompany } from "@/app/actions/crm/companies"
+import { errorMessage } from "@/lib/utils";
 
 export interface CompanyFormData {
     id?: string
@@ -101,8 +101,8 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                 router.push("/crm/companies")
                 router.refresh()
             }
-        } catch (err: any) {
-            const msg = err.message || "Failed to save company"
+        } catch (err) {
+            const msg = errorMessage(err) || "Failed to save company"
             setSaveError(msg)
             toast.error(msg)
             setIsSubmitting(false)

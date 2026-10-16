@@ -14,6 +14,7 @@ import {
     TrainingProgramStatus,
     EnrollmentStatus,
 } from "@prisma/client"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "hr" as const
@@ -406,9 +407,9 @@ export async function createAppraisalCycle(input: {
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Create appraisal cycle failed:", err)
-        return { success: false, error: err.message || "Failed to create appraisal cycle" }
+        return { success: false, error: errorMessage(err) || "Failed to create appraisal cycle" }
     }
 }
 
@@ -429,9 +430,9 @@ export async function updateAppraisalCycleStatus(
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Update appraisal cycle status failed:", err)
-        return { success: false, error: err.message || "Failed to update cycle status" }
+        return { success: false, error: errorMessage(err) || "Failed to update cycle status" }
     }
 }
 
@@ -488,9 +489,9 @@ export async function createPerformanceReview(input: {
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Create performance review failed:", err)
-        return { success: false, error: err.message || "Failed to create performance review" }
+        return { success: false, error: errorMessage(err) || "Failed to create performance review" }
     }
 }
 
@@ -517,9 +518,9 @@ export async function submitReviewSelfEvaluation(input: {
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Submit self review failed:", err)
-        return { success: false, error: err.message || "Failed to submit self evaluation" }
+        return { success: false, error: errorMessage(err) || "Failed to submit self evaluation" }
     }
 }
 
@@ -557,9 +558,9 @@ export async function submitReviewManagerEvaluation(input: {
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Submit manager review failed:", err)
-        return { success: false, error: err.message || "Failed to submit manager evaluation" }
+        return { success: false, error: errorMessage(err) || "Failed to submit manager evaluation" }
     }
 }
 
@@ -600,9 +601,9 @@ export async function createEmployeeGoal(input: {
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Create goal failed:", err)
-        return { success: false, error: err.message || "Failed to create goal" }
+        return { success: false, error: errorMessage(err) || "Failed to create goal" }
     }
 }
 
@@ -636,9 +637,9 @@ export async function updateGoalProgress(
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Update goal progress failed:", err)
-        return { success: false, error: err.message || "Failed to update goal progress" }
+        return { success: false, error: errorMessage(err) || "Failed to update goal progress" }
     }
 }
 
@@ -682,9 +683,9 @@ export async function createTrainingProgram(input: {
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Create training program failed:", err)
-        return { success: false, error: err.message || "Failed to create training program" }
+        return { success: false, error: errorMessage(err) || "Failed to create training program" }
     }
 }
 
@@ -705,9 +706,9 @@ export async function updateTrainingProgramStatus(
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Update training program status failed:", err)
-        return { success: false, error: err.message || "Failed to update program status" }
+        return { success: false, error: errorMessage(err) || "Failed to update program status" }
     }
 }
 
@@ -770,9 +771,9 @@ export async function enrollEmployeeInTraining(
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Enroll in training failed:", err)
-        return { success: false, error: err.message || "Failed to enroll employee in training" }
+        return { success: false, error: errorMessage(err) || "Failed to enroll employee in training" }
     }
 }
 
@@ -803,8 +804,8 @@ export async function updateEnrollmentStatus(input: {
         revalidatePath("/hr/performance")
         revalidatePath("/hr")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Update enrollment status failed:", err)
-        return { success: false, error: err.message || "Failed to update enrollment outcome" }
+        return { success: false, error: errorMessage(err) || "Failed to update enrollment outcome" }
     }
 }

@@ -8,6 +8,7 @@ import { fromSmallestCurrencyUnit } from "@/lib/payment-gateway-engine"
 import { planForSubscription, subscriptionStanding, type PaidPlan } from "@/lib/stripe-plans"
 import { applyPlanChange } from "@/lib/plan-change"
 import { BILLING_SYSTEM, logTenantAudit } from "@/lib/tenant-audit"
+import { errorMessage } from "@/lib/utils";
 
 export const dynamic = "force-dynamic"
 
@@ -27,8 +28,8 @@ export async function POST(req: Request) {
       signature,
       process.env.STRIPE_WEBHOOK_SECRET!
     )
-  } catch (err: any) {
-    return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 })
+  } catch (err) {
+    return new NextResponse(`Webhook Error: ${errorMessage(err)}`, { status: 400 })
   }
 
   // 0. Idempotency Check

@@ -10,7 +10,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -42,7 +42,7 @@ interface BillsClientProps {
   total: number
 }
 
-export default function BillsClient({ bills, total }: BillsClientProps) {
+export default function BillsClient({ bills }: BillsClientProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("ALL")
 
@@ -82,9 +82,9 @@ export default function BillsClient({ bills, total }: BillsClientProps) {
       try {
         await deleteBill(id)
         toast.success("Bill deleted successfully")
-      } catch (err) {
-        toast.error("Failed to delete bill")
-      }
+      } catch {
+                toast.error("Failed to delete bill")
+              }
     }
   }
 

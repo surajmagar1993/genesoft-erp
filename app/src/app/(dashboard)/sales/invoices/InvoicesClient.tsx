@@ -25,7 +25,7 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { InvoiceStatus, deleteInvoice, sendInvoiceEmail, type InvoiceDB } from "@/app/actions/sales/invoices"
+import { InvoiceStatus, deleteInvoice, sendInvoiceEmail } from "@/app/actions/sales/invoices"
 
 import { PageHeader } from "@/components/ui/page-header"
 import { RequireRole } from "@/components/auth/role-context"

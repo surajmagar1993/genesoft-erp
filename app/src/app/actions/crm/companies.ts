@@ -4,7 +4,7 @@ import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-te
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { fromRow, toRow, toRows } from "@/lib/pg-row"
-import { isUuid } from "@/lib/utils"
+import { isUuid, errorMessage } from "@/lib/utils"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -46,7 +46,7 @@ export async function getCompanies(
       prisma.company.count({ where }),
     ])
     return { data: toRows<Company>("Company", rows), total }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Exception fetching companies:", err)
     return { data: [], total: 0 }
   }
@@ -101,9 +101,9 @@ export async function createCompany(
 
     revalidatePath("/crm/companies")
     return { error: null, data: toRow<Company>("Company", row) }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Exception in createCompany:", err)
-    return { error: err.message || "Failed to create company" }
+    return { error: errorMessage(err) || "Failed to create company" }
   }
 }
 
@@ -129,9 +129,9 @@ export async function updateCompany(
 
     revalidatePath("/crm/companies")
     return { error: null }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Exception in updateCompany:", err)
-    return { error: err.message || "Failed to update company" }
+    return { error: errorMessage(err) || "Failed to update company" }
   }
 }
 
@@ -142,8 +142,8 @@ export async function deleteCompany(id: string): Promise<{ error: string | null 
     if (count === 0) return { error: "Company not found" }
     revalidatePath("/crm/companies")
     return { error: null }
-  } catch (err: any) {
-    return { error: err.message || "Failed to delete company" }
+  } catch (err) {
+    return { error: errorMessage(err) || "Failed to delete company" }
   }
 }
 

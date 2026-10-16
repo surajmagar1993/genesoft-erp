@@ -2,24 +2,10 @@
 
 import React from "react"
 import { TemplateProps, formatCurrency, formatDate, getInvoiceSummary } from "./template-common"
-import { Sparkles, Building2, UserCheck, CheckCircle2 } from "lucide-react"
+import { Sparkles, UserCheck } from "lucide-react"
 
 export function TemplateCreative({ invoice }: TemplateProps) {
-    const {
-        items,
-        gstSummary,
-        hsnSummary,
-        companyName,
-        companyLogo,
-        companyGstin,
-        companyAddress,
-        companyEmail,
-        isInterState,
-        isSingle,
-        taxLabel,
-        taxIdLabel,
-        docTitle: summaryDocTitle
-    } = getInvoiceSummary(invoice)
+    const { items, gstSummary, companyName, companyLogo, companyGstin, companyAddress, companyEmail, isInterState, isSingle, taxLabel, taxIdLabel } = getInvoiceSummary(invoice)
 
     const isProforma = invoice.type === "PROFORMA"
 

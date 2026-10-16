@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Save, X, Loader2, AlertCircle } from "lucide-react"
+import { ArrowLeft, Save, X, AlertCircle } from "lucide-react"
 import { COUNTRIES } from "@/lib/constants/countries"
 import { createContact, updateContact } from "@/app/actions/crm/contacts"
 import { TAX_EXEMPTION_REASONS } from "@/lib/gst-engine"
@@ -18,6 +18,7 @@ import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "sonner"
+import { errorMessage } from "@/lib/utils";
 
 export interface ContactFormData {
     type: "INDIVIDUAL" | "COMPANY"
@@ -196,8 +197,8 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                 router.push("/crm/contacts")
                 router.refresh()
             }
-        } catch (err: any) {
-            const msg = err.message || "Failed to save contact"
+        } catch (err) {
+            const msg = errorMessage(err) || "Failed to save contact"
             setSaveError(msg)
             toast.error(msg)
             setIsSubmitting(false)

@@ -7,8 +7,6 @@ import {
   FileText,
   Clock,
   AlertTriangle,
-  CheckCircle2,
-  XCircle,
   Download,
   Plus,
   RefreshCw,
@@ -18,12 +16,8 @@ import {
   ShieldCheck,
   Building2,
   MapPin,
-  ExternalLink,
   Copy,
-  Calendar,
-  Navigation,
-  History,
-  Settings,
+  Navigation
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -75,9 +69,7 @@ import {
   EWAY_VEHICLE_TYPES,
   EWAY_DOCUMENT_TYPES,
   calculateEwayBillValidity,
-  validateVehicleNumber,
-  validatePinCode,
-  validateTransporterId,
+  validateVehicleNumber
 } from "@/lib/eway-bill-engine"
 import { COMPANY } from "@/lib/constants/company"
 import { generateQrCodeDataUrl } from "@/lib/barcode/qrcode"

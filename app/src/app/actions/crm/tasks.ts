@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { fromRow, toRow, toRows } from "@/lib/pg-row"
 import { assertTenantRefs } from "@/lib/tenant-refs"
-import { isUuid } from "@/lib/utils"
+import { isUuid, errorMessage } from "@/lib/utils"
 import type { Prisma } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
@@ -86,8 +86,8 @@ export async function createTask(
     if (formData.deal_id) revalidatePath(`/crm/deals/${formData.deal_id}`)
 
     return { error: null, data: toRow<Task>("Task", row) }
-  } catch (err: any) {
-    return { error: err.message || "Failed to create task" }
+  } catch (err) {
+    return { error: errorMessage(err) || "Failed to create task" }
   }
 }
 
@@ -104,8 +104,8 @@ export async function updateTask(
 
     revalidatePath("/crm/tasks")
     return { error: null }
-  } catch (err: any) {
-    return { error: err.message || "Failed to update task" }
+  } catch (err) {
+    return { error: errorMessage(err) || "Failed to update task" }
   }
 }
 
@@ -117,7 +117,7 @@ export async function deleteTask(id: string): Promise<{ error: string | null }> 
 
     revalidatePath("/crm/tasks")
     return { error: null }
-  } catch (err: any) {
-    return { error: err.message || "Failed to delete task" }
+  } catch (err) {
+    return { error: errorMessage(err) || "Failed to delete task" }
   }
 }

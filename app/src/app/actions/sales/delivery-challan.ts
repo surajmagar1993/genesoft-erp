@@ -20,8 +20,7 @@ import {
     ChallanStatus,
     TransportMode,
     InvoiceType,
-    InvoiceStatus,
-    StockMovementType
+    InvoiceStatus
 } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */

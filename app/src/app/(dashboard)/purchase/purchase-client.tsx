@@ -6,17 +6,13 @@ import Link from "next/link"
 import {
     ShoppingCart,
     Truck,
-    Package,
     Building2,
     DollarSign,
     CheckCircle2,
-    Clock,
     AlertCircle,
-    XCircle,
     Plus,
     Search,
     RefreshCw,
-    Filter,
     Boxes,
     FileText,
     Receipt,
@@ -25,14 +21,11 @@ import {
     Send,
     Check,
     Ban,
-    ArrowUpRight,
     Loader2,
     Phone,
     Mail,
-    MapPin,
     Trash2,
-    ExternalLink,
-    AlertTriangle,
+    ExternalLink
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -70,8 +63,6 @@ import { toast } from "sonner"
 import {
     PurchaseOverviewData,
     PurchaseOrderRecord,
-    PurchaseOrderItemRecord,
-    VendorItem,
     createPurchaseOrder,
     createVendor,
     updatePurchaseOrderStatus,
@@ -79,7 +70,7 @@ import {
     convertPOToBill,
     PurchaseOrderItemInput,
 } from "@/app/actions/purchase"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import { PurchaseOrderStatus } from "@prisma/client"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
@@ -357,8 +348,8 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
             } else {
                 toast.error(res.error)
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to create supplier")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to create supplier")
         } finally {
             setIsSubmittingVendor(false)
         }
@@ -421,8 +412,8 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to create purchase order")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to create purchase order")
         } finally {
             setIsSubmittingPO(false)
         }
@@ -439,8 +430,8 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to update order status")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to update order status")
         } finally {
             setIsUpdatingStatus(null)
         }
@@ -520,8 +511,8 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to intake goods")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to intake goods")
         } finally {
             setIsSubmittingReceive(false)
         }
@@ -558,8 +549,8 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                     router.refresh()
                 })
             }
-        } catch (err: any) {
-            toast.error(err.message || "Failed to convert purchase order to bill")
+        } catch (err) {
+            toast.error(errorMessage(err) || "Failed to convert purchase order to bill")
         } finally {
             setIsSubmittingBill(false)
         }

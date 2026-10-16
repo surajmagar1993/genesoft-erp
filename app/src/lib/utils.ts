@@ -44,3 +44,11 @@ export function isUuid(value: unknown): value is string {
 export function isRecordId(value: unknown): value is string {
   return isUuid(value) || (typeof value === "string" && /^c[a-z0-9]{20,31}$/.test(value))
 }
+
+/** The message of anything thrown (Error, string or object), or "" — so `errorMessage(err) || "Fallback"` works. */
+export function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (typeof err === "string") return err
+  if (err && typeof err === "object" && "message" in err) return String((err as { message: unknown }).message ?? "")
+  return ""
+}

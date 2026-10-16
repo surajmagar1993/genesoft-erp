@@ -8,21 +8,14 @@ import {
     Plus,
     Search,
     Calendar,
-    DollarSign,
     Package,
     AlertCircle,
-    CheckCircle2,
     Clock,
     RotateCcw,
     ShieldAlert,
     Receipt,
     Pencil,
     Trash2,
-    Layers,
-    User,
-    Warehouse,
-    Filter,
-    ArrowUpRight,
     Loader2,
     ShieldCheck,
     Wrench,
@@ -70,8 +63,7 @@ import {
     AssetCondition,
     RentalAssetStatus,
     RentalBillingCycle,
-    RentalStatus,
-    DepositStatus,
+    RentalStatus
 } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
@@ -81,11 +73,10 @@ interface RentalClientProps {
 }
 
 export function RentalClient({ initialData }: RentalClientProps) {
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
-    const appLocale = moneyRegime?.locale
+    const { formatMoney } = useTaxRegime()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [data, setData] = useState<RentalOverviewData>(initialData)
+    const [data, ] = useState<RentalOverviewData>(initialData)
 
     // Active tab
     const [activeTab, setActiveTab] = useState("agreements")

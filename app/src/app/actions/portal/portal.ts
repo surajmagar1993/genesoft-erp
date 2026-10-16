@@ -13,6 +13,7 @@ import type {
   PortalTicketDetail,
   PortalDashboardData,
 } from "./portal-types"
+import { errorMessage } from "@/lib/utils";
 
 // ────────────────────────────────────────────
 // Helpers
@@ -596,8 +597,8 @@ export async function payPortalInvoice(
       transactionId: simTxId,
       message: `Payment of ${invoice.currencyCode} ${balanceDue.toFixed(2)} settled successfully via ${gateway}!`,
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error processing portal invoice payment:", error)
-    return { success: false, message: "Payment processing failed", error: error.message }
+    return { success: false, message: "Payment processing failed", error: errorMessage(error) }
   }
 }

@@ -9,32 +9,21 @@ import {
     Award,
     Plus,
     Search,
-    Filter,
-    CheckCircle2,
-    XCircle,
-    Clock,
     UserCheck,
     Video,
     ExternalLink,
     Star,
     Sparkles,
-    Building2,
     MapPin,
-    DollarSign,
     FileText,
     MoreHorizontal,
-    ArrowRight,
-    ChevronRight,
     Loader2,
     CalendarDays,
-    Phone,
-    Mail,
     Kanban,
     ListFilter,
-    AlertCircle,
     Eye
 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -67,7 +56,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { format } from "date-fns"
 import { toast } from "sonner"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import {
     JobStatus,
     ApplicantStage,
@@ -246,8 +235,8 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                 setIsCreateOpeningOpen(false)
                 resetJobForm()
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to create job opening.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to create job opening.")
             }
         })
     }
@@ -296,8 +285,8 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                 setIsAddCandidateOpen(false)
                 resetCandidateForm()
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to add candidate.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to add candidate.")
             }
         })
     }
@@ -323,8 +312,8 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                 await updateApplicantStage(candidate.id, newStage)
                 toast.success(`Candidate advanced to ${stageConfig[newStage].label}!`)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to update candidate stage.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to update candidate stage.")
             }
         })
     }
@@ -363,8 +352,8 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                 toast.success("Interview round scheduled! Candidate moved to Interviewing.")
                 setIsScheduleInterviewOpen(false)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to schedule interview.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to schedule interview.")
             }
         })
     }
@@ -392,8 +381,8 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                 toast.success("Interview feedback and rating submitted!")
                 setIsFeedbackModalOpen(false)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to submit feedback.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to submit feedback.")
             }
         })
     }
@@ -446,8 +435,8 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                 toast.success(`Candidate hired! Created Employee record ${res.employee.employeeNumber}.`)
                 setIsHireModalOpen(false)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to complete hire.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to complete hire.")
             }
         })
     }
@@ -458,8 +447,8 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                 await updateJobOpeningStatus(job.id, nextStatus)
                 toast.success(`Job opening status updated to ${nextStatus}.`)
                 router.refresh()
-            } catch (err: any) {
-                toast.error(err.message || "Failed to update job status.")
+            } catch (err) {
+                toast.error(errorMessage(err) || "Failed to update job status.")
             }
         })
     }

@@ -11,9 +11,7 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell,
-  BarChart,
-  Bar
+  Cell
 } from "recharts"
 
 interface DashboardChartsProps {

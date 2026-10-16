@@ -2,7 +2,6 @@
 
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
-import { createClient } from "@/lib/supabase/server"
 import { getTenantAdminId, getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
@@ -10,7 +9,7 @@ import { Resend } from "resend"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
 import { COMPANY } from "@/lib/constants/company"
 import { computeInvoiceGstSummary } from "@/lib/gst-engine"
-import { formatCurrency } from "@/lib/utils"
+import { formatCurrency, errorMessage } from "@/lib/utils"
 import { cleanTaxRate, getTenantTaxContext, invoiceItemTaxColumns, supplyTypeFor } from "@/lib/tenant-tax"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
@@ -158,8 +157,8 @@ export async function getInvoices(
       data: invoices.map(mapPrismaInvoiceToDB),
       total,
     }
-  } catch (error: any) {
-    console.error("getInvoices error:", error.message)
+  } catch (error) {
+    console.error("getInvoices error:", errorMessage(error))
     return { data: [], total: 0 }
   }
 }
@@ -180,8 +179,8 @@ export async function getInvoiceById(id: string): Promise<(InvoiceDB & { tenants
 
     if (!invoice) return null
     return mapPrismaInvoiceToDB(invoice)
-  } catch (error: any) {
-    console.error("getInvoiceById error:", error.message)
+  } catch (error) {
+    console.error("getInvoiceById error:", errorMessage(error))
     return null
   }
 }
@@ -308,9 +307,9 @@ export async function createInvoice(
           taxExemptionReason = taxExemptionReason || contact.taxExemptionReason || undefined
           taxExemptionCertificate = taxExemptionCertificate || contact.taxExemptionCertificate || undefined
         }
-      } catch (e) {
-        // Ignore contact lookup failure during build/offline
-      }
+      } catch {
+                // Ignore contact lookup failure during build/offline
+              }
     }
 
     // Compute GST summaries
@@ -425,9 +424,9 @@ export async function createInvoice(
 
     revalidatePath("/sales/invoices")
     return { id: invoice.id, error: null }
-  } catch (error: any) {
-    console.error("createInvoice error:", error.message)
-    return { id: null, error: error.message || "Failed to create invoice" }
+  } catch (error) {
+    console.error("createInvoice error:", errorMessage(error))
+    return { id: null, error: errorMessage(error) || "Failed to create invoice" }
   }
 }
 
@@ -588,9 +587,9 @@ export async function updateInvoice(
     revalidatePath(`/sales/invoices/${payload.id}`)
     revalidatePath(`/sales/invoices/${payload.id}/edit`)
     return { error: null }
-  } catch (error: any) {
-    console.error("updateInvoice error:", error.message)
-    return { error: error.message || "Failed to update invoice" }
+  } catch (error) {
+    console.error("updateInvoice error:", errorMessage(error))
+    return { error: errorMessage(error) || "Failed to update invoice" }
   }
 }
 
@@ -660,9 +659,9 @@ export async function convertProformaToInvoice(
     revalidatePath("/sales/invoices")
     revalidatePath(`/sales/invoices/${proformaId}`)
     return { success: true, newInvoiceNumber }
-  } catch (error: any) {
-    console.error("convertProformaToInvoice error:", error.message)
-    return { success: false, error: error.message || "Failed to convert proforma invoice" }
+  } catch (error) {
+    console.error("convertProformaToInvoice error:", errorMessage(error))
+    return { success: false, error: errorMessage(error) || "Failed to convert proforma invoice" }
   }
 }
 
@@ -708,9 +707,9 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
 
     revalidatePath("/sales/invoices")
     return { error: null }
-  } catch (error: any) {
-    console.error("deleteInvoice error:", error.message)
-    return { error: error.message || "Failed to delete invoice" }
+  } catch (error) {
+    console.error("deleteInvoice error:", errorMessage(error))
+    return { error: errorMessage(error) || "Failed to delete invoice" }
   }
 }
 
@@ -833,9 +832,9 @@ export async function updateInvoiceTemplate(
     revalidatePath("/sales/invoices")
     revalidatePath(`/sales/invoices/${id}`)
     return { success: true }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Failed to update invoice template:", err)
-    return { success: false, error: err.message || "Failed to update template" }
+    return { success: false, error: errorMessage(err) || "Failed to update template" }
   }
 }
 
@@ -867,9 +866,9 @@ export async function updateTenantDefaultTemplate(
     revalidatePath("/sales/invoices")
     revalidatePath("/sales/invoices/templates")
     return { success: true }
-  } catch (err: any) {
+  } catch (err) {
     console.error("Failed to update tenant default template:", err)
-    return { success: false, error: err.message || "Failed to update default template" }
+    return { success: false, error: errorMessage(err) || "Failed to update default template" }
   }
 }
 

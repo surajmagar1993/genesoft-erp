@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { createTenant } from "@/app/actions/saas/admin"
+import { errorMessage } from "@/lib/utils";
 
 const COUNTRIES = [
     { code: "IN", label: "India (+91)", currency: "INR" },
@@ -91,9 +92,9 @@ export default function NewTenantPage() {
             toast.success("Business tenant provisioned successfully!")
             router.push(`/admin/tenants/${newTenant.id}`)
             router.refresh()
-        } catch (error: any) {
+        } catch (error) {
             console.error("Failed to create tenant:", error)
-            toast.error(error?.message || "Failed to create tenant")
+            toast.error(errorMessage(error) || "Failed to create tenant")
         } finally {
             setIsLoading(false)
         }

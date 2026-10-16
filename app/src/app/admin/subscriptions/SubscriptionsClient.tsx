@@ -12,13 +12,9 @@ import {
     Building2, 
     Calendar, 
     Printer, 
-    FileText, 
-    ArrowUpRight, 
-    ShieldCheck, 
-    Sparkles, 
     MoreHorizontal
 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -30,10 +26,11 @@ import {
     DropdownMenuSeparator, 
     DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
-import { extendTenantTrial, updateTenantPlan } from "@/app/actions/saas/admin"
+import { extendTenantTrial } from "@/app/actions/saas/admin"
 import { formatSaaSInvoiceReceiptHtml } from "@/lib/saas-subscription-engine"
 import { toast } from "sonner"
 import { format } from "date-fns"
+import { errorMessage } from "@/lib/utils";
 
 interface SubscriptionsClientProps {
     data: {
@@ -57,8 +54,8 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
             unwrap(await extendTenantTrial(tenantId, 7))
             toast.success("Trial extended by 7 days")
             router.refresh()
-        } catch (error: any) {
-            toast.error(error?.message || "Failed to extend trial")
+        } catch (error) {
+            toast.error(errorMessage(error) || "Failed to extend trial")
         } finally {
             setIsLoading(false)
         }

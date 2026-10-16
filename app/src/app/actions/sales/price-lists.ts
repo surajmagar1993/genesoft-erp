@@ -10,6 +10,7 @@ import {
     ProductType,
     Prisma,
 } from "@prisma/client"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -617,9 +618,9 @@ export async function getPriceListsOverview(): Promise<{
                 matrixData,
             },
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in getPriceListsOverview:", err)
-        return { error: err.message || "Failed to load price lists overview" }
+        return { error: errorMessage(err) || "Failed to load price lists overview" }
     }
 }
 
@@ -692,9 +693,9 @@ export async function createPriceList(data: CreatePriceListInput): Promise<{
 
         revalidatePath("/sales/price-lists")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in createPriceList:", err)
-        return { error: err.message || "Failed to create price list" }
+        return { error: errorMessage(err) || "Failed to create price list" }
     }
 }
 
@@ -742,9 +743,9 @@ export async function updatePriceList(
 
         revalidatePath("/sales/price-lists")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in updatePriceList:", err)
-        return { error: err.message || "Failed to update price list" }
+        return { error: errorMessage(err) || "Failed to update price list" }
     }
 }
 
@@ -763,9 +764,9 @@ export async function deletePriceList(id: string): Promise<{ success?: boolean; 
 
         revalidatePath("/sales/price-lists")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in deletePriceList:", err)
-        return { error: err.message || "Failed to delete price list" }
+        return { error: errorMessage(err) || "Failed to delete price list" }
     }
 }
 
@@ -841,9 +842,9 @@ export async function upsertPriceListItem(data: UpsertPriceListItemInput): Promi
 
         revalidatePath("/sales/price-lists")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in upsertPriceListItem:", err)
-        return { error: err.message || "Failed to save product price override" }
+        return { error: errorMessage(err) || "Failed to save product price override" }
     }
 }
 
@@ -862,9 +863,9 @@ export async function deletePriceListItem(id: string): Promise<{ success?: boole
 
         revalidatePath("/sales/price-lists")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in deletePriceListItem:", err)
-        return { error: err.message || "Failed to remove price override" }
+        return { error: errorMessage(err) || "Failed to remove price override" }
     }
 }
 
@@ -892,9 +893,9 @@ export async function assignContactPriceList(
         revalidatePath("/sales/price-lists")
         revalidatePath("/crm/contacts")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in assignContactPriceList:", err)
-        return { error: err.message || "Failed to map customer to price list" }
+        return { error: errorMessage(err) || "Failed to map customer to price list" }
     }
 }
 
@@ -1023,8 +1024,8 @@ export async function calculateEffectivePrice(
                 currencyCode: product.currency || "INR",
             },
         }
-    } catch (err: any) {
+    } catch (err) {
         console.error("Error in calculateEffectivePrice:", err)
-        return { error: err.message || "Failed to calculate effective price" }
+        return { error: errorMessage(err) || "Failed to calculate effective price" }
     }
 }

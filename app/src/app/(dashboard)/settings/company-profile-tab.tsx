@@ -14,6 +14,7 @@ import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { updateTenantSettings, uploadTenantLogo, removeTenantLogo, TenantSettings, TenantAddress } from "@/app/actions/settings/tenant"
 import { unwrap } from "@/lib/action-result"
+import { errorMessage } from "@/lib/utils";
 
 interface CompanyProfileTabProps {
     initialSettings: TenantSettings | null
@@ -153,8 +154,8 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                 setStatusMsg({ type: "error", text: res.error || "Failed to update profile." })
                 toast.error(res.error || "Failed to update profile.")
             }
-        } catch (err: any) {
-            const msg = err.message || "Failed to update profile."
+        } catch (err) {
+            const msg = errorMessage(err) || "Failed to update profile."
             setStatusMsg({ type: "error", text: msg })
             toast.error(msg)
         } finally {

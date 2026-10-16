@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { BarcodeDisplay } from "@/components/inventory/barcode-display"
-import { Barcode as BarcodeIcon, Sparkles, QrCode as QrIcon } from "lucide-react"
+import { Barcode as BarcodeIcon, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 
 export interface ProductFormData {

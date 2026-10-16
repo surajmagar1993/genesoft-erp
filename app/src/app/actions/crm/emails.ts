@@ -6,10 +6,9 @@ import { getTenantAdminId, getTenantId, getTenantWriterId } from "@/lib/get-tena
 import { syncImapMailbox } from "@/lib/imap-sync"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { deliverTenantEmail, findForeignLink } from "@/lib/email-delivery"
-import { openSecret, sealSecret } from "@/lib/secret-box"
+import { sealSecret } from "@/lib/secret-box"
 import { revalidatePath } from "next/cache"
 import { checkSmtpTarget } from "@/lib/smtp-guard"
-import { CommunicationType } from "@prisma/client"
 import { logTenantAudit } from "@/lib/tenant-audit"
 import {
     EmailDirection,
@@ -22,12 +21,12 @@ import type {
     EmailMessageRecord,
     EmailTemplateRecord,
     EmailThreadSummary,
-    EmailsOverviewKPIs,
     EmailsOverview,
     SendEmailInput,
     CreateEmailAccountInput,
     CreateEmailTemplateInput,
 } from "./email-types"
+import { errorMessage } from "@/lib/utils";
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -285,9 +284,9 @@ export async function sendEmail(data: SendEmailInput): Promise<{
             revalidatePath("/crm/contacts")
         }
         return result
-    } catch (err: any) {
+    } catch (err) {
         console.error("sendEmail error:", err)
-        return { error: err.message || "Failed to send email" }
+        return { error: errorMessage(err) || "Failed to send email" }
     }
 }
 
@@ -328,9 +327,9 @@ export async function saveEmailDraft(data: Partial<SendEmailInput>): Promise<{
 
         revalidatePath("/crm/emails")
         return { success: true, draftId: draft.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("saveEmailDraft error:", err)
-        return { error: err.message || "Failed to save draft" }
+        return { error: errorMessage(err) || "Failed to save draft" }
     }
 }
 
@@ -347,9 +346,9 @@ export async function toggleStarEmail(id: string): Promise<{ success?: boolean; 
 
         revalidatePath("/crm/emails")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("toggleStarEmail error:", err)
-        return { error: err.message || "Failed to toggle star" }
+        return { error: errorMessage(err) || "Failed to toggle star" }
     }
 }
 
@@ -364,9 +363,9 @@ export async function markEmailAsRead(id: string): Promise<{ success?: boolean; 
 
         revalidatePath("/crm/emails")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("markEmailAsRead error:", err)
-        return { error: err.message || "Failed to mark as read" }
+        return { error: errorMessage(err) || "Failed to mark as read" }
     }
 }
 
@@ -377,9 +376,9 @@ export async function deleteEmailMessage(id: string): Promise<{ success?: boolea
         if (count === 0) return { error: "Message not found" }
         revalidatePath("/crm/emails")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("deleteEmailMessage error:", err)
-        return { error: err.message || "Failed to delete message" }
+        return { error: errorMessage(err) || "Failed to delete message" }
     }
 }
 
@@ -396,9 +395,9 @@ export async function syncMailbox(mailboxId: string): Promise<{
         const { syncedCount } = await syncImapMailbox(account)
         revalidatePath("/crm/emails")
         return { success: true, syncedCount }
-    } catch (err: any) {
+    } catch (err) {
         console.error("syncMailbox error:", err)
-        return { error: err.message || "Failed to sync mailbox" }
+        return { error: errorMessage(err) || "Failed to sync mailbox" }
     }
 }
 
@@ -449,9 +448,9 @@ export async function createEmailAccount(data: CreateEmailAccountInput): Promise
         revalidatePath("/crm/emails")
         await logTenantAudit(tenantId, "EMAIL_ACCOUNT_ADDED", { target: { type: "EMAIL_ACCOUNT", id: created.id }, metadata: { address: created.email } })
         return { success: true, accountId: created.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("createEmailAccount error:", err)
-        return { error: err.message || "Failed to configure email account" }
+        return { error: errorMessage(err) || "Failed to configure email account" }
     }
 }
 
@@ -487,9 +486,9 @@ export async function testSmtpConnection(params: {
 
         await transporter.verify()
         return { success: true, message: "SMTP server verified successfully! Connection established." }
-    } catch (err: any) {
+    } catch (err) {
         console.error("testSmtpConnection error:", err)
-        return { success: false, message: err.message || "Failed to connect to SMTP server." }
+        return { success: false, message: errorMessage(err) || "Failed to connect to SMTP server." }
     }
 }
 
@@ -502,9 +501,9 @@ export async function deleteEmailAccount(id: string): Promise<{ success?: boolea
         await logTenantAudit(tenantId, "EMAIL_ACCOUNT_REMOVED", { target: { type: "EMAIL_ACCOUNT", id }, metadata: { address: account?.email ?? null } })
         revalidatePath("/crm/emails")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("deleteEmailAccount error:", err)
-        return { error: err.message || "Failed to delete account" }
+        return { error: errorMessage(err) || "Failed to delete account" }
     }
 }
 
@@ -540,9 +539,9 @@ export async function createEmailTemplate(data: CreateEmailTemplateInput): Promi
 
         revalidatePath("/crm/emails")
         return { success: true, templateId: created.id }
-    } catch (err: any) {
+    } catch (err) {
         console.error("createEmailTemplate error:", err)
-        return { error: err.message || "Failed to create email template" }
+        return { error: errorMessage(err) || "Failed to create email template" }
     }
 }
 
@@ -553,9 +552,9 @@ export async function deleteEmailTemplate(id: string): Promise<{ success?: boole
         if (count === 0) return { error: "Template not found" }
         revalidatePath("/crm/emails")
         return { success: true }
-    } catch (err: any) {
+    } catch (err) {
         console.error("deleteEmailTemplate error:", err)
-        return { error: err.message || "Failed to delete template" }
+        return { error: errorMessage(err) || "Failed to delete template" }
     }
 }
 

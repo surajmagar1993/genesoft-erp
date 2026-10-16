@@ -13,10 +13,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import {
     PayrollRunStatus,
-    PayslipStatus,
-    AttendanceStatus,
-    LeaveType,
-    LeaveStatus
+    PayslipStatus
 } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
