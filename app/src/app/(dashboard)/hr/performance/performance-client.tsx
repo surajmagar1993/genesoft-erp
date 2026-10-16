@@ -125,12 +125,12 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
     const [isGradeOpen, setIsGradeOpen] = useState(false)
 
     // Form States: New Appraisal Cycle
-    const [cycleForm, setCycleForm] = useState({
+    const [cycleForm, setCycleForm] = useState(() => ({
         title: "",
         startDate: format(new Date(), "yyyy-MM-dd"),
         endDate: format(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"),
         description: ""
-    })
+    }))
 
     // Form States: Initiate Review
     const [reviewForm, setReviewForm] = useState({
@@ -163,7 +163,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
     })
 
     // Form States: New Goal
-    const [goalForm, setGoalForm] = useState({
+    const [goalForm, setGoalForm] = useState(() => ({
         employeeId: initialData.employees[0]?.id || "",
         cycleId: initialData.cycles[0]?.id || "",
         title: "",
@@ -172,10 +172,10 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
         targetMetric: "",
         weightage: 25,
         dueDate: format(new Date(Date.now() + 60 * 24 * 60 * 60 * 1000), "yyyy-MM-dd")
-    })
+    }))
 
     // Form States: New Training Program
-    const [programForm, setProgramForm] = useState({
+    const [programForm, setProgramForm] = useState(() => ({
         title: "",
         category: "TECHNICAL" as TrainingCategory,
         trainer: "",
@@ -186,7 +186,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
         startDate: format(new Date(), "yyyy-MM-dd"),
         endDate: format(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), "yyyy-MM-dd"),
         maxParticipants: 20
-    })
+    }))
 
     // Form States: Enroll
     const [enrollProgramId, setEnrollProgramId] = useState(initialData.programs[0]?.id || "")

@@ -83,12 +83,15 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
+import { useIsClient } from "@/hooks/use-is-client"
 
 interface EmailsClientProps {
     initialData: EmailsOverview
 }
 
 export function EmailsClient({ initialData }: EmailsClientProps) {
+    // Times are shown in the viewer's own time zone, once in the browser (no server/browser mismatch)
+    const isClient = useIsClient()
     const router = useRouter()
 
     const [accounts, setAccounts] = useState<EmailAccountRecord[]>(initialData.accounts)
@@ -101,6 +104,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
 
     // Sync state with incoming server props when router.refresh() triggers
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing fresh server props after router.refresh()
         setAccounts(initialData.accounts)
         setMessages(initialData.messages)
         setTemplates(initialData.templates)
@@ -1098,15 +1102,16 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                             </div>
                                             <div className="flex items-center gap-1 text-[11px] text-muted-foreground shrink-0">
                                                 <span>
-                                                    {new Date(threadMsg.createdAt).toLocaleDateString([], {
-                                                        month: "short",
-                                                        day: "numeric",
-                                                    })}
+                                                    {isClient &&
+                                                        new Date(threadMsg.createdAt).toLocaleDateString([], {
+                                                            month: "short",
+                                                            day: "numeric",
+                                                        })}
                                                 </span>
                                                 <button
                                                     onClick={(e) => handleToggleStar(threadMsg.id, threadMsg.isStarred, e)}
                                                     className="p-1 hover:text-amber-500 transition-colors"
-                                                >
+                                                 aria-label="Star">
                                                     <Star
                                                         className={`h-3.5 w-3.5 ${
                                                             threadMsg.isStarred
@@ -1208,7 +1213,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                                 activeThreadLeadMessage.isStarred
                                             )
                                         }
-                                    >
+                                     aria-label="Star">
                                         <Star
                                             className={`h-4 w-4 ${
                                                 activeThreadLeadMessage?.isStarred
@@ -1225,7 +1230,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                             handleDeleteMessage(activeThreadLeadMessage.id)
                                         }
                                         className="text-destructive hover:bg-destructive/10"
-                                    >
+                                     aria-label="Delete">
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
@@ -1330,15 +1335,16 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
 
                                                 <div className="flex flex-col items-end text-xs text-muted-foreground">
                                                     <span>
-                                                        {new Date(msg.createdAt).toLocaleString([], {
-                                                            dateStyle: "medium",
-                                                            timeStyle: "short",
-                                                        })}
+                                                        {isClient &&
+                                                            new Date(msg.createdAt).toLocaleString([], {
+                                                                dateStyle: "medium",
+                                                                timeStyle: "short",
+                                                            })}
                                                     </span>
                                                     {msg.status === EmailStatus.OPENED && msg.openedAt && (
                                                         <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1 mt-0.5">
                                                             <Eye className="h-3 w-3" />
-                                                            Opened at {new Date(msg.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                            Opened at {isClient && new Date(msg.openedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                         </span>
                                                     )}
                                                 </div>
@@ -1714,7 +1720,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                                     size="sm"
                                                     onClick={() => handleDeleteAccount(acc.id)}
                                                     className="text-destructive h-7 w-7 p-0"
-                                                >
+                                                 aria-label="Delete">
                                                     <Trash2 className="h-3.5 w-3.5" />
                                                 </Button>
                                             )}
@@ -2035,7 +2041,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                                 size="sm"
                                                 onClick={() => handleDeleteTemplate(tmpl.id)}
                                                 className="text-destructive h-6 w-6 p-0"
-                                            >
+                                             aria-label="Delete">
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </Button>
                                         </div>

@@ -55,6 +55,7 @@ export function BarcodeDisplay({
   useEffect(() => {
     let isMounted = true
     if (!cleanValue) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing the drawing when there is no value
       setSvgContent("")
       return
     }

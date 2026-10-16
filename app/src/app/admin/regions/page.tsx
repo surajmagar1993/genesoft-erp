@@ -20,7 +20,7 @@ export default async function RegionsPage() {
                         </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                        Tenants by country, with each region's currency and statutory tax engine. All regions are served by the same deployment.
+                        Tenants by country, with each region&apos;s currency and statutory tax engine. All regions are served by the same deployment.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">

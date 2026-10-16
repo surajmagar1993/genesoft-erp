@@ -23,9 +23,10 @@ import { formatCurrency } from "@/lib/utils"
 import { RequireRole } from "@/components/auth/role-context"
 import { toast } from "sonner"
 
+// Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
 const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—"
-    return new Date(dateStr).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    return new Date(dateStr).toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" })
 }
 
 interface Props {

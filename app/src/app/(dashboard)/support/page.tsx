@@ -34,6 +34,7 @@ export default function SupportPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading data when the screen opens
     loadTickets()
   }, [])
 
@@ -85,7 +86,7 @@ export default function SupportPage() {
             <LifeBuoy className="w-5 h-5 text-indigo-600" />
             <h1 className="font-semibold text-lg">Support Portal</h1>
           </div>
-          <Button size="icon" variant="ghost" onClick={() => setShowNewDialog(true)}>
+          <Button size="icon" variant="ghost" onClick={() => setShowNewDialog(true)} aria-label="Add">
             <Plus className="w-5 h-5" />
           </Button>
         </div>
@@ -189,7 +190,7 @@ export default function SupportPage() {
                     }
                   }}
                 />
-                <Button size="icon" className="h-10 w-10 shrink-0 rounded-xl bg-indigo-600 hover:bg-indigo-700" onClick={handleSendMessage} disabled={!newMessage}>
+                <Button size="icon" className="h-10 w-10 shrink-0 rounded-xl bg-indigo-600 hover:bg-indigo-700" onClick={handleSendMessage} disabled={!newMessage} aria-label="Send">
                   <Send className="w-4 h-4" />
                 </Button>
               </div>

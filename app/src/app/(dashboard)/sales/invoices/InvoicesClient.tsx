@@ -45,9 +45,10 @@ const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | 
 const formatCurrency = (amount: number, currency = "INR") =>
     new Intl.NumberFormat(localeForCurrency(currency), { style: "currency", currency }).format(amount)
 
+// Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
 const formatDate = (dateStr: string) => {
     if (!dateStr) return "—"
-    return new Date(dateStr).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    return new Date(dateStr).toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" })
 }
 
 interface Props {
@@ -270,7 +271,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                                             <Download className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                                                         </Button>
                                                     </a>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200 dark:hover:bg-slate-800" onClick={() => router.push(`/sales/invoices/${inv.id}/edit`)}>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200 dark:hover:bg-slate-800" onClick={() => router.push(`/sales/invoices/${inv.id}/edit`)} aria-label="Edit">
                                                         <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                                                     </Button>
                                                     <DropdownMenu>

@@ -191,14 +191,15 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
       ...defaultInvoiceForm,
       supplierGstin: regime.supplierTaxId || "",
       supplierState: regime.supplierState || "",
-      invoiceNumber: nextInvoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
+      invoiceNumber: nextInvoiceNumber || "",
     }
   )
 
   useEffect(() => {
     if (initialData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- loading the invoice being edited / the next number once it arrives
       setForm(initialData)
-    } else if (nextInvoiceNumber && form.invoiceNumber.startsWith("INV") && form.invoiceNumber.length < 15) {
+    } else if (nextInvoiceNumber && !form.invoiceNumber) {
       setForm((prev) => ({ ...prev, invoiceNumber: nextInvoiceNumber }))
     }
   }, [initialData, nextInvoiceNumber])
@@ -289,7 +290,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
     <div className="flex-1 space-y-6 p-8 pt-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/sales/invoices")}>
+        <Button variant="ghost" size="icon" onClick={() => router.push("/sales/invoices")} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -783,7 +784,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                           size="icon"
                           className="h-9 w-9"
                           onClick={() => removeLineItem(item.id)}
-                        >
+                         aria-label="Delete">
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

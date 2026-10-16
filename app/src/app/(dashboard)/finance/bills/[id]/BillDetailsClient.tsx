@@ -37,9 +37,10 @@ import { toast } from "sonner"
 const formatCurrency = (amount: number, currency: string = "INR") =>
     new Intl.NumberFormat(localeForCurrency(currency), { style: "currency", currency }).format(amount)
 
+// Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
 const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—"
-    return new Date(dateStr).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    return new Date(dateStr).toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" })
 }
 
 interface Props {
@@ -138,7 +139,7 @@ export default function BillDetailsClient({ bill }: Props) {
         <div className="space-y-6 max-w-5xl mx-auto pb-12">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => router.push("/finance/bills")}>
+                    <Button variant="ghost" size="icon" onClick={() => router.push("/finance/bills")} aria-label="Back">
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div>
@@ -410,7 +411,7 @@ export default function BillDetailsClient({ bill }: Props) {
                                                             size="icon"
                                                             disabled={isPending}
                                                             onClick={() => handleDeletePayment(p.id)}
-                                                        >
+                                                         aria-label="Delete">
                                                             <Trash2 className="h-4 w-4 text-destructive" />
                                                         </Button></RequireRole>
                                                     </TableCell>

@@ -138,7 +138,7 @@ export default function TaxConfigClient() {
                                         onChange={e => updateRate(idx, "rate", Number(e.target.value))}
                                         className="w-24"
                                     />
-                                    <Button size="icon" variant="ghost" onClick={() => removeRate(idx)} disabled={newGroup.rates.length === 1}>
+                                    <Button size="icon" variant="ghost" onClick={() => removeRate(idx)} disabled={newGroup.rates.length === 1} aria-label="Delete">
                                         <Trash2 className="h-4 w-4 text-destructive" />
                                     </Button>
                                 </div>
@@ -178,7 +178,7 @@ export default function TaxConfigClient() {
                                     </CardTitle>
                                     <CardDescription className="text-xs">{group.country_code} • {group.is_active ? "Active" : "Inactive"}</CardDescription>
                                 </div>
-                                <RequireRole min="MANAGER"><Button size="icon" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(group.id)}>
+                                <RequireRole min="MANAGER"><Button size="icon" variant="ghost" className="opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDelete(group.id)} aria-label="Delete">
                                     <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button></RequireRole>
                             </div>

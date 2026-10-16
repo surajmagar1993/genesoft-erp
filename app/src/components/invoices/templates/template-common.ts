@@ -17,10 +17,11 @@ export function formatCurrency(amount: number, currency: string = "INR") {
     }).format(amount)
 }
 
-export function formatDate(dateStr: string | null | undefined, locale = "en-IN") {
+export // Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
+function formatDate(dateStr: string | null | undefined, locale = "en-IN") {
     if (!dateStr) return "—"
     try {
-        return new Date(dateStr).toLocaleDateString(locale, {
+        return new Date(dateStr).toLocaleDateString(locale, { timeZone: "UTC",
             day: "2-digit",
             month: "short",
             year: "numeric"

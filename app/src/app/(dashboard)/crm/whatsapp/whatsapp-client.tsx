@@ -1037,7 +1037,7 @@ export default function WhatsAppClient({
                                                 toast.success("Verify token copied!")
                                             }}
                                             className="h-9 px-3"
-                                        >
+                                         aria-label="Copy">
                                             <Copy className="h-3.5 w-3.5" />
                                         </Button>
                                     </div>

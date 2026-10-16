@@ -63,6 +63,7 @@ import {
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { formatCurrency } from "@/lib/utils"
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import {
     ChallanReason,
     ChallanStatus,
@@ -84,6 +85,10 @@ interface DeliveryChallansClientProps {
 export function DeliveryChallansClient({ initialData }: DeliveryChallansClientProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
+    // Rates come from the business's country and Settings (a line without one uses the default)
+    const { regime } = useTaxRegime()
+    const defaultRate = regime?.defaultRate ?? 0
+    const rateOptions = regime?.standardRates?.length ? regime.standardRates : [0, defaultRate]
 
     // Filters
     const [searchQuery, setSearchQuery] = useState("")
@@ -117,14 +122,14 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
     const [lrNumber, setLrNumber] = useState("")
     const [lrDate, setLrDate] = useState("")
     const [placeOfSupply, setPlaceOfSupply] = useState("27-Maharashtra")
-    const [dispatchAddressText, setDispatchAddressText] = useState("Main Logistics Hub, Warehouse A, Mumbai, Maharashtra 400001")
+    const [dispatchAddressText, setDispatchAddressText] = useState("")
     const [deliveryAddressText, setDeliveryAddressText] = useState("")
     const [notes, setNotes] = useState("")
-    const [terms, setTerms] = useState("1. Goods are transported under Rule 55 of CGST Rules.\n2. Goods to be returned within 30 days if sent on approval.")
+    const [terms, setTerms] = useState("")
 
     // Line items for creation
     const [lineItems, setLineItems] = useState<CreateChallanItemInput[]>([
-        { productName: "", hsnCode: "", quantity: 1, unit: "PCS", unitPrice: 0, taxRate: 18, description: "" }
+        { productName: "", hsnCode: "", quantity: 1, unit: "PCS", unitPrice: 0, taxRate: undefined, description: "" }
     ])
 
     // Filtered Challans
@@ -191,8 +196,10 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                     quantity: it.qty,
                     unit: "PCS",
                     unitPrice: it.unitPrice,
-                    taxRate: it.taxPercent ?? 18,
-                    hsnCode: "8471"
+                    // The order's own rate; the server applies the business's default if missing
+                    taxRate: it.taxPercent ?? undefined,
+                    // No invented HSN code: filled in by the user (orders don't carry one)
+                    hsnCode: ""
                 }))
             )
             toast.info(`Loaded ${so.items.length} item(s) from Sales Order ${so.orderNumber}`)
@@ -203,7 +210,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
     const handleAddItemRow = () => {
         setLineItems(prev => [
             ...prev,
-            { productName: "", hsnCode: "", quantity: 1, unit: "PCS", unitPrice: 0, taxRate: 18 }
+            { productName: "", hsnCode: "", quantity: 1, unit: "PCS", unitPrice: 0, taxRate: undefined }
         ])
     }
 
@@ -247,7 +254,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
         lineItems.forEach(it => {
             const q = Number(it.quantity) || 0
             const r = Number(it.unitPrice) || 0
-            const tRate = Number(it.taxRate) || 0
+            const tRate = Number(it.taxRate ?? defaultRate) || 0
             const lineTaxable = q * r
             const lineTax = lineTaxable * (tRate / 100)
 
@@ -326,7 +333,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
         setLrNumber("")
         setLrDate("")
         setDeliveryAddressText("")
-        setLineItems([{ productName: "", hsnCode: "", quantity: 1, unit: "PCS", unitPrice: 0, taxRate: 18 }])
+        setLineItems([{ productName: "", hsnCode: "", quantity: 1, unit: "PCS", unitPrice: 0, taxRate: undefined }])
     }
 
     const handleUpdateStatus = () => {
@@ -612,7 +619,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
 
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
                                                             <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
@@ -865,7 +872,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                     </TableHeader>
                                     <TableBody>
                                         {lineItems.map((item, index) => {
-                                            const lineTotal = (item.quantity * item.unitPrice) * (1 + (item.taxRate / 100))
+                                            const lineTotal = (item.quantity * item.unitPrice) * (1 + ((item.taxRate ?? defaultRate) / 100))
                                             return (
                                                 <TableRow key={index} className="text-xs">
                                                     <TableCell>
@@ -924,18 +931,16 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                                     </TableCell>
                                                     <TableCell>
                                                         <Select
-                                                            value={String(item.taxRate)}
+                                                            value={String(item.taxRate ?? defaultRate)}
                                                             onValueChange={(v) => handleItemChange(index, "taxRate", Number(v))}
                                                         >
                                                             <SelectTrigger className="h-7 text-xs">
                                                                 <SelectValue />
                                                             </SelectTrigger>
                                                             <SelectContent>
-                                                                <SelectItem value="0">0%</SelectItem>
-                                                                <SelectItem value="5">5%</SelectItem>
-                                                                <SelectItem value="12">12%</SelectItem>
-                                                                <SelectItem value="18">18%</SelectItem>
-                                                                <SelectItem value="28">28%</SelectItem>
+                                                                {[...new Set(rateOptions)].map((r) => (
+                                                                    <SelectItem key={r} value={String(r)}>{r}%</SelectItem>
+                                                                ))}
                                                             </SelectContent>
                                                         </Select>
                                                     </TableCell>
@@ -950,7 +955,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                                             onClick={() => handleRemoveItemRow(index)}
                                                             disabled={lineItems.length <= 1}
                                                             className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                                                        >
+                                                         aria-label="Delete">
                                                             <Trash2 className="h-3.5 w-3.5" />
                                                         </Button>
                                                     </TableCell>
@@ -1178,7 +1183,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                             <th className="p-2 border-r w-16">Unit</th>
                                             <th className="p-2 border-r w-24 text-right">Rate</th>
                                             <th className="p-2 border-r w-24 text-right">Taxable Val</th>
-                                            <th className="p-2 border-r w-14 text-right">GST %</th>
+                                            <th className="p-2 border-r w-14 text-right">{regime?.taxLabel ?? "Tax"} %</th>
                                             <th className="p-2 text-right w-24">Total Value</th>
                                         </tr>
                                     </thead>
@@ -1192,7 +1197,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                                 <td className="p-2 border-r">{item.unit}</td>
                                                 <td className="p-2 border-r text-right font-mono">{formatCurrency(item.unitPrice)}</td>
                                                 <td className="p-2 border-r text-right font-mono">{formatCurrency(item.taxableAmount)}</td>
-                                                <td className="p-2 border-r text-right">{item.taxRate}%</td>
+                                                <td className="p-2 border-r text-right">{item.taxRate ?? defaultRate}%</td>
                                                 <td className="p-2 text-right font-mono font-bold">{formatCurrency(item.totalAmount)}</td>
                                             </tr>
                                         ))}

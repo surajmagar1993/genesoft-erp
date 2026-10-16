@@ -13,14 +13,20 @@ export default async function CompaniesPage({
     const page = params.page ? parseInt(params.page as string) : 1
     const limit = params.limit ? parseInt(params.limit as string) : 10
 
+    // Load first, render after: React can't catch rendering errors with try/catch
+    let result: Awaited<ReturnType<typeof getCompanies>> | null = null
     try {
-        const { data: companies, total } = await getCompanies(page, limit, search)
-        return <CompaniesClient initialCompanies={companies} total={total} />
+        result = await getCompanies(page, limit, search)
     } catch (error) {
+        console.error("getCompanies failed:", error)
+    }
+    if (!result) {
         return (
             <div className="flex h-[400px] items-center justify-center">
                 <p className="text-red-500">Failed to load companies</p>
             </div>
         )
     }
+    const { data: companies, total } = result
+    return <CompaniesClient initialCompanies={companies} total={total} />
 }

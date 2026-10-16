@@ -23,8 +23,9 @@ import EntityCommunications from "@/components/crm/EntityCommunications"
 
 import { formatCurrency } from "@/lib/utils"
 
+// Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
 function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString(undefined, {
+    return new Date(iso).toLocaleDateString("en-GB", { timeZone: "UTC",
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -47,7 +48,7 @@ export default function ContactDetailClient({ contact, ledger, initialTasks, ini
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/crm/contacts")}>
+          <Button variant="ghost" size="icon" onClick={() => router.push("/crm/contacts")} aria-label="Back">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

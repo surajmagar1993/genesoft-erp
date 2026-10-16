@@ -10,6 +10,7 @@ import { after } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendWelcomeEmailOnce } from '@/lib/welcome-email'
 import { clientIp, getPlatformGate } from '@/lib/platform-security'
+import { cleanWorkspaceSlug } from '@/lib/workspace-slug'
 import { headers } from 'next/headers'
 import { TURNSTILE_FAILED, turnstileEnabled, verifyTurnstile } from '@/lib/turnstile'
 import { SIGNUP_COUNTRIES, getTaxJurisdiction } from '@/lib/tax-jurisdiction'
@@ -57,7 +58,8 @@ export async function register(formData: FormData) {
   const fullName = formData.get('fullName') as string
   const email = formData.get('email') as string
   const company = formData.get('company') as string
-  const slug = formData.get('slug') as string
+  // Cleaned again on the server: never trust the browser's version
+  const slug = cleanWorkspaceSlug(String(formData.get('slug') || ''))
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
   const requestedPlan = String(formData.get('plan') || '').toUpperCase()
@@ -92,8 +94,8 @@ export async function register(formData: FormData) {
     redirect(`/register?error=${encodeURIComponent(TURNSTILE_FAILED)}`)
   }
 
-  if (!slug) {
-    redirect('/register?error=Workspace+slug+is+required')
+  if (!slug || slug.length < 3) {
+    redirect('/register?error=Choose+a+workspace+URL+of+at+least+3+letters+or+numbers')
   }
 
   // 1. Check if slug (domain) is already taken

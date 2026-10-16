@@ -86,9 +86,10 @@ import { RequireRole } from "@/components/auth/role-context"
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
 
+// Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
 const formatDate = (dateStr: string | null | undefined) => {
   if (!dateStr) return "—"
-  return new Date(dateStr).toLocaleDateString("en-IN", {
+  return new Date(dateStr).toLocaleDateString("en-IN", { timeZone: "UTC",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -137,41 +138,42 @@ export function EwayClient({ initialData }: EwayClientProps) {
   const [newTransporter, setNewTransporter] = useState({ name: "", gstin: "", phone: "", contactPerson: "" })
 
   // ── Generator Form State ───────────────────────────────────────────────────
-  const [genForm, setGenForm] = useState({
+  // Starts empty except the business's own details: no sample parties, vehicles or amounts
+  const [genForm, setGenForm] = useState(() => ({
     invoiceId: "",
     subSupplyType: "1", // Supply
     docType: "INV",
-    docNo: `INV-${Date.now().toString().slice(-6)}`,
+    docNo: "",
     docDate: new Date().toISOString().split("T")[0],
-    fromGstin: COMPANY.gstin || "27AAACG1234F1Z5",
+    fromGstin: COMPANY.gstin || "",
     fromTrdName: COMPANY.name || "",
-    fromAddr1: "Plot 42, Cyber Heights, Baner Road",
-    fromAddr2: "MIDC Phase 2",
-    fromPlace: "Pune",
-    fromPincode: 411045,
-    fromStateCode: 27,
-    toGstin: "27AABCA1234A1Z5",
-    toTrdName: "Apex Retail Solutions Ltd",
-    toAddr1: "Shop 12, Phoenix Marketcity, Viman Nagar",
+    fromAddr1: "",
+    fromAddr2: "",
+    fromPlace: "",
+    fromPincode: 0,
+    fromStateCode: 0,
+    toGstin: "",
+    toTrdName: "",
+    toAddr1: "",
     toAddr2: "",
-    toPlace: "Pune",
-    toPincode: 411014,
-    toStateCode: 27,
-    totalValue: 125000,
-    cgstValue: 11250,
-    sgstValue: 11250,
+    toPlace: "",
+    toPincode: 0,
+    toStateCode: 0,
+    totalValue: 0,
+    cgstValue: 0,
+    sgstValue: 0,
     igstValue: 0,
     cessValue: 0,
     transMode: "1", // Road
-    transDistance: 120,
-    vehicleNo: "MH12AB1234",
+    transDistance: 0,
+    vehicleNo: "",
     vehicleType: "R",
-    transporterId: "29AABCV1234F1Z1",
-    transporterName: "VRL Logistics Ltd",
-    transDocNo: `GR-${Date.now().toString().slice(-5)}`,
+    transporterId: "",
+    transporterName: "",
+    transDocNo: "",
     transDocDate: new Date().toISOString().split("T")[0],
-    mainHsn: "8471",
-  })
+    mainHsn: "",
+  }))
 
   // Live validity calculation for generator form
   const liveValidity = useMemo(() => {
@@ -542,7 +544,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                                 navigator.clipboard.writeText(b.ewayBillNo)
                                 toast.success("Copied EWB Number to clipboard!")
                               }}
-                            >
+                             aria-label="Copy">
                               <Copy className="h-3 w-3 text-muted-foreground" />
                             </Button>
                           </div>

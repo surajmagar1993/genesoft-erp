@@ -278,11 +278,11 @@ export default function AdminLayout({
             <AdminSidebar />
             <SidebarInset className="bg-muted/10">
                 <AdminTopBar />
-                <main className="flex-1 overflow-y-auto p-4 md:p-8">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8">
                     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
                         {children}
                     </div>
-                </main>
+                </div>
             </SidebarInset>
         </SidebarProvider>
     )

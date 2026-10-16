@@ -116,7 +116,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
       {/* Top Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/crm/deals")}>
+          <Button variant="ghost" size="icon" onClick={() => router.push("/crm/deals")} aria-label="Back">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

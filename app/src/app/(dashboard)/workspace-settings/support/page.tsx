@@ -26,6 +26,7 @@ export default function SupportAdminPage() {
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading data when the screen opens
     loadAllTickets()
   }, [])
 

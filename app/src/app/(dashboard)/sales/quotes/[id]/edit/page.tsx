@@ -58,6 +58,7 @@ export default function EditQuotePage() {
 
     useEffect(() => {
         if (id) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- loading data when the screen opens
             fetchQuote()
         }
     }, [id])

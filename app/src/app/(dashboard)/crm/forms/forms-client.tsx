@@ -120,6 +120,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
 
     // Sync state with incoming server props when router.refresh() triggers
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing server props / loading the selected form into the editor
         setForms(initialData.forms)
         setSubmissions(initialData.submissions)
         setKpis(initialData.kpis)
@@ -179,6 +180,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
         if (!studioIsNew && studioFormId) {
             const form = forms.find((f) => f.id === studioFormId)
             if (form) {
+                // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing server props / loading the selected form into the editor
                 setStudioTitle(form.title)
                 setStudioDescription(form.description || "")
                 setStudioType(form.type)
@@ -1160,7 +1162,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                         disabled={idx === 0}
                                                         onClick={() => handleMoveField(idx, "up")}
                                                         className="h-7 w-7 p-0"
-                                                    >
+                                                     aria-label="Move up">
                                                         <ArrowUp className="h-3.5 w-3.5 text-slate-500" />
                                                     </Button>
                                                     <Button
@@ -1169,7 +1171,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                         disabled={idx === studioFields.length - 1}
                                                         onClick={() => handleMoveField(idx, "down")}
                                                         className="h-7 w-7 p-0"
-                                                    >
+                                                     aria-label="Move down">
                                                         <ArrowDown className="h-3.5 w-3.5 text-slate-500" />
                                                     </Button>
                                                     <Button
@@ -1177,7 +1179,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                         size="sm"
                                                         onClick={() => handleRemoveField(idx)}
                                                         className="h-7 w-7 p-0 text-rose-500 hover:text-rose-700"
-                                                    >
+                                                     aria-label="Delete">
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </Button>
                                                 </div>

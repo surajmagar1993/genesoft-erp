@@ -1197,7 +1197,7 @@ export function WorkflowsClient({
                                                 size="icon"
                                                 onClick={() => removeCondition(i)}
                                                 className="h-7 w-7 text-red-500 hover:text-red-600"
-                                            >
+                                             aria-label="Delete">
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </Button>
                                         </div>
@@ -1255,7 +1255,7 @@ export function WorkflowsClient({
                                                     size="icon"
                                                     onClick={() => removeAction(i)}
                                                     className="h-6 w-6 text-red-500"
-                                                >
+                                                 aria-label="Delete">
                                                     <Trash2 className="h-3 w-3" />
                                                 </Button>
                                             )}

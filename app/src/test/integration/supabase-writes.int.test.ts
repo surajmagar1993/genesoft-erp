@@ -7,6 +7,7 @@ import { createTask } from "@/app/actions/crm/tasks"
 import { createCommunicationLog } from "@/app/actions/crm/communications"
 import { createAccount } from "@/app/actions/finance/accounts"
 import { actAs, createCustomer, createTestTenant } from "./helpers"
+import { unwrap } from "@/lib/action-result"
 
 /**
  * These used to save through the Supabase client and broke on column
@@ -35,10 +36,10 @@ describe("records that used to be saved through the Supabase client", () => {
         expect(order.error).toBeNull()
 
         const vendor = await prisma.contact.create({ data: { tenantId: t, displayName: "Supplier" } })
-        const bill = await createBill({
+        const bill = unwrap(await createBill({
             contactId: vendor.id, billNumber: "B-1", status: "OPEN", billDate: new Date("2026-10-02"), subtotal: 1000, taxAmount: 180, discount: 0, total: 1180, currencyCode: "INR",
             items: [{ productId: null, description: "Repair", hsnSacCode: "", quantity: 1, unitPrice: 1000, taxPercent: 18, taxAmount: 180, lineTotal: 1180 }],
-        } as never)
+        } as never))
         expect(bill?.id).toBeTruthy()
         expect(await prisma.billItem.count({ where: { billId: bill.id } })).toBe(1)
         // the bill also reaches the general ledger

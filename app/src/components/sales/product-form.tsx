@@ -75,6 +75,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                 const entry = initialData.customAttributes.find((a: any) => a.key === "barcode")
                 if (entry) bVal = entry.value
             }
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- loading the product being edited
             setForm({ ...initialData, barcode: bVal })
         }
     }, [initialData])
@@ -113,7 +114,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
         <div className="flex-1 space-y-6 p-8 pt-6">
             {/* Header */}
             <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => router.push("/sales/products")}>
+                <Button variant="ghost" size="icon" onClick={() => router.push("/sales/products")} aria-label="Back">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>

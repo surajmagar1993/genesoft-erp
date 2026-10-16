@@ -280,6 +280,10 @@ export async function createInvoice(
   const tenantId = await getTenantWriterId(MODULE)
 
   try {
+    // No number given: the next one in the business's sequence (never a made-up one)
+    if (!payload.invoice_number?.trim()) {
+      payload = { ...payload, invoice_number: await nextInvoiceNumber(tenantId, payload.type === "PROFORMA" ? "PROFORMA" : "TAX_INVOICE") }
+    }
     if (payload.contact_id && !(await prisma.contact.count({ where: { id: payload.contact_id, tenantId } }))) {
       return { id: null, error: "Customer not found" }
     }

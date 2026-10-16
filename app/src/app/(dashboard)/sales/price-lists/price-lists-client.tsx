@@ -589,7 +589,7 @@ export default function PriceListsClient({
                                                     size="sm"
                                                     onClick={() => handleDeletePriceList(pl.id, pl.name)}
                                                     className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
-                                                >
+                                                 aria-label="Delete">
                                                     <Trash2 className="h-3.5 w-3.5" />
                                                 </Button></RequireRole>
                                             </td>

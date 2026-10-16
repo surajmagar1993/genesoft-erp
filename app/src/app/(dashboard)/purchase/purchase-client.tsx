@@ -250,7 +250,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
         setPoTerms("")
         setPoItems([
             {
-                id: `item-${Date.now()}`,
+                id: `item-${crypto.randomUUID()}`,
                 productId: "",
                 description: "",
                 hsnSacCode: "",
@@ -1531,7 +1531,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                                     className="h-8 w-8 text-red-500 hover:text-red-700"
                                                     onClick={() => handleRemoveLineItem(item.id)}
                                                     disabled={poItems.length <= 1}
-                                                >
+                                                 aria-label="Delete">
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>

@@ -31,9 +31,10 @@ const statusConfig: Record<SalesOrderStatus, { label: string; variant: "default"
 import { formatCurrency } from "@/lib/utils"
 import { RequireRole } from "@/components/auth/role-context"
 
+// Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
 const formatDate = (dateStr: string) => {
     if (!dateStr) return "—"
-    return new Date(dateStr).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    return new Date(dateStr).toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" })
 }
 
 interface Props {
@@ -177,7 +178,7 @@ export default function OrdersClient({ initialOrders, total }: Props) {
                                             <TableCell className="text-right font-medium">{formatCurrency(Number(o.total), o.currency_code)}</TableCell>
                                             <TableCell><Badge variant={cfg.variant} className="flex w-fit items-center gap-1.5"><StatusIcon className="h-3 w-3" />{cfg.label}</Badge></TableCell>
                                             <TableCell className="text-right flex items-center justify-end gap-1">
-                                                <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/orders/${o.id}/edit`)}>
+                                                <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/orders/${o.id}/edit`)} aria-label="Edit">
                                                     <Pencil className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
                                                 <RequireRole min="MANAGER"><Button variant="ghost" size="icon" disabled={pendingId === o.id} onClick={() => handleDelete(o.id)}>

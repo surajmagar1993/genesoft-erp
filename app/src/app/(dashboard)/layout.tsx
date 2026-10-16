@@ -236,12 +236,12 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
         .map((group) => ({
             ...group,
             items: group.items.filter((item) => {
-                const module = moduleForPath(item.href)
+                const pathModule = moduleForPath(item.href)
                 // Modules the plan leaves out are hidden for everyone, admins too
-                if (planModules[PLAN_ROUTES[item.href] ?? module ?? ""] === false) return false
-                if (!module) return true
+                if (planModules[PLAN_ROUTES[item.href] ?? pathModule ?? ""] === false) return false
+                if (!pathModule) return true
                 if (!accessLoaded) return false
-                return !access || access[module] !== "NONE"
+                return !access || access[pathModule] !== "NONE"
             }),
         }))
         .filter((group) => group.items.length > 0)

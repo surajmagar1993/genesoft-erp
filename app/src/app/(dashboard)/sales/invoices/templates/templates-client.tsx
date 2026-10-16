@@ -50,7 +50,7 @@ export function TemplatesClient({ defaultTemplate: initialDefault, tenantName }:
         customer_email: "accounts@apextech.com",
         customer_gstin: "27AAACA9999P1Z1",
         invoice_date: new Date().toISOString(),
-        valid_until: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+        valid_until: new Date(new Date().getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(),
         reference: "PO-AG-88219",
         status: "SENT",
         discount: 2500,
@@ -146,7 +146,7 @@ export function TemplatesClient({ defaultTemplate: initialDefault, tenantName }:
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <Link href="/sales/invoices">
-                        <Button variant="outline" size="icon" className="h-9 w-9">
+                        <Button variant="outline" size="icon" className="h-9 w-9" aria-label="Back">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>

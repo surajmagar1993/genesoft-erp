@@ -95,12 +95,12 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
     const [selectedInvoice, setSelectedInvoice] = useState<SaaSPlatformInvoice | null>(null)
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false)
 
-    // Calculate trial countdown
-    const trialDaysRemaining = useMemo(() => {
-        if (!settings?.isTrial || !settings?.trialEndsAt) return 0
-        const diff = new Date(settings.trialEndsAt).getTime() - Date.now()
-        return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
-    }, [settings?.isTrial, settings?.trialEndsAt])
+    // Calculate trial countdown (the time is read once, when the tab opens)
+    const [openedAt] = useState(() => Date.now())
+    const trialDaysRemaining =
+        settings?.isTrial && settings?.trialEndsAt
+            ? Math.max(0, Math.ceil((new Date(settings.trialEndsAt).getTime() - openedAt) / (1000 * 60 * 60 * 24)))
+            : 0
     // The trial counts (as Pro) only until it ends; afterwards the workspace's own plan applies
     const trialActive = !!settings?.isTrial && trialDaysRemaining > 0
 

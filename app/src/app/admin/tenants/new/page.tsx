@@ -104,7 +104,7 @@ export default function NewTenantPage() {
             {/* Header & Back Navigation */}
             <div className="flex items-center gap-4">
                 <Link href="/admin/tenants">
-                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-muted">
+                    <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-muted" aria-label="Back">
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                 </Link>

@@ -941,7 +941,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                             size="sm"
                                                             className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                                                             onClick={() => handleDeleteTask(task.id)}
-                                                        >
+                                                         aria-label="Delete">
                                                             <Trash2 className="h-3.5 w-3.5" />
                                                         </Button>
                                                     </div>
@@ -1079,7 +1079,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                     size="sm"
                                                     className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                                                     onClick={() => handleDeleteProject(p.id)}
-                                                >
+                                                 aria-label="Delete">
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button></RequireRole>
                                             </TableCell>
@@ -1182,7 +1182,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                             size="sm"
                                             className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                                             onClick={() => handleDeleteMilestone(m.id)}
-                                        >
+                                         aria-label="Delete">
                                             <Trash2 className="h-4 w-4" />
                                         </Button></RequireRole>
                                     </div>
@@ -1263,7 +1263,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                     size="sm"
                                                     className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                                                     onClick={() => handleRemoveMember(m.id)}
-                                                >
+                                                 aria-label="Delete">
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button></RequireRole>
                                             </TableCell>
@@ -1424,7 +1424,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                     size="sm"
                                                     className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                                                     onClick={() => handleDeleteTime(te.id)}
-                                                >
+                                                 aria-label="Delete">
                                                     <Trash2 className="h-3.5 w-3.5" />
                                                 </Button>
                                             </TableCell>

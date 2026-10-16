@@ -63,10 +63,10 @@ describe("M17 one data path (Prisma) with tenant isolation", () => {
         const { tenant, user } = await createTestTenant()
         actAs(user)
         const vendor = await createCustomer(tenant.id, "Vendor")
-        const bill = await createBill({
+        const bill = unwrap(await createBill({
             contactId: vendor.id, billNumber: "B-9", status: "DRAFT", billDate: new Date("2026-10-02"), subtotal: 1, taxAmount: 0, discount: 0, total: 1, currencyCode: "INR",
             items: [{ description: "Repair", quantity: 2, unitPrice: 500, taxPercent: 18, taxAmount: 0, lineTotal: 1 }],
-        } as never)
+        } as never))
         expect(bill).toMatchObject({ subtotal: 1000, tax_amount: 180, total: 1180 })
         const item = await prisma.billItem.findFirstOrThrow({ where: { billId: bill.id } })
         expect(Number(item.lineTotal)).toBe(1180)

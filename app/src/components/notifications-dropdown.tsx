@@ -35,6 +35,7 @@ export function NotificationsDropdown() {
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- loading notifications when the menu mounts
         fetchNotifications()
         
         // Polling every 60 seconds as a simple mechanism

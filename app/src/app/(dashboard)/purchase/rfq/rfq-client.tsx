@@ -1586,7 +1586,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                 size="sm"
                                                 onClick={() => handleRemoveItemLine(item.id)}
                                                 className="h-6 w-6 p-0 text-muted-foreground hover:text-rose-500"
-                                            >
+                                             aria-label="Delete">
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </Button>
                                         </div>

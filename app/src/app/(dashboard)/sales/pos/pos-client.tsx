@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import {
   getPOSProducts,
   searchPOSProducts,
@@ -82,7 +82,6 @@ export function POSClient() {
   }, [])
   // Products
   const [products, setProducts] = useState<POSProductItem[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<POSProductItem[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("ALL")
   const [loading, setLoading] = useState(true)
@@ -130,7 +129,6 @@ export function POSClient() {
         getActivePOSSession(),
       ])
       setProducts(prods)
-      setFilteredProducts(prods)
       setSession(activeSession)
       if (!activeSession) setShowSessionDialog(true)
       setLoading(false)
@@ -141,8 +139,8 @@ export function POSClient() {
   // ── Categories ──
   const categories = ["ALL", ...Array.from(new Set(products.map((p) => p.category || "Uncategorized")))]
 
-  // ── Search & Filter ──
-  useEffect(() => {
+  // ── Search & Filter (derived, so it's never a keystroke behind) ──
+  const filteredProducts = useMemo(() => {
     let result = products
     if (selectedCategory !== "ALL") {
       result = result.filter((p) => (p.category || "Uncategorized") === selectedCategory)
@@ -156,7 +154,7 @@ export function POSClient() {
           p.category?.toLowerCase().includes(q)
       )
     }
-    setFilteredProducts(result)
+    return result
   }, [searchQuery, selectedCategory, products])
 
   // ── Cart Operations ──
@@ -551,7 +549,7 @@ export function POSClient() {
                       <button
                         onClick={() => updateQty(item.productId, -1)}
                         className="w-6 h-6 rounded-md bg-slate-200 dark:bg-slate-700 flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
-                      >
+                       aria-label="Remove">
                         <Minus className="w-3 h-3" />
                       </button>
                       <span className="w-6 text-center text-xs font-bold text-slate-900 dark:text-white">
@@ -560,13 +558,13 @@ export function POSClient() {
                       <button
                         onClick={() => updateQty(item.productId, 1)}
                         className="w-6 h-6 rounded-md bg-slate-200 dark:bg-slate-700 flex items-center justify-center hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-colors"
-                      >
+                       aria-label="Add">
                         <Plus className="w-3 h-3" />
                       </button>
                       <button
                         onClick={() => removeFromCart(item.productId)}
                         className="w-6 h-6 rounded-md flex items-center justify-center text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ml-1"
-                      >
+                       aria-label="Delete">
                         <Trash2 className="w-3 h-3" />
                       </button>
                     </div>

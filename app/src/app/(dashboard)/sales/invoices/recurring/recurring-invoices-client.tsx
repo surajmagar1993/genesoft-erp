@@ -122,10 +122,11 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
     }
 
     // Helper: format date
+    // Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
     const formatDate = (val: string | null | undefined) => {
         if (!val) return "N/A"
         try {
-            return new Date(val).toLocaleDateString("en-US", {
+            return new Date(val).toLocaleDateString("en-US", { timeZone: "UTC",
                 year: "numeric",
                 month: "short",
                 day: "numeric",
@@ -719,7 +720,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                         className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                         onClick={() => handleDeleteProfile(profile)}
                                                         disabled={isPending}
-                                                    >
+                                                     aria-label="Delete">
                                                         <Trash2 className="h-3.5 w-3.5" />
                                                     </Button></RequireRole>
                                                 </div>
@@ -1274,7 +1275,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                     variant="ghost"
                                                     onClick={() => removeItemRow(index)}
                                                     className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                                >
+                                                 aria-label="Close">
                                                     <X className="h-3.5 w-3.5" />
                                                 </Button>
                                             )}

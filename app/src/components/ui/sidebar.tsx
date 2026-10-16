@@ -610,6 +610,7 @@ function SidebarMenuSkeleton({
  
   React.useEffect(() => {
     // Generate random width on client-side mount only to ensure render purity
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- random skeleton width chosen in the browser only (shadcn)
     setWidth(`${Math.floor(Math.random() * 40) + 50}%`)
   }, [])
 

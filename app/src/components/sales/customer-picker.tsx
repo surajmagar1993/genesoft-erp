@@ -28,6 +28,7 @@ export function CustomerPicker({ id, contactId, customerName, onChange }: { id?:
     useEffect(() => {
         if (!open) return
         let live = true
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- showing the loading state while searching
         setLoading(true)
         const t = setTimeout(() => {
             getContacts(1, 20, search.trim() || undefined)

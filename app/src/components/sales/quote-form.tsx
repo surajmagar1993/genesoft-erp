@@ -108,7 +108,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
 
     /* ── Line Item CRUD ── */
     const addLineItem = () => {
-        const newItem: QuoteLineItem = { ...emptyLineItem, taxPercent: defaultRate, id: Date.now().toString() }
+        const newItem: QuoteLineItem = { ...emptyLineItem, taxPercent: defaultRate, id: crypto.randomUUID() }
         update("lineItems", [...form.lineItems, newItem])
     }
 
@@ -148,7 +148,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
         <div className="flex-1 space-y-6 p-8 pt-6">
             {/* Header */}
             <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => router.push("/sales/quotes")}>
+                <Button variant="ghost" size="icon" onClick={() => router.push("/sales/quotes")} aria-label="Back">
                     <ArrowLeft className="h-5 w-5" />
                 </Button>
                 <div>
@@ -350,7 +350,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
                                             size="icon"
                                             className="h-9 w-9"
                                             onClick={() => removeLineItem(item.id)}
-                                        >
+                                         aria-label="Delete">
                                             <Trash2 className="h-4 w-4 text-destructive" />
                                         </Button>
                                     </div>

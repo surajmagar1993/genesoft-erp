@@ -131,8 +131,9 @@ const MODULE = "finance" as const
 /**
  * Create a new vendor bill
  */
-export async function createBill(data: BillData) {
+async function _createBill(data: BillData) {
   const tenantId = await getTenantWriterId(MODULE)
+  if (!data.billNumber?.trim()) throw new Error("Enter the supplier's bill number.")
 
   if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
     throw new Error("Vendor not found")
@@ -207,8 +208,9 @@ export async function createBill(data: BillData) {
 /**
  * Update an existing bill
  */
-export async function updateBill(id: string, data: Partial<BillData>) {
+async function _updateBill(id: string, data: Partial<BillData>) {
   const tenantId = await getTenantWriterId(MODULE)
+  if (data.billNumber !== undefined && !data.billNumber.trim()) throw new Error("Enter the supplier's bill number.")
 
   if (data.contactId && !(await prisma.contact.count({ where: { id: data.contactId, tenantId } }))) {
     throw new Error("Vendor not found")
@@ -408,4 +410,12 @@ export async function getProducts(limit: number = 100) {
 /* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
 export async function updateBillStatus(...args: Parameters<typeof _updateBillStatus>) {
     return safeAction(() => _updateBillStatus(...args))
+}
+
+/* ActionResult (safeAction): the bill form shows the real message; it calls unwrap() */
+export async function createBill(...args: Parameters<typeof _createBill>) {
+    return safeAction(() => _createBill(...args))
+}
+export async function updateBill(...args: Parameters<typeof _updateBill>) {
+    return safeAction(() => _updateBill(...args))
 }

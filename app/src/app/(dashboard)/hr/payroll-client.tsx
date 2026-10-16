@@ -504,7 +504,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                                         onClick={() => handleDeleteRun(run.id)}
                                                                         disabled={isPending}
                                                                         className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
-                                                                    >
+                                                                     aria-label="Delete">
                                                                         <Trash2 className="h-3.5 w-3.5" />
                                                                     </Button></RequireRole>
                                                                 </>

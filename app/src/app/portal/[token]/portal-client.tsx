@@ -118,8 +118,9 @@ function formatCurrency(amount: number, code: string = "INR") {
   }).format(amount)
 }
 
+// Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString(undefined, {
+  return new Date(iso).toLocaleDateString("en-GB", { timeZone: "UTC",
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -203,6 +204,7 @@ export function PortalClient({
   )
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading the tab the visitor opened
     loadTab(activeTab)
   }, [activeTab, loadTab])
 

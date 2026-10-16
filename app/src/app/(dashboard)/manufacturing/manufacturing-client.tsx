@@ -105,7 +105,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
     const [woPlannedQty, setWoPlannedQty] = useState("10")
     const [woSourceWh, setWoSourceWh] = useState(initialData.availableWarehouses[0]?.id || "")
     const [woTargetWh, setWoTargetWh] = useState(initialData.availableWarehouses[0]?.id || "")
-    const [woDueDate, setWoDueDate] = useState(format(new Date(Date.now() + 7 * 86400000), "yyyy-MM-dd"))
+    const [woDueDate, setWoDueDate] = useState(() => format(new Date(Date.now() + 7 * 86400000), "yyyy-MM-dd"))
     const [woPriority, setWoPriority] = useState<WorkOrderPriority>("MEDIUM")
     const [woAssignedTo, setWoAssignedTo] = useState("")
     const [woNotes, setWoNotes] = useState("")
@@ -1209,7 +1209,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                         setBomComponents(bomComponents.filter((_, i) => i !== idx))
                                                     }}
                                                     className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                                                >
+                                                 aria-label="Delete">
                                                     <Trash2 className="h-3.5 w-3.5" />
                                                 </Button>
                                             )}

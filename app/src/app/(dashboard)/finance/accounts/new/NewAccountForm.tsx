@@ -65,7 +65,7 @@ export default function NewAccountForm({ parentAccounts }: Props) {
   return (
     <div className="space-y-6 max-w-2xl">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/finance/accounts")}>
+        <Button variant="ghost" size="icon" onClick={() => router.push("/finance/accounts")} aria-label="Back">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>

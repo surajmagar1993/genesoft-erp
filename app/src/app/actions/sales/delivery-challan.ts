@@ -14,6 +14,7 @@ import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import { safeAction } from "@/lib/safe-action"
+import { cleanTaxRate, getTenantTaxContext } from "@/lib/tenant-tax"
 import {
     ChallanReason,
     ChallanStatus,
@@ -324,7 +325,8 @@ export interface CreateChallanItemInput {
     quantity: number
     unit?: string
     unitPrice: number
-    taxRate: number
+    /** Empty = the business's default rate */
+    taxRate?: number
 }
 
 export interface CreateDeliveryChallanInput {
@@ -369,11 +371,14 @@ async function _createDeliveryChallan(input: CreateDeliveryChallanInput) {
     let taxAmount = 0
     let totalValue = 0
 
+    // A line without a rate takes the business's own default (never an assumed 18%)
+    const { regime } = await getTenantTaxContext(tenantId)
     const computedItems = input.items.map(item => {
         const qty = Math.max(item.quantity, 0)
         const price = Math.max(item.unitPrice, 0)
         const lineTaxable = Number((qty * price).toFixed(2))
-        const lineTax = Number((lineTaxable * (item.taxRate / 100)).toFixed(2))
+        const rate = cleanTaxRate(item.taxRate ?? regime.defaultRate)
+        const lineTax = Number((lineTaxable * (rate / 100)).toFixed(2))
         const lineTotal = Number((lineTaxable + lineTax).toFixed(2))
 
         totalQuantity += qty
@@ -389,7 +394,7 @@ async function _createDeliveryChallan(input: CreateDeliveryChallanInput) {
             quantity: qty,
             unit: item.unit || "PCS",
             unitPrice: price,
-            taxRate: item.taxRate ?? 18,
+            taxRate: rate,
             taxableAmount: lineTaxable,
             taxAmount: lineTax,
             totalAmount: lineTotal

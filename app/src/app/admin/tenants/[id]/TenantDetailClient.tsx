@@ -47,6 +47,7 @@ import { Printer, PlusCircle } from "lucide-react"
 import { readClosure } from "@/lib/workspace-closure"
 import { TenantClosureCard } from "./TenantClosureCard"
 import { ActivityLogTable } from "@/components/activity-log-table"
+import { inZone } from "@/lib/dates"
 
 export function TenantDetailClient({ tenant }: { tenant: any }) {
     const router = useRouter()
@@ -194,7 +195,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-5">
                 <div className="flex items-center gap-4">
                     <Link href="/admin/tenants">
-                        <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-muted">
+                        <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-muted" aria-label="Back">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
@@ -218,7 +219,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                 )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-0.5">
-                                Tenant ID: <span className="font-mono text-foreground font-medium">{tenant.id}</span> • Created {format(new Date(tenant.createdAt), "MMM d, yyyy")}
+                                Tenant ID: <span className="font-mono text-foreground font-medium">{tenant.id}</span> • Created {format(inZone(tenant.createdAt), "MMM d, yyyy")}
                             </p>
                         </div>
                     </div>
@@ -449,14 +450,14 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                 <div className="flex justify-between py-1.5 border-b border-border/50">
                                     <span className="text-muted-foreground">Period Renewal</span>
                                     <span className="font-medium">
-                                        {subMeta.currentPeriodEnd ? format(new Date(subMeta.currentPeriodEnd), "MMM d, yyyy") : "Active Continuous"}
+                                        {subMeta.currentPeriodEnd ? format(inZone(subMeta.currentPeriodEnd), "MMM d, yyyy") : "Active Continuous"}
                                     </span>
                                 </div>
                                 {subMeta.scheduledDowngrade && (
                                     <div className="flex justify-between py-1.5 border-b border-border/50 bg-amber-500/10 px-2 rounded">
                                         <span className="text-amber-700 dark:text-amber-400 font-medium">Scheduled Downgrade</span>
                                         <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-                                            To {subMeta.scheduledDowngrade.plan} on {format(new Date(subMeta.scheduledDowngrade.effectiveDate), "MMM d, yyyy")}
+                                            To {subMeta.scheduledDowngrade.plan} on {format(inZone(subMeta.scheduledDowngrade.effectiveDate), "MMM d, yyyy")}
                                         </span>
                                     </div>
                                 )}
@@ -475,7 +476,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                 <div className="flex justify-between py-1.5 border-b border-border/50">
                                     <span className="text-muted-foreground">Trial Expiration</span>
                                     <span className="font-medium text-amber-600">
-                                        {tenant.trialEndsAt ? format(new Date(tenant.trialEndsAt), "MMM d, yyyy (h:mm a)") : "No active trial expiration"}
+                                        {tenant.trialEndsAt ? format(inZone(tenant.trialEndsAt), "MMM d, yyyy (h:mm a)") : "No active trial expiration"}
                                     </span>
                                 </div>
                             </CardContent>
@@ -524,7 +525,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                                     {inv.invoiceNumber}
                                                 </TableCell>
                                                 <TableCell className="text-xs">
-                                                    {format(new Date(inv.date), "MMM d, yyyy")}
+                                                    {format(inZone(inv.date), "MMM d, yyyy")}
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-1.5">
@@ -636,7 +637,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                                 </span>
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground">
-                                                {format(new Date(u.createdAt), "MMM d, yyyy")}
+                                                {format(inZone(u.createdAt), "MMM d, yyyy")}
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -750,7 +751,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                     tenant.auditLogs.map((log: any) => (
                                         <TableRow key={log.id}>
                                             <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                                                {format(new Date(log.createdAt), "MMM d, yyyy (HH:mm)")}
+                                                {format(inZone(log.createdAt), "MMM d, yyyy (HH:mm)")}
                                             </TableCell>
                                             <TableCell>
                                                 <Badge variant="outline" className="font-mono text-[10px] font-bold">
@@ -1038,7 +1039,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                         <div className="space-y-3 text-xs bg-muted/20 p-4 rounded-lg border border-border/60">
                             <div className="flex justify-between py-1 border-b border-border/40">
                                 <span className="text-muted-foreground">Date:</span>
-                                <span className="font-semibold">{format(new Date(selectedInvoice.date), "PPP")}</span>
+                                <span className="font-semibold">{format(inZone(selectedInvoice.date), "PPP")}</span>
                             </div>
                             <div className="flex justify-between py-1 border-b border-border/40">
                                 <span className="text-muted-foreground">Billed To:</span>

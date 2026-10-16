@@ -77,6 +77,7 @@ import {
 import Papa from "papaparse"
 import { toast } from "sonner"
 import { format } from "date-fns"
+import { useIsClient } from "@/hooks/use-is-client"
 import type {
     DatasetType,
     DatasetMeta,
@@ -106,6 +107,8 @@ export function ReportBuilderClient({
     initialResult,
     initialConfig
 }: ReportBuilderClientProps) {
+    // "Generated" time is the viewer's local time, shown once in the browser
+    const isClient = useIsClient()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
@@ -409,7 +412,7 @@ export function ReportBuilderClient({
                         </p>
                     </div>
                     <div className="text-right text-xs text-muted-foreground">
-                        <p>Generated: {format(new Date(), "dd MMMM yyyy HH:mm")}</p>
+                        <p>Generated: {isClient ? format(new Date(), "dd MMMM yyyy HH:mm") : ""}</p>
                         <p>Total Records: {reportResult.totalCount}</p>
                     </div>
                 </div>
@@ -571,7 +574,7 @@ export function ReportBuilderClient({
                                                         type="button"
                                                         onClick={() => handleRemoveFilter(idx)}
                                                         className="h-6 w-6 text-muted-foreground hover:text-red-500 flex items-center justify-center rounded"
-                                                    >
+                                                     aria-label="Delete">
                                                         <Trash2 className="h-3 w-3" />
                                                     </button>
                                                 </div>
@@ -951,7 +954,7 @@ export function ReportBuilderClient({
                                                 size="sm"
                                                 className="h-7 w-7 p-0 text-muted-foreground hover:text-red-500"
                                                 onClick={(e) => handleDeleteSaved(saved.id, e)}
-                                            >
+                                             aria-label="Delete">
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </Button>
                                         )}

@@ -333,7 +333,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
         setSelectedCandidate(candidate)
         setIntCandidateId(candidate.id)
         setIntRoundName("Technical Round 1")
-        setIntScheduledAt(new Date(Date.now() + 86400000).toISOString().slice(0, 16))
+        setIntScheduledAt(new Date(new Date().getTime() + 86400000).toISOString().slice(0, 16))
         setIntDuration(45)
         setIntMeetingLink("https://meet.google.com/new")
         setIsScheduleInterviewOpen(true)
@@ -704,7 +704,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
 
                                                             <DropdownMenu>
                                                                 <DropdownMenuTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground">
+                                                                    <Button variant="ghost" size="icon" className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" aria-label="More actions">
                                                                         <MoreHorizontal className="h-3.5 w-3.5" />
                                                                     </Button>
                                                                 </DropdownMenuTrigger>
@@ -1029,7 +1029,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                 <TableCell className="text-right">
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
                                                                 <MoreHorizontal className="h-4 w-4" />
                                                             </Button>
                                                         </DropdownMenuTrigger>
@@ -1624,7 +1624,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                         type="button"
                                         onClick={() => setFbRating(star)}
                                         className="p-1 text-amber-400 hover:scale-110 transition-transform"
-                                    >
+                                     aria-label="Star">
                                         <Star className={`h-6 w-6 ${star <= fbRating ? "fill-current" : "text-muted-foreground/30"}`} />
                                     </button>
                                 ))}

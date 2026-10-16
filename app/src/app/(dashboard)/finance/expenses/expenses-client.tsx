@@ -110,6 +110,7 @@ export default function ExpensesClient({
     const [stats, setStats] = useState<ExpensesOverviewStats>(initialStats)
     // Pick up fresh server data after router.refresh()
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing fresh server props after router.refresh()
         setExpenses(initialExpenses)
         setJournalEntries(initialJournalEntries)
         setStats(initialStats)
@@ -769,7 +770,7 @@ export default function ExpensesClient({
                                                             onClick={() => handleVoidExpense(exp.id)}
                                                             disabled={isPending}
                                                             className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
-                                                        >
+                                                         aria-label="Cancel">
                                                             <Ban className="h-3.5 w-3.5" />
                                                         </Button></RequireRole>
                                                     )}

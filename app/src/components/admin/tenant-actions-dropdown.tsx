@@ -72,7 +72,7 @@ export function TenantActionsDropdown({ tenant }: { tenant: any }) {
                     size="icon" 
                     className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                     disabled={isLoading}
-                >
+                 aria-label="More actions">
                     <MoreHorizontal className="h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>

@@ -31,6 +31,7 @@ import {
 import { TDS_SECTIONS, calculateTds } from "@/lib/tds-engine"
 import { createBill, updateBill, BillStatus, BillItem } from "@/app/actions/finance/bills"
 import { toast } from "sonner"
+import { unwrap } from "@/lib/action-result"
 
 interface BillFormProps {
   initialData?: any
@@ -44,7 +45,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
   const router = useRouter()
   const mode = initialData ? "edit" : "create"
   
-  const [billNumber, setBillNumber] = useState(initialData?.bill_number || `BILL-${Date.now().toString().slice(-6)}`)
+  const [billNumber, setBillNumber] = useState(initialData?.bill_number || "")
   const [vendorId, setVendorId] = useState(initialData?.contact_id || "")
   const [status, setStatus] = useState<BillStatus>(initialData?.status || "DRAFT")
   const [billDate, setBillDate] = useState(initialData?.bill_date ? new Date(initialData.bill_date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0])
@@ -64,7 +65,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
   const [supplyType, setSupplyType] = useState<SupplyType>("intra") // Default to intra for now
 
   // Parse existing TDS deduction from notes if in edit mode
-  const initialTds = useMemo(() => {
+  const initialTds = (() => {
     if (initialData?.notes && initialData.notes.includes("TDS_DEDUCTION:")) {
       try {
         const jsonStr = initialData.notes.split("TDS_DEDUCTION:")[1]?.split("\n")[0]?.trim()
@@ -74,7 +75,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
       }
     }
     return null
-  }, [initialData?.notes])
+  })()
 
   const [tdsEnabled, setTdsEnabled] = useState(!!initialTds)
   const [tdsSection, setTdsSection] = useState<string>(initialTds?.sectionCode || "194C")
@@ -177,10 +178,10 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
 
     try {
       if (mode === "create") {
-        await createBill(data)
+        unwrap(await createBill(data))
         toast.success("Bill created successfully")
       } else {
-        await updateBill(initialData.id, data)
+        unwrap(await updateBill(initialData.id, data))
         toast.success("Bill updated successfully")
       }
       router.push("/finance/bills")
@@ -192,7 +193,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/finance/bills")}>
+        <Button variant="ghost" size="icon" onClick={() => router.push("/finance/bills")} aria-label="Back">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
@@ -339,7 +340,7 @@ export function BillForm({ initialData, vendors, products }: BillFormProps) {
                           {formatMoney(item.lineTotal)}
                         </TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => removeLineItem(index)}>
+                          <Button variant="ghost" size="icon" onClick={() => removeLineItem(index)} aria-label="Delete">
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </TableCell>

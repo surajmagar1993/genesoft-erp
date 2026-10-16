@@ -44,9 +44,10 @@ import { toast } from "sonner"
 const formatCurrency = (amount: number, currency: string = "INR") =>
     new Intl.NumberFormat(localeForCurrency(currency), { style: "currency", currency }).format(amount)
 
+// Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
 const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return "—"
-    return new Date(dateStr).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    return new Date(dateStr).toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" })
 }
 
 function calcInvoiceTotal(inv: InvoiceDB) {

@@ -126,6 +126,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
 
     useEffect(() => {
         if (initialBatchSerialData) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing fresh server props after router.refresh()
             setBatchSerialData(initialBatchSerialData)
         }
     }, [initialBatchSerialData])
@@ -1009,7 +1010,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                             size="icon" 
                                             className="h-7 w-7"
                                             onClick={() => openEditWarehouse(warehouse)}
-                                        >
+                                         aria-label="Edit">
                                             <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                                         </Button></RequireRole>
                                     </div>
@@ -1551,7 +1552,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                 className="h-9 w-9 p-0"
                                 onClick={() => handleTimeRangeChange(reportsTimeRange)}
                                 disabled={isLoadingReports}
-                            >
+                             aria-label="Refresh">
                                 <RefreshCw className={`h-4 w-4 ${isLoadingReports ? "animate-spin text-primary" : "text-muted-foreground"}`} />
                             </Button>
                         </div>

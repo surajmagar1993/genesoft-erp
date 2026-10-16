@@ -29,8 +29,8 @@ export function useRole() {
     const { role, access } = useContext(RoleContext)
     const pathname = usePathname()
     // On a module page, a member's buttons follow their access to that module
-    const module = moduleForPath(pathname || "")
-    const effective = role && !isAdminRole(role) && access && module ? LEVEL_ROLE[access[module]] : role
+    const pageModule = moduleForPath(pathname || "")
+    const effective = role && !isAdminRole(role) && access && pageModule ? LEVEL_ROLE[access[pageModule]] : role
     const rank = RANK[effective ?? "USER"] ?? RANK.USER
     return {
         role,

@@ -904,7 +904,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                                 setSelectedAssetForEdit(asset)
                                                                 setIsEditAssetOpen(true)
                                                             }}
-                                                        >
+                                                         aria-label="Edit">
                                                             <Pencil className="h-3.5 w-3.5" />
                                                         </Button>
                                                         <RequireRole min="MANAGER"><Button
@@ -913,7 +913,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                             className="h-8 w-8 text-muted-foreground hover:text-destructive"
                                                             disabled={asset.status === RentalAssetStatus.RENTED}
                                                             onClick={() => handleDeleteAsset(asset.id)}
-                                                        >
+                                                         aria-label="Delete">
                                                             <Trash2 className="h-3.5 w-3.5" />
                                                         </Button></RequireRole>
                                                     </div>

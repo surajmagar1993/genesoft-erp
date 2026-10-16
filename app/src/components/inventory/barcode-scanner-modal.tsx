@@ -99,6 +99,7 @@ export function BarcodeScannerModal({
   // Initialize selected warehouse
   useEffect(() => {
     if (warehouses.length > 0 && !selectedWarehouseId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting the scanner when it opens or closes
       setSelectedWarehouseId(warehouses[0].id)
     }
   }, [warehouses, selectedWarehouseId])
@@ -231,6 +232,7 @@ export function BarcodeScannerModal({
   useEffect(() => {
     if (!isOpen) {
       stopCamera()
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- resetting the scanner when it opens or closes
       setScannedProduct(null)
       setManualCode("")
     }

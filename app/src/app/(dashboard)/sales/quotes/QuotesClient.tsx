@@ -32,9 +32,10 @@ const statusConfig: Record<QuoteStatus, { label: string; variant: "default" | "s
 import { formatCurrency } from "@/lib/utils"
 import { RequireRole } from "@/components/auth/role-context"
 
+// Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
 const formatDate = (dateStr: string) => {
     if (!dateStr) return "—"
-    return new Date(dateStr).toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })
+    return new Date(dateStr).toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", year: "numeric" })
 }
 
 interface Props {
@@ -194,11 +195,11 @@ export default function QuotesClient({ initialQuotes, total }: Props) {
                                             <TableCell><Badge variant={cfg.variant} className="flex w-fit items-center gap-1.5"><StatusIcon className="h-3 w-3" />{cfg.label}</Badge></TableCell>
                                             <TableCell className="text-right flex items-center justify-end gap-1">
                                                 {q.status !== "ACCEPTED" && q.status !== "REJECTED" && (
-                                                    <Button variant="ghost" size="icon" disabled={pendingId === q.id} onClick={() => handleConvertToOrder(q.id)}>
+                                                    <Button variant="ghost" size="icon" disabled={pendingId === q.id} onClick={() => handleConvertToOrder(q.id)} aria-label="Convert to order">
                                                         <ShoppingCart className="h-4 w-4 text-emerald-600" />
                                                     </Button>
                                                 )}
-                                                <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/quotes/${q.id}/edit`)}>
+                                                <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/quotes/${q.id}/edit`)} aria-label="Edit">
                                                     <Pencil className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
                                                 <RequireRole min="MANAGER"><Button variant="ghost" size="icon" disabled={pendingId === q.id} onClick={() => handleDelete(q.id)}>

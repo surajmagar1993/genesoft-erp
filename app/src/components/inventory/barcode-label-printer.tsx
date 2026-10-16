@@ -364,7 +364,7 @@ export function BarcodeLabelPrinter({
                           className="h-6 w-6 rounded"
                           onClick={() => updateQty(p.id, -1)}
                           disabled={qty <= 0}
-                        >
+                         aria-label="Remove">
                           <Minus className="h-3 w-3" />
                         </Button>
                         <span className="w-8 text-center font-bold text-slate-900 dark:text-slate-100">
@@ -376,7 +376,7 @@ export function BarcodeLabelPrinter({
                           size="icon"
                           className="h-6 w-6 rounded"
                           onClick={() => updateQty(p.id, 1)}
-                        >
+                         aria-label="Add">
                           <Plus className="h-3 w-3" />
                         </Button>
                       </div>

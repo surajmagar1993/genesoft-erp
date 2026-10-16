@@ -138,9 +138,10 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
     }
 
     // Helper: format date
+    // Document dates are stored at midnight UTC: show that date for every viewer (no day shift, same on server and browser)
     const formatDate = (val: string) => {
         try {
-            return new Date(val).toLocaleDateString("en-US", {
+            return new Date(val).toLocaleDateString("en-US", { timeZone: "UTC",
                 year: "numeric",
                 month: "short",
                 day: "numeric",
@@ -1088,7 +1089,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                     variant="ghost"
                                                     className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                     onClick={() => handleDeleteAccount(acc)}
-                                                >
+                                                 aria-label="Delete">
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button></RequireRole>
                                             )}
