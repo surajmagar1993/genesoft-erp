@@ -171,7 +171,7 @@ export interface RawInvoice {
   contact?: {
     id?: string
     displayName?: string
-    companyName?: string
+    companyName?: string | null
     gstin?: string | null
     email?: string | null
   } | null
@@ -191,7 +191,7 @@ export interface RawCreditNote {
   contact?: {
     id?: string
     displayName?: string
-    companyName?: string
+    companyName?: string | null
     gstin?: string | null
   } | null
   items?: Array<{
@@ -228,7 +228,7 @@ export interface RawBill {
   contact?: {
     id?: string
     displayName?: string
-    companyName?: string
+    companyName?: string | null
     gstin?: string | null
   } | null
   items: RawBillItem[]

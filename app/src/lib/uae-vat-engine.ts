@@ -190,7 +190,7 @@ export interface RawUaeInvoice {
   contact?: {
     id?: string
     displayName?: string
-    companyName?: string
+    companyName?: string | null
     trn?: string | null
     email?: string | null
   } | null
@@ -220,7 +220,7 @@ export interface RawUaeBill {
   contact?: {
     id?: string
     displayName?: string
-    companyName?: string
+    companyName?: string | null
     trn?: string | null
   } | null
   items: RawUaeBillItem[]

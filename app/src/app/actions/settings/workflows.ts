@@ -13,6 +13,7 @@ import type {
 } from "@/types/workflows"
 import { PREBUILT_RECIPES } from "@/types/workflows"
 import { errorMessage } from "@/lib/utils";
+import type { Prisma } from "@prisma/client"
 
 export async function getWorkflowsOverview(): Promise<{
     rules: WorkflowRuleItem[]
@@ -69,7 +70,7 @@ export async function getWorkflowsOverview(): Promise<{
         triggerEvent: e.triggerEvent,
         entityId: e.entityId,
         status: e.status as "SUCCESS" | "FAILED" | "SKIPPED",
-        executedActions: (e.executedActions as unknown as any[]) || [],
+        executedActions: (e.executedActions as unknown as WorkflowExecutionItem["executedActions"]) || [],
         errorDetails: e.errorDetails,
         executionDurationMs: e.executionDurationMs,
         createdAt: e.createdAt
@@ -119,8 +120,8 @@ export async function createWorkflowRule(input: {
                 description: input.description || null,
                 triggerEvent: input.triggerEvent,
                 entityType: input.entityType,
-                conditions: input.conditions as any,
-                actions: input.actions as any,
+                conditions: input.conditions as unknown as Prisma.InputJsonValue,
+                actions: input.actions as unknown as Prisma.InputJsonValue,
                 isActive: input.isActive ?? true,
                 executionCount: 0
             }
@@ -173,8 +174,8 @@ export async function updateWorkflowRule(
                 description: input.description || null,
                 triggerEvent: input.triggerEvent,
                 entityType: input.entityType,
-                conditions: input.conditions as any,
-                actions: input.actions as any,
+                conditions: input.conditions as unknown as Prisma.InputJsonValue,
+                actions: input.actions as unknown as Prisma.InputJsonValue,
                 isActive: input.isActive ?? true
             }
         })
@@ -268,7 +269,7 @@ export async function installPrebuiltRecipe(recipeName: string): Promise<{
 
 export async function runWorkflowSimulator(
     workflowId: string,
-    mockPayload: Record<string, any>
+    mockPayload: Record<string, unknown>
 ): Promise<{
     success: boolean
     conditionMet: boolean
@@ -343,7 +344,7 @@ export async function runWorkflowSimulator(
                     tenantId,
                     workflowId: workflow.id,
                     triggerEvent: workflow.triggerEvent,
-                    entityId: mockPayload.id || mockPayload.invoiceNumber || mockPayload.code || "SIM-ENTITY",
+                    entityId: String(mockPayload.id || mockPayload.invoiceNumber || mockPayload.code || "SIM-ENTITY"),
                     status: "SKIPPED",
                     executedActions: [],
                     errorDetails: failedConditionReason,
@@ -398,9 +399,9 @@ export async function runWorkflowSimulator(
                     tenantId,
                     workflowId: workflow.id,
                     triggerEvent: workflow.triggerEvent,
-                    entityId: mockPayload.id || mockPayload.invoiceNumber || mockPayload.sku || mockPayload.code || "SIM-ENTITY",
+                    entityId: String(mockPayload.id || mockPayload.invoiceNumber || mockPayload.sku || mockPayload.code || "SIM-ENTITY"),
                     status: "SUCCESS",
-                    executedActions: executedActions as any,
+                    executedActions: executedActions as unknown as Prisma.InputJsonValue,
                     errorDetails: null,
                     executionDurationMs: durationMs
                 }

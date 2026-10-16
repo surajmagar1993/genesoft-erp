@@ -2352,14 +2352,14 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                             </div>
 
                             {/* Emergency Contact */}
-                            {(selectedEmployee.emergencyContact)?.name && (
+                            {Boolean(selectedEmployee.emergencyContact?.name) && (
                                 <div className="space-y-1 border-t pt-3 text-xs">
                                     <span className="font-semibold text-muted-foreground uppercase tracking-wider block">
                                         Emergency Contact
                                     </span>
                                     <div>
-                                        {(selectedEmployee.emergencyContact)?.name} •{" "}
-                                        {(selectedEmployee.emergencyContact)?.phone || "No phone"}
+                                        {String(selectedEmployee.emergencyContact?.name ?? "")} •{" "}
+                                        {String(selectedEmployee.emergencyContact?.phone ?? "") || "No phone"}
                                     </div>
                                 </div>
                             )}

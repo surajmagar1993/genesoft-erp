@@ -73,7 +73,7 @@ export async function getUkVatOverview(params?: {
     },
   })
 
-  const tenantSettings = (tenant?.settings as Record<string, any>) || {}
+  const tenantSettings = (tenant?.settings as Record<string, string | undefined> | null) || {}
   const taxpayerVrn = tenantSettings.uk_vrn || tenantSettings.vrn || ""
   const taxpayerLegalName = tenant?.name || ""
   const taxpayerAddress = tenantSettings.address || ""
@@ -96,7 +96,7 @@ export async function getUkVatOverview(params?: {
     },
   })
 
-  const rawInvoices: RawUkInvoice[] = invoicesDb.map((inv: any) => ({
+  const rawInvoices: RawUkInvoice[] = invoicesDb.map((inv) => ({
     id: inv.id,
     invoiceNumber: inv.invoiceNumber,
     invoiceDate: inv.invoiceDate,
@@ -114,13 +114,13 @@ export async function getUkVatOverview(params?: {
           trn: inv.contact.trn, // UK VRN
         }
       : null,
-    items: (inv.items || []).map((it: any) => ({
+    items: (inv.items || []).map((it) => ({
       id: it.id,
       description: it.description,
       quantity: Number(it.quantity || 1),
       unitPrice: Number(it.unitPrice || 0),
       vatRate: it.vatRate ? Number(it.vatRate) : 20.0,
-      vatAmount: Number(it.taxAmount || 0),
+      vatAmount: Number(it.vatAmount || 0),
       lineTotal: Number(it.lineTotal || 0),
     })),
   }))
@@ -143,7 +143,7 @@ export async function getUkVatOverview(params?: {
     },
   })
 
-  const rawBills: RawUkBill[] = billsDb.map((b: any) => ({
+  const rawBills: RawUkBill[] = billsDb.map((b) => ({
     id: b.id,
     billNumber: b.billNumber,
     billDate: b.billDate,
@@ -160,7 +160,7 @@ export async function getUkVatOverview(params?: {
           trn: b.contact.trn,
         }
       : null,
-    items: (b.items || []).map((bi: any) => ({
+    items: (b.items || []).map((bi) => ({
       id: bi.id,
       description: bi.description,
       quantity: Number(bi.quantity || 1),

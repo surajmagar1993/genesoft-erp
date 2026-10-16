@@ -21,6 +21,7 @@ import type {
     SubmitPublicFormPayload,
 } from "./form-types"
 import { errorMessage } from "@/lib/utils";
+import type { Prisma } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -40,16 +41,16 @@ export async function getWebFormsOverview(
     if (isDemoSeedEnabled()) await autoSeedWebFormsIfEmpty(tenantId)
 
     // 1. Fetch Forms
-    const whereForm: any = { tenantId }
+    const whereForm: Prisma.WebFormWhereInput = { tenantId }
     if (formId) whereForm.id = formId
-    if (statusFilter && statusFilter !== "ALL") whereForm.status = statusFilter
+    if (statusFilter && statusFilter !== "ALL") whereForm.status = statusFilter as WebFormStatus
 
     const rawForms = await prisma.webForm.findMany({
         where: whereForm,
         orderBy: { createdAt: "desc" },
     })
 
-    const forms: WebFormRecord[] = rawForms.map((f: any) => ({
+    const forms: WebFormRecord[] = rawForms.map((f) => ({
         id: f.id,
         tenantId: f.tenantId,
         code: f.code,
@@ -57,7 +58,7 @@ export async function getWebFormsOverview(
         description: f.description,
         type: f.type as WebFormType,
         status: f.status as WebFormStatus,
-        fields: (f.fields as FormFieldConfig[]) || [],
+        fields: (f.fields as unknown as FormFieldConfig[]) || [],
         submitButtonText: f.submitButtonText,
         successMessage: f.successMessage,
         redirectUrl: f.redirectUrl,
@@ -73,7 +74,7 @@ export async function getWebFormsOverview(
     }))
 
     // 2. Fetch Submissions
-    const whereSubmissions: any = { tenantId }
+    const whereSubmissions: Prisma.FormSubmissionWhereInput = { tenantId }
     if (formId) whereSubmissions.webFormId = formId
 
     const rawSubmissions = await prisma.formSubmission.findMany({
@@ -96,7 +97,7 @@ export async function getWebFormsOverview(
         lead: s.lead,
         contactId: s.contactId,
         contact: s.contact,
-        data: (s.data as Record<string, any>) || {},
+        data: (s.data as Record<string, unknown> | null) || {},
         ipAddress: s.ipAddress,
         userAgent: s.userAgent,
         referer: s.referer,
@@ -179,7 +180,7 @@ export async function createWebForm(data: CreateWebFormInput): Promise<{
                 description: data.description?.trim() || null,
                 type: data.type || "CONTACT",
                 status: "ACTIVE",
-                fields: data.fields as any,
+                fields: data.fields as unknown as Prisma.InputJsonValue,
                 submitButtonText: data.submitButtonText?.trim() || "Submit Request",
                 successMessage:
                     data.successMessage?.trim() ||
@@ -219,16 +220,16 @@ export async function updateWebForm(
         const tenantId = await getTenantWriterId(MODULE)
         if (!tenantId) return { error: "Authentication required" }
 
-        const updateData: any = {}
+        const updateData: Prisma.WebFormUncheckedUpdateManyInput = {}
         if (data.title !== undefined) updateData.title = data.title.trim()
         if (data.description !== undefined) updateData.description = data.description?.trim() || null
         if (data.type !== undefined) updateData.type = data.type
         if (data.status !== undefined) updateData.status = data.status
-        if (data.fields !== undefined) updateData.fields = data.fields
+        if (data.fields !== undefined) updateData.fields = data.fields as unknown as Prisma.InputJsonValue
         if (data.submitButtonText !== undefined) updateData.submitButtonText = data.submitButtonText.trim()
         if (data.successMessage !== undefined) updateData.successMessage = data.successMessage.trim()
         if (data.redirectUrl !== undefined) updateData.redirectUrl = data.redirectUrl?.trim() || null
-        if (data.defaultLeadStatus !== undefined) updateData.defaultLeadStatus = data.defaultLeadStatus
+        if (data.defaultLeadStatus !== undefined) updateData.defaultLeadStatus = data.defaultLeadStatus as LeadStatus
         if (data.defaultLeadSource !== undefined) updateData.defaultLeadSource = data.defaultLeadSource.trim()
         if (data.assignedTo !== undefined) updateData.assignedTo = data.assignedTo?.trim() || null
         if (data.notifyEmail !== undefined) updateData.notifyEmail = data.notifyEmail?.trim() || null

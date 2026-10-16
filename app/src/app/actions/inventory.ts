@@ -230,7 +230,7 @@ export async function getInventoryOverview(): Promise<InventoryOverviewData> {
         }))
 
         const customAttrs = (typeof p.customAttributes === "object" && p.customAttributes !== null) ? p.customAttributes : {}
-        const barcode = (customAttrs as any).barcode || p.sku || null
+        const barcode = (customAttrs as { barcode?: string | null }).barcode || p.sku || null
 
         return {
             id: p.id,
@@ -685,7 +685,7 @@ async function _transferStock(data: {
 // Barcode & QR Code Actions
 // ────────────────────────────────────────────
 
-export async function getProductByBarcode(code: string): Promise<{ product: any | null }> {
+export async function getProductByBarcode(code: string) {
     const tenantId = await getTenantId(MODULE)
     const clean = code.trim()
     if (!clean) return { product: null }
@@ -729,7 +729,7 @@ export async function getProductByBarcode(code: string): Promise<{ product: any 
 
         product = candidates.find((p) => {
             const attrs = (typeof p.customAttributes === "object" && p.customAttributes !== null) ? p.customAttributes : {}
-            const b = (attrs as any).barcode
+            const b = (attrs as { barcode?: string | null }).barcode
             return b && String(b).toLowerCase() === clean.toLowerCase()
         }) || null
     }
@@ -737,7 +737,7 @@ export async function getProductByBarcode(code: string): Promise<{ product: any 
     if (!product) return { product: null }
 
     const customAttrs = (typeof product.customAttributes === "object" && product.customAttributes !== null) ? product.customAttributes : {}
-    const barcode = (customAttrs as any).barcode || product.sku || null
+    const barcode = (customAttrs as { barcode?: string | null }).barcode || product.sku || null
 
     return {
         product: {
@@ -915,8 +915,8 @@ export async function getInventoryReportsData(
             let costPrice = 0
             if (p.billItems && p.billItems.length > 0 && Number(p.billItems[0].unitPrice) > 0) {
                 costPrice = Number(p.billItems[0].unitPrice)
-            } else if (p.customAttributes && typeof p.customAttributes === "object" && (p.customAttributes as any).costPrice) {
-                costPrice = Number((p.customAttributes as any).costPrice) || 0
+            } else if (p.customAttributes && typeof p.customAttributes === "object" && (p.customAttributes as { costPrice?: number | string }).costPrice) {
+                costPrice = Number((p.customAttributes as { costPrice?: number | string }).costPrice) || 0
             } else if (sellingPrice > 0) {
                 costPrice = parseFloat((sellingPrice * 0.65).toFixed(2))
             }
@@ -950,7 +950,7 @@ export async function getInventoryReportsData(
                 productId: p.id,
                 productName: p.name,
                 sku: p.sku,
-                barcode: (p.customAttributes as any)?.barcode || null,
+                barcode: (p.customAttributes as { barcode?: string | null } | null)?.barcode || null,
                 category: p.category || "General",
                 stockQty,
                 unit: p.unit || "Nos",

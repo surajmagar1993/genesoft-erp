@@ -18,6 +18,7 @@ import {
     LeaveType,
     LeaveStatus
 } from "@prisma/client"
+import type { AddressJson } from "@/lib/json-types"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "hr" as const
@@ -65,9 +66,9 @@ export interface EmployeeRecord {
     managerName?: string | null
     basicSalary: number | null
     currencyCode: string
-    bankDetails: any
-    address: any
-    emergencyContact: any
+    bankDetails: Record<string, unknown> | null
+    address: AddressJson
+    emergencyContact: Record<string, unknown> | null
     createdAt: Date
 }
 
@@ -273,9 +274,9 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
         managerName: e.manager?.displayName || null,
         basicSalary: e.basicSalary ? Number(e.basicSalary) : null,
         currencyCode: e.currencyCode,
-        bankDetails: e.bankDetails,
-        address: e.address,
-        emergencyContact: e.emergencyContact,
+        bankDetails: e.bankDetails as Record<string, unknown> | null,
+        address: e.address as AddressJson,
+        emergencyContact: e.emergencyContact as Record<string, unknown> | null,
         createdAt: e.createdAt
     }))
 
@@ -491,6 +492,7 @@ async function _updateEmployee(employeeId: string, data: UpdateEmployeeInput) {
     const firstName = data.firstName !== undefined ? data.firstName.trim() : existing.firstName
     const lastName = data.lastName !== undefined ? data.lastName.trim() : existing.lastName
     const displayName = lastName ? `${firstName} ${lastName}` : firstName
+    const existingAddress = existing.address as AddressJson
 
     const updated = await prisma.employee.update({
         where: { id: employeeId },
@@ -507,10 +509,10 @@ async function _updateEmployee(employeeId: string, data: UpdateEmployeeInput) {
             managerId: data.managerId,
             basicSalary: data.basicSalary !== undefined ? (data.basicSalary ? Number(data.basicSalary) : null) : undefined,
             address: {
-                ...(existing.address as any || {}),
-                country: data.country !== undefined ? data.country.trim() : ((existing.address as any)?.country || "India"),
-                state: data.state !== undefined ? data.state.trim() : (existing.address as any)?.state,
-                city: data.city !== undefined ? data.city.trim() : (existing.address as any)?.city
+                ...(existingAddress || {}),
+                country: data.country !== undefined ? data.country.trim() : (existingAddress?.country || ""),
+                state: data.state !== undefined ? data.state.trim() : existingAddress?.state,
+                city: data.city !== undefined ? data.city.trim() : existingAddress?.city
             }
         }
     })

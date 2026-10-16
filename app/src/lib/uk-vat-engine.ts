@@ -173,7 +173,7 @@ export interface RawUkInvoice {
   contact?: {
     id?: string
     displayName?: string
-    companyName?: string
+    companyName?: string | null
     trn?: string | null // UK VRN
   } | null
   items: RawUkInvoiceItem[]
@@ -201,7 +201,7 @@ export interface RawUkBill {
   contact?: {
     id?: string
     displayName?: string
-    companyName?: string
+    companyName?: string | null
     trn?: string | null
   } | null
   items: RawUkBillItem[]

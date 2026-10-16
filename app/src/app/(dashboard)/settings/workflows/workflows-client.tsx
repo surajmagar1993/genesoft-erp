@@ -161,7 +161,7 @@ export function WorkflowsClient({
         success: boolean
         conditionMet: boolean
         status: string
-        executedActions: any[]
+        executedActions: WorkflowExecutionItem["executedActions"]
         durationMs: number
         reason?: string
         error?: string
@@ -349,7 +349,7 @@ export function WorkflowsClient({
         setFormConditions(prev => prev.filter((_, i) => i !== index))
     }
 
-    const updateCondition = (index: number, key: keyof WorkflowCondition, val: any) => {
+    const updateCondition = (index: number, key: keyof WorkflowCondition, val: WorkflowCondition[keyof WorkflowCondition]) => {
         setFormConditions(prev =>
             prev.map((c, i) => (i === index ? { ...c, [key]: val } : c))
         )
@@ -371,7 +371,7 @@ export function WorkflowsClient({
         setFormActions(prev =>
             prev.map((a, i) => {
                 if (i !== index) return a
-                let defaultParams: any = {}
+                let defaultParams: WorkflowAction["params"] = {}
                 if (type === "SEND_NOTIFICATION") defaultParams = { recipientRole: "ADMIN", message: "Workflow notification alert." }
                 if (type === "SEND_EMAIL") defaultParams = { emailSubject: "Automated Notification", emailBody: "Please see attached update." }
                 if (type === "CREATE_TASK") defaultParams = { taskTitle: "Follow up on automated workflow", taskPriority: "HIGH", taskDueDays: 2 }
@@ -382,7 +382,7 @@ export function WorkflowsClient({
         )
     }
 
-    const updateActionParam = (index: number, paramKey: string, val: any) => {
+    const updateActionParam = (index: number, paramKey: string, val: string | number | boolean) => {
         setFormActions(prev =>
             prev.map((a, i) => (i === index ? { ...a, params: { ...a.params, [paramKey]: val } } : a))
         )
@@ -395,7 +395,7 @@ export function WorkflowsClient({
             return
         }
 
-        let parsedPayload: any = {}
+        let parsedPayload: Record<string, unknown> = {}
         try {
             parsedPayload = JSON.parse(simPayloadJson)
         } catch {
@@ -421,8 +421,8 @@ export function WorkflowsClient({
                     workflowId: simSelectedWorkflowId,
                     workflowName: selectedRule?.name || "Simulated Rule",
                     triggerEvent: selectedRule?.triggerEvent || "EVENT",
-                    entityId: parsedPayload.id || parsedPayload.code || "SIM-MOCK",
-                    status: res.status as any,
+                    entityId: String(parsedPayload.id || parsedPayload.code || "SIM-MOCK"),
+                    status: res.status as WorkflowExecutionItem["status"],
                     executedActions: res.executedActions,
                     errorDetails: res.reason || null,
                     executionDurationMs: res.durationMs,
@@ -446,7 +446,7 @@ export function WorkflowsClient({
         const rule = rules.find(r => r.id === workflowId)
         if (!rule) return
 
-        let mock: any = {}
+        let mock: Record<string, unknown> = {}
         if (rule.triggerEvent === "INVOICE_OVERDUE") {
             mock = { id: "INV-2026-9041", customerName: "Acme Global Solutions", total: 85000, balanceDue: 85000, daysOverdue: 7, status: "OVERDUE" }
         } else if (rule.triggerEvent === "STOCK_LOW") {

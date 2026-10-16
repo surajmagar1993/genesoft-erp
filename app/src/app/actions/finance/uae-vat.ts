@@ -75,7 +75,7 @@ export async function getUaeVatOverview(params?: {
     }
   })
 
-  const tenantSettings = (tenant?.settings as Record<string, any>) || {}
+  const tenantSettings = (tenant?.settings as Record<string, string | undefined> | null) || {}
   const taxpayerTrn = tenantSettings.trn || tenantSettings.vat_trn || ""
   const taxpayerLegalName = tenant?.name || ""
   const taxpayerAddress = tenantSettings.address || ""
@@ -98,7 +98,7 @@ export async function getUaeVatOverview(params?: {
     }
   })
 
-  const rawInvoices: RawUaeInvoice[] = invoicesDb.map((inv: any) => ({
+  const rawInvoices: RawUaeInvoice[] = invoicesDb.map((inv) => ({
     id: inv.id,
     invoiceNumber: inv.invoiceNumber,
     invoiceDate: inv.invoiceDate,
@@ -117,7 +117,7 @@ export async function getUaeVatOverview(params?: {
       trn: inv.contact.trn,
       email: inv.contact.email,
     } : null,
-    items: (inv.items || []).map((li: any) => ({
+    items: (inv.items || []).map((li) => ({
       id: li.id,
       description: li.description,
       quantity: Number(li.quantity || 1),
@@ -147,7 +147,7 @@ export async function getUaeVatOverview(params?: {
     }
   })
 
-  const rawBills: RawUaeBill[] = billsDb.map((b: any) => ({
+  const rawBills: RawUaeBill[] = billsDb.map((b) => ({
     id: b.id,
     billNumber: b.billNumber,
     billDate: b.billDate,
@@ -163,7 +163,7 @@ export async function getUaeVatOverview(params?: {
       companyName: b.contact.companyName,
       trn: b.contact.trn,
     } : null,
-    items: (b.items || []).map((bi: any) => ({
+    items: (b.items || []).map((bi) => ({
       id: bi.id,
       description: bi.description,
       quantity: Number(bi.quantity || 1),

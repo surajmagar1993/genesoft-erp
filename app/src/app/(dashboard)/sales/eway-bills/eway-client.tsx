@@ -57,6 +57,7 @@ import { toast } from "sonner"
 import {
   EwayOverviewData,
   EwayBillRecord,
+  type EligibleInvoiceCandidate,
   generateEwayBill,
   updateEwayBillVehicle,
   cancelEwayBill,
@@ -69,7 +70,11 @@ import {
   EWAY_VEHICLE_TYPES,
   EWAY_DOCUMENT_TYPES,
   calculateEwayBillValidity,
-  validateVehicleNumber
+  validateVehicleNumber,
+  type EwayDocType,
+  type EwaySubSupplyCode,
+  type EwayTransportModeCode,
+  type EwayVehicleTypeCode,
 } from "@/lib/eway-bill-engine"
 import { COMPANY } from "@/lib/constants/company"
 import { generateQrCodeDataUrl } from "@/lib/barcode/qrcode"
@@ -171,7 +176,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
   const liveValidity = useMemo(() => {
     return calculateEwayBillValidity(
       Number(genForm.transDistance) || 1,
-      (genForm.vehicleType as any) || "R",
+      (genForm.vehicleType as EwayVehicleTypeCode) || "R",
       new Date()
     )
   }, [genForm.transDistance, genForm.vehicleType])
@@ -212,7 +217,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
   }
 
   // Populate generator from eligible candidate invoice
-  const handleSelectInvoiceCandidate = (cand: any) => {
+  const handleSelectInvoiceCandidate = (cand: EligibleInvoiceCandidate) => {
     setGenForm((prev) => ({
       ...prev,
       invoiceId: cand.id,
@@ -242,10 +247,10 @@ export function EwayClient({ initialData }: EwayClientProps) {
     startTransition(async () => {
       const res = await generateEwayBill({
         ...genForm,
-        subSupplyType: genForm.subSupplyType as any,
-        docType: genForm.docType as any,
-        transMode: genForm.transMode as any,
-        vehicleType: genForm.vehicleType as any,
+        subSupplyType: genForm.subSupplyType as EwaySubSupplyCode,
+        docType: genForm.docType as EwayDocType,
+        transMode: genForm.transMode as EwayTransportModeCode,
+        vehicleType: genForm.vehicleType as EwayVehicleTypeCode,
         supplyType: "O",
         itemList: [
           {
@@ -486,7 +491,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
               />
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
                 <SelectTrigger className="w-36 text-xs">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>

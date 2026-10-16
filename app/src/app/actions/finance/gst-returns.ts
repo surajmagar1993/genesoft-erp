@@ -72,7 +72,7 @@ export async function getGstReturnsOverview(params?: {
     }
   })
 
-  const tenantSettings = (tenant?.settings as Record<string, any>) || {}
+  const tenantSettings = (tenant?.settings as Record<string, string | undefined> | null) || {}
   const supplierGstin = tenantSettings.gstin || ""
   const supplierLegalName = tenant?.name || ""
   const supplierState = tenantSettings.state || ""
@@ -95,7 +95,7 @@ export async function getGstReturnsOverview(params?: {
     }
   })
 
-  const rawInvoices: RawInvoice[] = invoicesDb.map((inv: any) => ({
+  const rawInvoices: RawInvoice[] = invoicesDb.map((inv) => ({
     id: inv.id,
     invoiceNumber: inv.invoiceNumber,
     invoiceDate: inv.invoiceDate,
@@ -113,7 +113,7 @@ export async function getGstReturnsOverview(params?: {
       gstin: inv.contact.gstin,
       email: inv.contact.email,
     } : null,
-    items: (inv.items || []).map((li: any) => ({
+    items: (inv.items || []).map((li) => ({
       id: li.id,
       description: li.description,
       hsnSacCode: li.hsnSacCode,
@@ -148,7 +148,7 @@ export async function getGstReturnsOverview(params?: {
     }
   })
 
-  const rawCreditNotes: RawCreditNote[] = creditNotesDb.map((cn: any) => ({
+  const rawCreditNotes: RawCreditNote[] = creditNotesDb.map((cn) => ({
     id: cn.id,
     creditNoteNumber: cn.creditNoteNumber,
     issueDate: cn.issueDate,
@@ -164,7 +164,7 @@ export async function getGstReturnsOverview(params?: {
       companyName: cn.contact.companyName,
       gstin: cn.contact.gstin,
     } : null,
-    items: (cn.items || []).map((ci: any) => ({
+    items: (cn.items || []).map((ci) => ({
       description: ci.description,
       hsnSacCode: ci.hsnSacCode,
       quantity: Number(ci.quantity || 1),
@@ -193,7 +193,7 @@ export async function getGstReturnsOverview(params?: {
     }
   })
 
-  const rawBills: RawBill[] = billsDb.map((b: any) => ({
+  const rawBills: RawBill[] = billsDb.map((b) => ({
     id: b.id,
     billNumber: b.billNumber,
     billDate: b.billDate,
@@ -208,7 +208,7 @@ export async function getGstReturnsOverview(params?: {
       companyName: b.contact.companyName,
       gstin: b.contact.gstin,
     } : null,
-    items: (b.items || []).map((bi: any) => ({
+    items: (b.items || []).map((bi) => ({
       id: bi.id,
       description: bi.description,
       hsnSacCode: bi.hsnSacCode,

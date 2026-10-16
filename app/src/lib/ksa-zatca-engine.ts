@@ -511,7 +511,7 @@ export interface RawKsaInvoice {
   contact?: {
     id?: string
     displayName?: string
-    companyName?: string
+    companyName?: string | null
     trn?: string | null // VAT Registration #
   } | null
   items: RawKsaInvoiceItem[]
@@ -539,7 +539,7 @@ export interface RawKsaBill {
   contact?: {
     id?: string
     displayName?: string
-    companyName?: string
+    companyName?: string | null
     trn?: string | null
   } | null
   items: RawKsaBillItem[]

@@ -43,8 +43,22 @@ import { TenantClosureCard } from "./TenantClosureCard"
 import { ActivityLogTable } from "@/components/activity-log-table"
 import { inZone } from "@/lib/dates"
 import { errorMessage } from "@/lib/utils";
+import type { getTenantById } from "@/app/actions/saas/admin"
+import type { SaaSPlatformInvoice } from "@/lib/saas-subscription-engine"
 
-export function TenantDetailClient({ tenant }: { tenant: any }) {
+type TenantDetail = NonNullable<Awaited<ReturnType<typeof getTenantById>>>
+/** A stored platform receipt: current fields (SaaSPlatformInvoice) or older names */
+type StoredReceipt = SaaSPlatformInvoice & { id?: string; date?: string; plan?: string; taxRate?: number; total?: number }
+type ReceiptRow = StoredReceipt & { id: string; date: string; plan: string; taxRate: number; total: number }
+/** tenants.settings.subscription as this page reads it */
+type SubscriptionMeta = {
+    invoices?: unknown
+    billingCycle?: string
+    currentPeriodEnd?: string
+    scheduledDowngrade?: { plan?: string; effectiveDate?: string } | null
+}
+
+export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
     const router = useRouter()
     const closure = readClosure(tenant.settings)
     const [activeTab, setActiveTab] = useState<"overview" | "users" | "records" | "audit" | "activity">("overview")
@@ -72,12 +86,12 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
     const [isIssuingInvoice, setIsIssuingInvoice] = useState(false)
 
     // Receipt Modal State
-    const [selectedInvoice, setSelectedInvoice] = useState<any>(null)
+    const [selectedInvoice, setSelectedInvoice] = useState<ReceiptRow | null>(null)
     const [isReceiptOpen, setIsReceiptOpen] = useState(false)
 
-    const subMeta = (tenant.settings as any)?.subscription || {}
+    const subMeta = ((tenant.settings as { subscription?: SubscriptionMeta } | null)?.subscription || {}) as SubscriptionMeta
     // Stored receipts use issueDate/tier/taxPercent/totalAmount (SaaSPlatformInvoice); add the names this page shows
-    const saasInvoices: any[] = (Array.isArray(subMeta.invoices) ? subMeta.invoices : []).map((inv: any) => ({
+    const saasInvoices: ReceiptRow[] = (Array.isArray(subMeta.invoices) ? (subMeta.invoices as StoredReceipt[]) : []).map((inv) => ({
         ...inv,
         id: inv.id ?? inv.invoiceNumber,
         date: inv.issueDate ?? inv.date,
@@ -108,7 +122,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
         }
     }
 
-    const printReceipt = (inv: any) => {
+    const printReceipt = (inv: SaaSPlatformInvoice) => {
         const win = window.open("", "_blank")
         if (win) {
             win.document.write(formatSaaSInvoiceReceiptHtml(inv))
@@ -452,7 +466,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                     <div className="flex justify-between py-1.5 border-b border-border/50 bg-amber-500/10 px-2 rounded">
                                         <span className="text-amber-700 dark:text-amber-400 font-medium">Scheduled Downgrade</span>
                                         <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-                                            To {subMeta.scheduledDowngrade.plan} on {format(inZone(subMeta.scheduledDowngrade.effectiveDate), "MMM d, yyyy")}
+                                            To {subMeta.scheduledDowngrade.plan} on {format(inZone(subMeta.scheduledDowngrade.effectiveDate ?? ""), "MMM d, yyyy")}
                                         </span>
                                     </div>
                                 )}
@@ -612,7 +626,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                             </TableHeader>
                             <TableBody>
                                 {tenant.users && tenant.users.length > 0 ? (
-                                    tenant.users.map((u: any) => (
+                                    tenant.users.map((u) => (
                                         <TableRow key={u.id}>
                                             <TableCell className="font-semibold text-sm">
                                                 {u.fullName || "Unnamed User"}
@@ -743,7 +757,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                             </TableHeader>
                             <TableBody>
                                 {tenant.auditLogs && tenant.auditLogs.length > 0 ? (
-                                    tenant.auditLogs.map((log: any) => (
+                                    tenant.auditLogs.map((log) => (
                                         <TableRow key={log.id}>
                                             <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                                                 {format(inZone(log.createdAt), "MMM d, yyyy (HH:mm)")}
@@ -894,7 +908,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                 <select
                                     id="editPlan"
                                     value={editForm.plan}
-                                    onChange={e => setEditForm(prev => ({ ...prev, plan: e.target.value }))}
+                                    onChange={e => setEditForm(prev => ({ ...prev, plan: e.target.value as typeof prev.plan }))}
                                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
                                 >
                                     <option value="FREE">FREE</option>

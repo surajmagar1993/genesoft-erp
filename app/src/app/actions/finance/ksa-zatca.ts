@@ -100,7 +100,7 @@ export async function getKsaVatOverview(params?: {
     },
   })
 
-  const tenantSettings = (tenant?.settings as Record<string, any>) || {}
+  const tenantSettings = (tenant?.settings as Record<string, string | undefined> | null) || {}
   const taxpayerVatNumber = tenantSettings.ksa_vat_number || tenantSettings.vat_number || ""
   const taxpayerLegalName = tenant?.name || ""
   const taxpayerAddress = tenantSettings.address || ""
@@ -123,7 +123,7 @@ export async function getKsaVatOverview(params?: {
     },
   })
 
-  const rawInvoices: RawKsaInvoice[] = invoicesDb.map((inv: any) => ({
+  const rawInvoices: RawKsaInvoice[] = invoicesDb.map((inv) => ({
     id: inv.id,
     invoiceNumber: inv.invoiceNumber,
     invoiceDate: inv.invoiceDate,
@@ -140,13 +140,13 @@ export async function getKsaVatOverview(params?: {
           trn: inv.contact.trn,
         }
       : null,
-    items: (inv.items || []).map((li: any) => ({
+    items: (inv.items || []).map((li) => ({
       id: li.id,
       description: li.description,
       quantity: Number(li.quantity || 1),
       unitPrice: Number(li.unitPrice || 0),
       vatRate: li.vatRate ? Number(li.vatRate) : 15.0,
-      vatAmount: li.vatAmount ? Number(li.vatAmount) : Number(li.taxAmount || 0),
+      vatAmount: Number(li.vatAmount || 0),
       lineTotal: Number(li.lineTotal || 0),
     })),
   }))
@@ -169,7 +169,7 @@ export async function getKsaVatOverview(params?: {
     },
   })
 
-  const rawBills: RawKsaBill[] = billsDb.map((b: any) => ({
+  const rawBills: RawKsaBill[] = billsDb.map((b) => ({
     id: b.id,
     billNumber: b.billNumber,
     billDate: b.billDate,
@@ -186,7 +186,7 @@ export async function getKsaVatOverview(params?: {
           trn: b.contact.trn,
         }
       : null,
-    items: (b.items || []).map((bi: any) => ({
+    items: (b.items || []).map((bi) => ({
       id: bi.id,
       description: bi.description,
       quantity: Number(bi.quantity || 1),
@@ -298,7 +298,7 @@ export async function generateZatcaInvoicePayload(invoiceId: string) {
 
   if (!invoice) throw new Error("Invoice not found.")
 
-  const tenantSettings = (invoice.tenant?.settings as Record<string, any>) || {}
+  const tenantSettings = (invoice.tenant?.settings as Record<string, string | undefined> | null) || {}
   const sellerVatNumber = requireTaxId(tenantSettings.ksa_vat_number || tenantSettings.vat_number, "VAT number")
   const sellerName = invoice.tenant?.name || ""
 
@@ -328,13 +328,13 @@ export async function generateZatcaInvoicePayload(invoiceId: string) {
     margin: 1,
   })
 
-  const items = (invoice.items || []).map((it: any, idx: number) => ({
+  const items = (invoice.items || []).map((it, idx: number) => ({
     id: it.id || String(idx + 1),
     name: it.description || `Item ${idx + 1}`,
     quantity: Number(it.quantity || 1),
     unitPrice: Number(it.unitPrice || 0),
     vatRate: 15.0,
-    vatAmount: Number(it.taxAmount || 0),
+    vatAmount: Number(it.vatAmount || 0),
     lineTotal: Number(it.lineTotal || 0),
   }))
 
@@ -347,10 +347,11 @@ export async function generateZatcaInvoicePayload(invoiceId: string) {
     seller: {
       legalName: sellerName,
       vatNumber: sellerVatNumber,
-      street: tenantSettings.street || "King Fahd Road",
-      postalZone: tenantSettings.postalCode || "12211",
-      city: tenantSettings.city || "Riyadh",
-      district: tenantSettings.district || "Olaya",
+      // The business's own address only: no sample values on a tax document
+      street: tenantSettings.street || "",
+      postalZone: tenantSettings.postalCode || "",
+      city: tenantSettings.city || "",
+      district: tenantSettings.district || "",
     },
     buyer: {
       legalName: invoice.contact?.companyName || invoice.contact?.displayName || "Walk-in Customer",

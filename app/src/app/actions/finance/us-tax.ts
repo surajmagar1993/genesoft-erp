@@ -140,9 +140,9 @@ export async function getUsTaxOverview(params?: {
 
   // Format invoices
   const rawInvoices: RawUsInvoice[] = invoicesDb.map((inv) => {
-    const billTo = (inv.billTo as Record<string, any>) || {}
-    const shipTo = (inv.shipTo as Record<string, any>) || {}
-    const contactBilling = (inv.contact?.billingAddress as Record<string, any>) || {}
+    const billTo = (inv.billTo as Record<string, string | undefined> | null) || {}
+    const shipTo = (inv.shipTo as Record<string, string | undefined> | null) || {}
+    const contactBilling = (inv.contact?.billingAddress as Record<string, string | undefined> | null) || {}
 
     const stateCandidate =
       inv.placeOfSupply ||
@@ -222,7 +222,7 @@ export async function getUsTaxOverview(params?: {
     const expiryDateStr = `${taxYear}-12-31`
     const { status, daysToExpiry } = evaluateCertificateStatus(expiryDateStr)
 
-    const addr = (c.billingAddress as Record<string, any>) || {}
+    const addr = (c.billingAddress as Record<string, string | undefined> | null) || {}
     const state = resolveStateCode(addr.state)
 
     return {
@@ -311,7 +311,7 @@ export async function export1099FireCsvAction(params: { taxYear: number }): Prom
     where: { id: tenantId },
     select: { name: true, settings: true },
   })
-  const settings = (tenant?.settings as Record<string, any>) || {}
+  const settings = (tenant?.settings as Record<string, string | undefined> | null) || {}
   const payerName = tenant?.name || ""
   const payerEin = requireTaxId(settings.ein || settings.tax_id, "EIN")
 
