@@ -10,6 +10,7 @@ import { Resend } from "resend"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
 import { COMPANY } from "@/lib/constants/company"
 import { computeInvoiceGstSummary } from "@/lib/gst-engine"
+import { formatCurrency } from "@/lib/utils"
 import { cleanTaxRate, getTenantTaxContext, invoiceItemTaxColumns, supplyTypeFor } from "@/lib/tenant-tax"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
@@ -733,50 +734,45 @@ export async function sendInvoiceEmail(
     return { error: "Failed to generate PDF" }
   }
 
-  // Compute grand total from line items
-  const items = (invoice.invoice_line_items ?? []).map((li) => ({
-    qty: li.qty,
-    unitPrice: li.unit_price,
-    gstRate: li.tax_percent,
-  }))
-  const summary = computeInvoiceGstSummary(
-    items,
-    invoice.supply_type ?? "intra",
-    invoice.discount ?? 0,
-    invoice.discount_type ?? "PERCENT"
-  )
-  const grandTotal = summary.grandTotal
+  // The total saved with the invoice (worked out on the server for its country), in its own currency
+  const grandTotal = formatCurrency(Number(invoice.total ?? 0), invoice.currency_code || "INR")
+  const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
 
   const resend = new Resend(apiKey)
   const supplierName = invoice.tenants?.name || COMPANY.name
   const isProforma = invoice.type === "PROFORMA"
-  const documentLabel = isProforma ? "Proforma Invoice" : "Tax Invoice"
+  const documentLabel = isProforma ? "Proforma Invoice" : invoice.invoice_title || "Invoice"
+  const issued = invoice.invoice_date
+    ? new Date(invoice.invoice_date).toLocaleDateString(invoice.locale || "en-GB", { day: "numeric", month: "short", year: "numeric" })
+    : "—"
+  // Display name in the From header: no quotes or angle brackets
+  const fromName = supplierName.replace(/["<>\r\n]/g, "").trim() || "Invoices"
 
   const { error: emailError } = await resend.emails.send({
-    from: `${supplierName} <invoices@${process.env.RESEND_DOMAIN}>`,
+    from: `"${fromName}" <invoices@${process.env.RESEND_DOMAIN}>`,
     to: [recipientEmail],
     subject: `${documentLabel} ${invoice.invoice_number} from ${supplierName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; color: #0f172a;">
-        <h2 style="color: #1e40af;">${documentLabel} ${invoice.invoice_number}</h2>
-        <p>Dear ${invoice.customer_name},</p>
-        <p>Please find your ${documentLabel.toLowerCase()} attached to this email.</p>
+        <h2 style="color: #1e40af;">${esc(documentLabel)} ${esc(invoice.invoice_number)}</h2>
+        <p>Dear ${esc(invoice.customer_name)},</p>
+        <p>Please find your ${esc(documentLabel.toLowerCase())} attached to this email.</p>
         <table style="width:100%; border-collapse:collapse; margin: 20px 0; font-size:14px;">
           <tr>
             <td style="padding:8px; border:1px solid #e2e8f0; color:#64748b;">Invoice Number</td>
-            <td style="padding:8px; border:1px solid #e2e8f0; font-weight:600;">${invoice.invoice_number}</td>
+            <td style="padding:8px; border:1px solid #e2e8f0; font-weight:600;">${esc(invoice.invoice_number)}</td>
           </tr>
           <tr>
             <td style="padding:8px; border:1px solid #e2e8f0; color:#64748b;">Invoice Date</td>
-            <td style="padding:8px; border:1px solid #e2e8f0;">${invoice.invoice_date ? new Date(invoice.invoice_date).toLocaleDateString("en-IN") : "—"}</td>
+            <td style="padding:8px; border:1px solid #e2e8f0;">${issued}</td>
           </tr>
           <tr>
             <td style="padding:8px; border:1px solid #e2e8f0; color:#64748b;">Grand Total</td>
-            <td style="padding:8px; border:1px solid #e2e8f0; font-weight:700; color:#1e40af;">₹${grandTotal.toFixed(2)}</td>
+            <td style="padding:8px; border:1px solid #e2e8f0; font-weight:700; color:#1e40af;">${esc(grandTotal)}</td>
           </tr>
         </table>
         <p style="color:#64748b; font-size:13px;">If you have any questions, please reply to this email.</p>
-        <p>Regards,<br/><strong>${supplierName}</strong></p>
+        <p>Regards,<br/><strong>${esc(supplierName)}</strong></p>
       </div>`,
     attachments: [
       {

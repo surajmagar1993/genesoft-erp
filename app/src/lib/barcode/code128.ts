@@ -65,6 +65,16 @@ export function encodeCode128B(text: string): string {
   return binaryPattern
 }
 
+/** Text placed inside the SVG: product codes are user input, and the SVG is inserted as HTML. */
+function escapeXml(value: string): string {
+  return value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
+}
+
+/** Colours go into attributes: allow only real colour values. */
+function safeColor(value: string, fallback: string): string {
+  return /^(#[0-9a-f]{3,8}|currentColor|transparent|[a-z]{3,20})$/i.test(value) ? value : fallback
+}
+
 /**
  * Generates an SVG string for a Code 128 barcode.
  */
@@ -73,10 +83,11 @@ export function generateCode128Svg(text: string, options: Code128Options = {}): 
     width = 240,
     height = 70,
     showText = true,
-    barColor = "#0f172a",
-    backgroundColor = "transparent",
-    fontSize = 11,
+    fontSize: rawFontSize = 11,
   } = options
+  const barColor = safeColor(options.barColor ?? "#0f172a", "#0f172a")
+  const backgroundColor = safeColor(options.backgroundColor ?? "transparent", "transparent")
+  const fontSize = Number.isFinite(Number(rawFontSize)) ? Number(rawFontSize) : 11
 
   const binary = encodeCode128B(text)
   if (!binary) return ""
@@ -115,7 +126,7 @@ export function generateCode128Svg(text: string, options: Code128Options = {}): 
     : ""
 
   const textElement = showText
-    ? `<text x="${totalModules / 2}" y="${height - 2}" text-anchor="middle" font-family="monospace, ui-monospace, sans-serif" font-size="${fontSize}" font-weight="600" fill="${barColor}">${text}</text>`
+    ? `<text x="${totalModules / 2}" y="${height - 2}" text-anchor="middle" font-family="monospace, ui-monospace, sans-serif" font-size="${fontSize}" font-weight="600" fill="${barColor}">${escapeXml(text)}</text>`
     : ""
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalModules} ${height}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet">

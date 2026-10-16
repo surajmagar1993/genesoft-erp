@@ -541,6 +541,11 @@ export function compileSaaSSubscriptionInvoice(params: {
 /**
  * Compiles a printable HTML subscription invoice slip with inline styles.
  */
+/** Every value inserted into the receipt HTML: business names and payment references come from users. */
+function esc(value: unknown): string {
+    return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
+}
+
 export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): string {
     const catalog = getRegionalPricing(invoice.currency)
     const planDef = PLAN_TIERS[invoice.tier]
@@ -550,7 +555,7 @@ export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): stri
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Subscription Tax Invoice - ${invoice.invoiceNumber}</title>
+    <title>Subscription Tax Invoice - ${esc(invoice.invoiceNumber)}</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 24px; color: #0f172a; background: #fff; }
         .invoice-card { max-width: 680px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -580,7 +585,7 @@ export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): stri
             </div>
             <div style="text-align: right;">
                 <span class="badge">PAID RECEIPT</span>
-                <div style="font-size: 16px; font-weight: 800; margin-top: 8px;">${invoice.invoiceNumber}</div>
+                <div style="font-size: 16px; font-weight: 800; margin-top: 8px;">${esc(invoice.invoiceNumber)}</div>
                 <div style="font-size: 12px; color: #64748b;">${new Date(invoice.issueDate).toLocaleDateString("en-IN", { dateStyle: "medium" })}</div>
             </div>
         </div>
@@ -588,12 +593,12 @@ export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): stri
         <div class="meta-grid">
             <div class="meta-box">
                 <h3>Billed To (Tenant Account)</h3>
-                <strong>${invoice.tenantName}</strong>
-                <p style="margin: 2px 0 0 0; color: #64748b;">Tenant UUID: ${invoice.tenantId}</p>
+                <strong>${esc(invoice.tenantName)}</strong>
+                <p style="margin: 2px 0 0 0; color: #64748b;">Tenant UUID: ${esc(invoice.tenantId)}</p>
             </div>
             <div class="meta-box" style="text-align: right;">
                 <h3>Subscription Coverage</h3>
-                <strong>${planDef.name} (${invoice.billingCycle})</strong>
+                <strong>${esc(planDef.name)} (${esc(invoice.billingCycle)})</strong>
                 <p style="margin: 2px 0 0 0; color: #64748b;">
                     ${new Date(invoice.periodStart).toLocaleDateString()} to ${new Date(invoice.periodEnd).toLocaleDateString()}
                 </p>
@@ -605,16 +610,16 @@ export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): stri
                 <tr>
                     <th>Description</th>
                     <th>Cycle</th>
-                    <th style="text-align: right;">Amount (${invoice.currency})</th>
+                    <th style="text-align: right;">Amount (${esc(invoice.currency)})</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td>
-                        <strong>${planDef.name} Plan License</strong>
-                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${planDef.tagline}</div>
+                        <strong>${esc(planDef.name)} Plan License</strong>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${esc(planDef.tagline)}</div>
                     </td>
-                    <td>${invoice.billingCycle}</td>
+                    <td>${esc(invoice.billingCycle)}</td>
                     <td style="text-align: right; font-weight: 600;">${catalog.symbol}${invoice.subtotal.toFixed(2)}</td>
                 </tr>
             </tbody>
@@ -626,7 +631,7 @@ export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): stri
                 <td style="text-align: right; font-weight: 600;">${catalog.symbol}${invoice.subtotal.toFixed(2)}</td>
             </tr>
             <tr>
-                <td style="color: #64748b;">Tax (${invoice.taxPercent}%):</td>
+                <td style="color: #64748b;">Tax (${Number(invoice.taxPercent)}%):</td>
                 <td style="text-align: right; font-weight: 600;">${catalog.symbol}${invoice.taxAmount.toFixed(2)}</td>
             </tr>
             <tr>
@@ -636,7 +641,7 @@ export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): stri
         </table>
 
         <div style="margin-top: 24px; padding: 12px 16px; background: #f8fafc; border-radius: 8px; font-size: 12px; color: #475569;">
-            <strong>Payment Method:</strong> ${invoice.paymentMethod} &bull; <strong>Reference:</strong> ${invoice.transactionRef || "N/A"}
+            <strong>Payment Method:</strong> ${esc(invoice.paymentMethod)} &bull; <strong>Reference:</strong> ${esc(invoice.transactionRef || "N/A")}
         </div>
 
         <div class="footer">
