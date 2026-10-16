@@ -31,7 +31,7 @@ export default async function SupportInboxPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-200">
-                        {tickets.filter((t: any) => t.status === "OPEN").length} Urgent
+                        {tickets.filter((t) => t.status === "OPEN").length} Urgent
                     </Badge>
                     <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
                         {tickets.length} Total Tickets
@@ -59,7 +59,7 @@ export default async function SupportInboxPage() {
                         </TableHeader>
                         <TableBody>
                             {tickets.length > 0 ? (
-                                tickets.map((ticket: any) => (
+                                tickets.map((ticket) => (
                                     <TableRow key={ticket.id} className="group hover:bg-primary/5 transition-colors">
                                         <TableCell>
                                             <div className="flex flex-col gap-1">
@@ -122,6 +122,6 @@ export default async function SupportInboxPage() {
     )
 }
 
-function cn(...classes: any[]) {
+function cn(...classes: unknown[]) {
     return classes.filter(Boolean).join(' ')
 }

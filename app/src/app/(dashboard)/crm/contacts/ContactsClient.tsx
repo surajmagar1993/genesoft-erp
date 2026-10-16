@@ -108,7 +108,7 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
             header: true,
             skipEmptyLines: true,
             complete: async (results) => {
-                const { error, count } = await importContacts(results.data as any[])
+                const { error, count } = await importContacts(results.data as unknown[])
                 setIsImporting(false)
                 if (error) {
                     toast.error(`Import failed: ${error}`)

@@ -250,7 +250,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
         orderBy: [{ status: "asc" }, { employeeNumber: "asc" }]
     })
 
-    const employees: EmployeeRecord[] = rawEmployees.map((e: any) => ({
+    const employees: EmployeeRecord[] = rawEmployees.map((e) => ({
         id: e.id,
         tenantId: e.tenantId,
         userId: e.userId,
@@ -289,7 +289,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
         orderBy: { name: "asc" }
     })
 
-    const departments: DepartmentRecord[] = rawDepartments.map((d: any) => ({
+    const departments: DepartmentRecord[] = rawDepartments.map((d) => ({
         id: d.id,
         name: d.name,
         code: d.code,
@@ -310,7 +310,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
         orderBy: { title: "asc" }
     })
 
-    const designations: DesignationRecord[] = rawDesignations.map((des: any) => ({
+    const designations: DesignationRecord[] = rawDesignations.map((des) => ({
         id: des.id,
         departmentId: des.departmentId,
         departmentName: des.department?.name || null,
@@ -339,7 +339,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
         }
     })
 
-    const todayAttendance: AttendanceRecord[] = rawAttendance.map((a: any) => ({
+    const todayAttendance: AttendanceRecord[] = rawAttendance.map((a) => ({
         id: a.id,
         employeeId: a.employeeId,
         employeeName: a.employee.displayName,
@@ -368,7 +368,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
         orderBy: [{ status: "asc" }, { startDate: "desc" }]
     })
 
-    const allLeaves: LeaveRecord[] = rawLeaves.map((l: any) => ({
+    const allLeaves: LeaveRecord[] = rawLeaves.map((l) => ({
         id: l.id,
         employeeId: l.employeeId,
         employeeName: l.employee.displayName,
@@ -387,10 +387,10 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
 
     // 7. Calculate Telemetry
     const totalEmployees = employees.length
-    const activeEmployees = employees.filter((e: any) => e.status === "ACTIVE" || e.status === "PROBATION").length
-    const presentToday = todayAttendance.filter((a: any) => a.status === "PRESENT" || a.status === "LATE").length
+    const activeEmployees = employees.filter((e) => e.status === "ACTIVE" || e.status === "PROBATION").length
+    const presentToday = todayAttendance.filter((a) => a.status === "PRESENT" || a.status === "LATE").length
     const attendanceRate = totalEmployees > 0 ? Math.round((presentToday / totalEmployees) * 100) : 0
-    const pendingLeavesCount = allLeaves.filter((l: any) => l.status === "PENDING").length
+    const pendingLeavesCount = allLeaves.filter((l) => l.status === "PENDING").length
     const departmentsCount = departments.length
 
     return {

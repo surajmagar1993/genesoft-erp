@@ -223,7 +223,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
         tan: profileTan,
         pan: profilePan,
         deductorName: profileDeductorName,
-        deductorCategory: profileCategory as any,
+        deductorCategory: profileCategory,
         responsiblePersonName: profilePersonName,
         responsiblePersonDesignation: profilePersonDesignation,
         responsiblePersonPan: profilePersonPan,

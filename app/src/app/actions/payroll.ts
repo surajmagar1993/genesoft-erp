@@ -188,7 +188,7 @@ export async function getPayrollOverview(month?: number, year?: number): Promise
     ])
 
     // Format pay runs
-    const payRuns: PayrollRunRecord[] = (payRunsRaw as any[]).map((r: any) => ({
+    const payRuns: PayrollRunRecord[] = (payRunsRaw as any[]).map((r) => ({
         id: r.id,
         runNumber: r.runNumber,
         periodMonth: r.periodMonth,
@@ -208,7 +208,7 @@ export async function getPayrollOverview(month?: number, year?: number): Promise
     }))
 
     // Format structures
-    const salaryStructures: SalaryStructureRecord[] = (structuresRaw as any[]).map((s: any) => ({
+    const salaryStructures: SalaryStructureRecord[] = (structuresRaw as any[]).map((s) => ({
         id: s.id,
         name: s.name,
         code: s.code,
@@ -230,7 +230,7 @@ export async function getPayrollOverview(month?: number, year?: number): Promise
     }))
 
     // Format payslips
-    const recentPayslips: PayslipRecord[] = (payslipsRaw as any[]).map((p: any) => ({
+    const recentPayslips: PayslipRecord[] = (payslipsRaw as any[]).map((p) => ({
         id: p.id,
         payrollRunId: p.payrollRunId,
         employeeId: p.employeeId,
@@ -288,7 +288,7 @@ export async function getPayrollOverview(month?: number, year?: number): Promise
         recentPayslips,
         salaryStructures,
         pfWageCeiling: await getPfWageCeiling(tenantId),
-        activeEmployees: (employeesRaw as any[]).map((e: any) => ({
+        activeEmployees: (employeesRaw as any[]).map((e) => ({
             id: e.id,
             displayName: e.displayName,
             employeeNumber: e.employeeNumber,
@@ -477,7 +477,7 @@ async function _generatePayRun(
 
         if (attendances.length > 0) {
             let actualPresent = 0
-            attendances.forEach((att: any) => {
+            attendances.forEach((att) => {
                 if (att.status === "PRESENT") actualPresent += 1
                 else if (att.status === "HALF_DAY") actualPresent += 0.5
             })
@@ -490,7 +490,7 @@ async function _generatePayRun(
         const monthEnd = new Date(periodYear, periodMonth - 1, daysInMonth, 23, 59, 59)
         const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
         const leaveDays = new Set<string>()
-        approvedLeaves.forEach((lv: any) => {
+        approvedLeaves.forEach((lv) => {
             const total = Number(lv.days) || 1
             const start = new Date(lv.startDate)
             const end = new Date(lv.endDate)

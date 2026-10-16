@@ -75,7 +75,7 @@ export default function EntityCommunications({ entityId, entityType, initialLogs
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSaving(true)
-    const { error, data } = await createCommunicationLog(formData as any)
+    const { error, data } = await createCommunicationLog(formData)
     if (!error && data) {
       setLogs([data, ...logs])
       setIsDialogOpen(false)

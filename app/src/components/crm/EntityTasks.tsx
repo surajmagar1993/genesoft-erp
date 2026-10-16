@@ -35,7 +35,7 @@ export default function EntityTasks({ entityId, entityType, initialTasks }: Prop
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSaving(true)
-    const { error, data } = await createTask(formData as any)
+    const { error, data } = await createTask(formData)
     if (!error && data) {
       setTasks([data, ...tasks])
       setIsDialogOpen(false)

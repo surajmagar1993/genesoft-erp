@@ -56,7 +56,7 @@ export async function getEmailsOverview(
         orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
     })
 
-    const accounts: EmailAccountRecord[] = rawAccounts.map((a: any) => ({
+    const accounts: EmailAccountRecord[] = rawAccounts.map((a) => ({
         id: a.id,
         tenantId: a.tenantId,
         name: a.name,
@@ -125,7 +125,7 @@ export async function getEmailsOverview(
         take: 60,
     })
 
-    const messages: EmailMessageRecord[] = rawMessages.map((m: any) => ({
+    const messages: EmailMessageRecord[] = rawMessages.map((m) => ({
         id: m.id,
         tenantId: m.tenantId,
         emailAccountId: m.emailAccountId,
@@ -199,7 +199,7 @@ export async function getEmailsOverview(
         orderBy: { name: "asc" },
     })
 
-    const templates: EmailTemplateRecord[] = rawTemplates.map((t: any) => ({
+    const templates: EmailTemplateRecord[] = rawTemplates.map((t) => ({
         id: t.id,
         tenantId: t.tenantId,
         name: t.name,

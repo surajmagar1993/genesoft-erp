@@ -54,7 +54,7 @@ export async function getPOSProducts(): Promise<POSProductItem[]> {
     orderBy: { name: "asc" },
   })
 
-  return products.map((p: any) => {
+  return products.map((p) => {
     const attrs = (typeof p.customAttributes === "object" && p.customAttributes !== null) ? p.customAttributes : {}
     const barcode = (attrs as any).barcode || p.sku || null
     return {
@@ -110,7 +110,7 @@ export async function searchPOSProducts(
     take: 20,
   })
 
-  return products.map((p: any) => {
+  return products.map((p) => {
     const attrs = (typeof p.customAttributes === "object" && p.customAttributes !== null) ? p.customAttributes : {}
     const barcode = (attrs as any).barcode || p.sku || null
     return {

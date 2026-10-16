@@ -327,7 +327,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {data.invoices.map((inv: any) => (
+                                    {data.invoices.map((inv) => (
                                         <TableRow key={inv.id} className="hover:bg-primary/5 transition-colors">
                                             <TableCell className="font-mono text-xs font-semibold">
                                                 {inv.invoiceNumber}

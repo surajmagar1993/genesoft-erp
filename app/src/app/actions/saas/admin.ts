@@ -139,7 +139,7 @@ export async function getPlatformStats() {
         totalUsers,
         activeTrials,
         openTickets,
-        recentTenants: (recentTenants || []).map((t: any) => ({
+        recentTenants: (recentTenants || []).map((t) => ({
             id: t.id,
             name: t.name,
             plan: t.plan,
@@ -995,7 +995,7 @@ export async function getDashboardCharts() {
         chartDataMap[label] = 0
     }
 
-    signups.forEach((t: any) => {
+    signups.forEach((t) => {
         const d = new Date(t.createdAt)
         const label = `${months[d.getMonth()]}`
         if (chartDataMap[label] !== undefined) {
@@ -1013,7 +1013,7 @@ export async function getDashboardCharts() {
     })
 
     const regionMap: Record<string, number> = {}
-    regions.forEach((t: any) => {
+    regions.forEach((t) => {
         const code = t.countryCode || "Unknown"
         regionMap[code] = (regionMap[code] || 0) + 1
     })
@@ -1084,7 +1084,7 @@ export async function getSecurityOverview() {
             blockedIpMap.set(item.ip, item)
         })
 
-        ipBlockLogs.forEach((log: any) => {
+        ipBlockLogs.forEach((log) => {
             const ip = log.targetId
             if (!ip) return
             if (log.action === "SECURITY_IP_BLOCK") {
@@ -1613,13 +1613,13 @@ export async function getPlatformRegions() {
 
         const regions = definedRegions.map(reg => {
             const codes = reg.code === "GB" ? ["GB", "UK"] : [reg.code]
-            const matchingTenants = tenants.filter((t: any) => codes.includes((t.countryCode || "IN").toUpperCase()))
-            const userCount = matchingTenants.reduce((sum: number, t: any) => sum + (t.users?.length || 0), 0)
+            const matchingTenants = tenants.filter((t) => codes.includes((t.countryCode || "IN").toUpperCase()))
+            const userCount = matchingTenants.reduce((sum: number, t) => sum + (t.users?.length || 0), 0)
             return {
                 ...reg,
                 tenantCount: matchingTenants.length,
                 userCount,
-                activeTenants: matchingTenants.filter((t: any) => t.isActive).length,
+                activeTenants: matchingTenants.filter((t) => t.isActive).length,
                 isOperational: true
             }
         })

@@ -168,7 +168,7 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
             orderBy: { displayName: "asc" }
         })
 
-        const allEmployees: EmployeeSelectorItem[] = allEmpList.map((e: any) => ({
+        const allEmployees: EmployeeSelectorItem[] = allEmpList.map((e) => ({
             id: e.id,
             displayName: e.displayName,
             employeeNumber: e.employeeNumber,
@@ -264,7 +264,7 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
             orderBy: { date: "desc" }
         })
 
-        const attendanceHistory: AttendanceHistoryRecord[] = recentAttendances.map((a: any) => ({
+        const attendanceHistory: AttendanceHistoryRecord[] = recentAttendances.map((a) => ({
             id: a.id,
             date: a.date,
             checkIn: a.checkIn,
@@ -277,15 +277,15 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
         // Month-to-date stats
         const currentMonth = new Date().getMonth()
         const currentYear = new Date().getFullYear()
-        const thisMonthRecords = recentAttendances.filter((a: any) => {
+        const thisMonthRecords = recentAttendances.filter((a) => {
             const d = new Date(a.date)
             return d.getMonth() === currentMonth && d.getFullYear() === currentYear
         })
 
-        const presentDays = thisMonthRecords.filter((a: any) => a.status === AttendanceStatus.PRESENT).length
-        const lateDays = thisMonthRecords.filter((a: any) => a.status === AttendanceStatus.LATE).length
-        const leaveDays = thisMonthRecords.filter((a: any) => a.status === AttendanceStatus.ON_LEAVE).length
-        const totalHours = thisMonthRecords.reduce((acc: number, a: any) => acc + (a.workingHours ? Number(a.workingHours) : 0), 0)
+        const presentDays = thisMonthRecords.filter((a) => a.status === AttendanceStatus.PRESENT).length
+        const lateDays = thisMonthRecords.filter((a) => a.status === AttendanceStatus.LATE).length
+        const leaveDays = thisMonthRecords.filter((a) => a.status === AttendanceStatus.ON_LEAVE).length
+        const totalHours = thisMonthRecords.reduce((acc: number, a) => acc + (a.workingHours ? Number(a.workingHours) : 0), 0)
 
         // 3. Leave Requests & Balances
         const allLeaves = await prisma.leave.findMany({
@@ -293,7 +293,7 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
             orderBy: { createdAt: "desc" }
         })
 
-        const leaveRequests: LeaveRequestRecord[] = allLeaves.map((l: any) => ({
+        const leaveRequests: LeaveRequestRecord[] = allLeaves.map((l) => ({
             id: l.id,
             type: l.type,
             startDate: l.startDate,
@@ -308,12 +308,12 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
         // Leave Balances calculation (Standard annual quotas: Casual 12, Sick 12, Earned 18)
         const calculateCategory = (type: LeaveType, entitlement: number): LeaveBalanceCategory => {
             const used = allLeaves
-                .filter((l: any) => l.type === type && l.status === LeaveStatus.APPROVED)
-                .reduce((acc: number, l: any) => acc + Number(l.days), 0)
+                .filter((l) => l.type === type && l.status === LeaveStatus.APPROVED)
+                .reduce((acc: number, l) => acc + Number(l.days), 0)
 
             const pending = allLeaves
-                .filter((l: any) => l.type === type && l.status === LeaveStatus.PENDING)
-                .reduce((acc: number, l: any) => acc + Number(l.days), 0)
+                .filter((l) => l.type === type && l.status === LeaveStatus.PENDING)
+                .reduce((acc: number, l) => acc + Number(l.days), 0)
 
             const available = Math.max(0, entitlement - used - pending)
             return { total: entitlement, used, pending, available }
@@ -332,7 +332,7 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
             take: 12
         })
 
-        const payslips: PortalPayslipRecord[] = rawPayslips.map((p: any) => ({
+        const payslips: PortalPayslipRecord[] = rawPayslips.map((p) => ({
             id: p.id,
             slipNumber: p.slipNumber,
             periodMonth: p.periodMonth,
@@ -364,7 +364,7 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
             take: 20
         })
 
-        const tasks: PortalTaskRecord[] = rawTasks.map((t: any) => ({
+        const tasks: PortalTaskRecord[] = rawTasks.map((t) => ({
             id: t.id,
             taskCode: t.taskCode,
             title: t.title,

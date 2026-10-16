@@ -124,7 +124,7 @@ async function ensureDefaultWarehouse(tenantId: string) {
 
     if (products.length > 0) {
         await prisma.warehouseStock.createMany({
-            data: products.map((p: any) => ({
+            data: products.map((p) => ({
                 tenantId,
                 warehouseId: defaultWarehouse.id,
                 productId: p.id,
@@ -162,9 +162,9 @@ export async function getInventoryOverview(): Promise<InventoryOverviewData> {
         ]
     })
 
-    const warehouses: WarehouseItem[] = rawWarehouses.map((w: any) => {
-        const totalUnits = w.warehouseStocks.reduce((sum: number, s: any) => sum + Number(s.quantity), 0)
-        const itemCount = w.warehouseStocks.filter((s: any) => Number(s.quantity) > 0).length
+    const warehouses: WarehouseItem[] = rawWarehouses.map((w) => {
+        const totalUnits = w.warehouseStocks.reduce((sum: number, s) => sum + Number(s.quantity), 0)
+        const itemCount = w.warehouseStocks.filter((s) => Number(s.quantity) > 0).length
         return {
             id: w.id,
             name: w.name,
@@ -204,7 +204,7 @@ export async function getInventoryOverview(): Promise<InventoryOverviewData> {
     let lowStockCount = 0
     let outOfStockCount = 0
 
-    const products: InventoryProduct[] = rawProducts.map((p: any) => {
+    const products: InventoryProduct[] = rawProducts.map((p) => {
         const unitPriceNum = Number(p.unitPrice)
         const stockQtyNum = Number(p.stockQty)
         const productValuation = stockQtyNum * unitPriceNum
@@ -213,7 +213,7 @@ export async function getInventoryOverview(): Promise<InventoryOverviewData> {
 
         // Calculate minimum reorder point across warehouses (or default to 10)
         const reorderPoint = p.warehouseStocks.length > 0 
-            ? Math.min(...p.warehouseStocks.map((s: any) => Number(s.reorderPoint)))
+            ? Math.min(...p.warehouseStocks.map((s) => Number(s.reorderPoint)))
             : 10
 
         let status: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" = "IN_STOCK"
@@ -225,7 +225,7 @@ export async function getInventoryOverview(): Promise<InventoryOverviewData> {
             lowStockCount++
         }
 
-        const warehouseBreakdown = p.warehouseStocks.map((ws: any) => ({
+        const warehouseBreakdown = p.warehouseStocks.map((ws) => ({
             warehouseId: ws.warehouseId,
             warehouseName: ws.warehouse.name,
             warehouseCode: ws.warehouse.code,
@@ -273,7 +273,7 @@ export async function getInventoryOverview(): Promise<InventoryOverviewData> {
         take: 50
     })
 
-    const recentMovements: StockMovementRecord[] = rawMovements.map((m: any) => ({
+    const recentMovements: StockMovementRecord[] = rawMovements.map((m) => ({
         id: m.id,
         productId: m.productId,
         productName: m.product?.name || "Unknown Product",
@@ -731,7 +731,7 @@ export async function getProductByBarcode(code: string): Promise<{ product: any 
             take: 250
         })
 
-        product = candidates.find((p: any) => {
+        product = candidates.find((p) => {
             const attrs = (typeof p.customAttributes === "object" && p.customAttributes !== null) ? p.customAttributes : {}
             const b = (attrs as any).barcode
             return b && String(b).toLowerCase() === clean.toLowerCase()
@@ -756,7 +756,7 @@ export async function getProductByBarcode(code: string): Promise<{ product: any 
             currency: product.currency || "INR",
             stockQty: Number(product.stockQty),
             isActive: product.isActive,
-            warehouseBreakdown: product.warehouseStocks.map((ws: any) => ({
+            warehouseBreakdown: product.warehouseStocks.map((ws) => ({
                 warehouseId: ws.warehouseId,
                 warehouseName: ws.warehouse.name,
                 warehouseCode: ws.warehouse.code,
@@ -933,7 +933,7 @@ export async function getInventoryReportsData(
             totalAssetCostValue += totalCost
             totalRetailValue += totalRetail
 
-            const minReorder = p.warehouseStocks.reduce((sum: number, ws: any) => sum + Number(ws.reorderPoint || 0), 0)
+            const minReorder = p.warehouseStocks.reduce((sum: number, ws) => sum + Number(ws.reorderPoint || 0), 0)
             let status: "IN_STOCK" | "LOW_STOCK" | "OUT_OF_STOCK" = "IN_STOCK"
             if (stockQty <= 0) {
                 status = "OUT_OF_STOCK"
@@ -943,7 +943,7 @@ export async function getInventoryReportsData(
                 deficitSKUCount += 1
             }
 
-            const warehouseAllocations = p.warehouseStocks.map((ws: any) => ({
+            const warehouseAllocations = p.warehouseStocks.map((ws) => ({
                 warehouseId: ws.warehouseId,
                 warehouseName: ws.warehouse.name,
                 warehouseCode: ws.warehouse.code,
@@ -995,7 +995,7 @@ export async function getInventoryReportsData(
 
             const depotMap: Record<string, number> = {}
             for (const w of warehouses) {
-                const alloc = p.warehouseStocks.find((ws: any) => ws.warehouseId === w.id)
+                const alloc = p.warehouseStocks.find((ws) => ws.warehouseId === w.id)
                 depotMap[w.id] = alloc ? Number(alloc.quantity) : 0
             }
             matrixRows.push({
@@ -1023,7 +1023,7 @@ export async function getInventoryReportsData(
             valuationReport,
             velocityReport,
             matrixReport: {
-                warehouses: warehouses.map((w: any) => ({ id: w.id, name: w.name, code: w.code })),
+                warehouses: warehouses.map((w) => ({ id: w.id, name: w.name, code: w.code })),
                 rows: matrixRows
             }
         }

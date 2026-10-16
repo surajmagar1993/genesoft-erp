@@ -486,7 +486,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
         orderBy: { assetCode: "asc" }
     })
 
-    const assets: RentalAssetRecord[] = (rawAssets as any[]).map((a: any) => ({
+    const assets: RentalAssetRecord[] = (rawAssets as any[]).map((a) => ({
         id: a.id,
         tenantId: a.tenantId,
         assetCode: a.assetCode,
@@ -526,14 +526,14 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
     })
 
     // Fetch linked invoices if any
-    const invoiceIds = (rawAgreements as any[]).map((ag: any) => ag.invoiceId).filter(Boolean) as string[]
+    const invoiceIds = (rawAgreements as any[]).map((ag) => ag.invoiceId).filter(Boolean) as string[]
     const invoices = invoiceIds.length > 0
         ? await prisma.invoice.findMany({
             where: { tenantId, id: { in: invoiceIds } },
             select: { id: true, invoiceNumber: true }
         })
         : []
-    const invoiceMap = new Map((invoices as any[]).map((inv: any) => [inv.id, inv.invoiceNumber]))
+    const invoiceMap = new Map((invoices as any[]).map((inv) => [inv.id, inv.invoiceNumber]))
 
     const agreements: RentalAgreementRecord[] = (rawAgreements as any[]).map((ag: any) => ({
         id: ag.id,
@@ -592,7 +592,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
         orderBy: { returnDate: "desc" }
     })
 
-    const returns: RentalReturnRecord[] = (rawReturns as any[]).map((r: any) => {
+    const returns: RentalReturnRecord[] = (rawReturns as any[]).map((r) => {
         const damageFee = Number(r.damageFee)
         const lateFee = Number(r.lateFee)
         const depositRefunded = Number(r.depositRefunded)
@@ -622,7 +622,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
         select: { id: true, displayName: true, email: true, phone: true },
         orderBy: { displayName: "asc" }
     })
-    const availableCustomers = (rawCustomers as any[]).map((c: any) => ({
+    const availableCustomers = (rawCustomers as any[]).map((c) => ({
         id: c.id,
         name: c.displayName,
         email: c.email,
@@ -634,7 +634,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
         select: { id: true, name: true, code: true },
         orderBy: { name: "asc" }
     })
-    const availableWarehouses = (rawWarehouses as any[]).map((w: any) => ({
+    const availableWarehouses = (rawWarehouses as any[]).map((w) => ({
         id: w.id,
         name: w.name,
         code: w.code
@@ -769,7 +769,7 @@ async function _deleteRentalAsset(id: string) {
     if (!asset) throw new Error("Asset not found")
 
     const hasActiveAgreements = (asset.agreementItems as any[]).some(
-        (item: any) => item.agreement.status === RentalStatus.ACTIVE || item.agreement.status === RentalStatus.OVERDUE
+        (item) => item.agreement.status === RentalStatus.ACTIVE || item.agreement.status === RentalStatus.OVERDUE
     )
 
     if (hasActiveAgreements || asset.status === RentalAssetStatus.RENTED) {
@@ -816,7 +816,7 @@ async function _createRentalAgreement(input: CreateRentalAgreementInput) {
     const assets = await prisma.rentalAsset.findMany({
         where: { tenantId, id: { in: assetIds } }
     })
-    const assetMap = new Map((assets as any[]).map((a: any) => [a.id, a]))
+    const assetMap = new Map((assets as any[]).map((a) => [a.id, a]))
 
     let totalRentalAmount = 0
     let totalDeposit = 0
@@ -1023,7 +1023,7 @@ async function _processRentalReturn(input: ProcessRentalReturnInput) {
         const allItems = await tx.rentalAgreementItem.findMany({
             where: { agreementId: input.agreementId, tenantId }
         })
-        const allReturned = (allItems as any[]).every((item: any) => item.conditionIn !== null)
+        const allReturned = (allItems as any[]).every((item) => item.conditionIn !== null)
 
         if (allReturned) {
             await tx.rentalAgreement.update({

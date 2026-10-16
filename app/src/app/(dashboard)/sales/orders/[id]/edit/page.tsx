@@ -32,7 +32,7 @@ export default function EditOrderPage() {
                 expectedDate: data.expected_date || "",
                 reference: data.reference || "",
                 status: data.status,
-                lineItems: data.sales_order_items?.map((li: any) => ({
+                lineItems: data.sales_order_items?.map((li) => ({
                     id: li.id,
                     productName: li.product_name,
                     description: li.description || "",

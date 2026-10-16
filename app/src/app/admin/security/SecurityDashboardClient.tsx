@@ -547,7 +547,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             </TableHeader>
                             <TableBody>
                                 {data.securityEvents && data.securityEvents.length > 0 ? (
-                                    data.securityEvents.map((evt: any) => (
+                                    data.securityEvents.map((evt) => (
                                         <TableRow key={evt.id} className="hover:bg-muted/30">
                                             <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                                                 {format(new Date(evt.createdAt), "MMM d, yyyy (HH:mm)")}

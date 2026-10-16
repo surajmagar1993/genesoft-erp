@@ -13,7 +13,7 @@ export default async function InvoiceTemplatesPage() {
         select: { settings: true, name: true }
     })
 
-    const tenantSettings = (tenant?.settings as Record<string, any>) || {}
+    const tenantSettings = (tenant?.settings as Record<string, unknown>) || {}
     const defaultTemplate: InvoiceTemplateId = (tenantSettings.invoice_template as InvoiceTemplateId) || "MODERN"
 
     return (

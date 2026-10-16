@@ -204,10 +204,10 @@ export async function getRfqOverview(): Promise<RfqOverviewData> {
     let pendingReview = 0
     let convertedCount = 0
 
-    const rfqs: RfqRecord[] = rawRfqs.map((rfq: any) => {
+    const rfqs: RfqRecord[] = rawRfqs.map((rfq) => {
         let rfqTargetBudget = 0
 
-        const items: RfqItemRecord[] = rfq.items.map((item: any) => {
+        const items: RfqItemRecord[] = rfq.items.map((item) => {
             const qty = Number(item.quantity)
             const targetPrice = item.targetUnitPrice ? Number(item.targetUnitPrice) : 0
             const lineBudget = qty * targetPrice
@@ -234,7 +234,7 @@ export async function getRfqOverview(): Promise<RfqOverviewData> {
         let lowestQuoteTotal: number | null = null
         let bestVendorName: string | null = null
 
-        const vendors: RfqVendorRecord[] = rfq.vendors.map((v: any) => {
+        const vendors: RfqVendorRecord[] = rfq.vendors.map((v) => {
             const total = Number(v.totalAmount)
             const subtotal = Number(v.subtotal)
             const tax = Number(v.taxAmount)
@@ -272,7 +272,7 @@ export async function getRfqOverview(): Promise<RfqOverviewData> {
                 notes: v.notes,
                 isWinner: v.isWinner,
                 awardedAt: v.awardedAt,
-                items: v.items.map((i: any) => ({
+                items: v.items.map((i) => ({
                     id: i.id,
                     quoteId: i.quoteId,
                     rfqItemId: i.rfqItemId,
@@ -355,7 +355,7 @@ export async function getRfqOverview(): Promise<RfqOverviewData> {
         },
         rfqs,
         vendors: vendorsLookup,
-        products: productsLookup.map((p: any) => ({
+        products: productsLookup.map((p) => ({
             id: p.id,
             name: p.name,
             sku: p.sku,
@@ -533,7 +533,7 @@ async function _recordVendorQuote(input: RecordVendorQuoteInput) {
         })
 
         for (const itemInput of input.items) {
-            const rfqItem = quote.rfq.items.find((i: any) => i.id === itemInput.rfqItemId)
+            const rfqItem = quote.rfq.items.find((i) => i.id === itemInput.rfqItemId)
             if (!rfqItem) continue
 
             const qty = Number(rfqItem.quantity)
@@ -608,7 +608,7 @@ async function _awardVendorQuote(rfqId: string, quoteId: string) {
         throw new Error("RFQ tender not found")
     }
 
-    const winningQuote = rfq.vendors.find((v: any) => v.id === quoteId)
+    const winningQuote = rfq.vendors.find((v) => v.id === quoteId)
     if (!winningQuote) {
         throw new Error("Selected vendor quote not found in this RFQ")
     }
@@ -635,8 +635,8 @@ async function _awardVendorQuote(rfqId: string, quoteId: string) {
         }
 
         // 2. Generate Purchase Order
-        const poItemsData = rfq.items.map((rfqItem: any) => {
-            const quoteItem = winningQuote.items.find((qi: any) => qi.rfqItemId === rfqItem.id)
+        const poItemsData = rfq.items.map((rfqItem) => {
+            const quoteItem = winningQuote.items.find((qi) => qi.rfqItemId === rfqItem.id)
             const qty = Number(rfqItem.quantity)
             const unitPrice = quoteItem ? Number(quoteItem.unitPrice) : (rfqItem.targetUnitPrice ? Number(rfqItem.targetUnitPrice) : 0)
             const taxPercent = quoteItem ? Number(quoteItem.taxPercent) : 0

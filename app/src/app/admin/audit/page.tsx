@@ -46,7 +46,7 @@ export default async function AdminAuditPage() {
                         </TableHeader>
                         <TableBody>
                                 {logs.length > 0 ? (
-                                logs.map((log: any) => (
+                                logs.map((log) => (
                                     <TableRow key={log.id}>
                                         <TableCell className="font-medium text-sm">
                                             <Badge variant="outline">{log.action}</Badge>

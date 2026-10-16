@@ -128,7 +128,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                 templateKey: whatsAppTemplate,
             })
             if (res.success) {
-                toast.success(res.simulated ? "WhatsApp message simulated & recorded in timeline!" : "WhatsApp message dispatched successfully!")
+                toast.success("simulated" in res && res.simulated ? "WhatsApp message simulated & recorded in timeline!" : "WhatsApp message dispatched successfully!")
                 setOpenWhatsAppModal(false)
             } else {
                 toast.error(res.error || "Failed to dispatch WhatsApp message")
@@ -235,7 +235,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                     PROFORMA INVOICE
                                 </Badge>
                             )}
-                            <Badge variant={getVariant(invoice.status) as any} className="uppercase px-2 h-6 tracking-wider font-semibold text-xs">
+                            <Badge variant={getVariant(invoice.status)} className="uppercase px-2 h-6 tracking-wider font-semibold text-xs">
                                 {invoice.status.replace('_', ' ')}
                             </Badge>
                         </div>

@@ -165,7 +165,7 @@ export default async function SettingsPage({
 
                 {/* Billing Settings */}
                 <TabsContent value="billing">
-                    <BillingTab settings={settings as any} pricing={billingPricing} checkoutResult={checkoutResult} planFeatures={planFeatures} />
+                    <BillingTab settings={settings} pricing={billingPricing} checkoutResult={checkoutResult} planFeatures={planFeatures} />
                 </TabsContent>
 
                 {/* Team & Access (workspace admins only) */}

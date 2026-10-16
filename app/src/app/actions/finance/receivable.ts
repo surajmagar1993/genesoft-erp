@@ -133,7 +133,7 @@ export async function getTopDebtors(limit = 10): Promise<DebtorSummary[]> {
     if (balance <= 0) continue
 
     const contactId = inv.contact_id
-    const displayName = (inv.contacts as any)?.display_name || "Unknown Customer"
+    const displayName = (inv.contacts)?.display_name || "Unknown Customer"
     const isOverdue = inv.due_date && new Date(inv.due_date) < now
 
     if (!debtorMap.has(contactId)) {

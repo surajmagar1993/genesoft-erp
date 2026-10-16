@@ -234,7 +234,7 @@ export async function getBankReconciliationOverview(
         orderBy: [{ isPrimary: "desc" }, { createdAt: "asc" }],
     })
 
-    const bankAccounts: BankAccountRecord[] = rawBankAccounts.map((ba: any) => ({
+    const bankAccounts: BankAccountRecord[] = rawBankAccounts.map((ba) => ({
         id: ba.id,
         tenantId: ba.tenantId,
         accountName: ba.accountName,
@@ -264,7 +264,7 @@ export async function getBankReconciliationOverview(
         statementCount: ba.statements.length,
         transactionCount: ba.transactions.length,
         unreconciledCount: ba.transactions.filter(
-            (t: any) => t.status === BankReconcileStatus.UNMATCHED
+            (t) => t.status === BankReconcileStatus.UNMATCHED
         ).length,
     }))
 
@@ -311,7 +311,7 @@ export async function getBankReconciliationOverview(
         orderBy: { startDate: "desc" },
     })
 
-    const statements: BankStatementRecord[] = rawStatements.map((s: any) => ({
+    const statements: BankStatementRecord[] = rawStatements.map((s) => ({
         id: s.id,
         tenantId: s.tenantId,
         bankAccountId: s.bankAccountId,
@@ -328,7 +328,7 @@ export async function getBankReconciliationOverview(
         updatedAt: s.updatedAt.toISOString(),
         transactionCount: s.transactions.length,
         matchedCount: s.transactions.filter(
-            (t: any) =>
+            (t) =>
                 t.status === BankReconcileStatus.MATCHED ||
                 t.status === BankReconcileStatus.RECONCILED
         ).length,
@@ -376,7 +376,7 @@ export async function getBankReconciliationOverview(
         orderBy: { transactionDate: "desc" },
     })
 
-    const transactions: BankTransactionRecord[] = rawTransactions.map((t: any) => ({
+    const transactions: BankTransactionRecord[] = rawTransactions.map((t) => ({
         id: t.id,
         tenantId: t.tenantId,
         bankAccountId: t.bankAccountId,
@@ -457,7 +457,7 @@ export async function getBankReconciliationOverview(
     })
 
     const candidateRecords: CandidateSystemRecord[] = [
-        ...rawPayments.map((p: any) => ({
+        ...rawPayments.map((p) => ({
             id: p.id,
             source: "PAYMENT" as const,
             numberOrRef: p.reference || `PMT-${p.id.substring(0, 6).toUpperCase()}`,
@@ -467,7 +467,7 @@ export async function getBankReconciliationOverview(
             type: p.type as "INBOUND" | "OUTBOUND",
             matchedTransactionId: p.bankTransactions[0]?.id || null,
         })),
-        ...rawExpenses.map((e: any) => ({
+        ...rawExpenses.map((e) => ({
             id: e.id,
             source: "EXPENSE" as const,
             numberOrRef: e.expenseNumber,
@@ -849,7 +849,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
 
             if (bTxn.type === BankTransactionType.DEPOSIT) {
                 // Look for matching inbound payment
-                let matchingPayment = systemPayments.find((p: any) => {
+                let matchingPayment = systemPayments.find((p) => {
                     if (p.bankTransactions.length > 0) return false // already matched
                     if (p.type !== "INBOUND") return false
                     const pAmount = Number(p.amount)
@@ -895,7 +895,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
             } else if (bTxn.type === BankTransactionType.WITHDRAWAL) {
                 // Look for matching outbound payment or expense
                 // 1. Try expenses first
-                let matchingExpense = systemExpenses.find((e: any) => {
+                let matchingExpense = systemExpenses.find((e) => {
                     if (e.bankTransactions.length > 0) return false
                     const eAmount = Number(e.totalAmount)
                     const eRef = usableRef(e.paymentReference)
@@ -935,7 +935,7 @@ export async function autoMatchTransactions(bankAccountId: string): Promise<{
                 }
 
                 // 2. Try outbound bill payments
-                let matchingOutboundPayment = systemPayments.find((p: any) => {
+                let matchingOutboundPayment = systemPayments.find((p) => {
                     if (p.bankTransactions.length > 0) return false
                     if (p.type !== "OUTBOUND") return false
                     const pAmount = Number(p.amount)
@@ -1222,7 +1222,7 @@ export async function finalizeReconciliation(statementId: string): Promise<{
 
         // Check if there are any unmatched transactions in this statement
         const unmatched = statement.transactions.filter(
-            (t: any) => t.status === BankReconcileStatus.UNMATCHED
+            (t) => t.status === BankReconcileStatus.UNMATCHED
         )
         if (unmatched.length > 0) {
             return {

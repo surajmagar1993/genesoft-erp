@@ -183,7 +183,7 @@ export async function getBudgetsOverview(filters?: {
         spendByBudget.set(b.id, await ledgerSpendByAccount(tenantId, new Date(b.startDate), new Date(b.endDate), [...new Set(b.items.map((i) => i.accountId))]))
     }
 
-    const budgets: BudgetSummary[] = rawBudgets.map((b: any) => {
+    const budgets: BudgetSummary[] = rawBudgets.map((b) => {
         new Date(b.startDate);
         new Date(b.endDate);
 
@@ -313,7 +313,7 @@ export async function getBudgetDetail(id: string): Promise<BudgetDetailData | nu
 
     let planTotalActual = 0
 
-    const items: BudgetItemDetail[] = rawBudget.items.map((item: any) => {
+    const items: BudgetItemDetail[] = rawBudget.items.map((item) => {
         const budgeted = Number(item.budgetedAmount || 0)
         const actual = expensesByAccount.get(item.accountId) || 0
         const variance = budgeted - actual
@@ -383,7 +383,7 @@ export async function getBudgetDetail(id: string): Promise<BudgetDetailData | nu
     return {
         budget: budgetSummary,
         items,
-        recentExpenses: relevantExpenses.map((e: any) => ({
+        recentExpenses: relevantExpenses.map((e) => ({
             id: e.id,
             expenseNumber: e.expenseNumber,
             title: e.title,

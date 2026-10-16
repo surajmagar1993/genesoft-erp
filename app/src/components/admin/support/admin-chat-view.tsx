@@ -41,7 +41,7 @@ export function AdminChatView({ ticketId, initialMessages }: AdminChatViewProps)
     <div className="space-y-6">
       {/* Chat History */}
       <div className="space-y-4 min-h-[400px] bg-muted/20 rounded-xl p-6 border border-primary/5">
-        {messages.map((message: any) => (
+        {messages.map((message) => (
           <div key={message.id} className={cn(
             "flex flex-col max-w-[80%] gap-1",
             message.isFromAdmin ? "ml-auto items-end" : "mr-auto items-start"
@@ -96,6 +96,6 @@ export function AdminChatView({ ticketId, initialMessages }: AdminChatViewProps)
   )
 }
 
-function cn(...classes: any[]) {
+function cn(...classes: unknown[]) {
   return classes.filter(Boolean).join(' ')
 }

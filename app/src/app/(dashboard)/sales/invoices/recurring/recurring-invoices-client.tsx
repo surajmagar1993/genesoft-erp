@@ -290,7 +290,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
     const handleToggleStatus = (profile: RecurringProfileRecord) => {
         const nextStatus = profile.status === "ACTIVE" ? "PAUSED" : "ACTIVE"
         startTransition(async () => {
-            const res = await toggleRecurringProfileStatus(profile.id, nextStatus as any)
+            const res = await toggleRecurringProfileStatus(profile.id, nextStatus)
             if (res.error) {
                 setActionMessage({ type: "error", text: res.error })
             } else {
@@ -1049,7 +1049,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                 <label className="font-semibold text-foreground">Billing Cadence *</label>
                                 <select
                                     value={formData.frequency}
-                                    onChange={(e) => setFormData({ ...formData, frequency: e.target.value as any })}
+                                    onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
                                     className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs"
                                 >
                                     <option value="WEEKLY">Weekly</option>

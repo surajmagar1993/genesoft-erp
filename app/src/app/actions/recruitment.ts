@@ -206,7 +206,7 @@ export async function getRecruitmentOverview(): Promise<RecruitmentOverviewData>
         }
     })
 
-    const applicantRecords: JobApplicantRecord[] = (applicants as any[]).map((app: any) => ({
+    const applicantRecords: JobApplicantRecord[] = (applicants as any[]).map((app) => ({
         id: app.id,
         applicantNumber: app.applicantNumber,
         jobOpeningId: app.jobOpeningId,
@@ -234,7 +234,7 @@ export async function getRecruitmentOverview(): Promise<RecruitmentOverviewData>
         createdAt: app.createdAt
     }))
 
-    const interviewRecords: ApplicantInterviewRecord[] = (interviews as any[]).map((inv: any) => ({
+    const interviewRecords: ApplicantInterviewRecord[] = (interviews as any[]).map((inv) => ({
         id: inv.id,
         applicantId: inv.applicantId,
         applicantName: inv.applicant.fullName,
@@ -277,7 +277,7 @@ export async function getRecruitmentOverview(): Promise<RecruitmentOverviewData>
         interviews: interviewRecords,
         departments,
         designations,
-        employees: (employees as any[]).map((e: any) => ({
+        employees: (employees as any[]).map((e) => ({
             id: e.id,
             displayName: e.displayName,
             email: e.email,
@@ -609,7 +609,7 @@ async function _hireApplicant(applicantId: string, employeeData: HireApplicantIn
             employee: newEmployee,
             applicant: updatedApplicant
         }
-    }).then((res: any) => {
+    }).then((res) => {
         revalidatePath("/hr")
         revalidatePath("/hr/recruitment")
         return res

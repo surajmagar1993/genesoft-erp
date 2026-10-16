@@ -322,7 +322,7 @@ export function POSClient() {
           
           const matched = products.find(
             (p) =>
-              (p as any).barcode?.toLowerCase() === barcode ||
+              (p).barcode?.toLowerCase() === barcode ||
               p.sku?.toLowerCase() === barcode ||
               p.id.toLowerCase() === barcode
           )

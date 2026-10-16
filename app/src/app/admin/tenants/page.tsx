@@ -77,7 +77,7 @@ export default async function TenantsPage(props: {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {tenants.map((tenant: any) => (
+                            {tenants.map((tenant) => (
                                 <TableRow key={tenant.id} className="group hover:bg-primary/5 transition-colors">
                                     <TableCell>
                                         <Link href={`/admin/tenants/${tenant.id}`} className="flex items-center gap-3 group-hover:text-primary transition-colors">

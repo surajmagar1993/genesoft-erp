@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 interface ChartProps {
-    data: any[]
+    data: unknown[]
     currencySymbol?: string
 }
 

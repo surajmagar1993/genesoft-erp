@@ -87,7 +87,7 @@ export async function getWebFormsOverview(
         take: 50,
     })
 
-    const submissions: FormSubmissionRecord[] = rawSubmissions.map((s: any) => ({
+    const submissions: FormSubmissionRecord[] = rawSubmissions.map((s) => ({
         id: s.id,
         tenantId: s.tenantId,
         webFormId: s.webFormId,

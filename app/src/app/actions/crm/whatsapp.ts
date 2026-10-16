@@ -229,7 +229,7 @@ export async function sendWhatsAppMessage(payload: {
     try {
         const tenantId = await getTenantWriterId(MODULE)
         await assertTenantRefs(tenantId, { contact: payload.contactId })
-        if (!tenantId) return { success: false, error: "Unauthorized" }
+        if (!tenantId) return { success: false as const, error: "Unauthorized" }
 
         const tenant = await prisma.tenant.findUnique({
             where: { id: tenantId },
@@ -252,7 +252,7 @@ export async function sendWhatsAppMessage(payload: {
         }
 
         if (!messageText.trim()) {
-            return { success: false, error: "Message content cannot be empty" }
+            return { success: false as const, error: "Message content cannot be empty" }
         }
 
         // Dispatch via Engine
@@ -324,7 +324,7 @@ export async function sendWhatsAppMessage(payload: {
         }
     } catch (err) {
         console.error("sendWhatsAppMessage error:", err)
-        return { success: false, error: errorMessage(err) || "Failed to dispatch message" }
+        return { success: false as const, error: errorMessage(err) || "Failed to dispatch message" }
     }
 }
 
@@ -339,14 +339,14 @@ export async function sendInvoiceViaWhatsApp(params: {
 }) {
     try {
         const tenantId = await getTenantWriterId(["sales", "crm"])
-        if (!tenantId) return { success: false, error: "Unauthorized" }
+        if (!tenantId) return { success: false as const, error: "Unauthorized" }
 
         const invoice = await prisma.invoice.findFirst({
             where: { id: params.invoiceId, tenantId },
             include: { contact: true },
         })
 
-        if (!invoice) return { success: false, error: "Invoice not found" }
+        if (!invoice) return { success: false as const, error: "Invoice not found" }
 
         const tenant = await prisma.tenant.findUnique({
             where: { id: tenantId },
@@ -355,7 +355,7 @@ export async function sendInvoiceViaWhatsApp(params: {
 
         const phone = params.recipientPhone || invoice.contact?.phone || ""
         if (!phone) {
-            return { success: false, error: "No contact phone number provided for this customer" }
+            return { success: false as const, error: "No contact phone number provided for this customer" }
         }
 
         const currency = invoice.currencyCode || tenant?.currencyCode || "INR"
@@ -394,7 +394,7 @@ export async function sendInvoiceViaWhatsApp(params: {
         })
     } catch (err) {
         console.error("sendInvoiceViaWhatsApp error:", err)
-        return { success: false, error: errorMessage(err) || "Failed to send invoice via WhatsApp" }
+        return { success: false as const, error: errorMessage(err) || "Failed to send invoice via WhatsApp" }
     }
 }
 

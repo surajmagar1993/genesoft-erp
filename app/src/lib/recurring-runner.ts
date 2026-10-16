@@ -110,7 +110,7 @@ if (!profile) return { error: "Recurring profile not found" }
                 terms: profile.terms,
                 recurringProfileId: profile.id,
                 items: {
-                    create: profile.items.map((item: any) => {
+                    create: profile.items.map((item) => {
                         // Keep the profile's total rate; split it for the business's country now
                         const rate = Number(item.cgstRate || 0) + Number(item.sgstRate || 0) + Number(item.igstRate || 0)
                         const supplyType = taxCtx.regime.mode === "SINGLE" ? "single" : Number(item.igstRate || 0) > 0 ? "inter" : "intra"

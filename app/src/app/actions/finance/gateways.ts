@@ -227,7 +227,7 @@ export async function initiateInvoicePaymentSession(params: {
             return { success: false, simulated: false, error: "Invoice not found or unauthorized" }
         }
 
-        const totalPaid = (invoice.payments as any[]).reduce((acc: number, p: any) => acc + Number(p.amount), 0)
+        const totalPaid = (invoice.payments as any[]).reduce((acc: number, p) => acc + Number(p.amount), 0)
         const balanceDue = Math.max(0, Number(invoice.total) - totalPaid)
         const payAmount = params.customAmount && params.customAmount > 0 ? Math.min(params.customAmount, balanceDue) : balanceDue
 
@@ -315,7 +315,7 @@ export async function recordOnlineInvoicePayment(params: {
             contact_id: invoice.contactId,
             amount: params.amount,
             payment_date: new Date().toISOString(),
-            payment_method: paymentMethod as any,
+            payment_method: paymentMethod,
             type: "INBOUND",
             reference: `${params.gateway}:${params.transactionId}`,
             notes: params.notes || `Online payment received via ${params.gateway}`,

@@ -192,7 +192,7 @@ export async function getTdsOverview(
   })
 
   // 2. Discover deductions embedded in bills (e.g. notes containing TDS JSON)
-  billsWithTds.forEach((bill: any) => {
+  billsWithTds.forEach((bill) => {
     if (bill.notes && bill.notes.includes("TDS_DEDUCTION:")) {
       try {
         const jsonStr = bill.notes.split("TDS_DEDUCTION:")[1]?.split("\n")[0]?.trim()

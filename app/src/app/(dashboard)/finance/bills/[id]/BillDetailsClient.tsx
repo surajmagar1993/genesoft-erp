@@ -143,7 +143,7 @@ export default function BillDetailsClient({ bill }: Props) {
                     <div>
                         <div className="flex items-center gap-3">
                             <h1 className="text-3xl font-bold tracking-tight">{bill.bill_number}</h1>
-                            <Badge variant={getStatusVariant(bill.status) as any} className="uppercase px-2 h-6 tracking-wider font-semibold text-xs">
+                            <Badge variant={getStatusVariant(bill.status)} className="uppercase px-2 h-6 tracking-wider font-semibold text-xs">
                                 {bill.status.replace('_', ' ')}
                             </Badge>
                         </div>

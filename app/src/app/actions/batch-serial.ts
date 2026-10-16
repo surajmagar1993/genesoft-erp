@@ -177,7 +177,7 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
     let expiredBatches = 0
     let recalledBatches = 0
 
-    const batches: BatchItem[] = rawBatches.map((b: any) => {
+    const batches: BatchItem[] = rawBatches.map((b) => {
         let daysToExpiry: number | null = null
         if (b.expiryDate) {
             const diffTime = new Date(b.expiryDate).getTime() - now.getTime()
@@ -228,7 +228,7 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
     let defectiveSerials = 0
     let maintenanceSerials = 0
 
-    const serials: SerialItem[] = rawSerials.map((s: any) => {
+    const serials: SerialItem[] = rawSerials.map((s) => {
         if (s.status === "AVAILABLE") availableSerials++
         else if (s.status === "ALLOCATED") allocatedSerials++
         else if (s.status === "SOLD") soldSerials++
@@ -273,7 +273,7 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
         },
         batches,
         serials,
-        products: products.map((p: any) => ({
+        products: products.map((p) => ({
             id: p.id,
             name: p.name,
             sku: p.sku,
@@ -713,7 +713,7 @@ async function _createSerialsBulk(data: {
         select: { serialNumber: true }
     })
 
-    const existingSet = new Set(existing.map((e: any) => e.serialNumber))
+    const existingSet = new Set(existing.map((e) => e.serialNumber))
     const uniqueSerials = serialsToCreate.filter((s) => !existingSet.has(s))
 
     if (uniqueSerials.length === 0) {
@@ -874,7 +874,7 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
                 category: serial.product.category,
                 stockQty: Number(serial.product.stockQty)
             },
-            movements: movements.map((m: any) => ({
+            movements: movements.map((m) => ({
                 id: m.id,
                 type: m.type,
                 quantity: Number(m.quantity),
@@ -946,7 +946,7 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
                 updatedAt: batch.updatedAt,
                 serialCount: batch._count.serials,
                 daysToExpiry: null,
-                serialsList: batch.serials.map((s: any) => ({
+                serialsList: batch.serials.map((s) => ({
                     id: s.id,
                     productId: s.productId,
                     productName: batch.product.name,
@@ -975,7 +975,7 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
                 category: batch.product.category,
                 stockQty: Number(batch.product.stockQty)
             },
-            movements: movements.map((m: any) => ({
+            movements: movements.map((m) => ({
                 id: m.id,
                 type: m.type,
                 quantity: Number(m.quantity),

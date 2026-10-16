@@ -609,10 +609,10 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
                 managerId: fullProj.managerId,
                 managerName: fullProj.manager?.displayName || null,
                 tasksCount: fullProj.tasks.length,
-                completedTasksCount: (fullProj.tasks as any[]).filter((t: any) => t.status === ProjectTaskStatus.DONE).length,
-                completionPercentage: fullProj.tasks.length > 0 ? Math.round(((fullProj.tasks as any[]).filter((t: any) => t.status === ProjectTaskStatus.DONE).length / fullProj.tasks.length) * 100) : 0,
-                totalEstimatedHours: (fullProj.tasks as any[]).reduce((sum: number, t: any) => sum + (t.estimatedHours ? Number(t.estimatedHours) : 0), 0),
-                totalActualHours: (fullProj.tasks as any[]).reduce((sum: number, t: any) => sum + (t.actualHours ? Number(t.actualHours) : 0), 0),
+                completedTasksCount: (fullProj.tasks as any[]).filter((t) => t.status === ProjectTaskStatus.DONE).length,
+                completionPercentage: fullProj.tasks.length > 0 ? Math.round(((fullProj.tasks as any[]).filter((t) => t.status === ProjectTaskStatus.DONE).length / fullProj.tasks.length) * 100) : 0,
+                totalEstimatedHours: (fullProj.tasks as any[]).reduce((sum: number, t) => sum + (t.estimatedHours ? Number(t.estimatedHours) : 0), 0),
+                totalActualHours: (fullProj.tasks as any[]).reduce((sum: number, t) => sum + (t.actualHours ? Number(t.actualHours) : 0), 0),
                 membersCount: fullProj.members.length,
                 milestonesCount: fullProj.milestones.length,
                 createdAt: fullProj.createdAt,
@@ -621,7 +621,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
 
             selectedProject = {
                 project: projectSummary,
-                members: (fullProj.members as any[]).map((m: any) => ({
+                members: (fullProj.members as any[]).map((m) => ({
                     id: m.id,
                     projectId: m.projectId,
                     employeeId: m.employeeId,
@@ -633,7 +633,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
                     hourlyRate: m.hourlyRate ? Number(m.hourlyRate) : null,
                     joinedAt: m.joinedAt,
                 })),
-                milestones: (fullProj.milestones as any[]).map((ms: any) => ({
+                milestones: (fullProj.milestones as any[]).map((ms) => ({
                     id: ms.id,
                     projectId: ms.projectId,
                     title: ms.title,
@@ -644,7 +644,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
                     deliverable: ms.deliverable,
                     tasksCount: ms.tasks.length,
                 })),
-                tasks: (fullProj.tasks as any[]).map((t: any) => ({
+                tasks: (fullProj.tasks as any[]).map((t) => ({
                     id: t.id,
                     projectId: t.projectId,
                     projectCode: fullProj.projectCode,
@@ -665,7 +665,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
                     completedAt: t.completedAt,
                     createdAt: t.createdAt,
                 })),
-                timeEntries: (fullProj.timeEntries as any[]).map((te: any) => ({
+                timeEntries: (fullProj.timeEntries as any[]).map((te) => ({
                     id: te.id,
                     projectId: te.projectId,
                     projectName: fullProj.name,
@@ -696,7 +696,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
         orderBy: { createdAt: "desc" }
     })
 
-    const allTasks: ProjectTaskRecord[] = (allRawTasks as any[]).map((t: any) => ({
+    const allTasks: ProjectTaskRecord[] = (allRawTasks as any[]).map((t) => ({
         id: t.id,
         projectId: t.projectId,
         projectCode: t.project.projectCode,
@@ -730,7 +730,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
         take: 100,
     })
 
-    const allTimeEntries: ProjectTimeEntryRecord[] = (allRawTime as any[]).map((te: any) => ({
+    const allTimeEntries: ProjectTimeEntryRecord[] = (allRawTime as any[]).map((te) => ({
         id: te.id,
         projectId: te.projectId,
         projectName: te.project.name,
@@ -754,7 +754,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
         orderBy: { displayName: "asc" }
     })
 
-    const availableClients = availableClientsRaw.map((c: any) => ({
+    const availableClients = availableClientsRaw.map((c) => ({
         id: c.id,
         name: c.displayName,
     }))
@@ -772,7 +772,7 @@ export async function getProjectsOverview(selectedProjectId?: string): Promise<P
         orderBy: { displayName: "asc" }
     })
 
-    const availableEmployees = (availableEmployeesRaw as any[]).map((e: any) => ({
+    const availableEmployees = (availableEmployeesRaw as any[]).map((e) => ({
         id: e.id,
         name: e.displayName,
         employeeNumber: e.employeeNumber,

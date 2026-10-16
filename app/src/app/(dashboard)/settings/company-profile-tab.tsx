@@ -49,7 +49,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
     }
 
     const [name, setName] = useState(initialSettings?.name || "")
-    const [gstin, setGstin] = useState(initialSettings?.gstin || (initialSettings?.settings as any)?.gstin || "")
+    const [gstin, setGstin] = useState(initialSettings?.gstin || (initialSettings?.settings)?.gstin || "")
     const [email, setEmail] = useState(initialSettings?.email || "")
     const [phone, setPhone] = useState(initialSettings?.phone || "")
     const [website, setWebsite] = useState(initialSettings?.website || "")

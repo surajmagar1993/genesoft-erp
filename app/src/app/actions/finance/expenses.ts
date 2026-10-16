@@ -440,7 +440,7 @@ export async function getExpensesOverview(): Promise<{
             orderBy: { expenseDate: "desc" },
         })
 
-        const expenses: ExpenseRecord[] = rawExpenses.map((e: any) => ({
+        const expenses: ExpenseRecord[] = rawExpenses.map((e) => ({
             id: e.id,
             tenantId: e.tenantId,
             expenseNumber: e.expenseNumber,
@@ -488,7 +488,7 @@ export async function getExpensesOverview(): Promise<{
             orderBy: { date: "desc" },
         })
 
-        const journalEntries: JournalEntryRecord[] = rawJes.map((je: any) => ({
+        const journalEntries: JournalEntryRecord[] = rawJes.map((je) => ({
             id: je.id,
             tenantId: je.tenantId,
             entryNumber: je.entryNumber,
@@ -502,7 +502,7 @@ export async function getExpensesOverview(): Promise<{
             totalCredit: Number(je.totalCredit),
             currencyCode: je.currencyCode,
             createdAt: je.createdAt,
-            lines: je.lines.map((l: any) => ({
+            lines: je.lines.map((l) => ({
                 id: l.id,
                 journalEntryId: l.journalEntryId,
                 accountId: l.accountId,
@@ -523,7 +523,7 @@ export async function getExpensesOverview(): Promise<{
             orderBy: { code: "asc" },
         })
 
-        const accounts: AccountLookup[] = rawAccounts.map((a: any) => ({
+        const accounts: AccountLookup[] = rawAccounts.map((a) => ({
             id: a.id,
             code: a.code,
             name: a.name,
@@ -539,7 +539,7 @@ export async function getExpensesOverview(): Promise<{
             orderBy: { displayName: "asc" },
         })
 
-        const vendors: ContactLookup[] = rawVendors.map((c: any) => ({
+        const vendors: ContactLookup[] = rawVendors.map((c) => ({
             id: c.id,
             displayName: c.displayName,
             email: c.email,
@@ -556,7 +556,7 @@ export async function getExpensesOverview(): Promise<{
             orderBy: { firstName: "asc" },
         })
 
-        const employees: EmployeeLookup[] = rawEmployees.map((emp: any) => ({
+        const employees: EmployeeLookup[] = rawEmployees.map((emp) => ({
             id: emp.id,
             employeeNumber: emp.employeeNumber,
             name: `${emp.firstName} ${emp.lastName}`.trim(),

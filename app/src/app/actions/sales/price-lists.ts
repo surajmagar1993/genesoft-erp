@@ -424,7 +424,7 @@ export async function getPriceListsOverview(): Promise<{
             orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
         })
 
-        const priceLists: PriceListRecord[] = rawPriceLists.map((pl: any) => ({
+        const priceLists: PriceListRecord[] = rawPriceLists.map((pl) => ({
             id: pl.id,
             tenantId: pl.tenantId,
             code: pl.code,
@@ -442,7 +442,7 @@ export async function getPriceListsOverview(): Promise<{
             itemCount: pl.items.length,
             assignedCustomerCount: pl.contacts.length,
             createdAt: pl.createdAt,
-            items: pl.items.map((it: any) => {
+            items: pl.items.map((it) => {
                 const baseP = Number(it.product.unitPrice)
                 const customP = it.customPrice !== null ? Number(it.customPrice) : null
                 const discP = it.discountPercent !== null ? Number(it.discountPercent) : null
@@ -482,7 +482,7 @@ export async function getPriceListsOverview(): Promise<{
             orderBy: { name: "asc" },
         })
 
-        const products: ProductLookup[] = rawProducts.map((p: any) => ({
+        const products: ProductLookup[] = rawProducts.map((p) => ({
             id: p.id,
             name: p.name,
             sku: p.sku,
@@ -502,7 +502,7 @@ export async function getPriceListsOverview(): Promise<{
             orderBy: { displayName: "asc" },
         })
 
-        const customers: CustomerLookup[] = rawCustomers.map((c: any) => ({
+        const customers: CustomerLookup[] = rawCustomers.map((c) => ({
             id: c.id,
             displayName: c.displayName,
             email: c.email,
@@ -927,7 +927,7 @@ export async function calculateEffectivePrice(
         const basePrice = Number(product.unitPrice)
         const quantity = Math.max(1, Number(input.quantity || 1))
 
-        let targetPriceList: any = null
+        let targetPriceList = null
 
         // Priority 1: Explicit Price List specified
         if (input.priceListId) {

@@ -514,7 +514,7 @@ export function TenantDetailClient({ tenant }: { tenant: any }) {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {saasInvoices.map((inv: any) => (
+                                        {saasInvoices.map((inv) => (
                                             <TableRow key={inv.id}>
                                                 <TableCell className="font-mono text-xs font-semibold">
                                                     {inv.invoiceNumber}

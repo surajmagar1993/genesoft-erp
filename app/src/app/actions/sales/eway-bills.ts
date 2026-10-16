@@ -220,7 +220,7 @@ export async function getEwayBillsOverview(
     }
   })
 
-  const eligibleInvoices: EligibleInvoiceCandidate[] = invoices.map((inv: any) => {
+  const eligibleInvoices: EligibleInvoiceCandidate[] = invoices.map((inv) => {
     const totalAmount = Number(inv.total || 0)
     const billTo = (inv.billTo as Record<string, any>) || {}
     const ewbNo = existingEwbInvoiceMap.get(inv.id) || billTo.ewayBillNo
@@ -446,7 +446,7 @@ export async function generateEwayBill(payload: {
     where: { id: tenantId },
     select: { settings: true },
   })
-  const currentSettings = (tenant?.settings as Record<string, any>) || {}
+  const currentSettings = (tenant?.settings as Record<string, unknown>) || {}
   const currentBills: EwayBillRecord[] = Array.isArray(currentSettings.ewayBills) ? currentSettings.ewayBills : []
 
   const updatedBills = [newBill, ...currentBills]
@@ -469,7 +469,7 @@ export async function generateEwayBill(payload: {
         select: { billTo: true, notes: true },
       })
       if (inv) {
-        const billTo = (inv.billTo as Record<string, any>) || {}
+        const billTo = (inv.billTo as Record<string, unknown>) || {}
         await prisma.invoice.update({
           where: { id: payload.invoiceId },
           data: {
@@ -519,7 +519,7 @@ export async function updateEwayBillVehicle(
     where: { id: tenantId },
     select: { settings: true },
   })
-  const currentSettings = (tenant?.settings as Record<string, any>) || {}
+  const currentSettings = (tenant?.settings as Record<string, unknown>) || {}
   const currentBills: EwayBillRecord[] = Array.isArray(currentSettings.ewayBills) ? currentSettings.ewayBills : []
 
   const targetIndex = currentBills.findIndex((b) => b.id === ewayBillId || b.ewayBillNo === ewayBillId)
@@ -579,7 +579,7 @@ export async function cancelEwayBill(
     where: { id: tenantId },
     select: { settings: true },
   })
-  const currentSettings = (tenant?.settings as Record<string, any>) || {}
+  const currentSettings = (tenant?.settings as Record<string, unknown>) || {}
   const currentBills: EwayBillRecord[] = Array.isArray(currentSettings.ewayBills) ? currentSettings.ewayBills : []
 
   const targetIndex = currentBills.findIndex((b) => b.id === ewayBillId || b.ewayBillNo === ewayBillId)
@@ -720,7 +720,7 @@ export async function saveTransporter(
     where: { id: tenantId },
     select: { settings: true },
   })
-  const currentSettings = (tenant?.settings as Record<string, any>) || {}
+  const currentSettings = (tenant?.settings as Record<string, unknown>) || {}
   const { transporters } = getEwayStore(tenant?.settings)
 
   const updatedList = [...transporters]

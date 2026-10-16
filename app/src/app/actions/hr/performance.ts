@@ -164,7 +164,7 @@ export async function getPerformanceOverview(): Promise<PerformanceOverviewData>
         orderBy: { startDate: "desc" }
     })
 
-    const cycles: AppraisalCycleRecord[] = rawCycles.map((c: any) => ({
+    const cycles: AppraisalCycleRecord[] = rawCycles.map((c) => ({
         id: c.id,
         cycleCode: c.cycleCode,
         title: c.title,
@@ -195,7 +195,7 @@ export async function getPerformanceOverview(): Promise<PerformanceOverviewData>
         orderBy: { createdAt: "desc" }
     })
 
-    const reviews: PerformanceReviewRecord[] = rawReviews.map((r: any) => ({
+    const reviews: PerformanceReviewRecord[] = rawReviews.map((r) => ({
         id: r.id,
         reviewCode: r.reviewCode,
         cycleId: r.cycleId,
@@ -232,7 +232,7 @@ export async function getPerformanceOverview(): Promise<PerformanceOverviewData>
         orderBy: [{ progress: "asc" }, { createdAt: "desc" }]
     })
 
-    const goals: EmployeeGoalRecord[] = rawGoals.map((g: any) => ({
+    const goals: EmployeeGoalRecord[] = rawGoals.map((g) => ({
         id: g.id,
         goalCode: g.goalCode,
         employeeId: g.employeeId,
@@ -262,7 +262,7 @@ export async function getPerformanceOverview(): Promise<PerformanceOverviewData>
         orderBy: { createdAt: "desc" }
     })
 
-    const programs: TrainingProgramRecord[] = rawPrograms.map((p: any) => ({
+    const programs: TrainingProgramRecord[] = rawPrograms.map((p) => ({
         id: p.id,
         programCode: p.programCode,
         title: p.title,
@@ -277,7 +277,7 @@ export async function getPerformanceOverview(): Promise<PerformanceOverviewData>
         endDate: p.endDate,
         maxParticipants: p.maxParticipants,
         enrollmentsCount: p.enrollments.length,
-        completedCount: p.enrollments.filter((e: any) => e.status === EnrollmentStatus.COMPLETED).length,
+        completedCount: p.enrollments.filter((e) => e.status === EnrollmentStatus.COMPLETED).length,
         createdAt: p.createdAt
     }))
 
@@ -297,7 +297,7 @@ export async function getPerformanceOverview(): Promise<PerformanceOverviewData>
         orderBy: { enrolledAt: "desc" }
     })
 
-    const enrollments: TrainingEnrollmentRecord[] = rawEnrollments.map((e: any) => ({
+    const enrollments: TrainingEnrollmentRecord[] = rawEnrollments.map((e) => ({
         id: e.id,
         programId: e.programId,
         programCode: e.program.programCode,
@@ -328,7 +328,7 @@ export async function getPerformanceOverview(): Promise<PerformanceOverviewData>
         orderBy: { displayName: "asc" }
     })
 
-    const employees = rawEmployees.map((e: any) => ({
+    const employees = rawEmployees.map((e) => ({
         id: e.id,
         displayName: e.displayName,
         employeeNumber: e.employeeNumber,

@@ -155,7 +155,7 @@ export async function getPurchaseOverview(): Promise<PurchaseOverviewData> {
     let pendingReceiptsCount = 0
     let receivedOrdersCount = 0
 
-    const orders: PurchaseOrderRecord[] = rawOrders.map((o: any) => {
+    const orders: PurchaseOrderRecord[] = rawOrders.map((o) => {
         const totalNum = Number(o.total)
         if (o.status === "APPROVED" || o.status === "RECEIVED" || o.status === "PARTIALLY_RECEIVED") {
             totalSpend += totalNum
@@ -170,7 +170,7 @@ export async function getPurchaseOverview(): Promise<PurchaseOverviewData> {
             receivedOrdersCount++
         }
 
-        const items: PurchaseOrderItemRecord[] = o.items.map((i: any) => ({
+        const items: PurchaseOrderItemRecord[] = o.items.map((i) => ({
             id: i.id,
             purchaseOrderId: i.purchaseOrderId,
             productId: i.productId,
@@ -232,7 +232,7 @@ export async function getPurchaseOverview(): Promise<PurchaseOverviewData> {
         orderBy: { displayName: "asc" }
     })
 
-    const vendors: VendorItem[] = rawVendors.map((v: any) => {
+    const vendors: VendorItem[] = rawVendors.map((v) => {
         const billing = (v.billingAddress as any) || {}
         return {
             id: v.id,
@@ -263,7 +263,7 @@ export async function getPurchaseOverview(): Promise<PurchaseOverviewData> {
         orderBy: { name: "asc" }
     })
 
-    const products = rawProducts.map((p: any) => ({
+    const products = rawProducts.map((p) => ({
         id: p.id,
         name: p.name,
         sku: p.sku,
@@ -458,7 +458,7 @@ async function _receiveGoods(data: {
             const qtyReceivedNow = Number(itemInput.quantity)
             if (qtyReceivedNow <= 0) continue
 
-            const itemRecord = po.items.find((i: any) => i.id === itemInput.itemId)
+            const itemRecord = po.items.find((i) => i.id === itemInput.itemId)
             if (!itemRecord) continue
 
             const prevReceived = Number(itemRecord.receivedQty)
@@ -542,8 +542,8 @@ async function _receiveGoods(data: {
         const updatedItems = await tx.purchaseOrderItem.findMany({
             where: { purchaseOrderId: po.id }
         })
-        const fullyComplete = updatedItems.every((i: any) => Number(i.receivedQty) >= Number(i.quantity))
-        const hasSomeReceived = updatedItems.some((i: any) => Number(i.receivedQty) > 0)
+        const fullyComplete = updatedItems.every((i) => Number(i.receivedQty) >= Number(i.quantity))
+        const hasSomeReceived = updatedItems.some((i) => Number(i.receivedQty) > 0)
 
         let newStatus: PurchaseOrderStatus = po.status
         if (fullyComplete) {
@@ -612,7 +612,7 @@ export async function convertPOToBill(data: string | {
                 currencyCode: po.currencyCode,
                 notes: `Generated automatically from ${po.orderNumber}`,
                 items: {
-                    create: po.items.map((item: any) => ({
+                    create: po.items.map((item) => ({
                         productId: item.productId,
                         description: item.description,
                         hsnSacCode: item.hsnSacCode,

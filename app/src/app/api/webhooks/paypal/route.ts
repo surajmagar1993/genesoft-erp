@@ -119,7 +119,7 @@ export async function POST(req: Request) {
                         const allPayments = await prisma.payment.findMany({
                             where: { invoiceId: invoice.id },
                         })
-                        const totalPaid = allPayments.reduce((s: number, p: any) => s + Number(p.amount), 0)
+                        const totalPaid = allPayments.reduce((s: number, p) => s + Number(p.amount), 0)
                         const isPaid = totalPaid >= Number(invoice.total)
 
                         await prisma.invoice.update({

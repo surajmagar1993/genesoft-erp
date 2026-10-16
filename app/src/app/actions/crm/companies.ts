@@ -196,12 +196,12 @@ export async function getCompanyWithRelations(id: string): Promise<CompanyRelati
   const deals = dealsRes.data ?? []
 
   const activePipelineValue = deals
-    .filter((d: any) => !["CLOSED_WON", "CLOSED_LOST"].includes(d.stage))
-    .reduce((sum: number, d: any) => sum + (Number(d.value) || 0), 0)
+    .filter((d) => !["CLOSED_WON", "CLOSED_LOST"].includes(d.stage))
+    .reduce((sum: number, d) => sum + (Number(d.value) || 0), 0)
 
   const closedWonRevenue = deals
-    .filter((d: any) => d.stage === "CLOSED_WON")
-    .reduce((sum: number, d: any) => sum + (Number(d.value) || 0), 0)
+    .filter((d) => d.stage === "CLOSED_WON")
+    .reduce((sum: number, d) => sum + (Number(d.value) || 0), 0)
 
   return {
     company,

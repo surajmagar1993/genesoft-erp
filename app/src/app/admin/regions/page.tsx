@@ -76,7 +76,7 @@ export default async function RegionsPage() {
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Active Tenants</p>
-                            <p className="text-2xl font-black text-emerald-500">{data.regions.reduce((sum: number, r: any) => sum + r.activeTenants, 0)}</p>
+                            <p className="text-2xl font-black text-emerald-500">{data.regions.reduce((sum: number, r) => sum + r.activeTenants, 0)}</p>
                         </div>
                     </CardContent>
                 </Card>

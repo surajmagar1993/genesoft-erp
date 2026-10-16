@@ -150,7 +150,7 @@ export default function SupportPage() {
             {/* Messages */}
             <ScrollArea className="flex-1 p-6">
               <div className="max-w-3xl mx-auto space-y-6 pb-20">
-                {liveMessages?.map((msg: any) => (
+                {liveMessages?.map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex ${msg.isFromAdmin ? "justify-start" : "justify-end"}`}

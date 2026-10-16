@@ -72,7 +72,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
         if (initialData) {
             let bVal = initialData.barcode || ""
             if (!bVal && initialData.customAttributes) {
-                const entry = initialData.customAttributes.find((a: any) => a.key === "barcode")
+                const entry = initialData.customAttributes.find((a) => a.key === "barcode")
                 if (entry) bVal = entry.value
             }
             // eslint-disable-next-line react-hooks/set-state-in-effect -- loading the product being edited

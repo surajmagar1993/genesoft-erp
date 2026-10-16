@@ -66,7 +66,7 @@ export async function getCustomerLedger(contactId: string): Promise<CustomerLedg
   if (!tenant) throw new Error("Tenant not found")
 
   // Map to UI format
-  const entries: LedgerEntry[] = dbEntries.map((e: any) => {
+  const entries: LedgerEntry[] = dbEntries.map((e) => {
     const amount = Number(e.amount)
     return {
       id: e.id,

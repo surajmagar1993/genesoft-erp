@@ -133,7 +133,7 @@ export default async function AdminDashboardPage() {
                     <CardContent className="p-0">
                         <div className="divide-y divide-primary/5">
                             {stats.recentTenants.length > 0 ? (
-                                stats.recentTenants.map((tenant: any) => (
+                                stats.recentTenants.map((tenant) => (
                                     <div key={tenant.id} className="flex items-center gap-4 p-4 hover:bg-muted/30 transition-colors">
                                         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center font-bold text-primary text-sm shadow-sm">
                                             {tenant.name.substring(0, 2).toUpperCase()}
@@ -202,7 +202,7 @@ export default async function AdminDashboardPage() {
                         <CardContent className="p-4">
                             <div className="space-y-4">
                                 {logs.length > 0 ? (
-                                    logs.map((log: any) => (
+                                    logs.map((log) => (
                                         <div key={log.id} className="flex gap-3 text-sm group">
                                             <div className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${
                                                 log.level === 'ERROR' || log.level === 'FATAL' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]' : 

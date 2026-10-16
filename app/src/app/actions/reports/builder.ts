@@ -35,7 +35,7 @@ export async function getReportBuilderInitData(): Promise<{
         orderBy: { updatedAt: "desc" }
     })
 
-    const userReports: SavedReportRecord[] = dbReports.map((r: any) => ({
+    const userReports: SavedReportRecord[] = dbReports.map((r) => ({
         id: r.id,
         name: r.name,
         description: r.description,
@@ -177,7 +177,7 @@ export async function runCustomReportQuery(config: ReportConfig): Promise<Report
                 orderBy: { displayName: "asc" },
                 take: 500
             })
-            rawData = employees.map((e: any) => ({
+            rawData = employees.map((e) => ({
                 employeeNumber: e.employeeNumber,
                 displayName: e.displayName,
                 department: e.department?.name || "General",
@@ -200,7 +200,7 @@ export async function runCustomReportQuery(config: ReportConfig): Promise<Report
                 orderBy: { createdAt: "desc" },
                 take: 500
             })
-            rawData = tasks.map((t: any) => ({
+            rawData = tasks.map((t) => ({
                 taskCode: t.taskCode,
                 title: t.title,
                 projectName: t.project?.name || "General Project",

@@ -221,7 +221,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
     }))
 
     // Format Work Orders
-    const workOrders: WorkOrderRecord[] = (workOrdersRaw as any[]).map((w: any) => ({
+    const workOrders: WorkOrderRecord[] = (workOrdersRaw as any[]).map((w) => ({
         id: w.id,
         orderNumber: w.orderNumber,
         bomId: w.bomId,
@@ -251,7 +251,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
     }))
 
     // Format Inspections
-    const inspections: QualityInspectionRecord[] = (inspectionsRaw as any[]).map((qc: any) => ({
+    const inspections: QualityInspectionRecord[] = (inspectionsRaw as any[]).map((qc) => ({
         id: qc.id,
         workOrderId: qc.workOrderId,
         workOrderNumber: qc.workOrder.orderNumber,
@@ -292,7 +292,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
         workOrders,
         boms,
         inspections,
-        availableProducts: (productsRaw as any[]).map((p: any) => ({
+        availableProducts: (productsRaw as any[]).map((p) => ({
             id: p.id,
             name: p.name,
             sku: p.sku,
@@ -300,7 +300,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
             unitPrice: Number(p.unitPrice),
             stockQty: Number(p.stockQty)
         })),
-        availableWarehouses: (warehousesRaw as any[]).map((wh: any) => ({
+        availableWarehouses: (warehousesRaw as any[]).map((wh) => ({
             id: wh.id,
             name: wh.name,
             code: wh.code

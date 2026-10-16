@@ -52,7 +52,7 @@ export default async function SystemLogsPage() {
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold">Errors (24h)</span>
                                 <Badge variant="destructive" className="h-5 text-[10px] font-black">
-                                    {logs.filter((l: any) => l.level === 'ERROR' || l.level === 'FATAL').length} Critical
+                                    {logs.filter((l) => l.level === 'ERROR' || l.level === 'FATAL').length} Critical
                                 </Badge>
                             </div>
                             <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
@@ -109,7 +109,7 @@ export default async function SystemLogsPage() {
                             </TableHeader>
                             <TableBody className="font-mono">
                                 {logs.length > 0 ? (
-                                    logs.map((log: any) => (
+                                    logs.map((log) => (
                                         <TableRow key={log.id} className="group hover:bg-muted/40 border-primary/5 transition-all">
                                             <TableCell>
                                                 <Badge 
@@ -174,7 +174,7 @@ export default async function SystemLogsPage() {
     )
 }
 
-function cn(...classes: any[]) {
+function cn(...classes: unknown[]) {
     return classes.filter(Boolean).join(' ')
 }
 

@@ -133,7 +133,7 @@ export async function getTopCreditors(limit = 10): Promise<CreditorSummary[]> {
     if (balance <= 0) continue
 
     const contactId = bill.contact_id
-    const displayName = (bill.contacts as any)?.display_name || "Unknown Vendor"
+    const displayName = (bill.contacts)?.display_name || "Unknown Vendor"
     const isOverdue = bill.due_date && new Date(bill.due_date) < now
 
     if (!creditorMap.has(contactId)) {

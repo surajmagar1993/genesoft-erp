@@ -46,7 +46,7 @@ export async function getWorkflowsOverview(): Promise<{
         })
     ])
 
-    const rules: WorkflowRuleItem[] = dbRules.map((r: any) => ({
+    const rules: WorkflowRuleItem[] = dbRules.map((r) => ({
         id: r.id,
         code: r.code,
         name: r.name,
@@ -62,7 +62,7 @@ export async function getWorkflowsOverview(): Promise<{
         updatedAt: r.updatedAt
     }))
 
-    const executions: WorkflowExecutionItem[] = dbExecutions.map((e: any) => ({
+    const executions: WorkflowExecutionItem[] = dbExecutions.map((e) => ({
         id: e.id,
         workflowId: e.workflowId,
         workflowName: e.workflow?.name || "Automated Rule",

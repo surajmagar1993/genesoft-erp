@@ -55,7 +55,7 @@ export default async function WhatsAppHubPage() {
         }),
     ])
 
-    const contacts = rawContacts.map((c: any) => ({
+    const contacts = rawContacts.map((c) => ({
         id: c.id,
         name: c.displayName,
         phone: c.phone,
@@ -64,7 +64,7 @@ export default async function WhatsAppHubPage() {
         updatedAt: c.updatedAt ? c.updatedAt.toISOString() : new Date().toISOString(),
     }))
 
-    const invoices = rawInvoices.map((inv: any) => ({
+    const invoices = rawInvoices.map((inv) => ({
         id: inv.id,
         invoice_number: inv.invoiceNumber || "",
         customer_name: inv.contact?.displayName || (inv.billTo as any)?.name || "Customer",

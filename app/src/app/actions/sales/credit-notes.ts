@@ -330,7 +330,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
         orderBy: { issueDate: "desc" }
     })
 
-    const creditNotes: CreditNoteRecord[] = (rawCreditNotes as any[]).map((cn: any) => ({
+    const creditNotes: CreditNoteRecord[] = (rawCreditNotes as unknown[]).map((cn: any) => ({
         id: cn.id,
         tenantId: cn.tenantId,
         creditNoteNumber: cn.creditNoteNumber,
@@ -389,7 +389,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
         orderBy: { refundDate: "desc" }
     })
 
-    const refunds: CreditNoteRefundRecord[] = (rawRefunds as any[]).map((r: any) => ({
+    const refunds: CreditNoteRefundRecord[] = (rawRefunds as any[]).map((r) => ({
         id: r.id,
         creditNoteId: r.creditNoteId,
         creditNoteNumber: r.creditNote.creditNoteNumber,
@@ -407,7 +407,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
         select: { id: true, displayName: true, email: true, phone: true },
         orderBy: { displayName: "asc" }
     })
-    const availableCustomers = (rawCustomers as any[]).map((c: any) => ({
+    const availableCustomers = (rawCustomers as any[]).map((c) => ({
         id: c.id,
         name: c.displayName,
         email: c.email,
@@ -426,7 +426,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
         },
         orderBy: { invoiceDate: "desc" }
     })
-    const availableInvoices = (rawInvoices as any[]).map((inv: any) => ({
+    const availableInvoices = (rawInvoices as any[]).map((inv) => ({
         id: inv.id,
         invoiceNumber: inv.invoiceNumber,
         contactId: inv.contactId,
@@ -441,7 +441,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
         select: { id: true, name: true, code: true },
         orderBy: { name: "asc" }
     })
-    const availableWarehouses = (rawWarehouses as any[]).map((w: any) => ({
+    const availableWarehouses = (rawWarehouses as any[]).map((w) => ({
         id: w.id,
         name: w.name,
         code: w.code,
@@ -452,7 +452,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
         select: { id: true, name: true, sku: true, unitPrice: true, hsnSacCode: true },
         orderBy: { name: "asc" }
     })
-    const availableProducts = (rawProducts as any[]).map((p: any) => ({
+    const availableProducts = (rawProducts as any[]).map((p) => ({
         id: p.id,
         name: p.name,
         sku: p.sku,

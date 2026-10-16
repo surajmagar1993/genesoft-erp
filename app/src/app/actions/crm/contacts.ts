@@ -79,7 +79,7 @@ export async function getContacts(
       prisma.contact.count({ where: whereClause }),
     ])
 
-    const formatted: Contact[] = items.map((c: any) => ({
+    const formatted: Contact[] = items.map((c) => ({
       id: c.id,
       display_name: c.displayName,
       type: c.type as "INDIVIDUAL" | "COMPANY",

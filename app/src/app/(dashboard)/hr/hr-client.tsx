@@ -307,9 +307,9 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
         setEmpDesigId(emp.designationId || "")
         setEmpManagerId(emp.managerId || "")
         setEmpSalary(emp.basicSalary ? String(emp.basicSalary) : "")
-        setEmpCountry((emp.address as any)?.country || "India")
-        setEmpState((emp.address as any)?.state || "")
-        setEmpCity((emp.address as any)?.city || "")
+        setEmpCountry((emp.address)?.country || "India")
+        setEmpState((emp.address)?.state || "")
+        setEmpCity((emp.address)?.city || "")
         setIsEditEmployeeOpen(true)
     }
 
@@ -2338,11 +2338,11 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                         <Phone className="h-4 w-4 text-muted-foreground" />
                                         <span>{selectedEmployee.phone || "No phone recorded"}</span>
                                     </div>
-                                    {((selectedEmployee.address as any)?.city || (selectedEmployee.address as any)?.state) && (
+                                    {((selectedEmployee.address)?.city || (selectedEmployee.address)?.state) && (
                                         <div className="flex items-center gap-2 sm:col-span-2">
                                             <MapPin className="h-4 w-4 text-muted-foreground" />
                                             <span>
-                                                {[(selectedEmployee.address as any)?.city, (selectedEmployee.address as any)?.state]
+                                                {[(selectedEmployee.address)?.city, (selectedEmployee.address)?.state]
                                                     .filter(Boolean)
                                                     .join(", ")}
                                             </span>
@@ -2352,14 +2352,14 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                             </div>
 
                             {/* Emergency Contact */}
-                            {(selectedEmployee.emergencyContact as any)?.name && (
+                            {(selectedEmployee.emergencyContact)?.name && (
                                 <div className="space-y-1 border-t pt-3 text-xs">
                                     <span className="font-semibold text-muted-foreground uppercase tracking-wider block">
                                         Emergency Contact
                                     </span>
                                     <div>
-                                        {(selectedEmployee.emergencyContact as any)?.name} •{" "}
-                                        {(selectedEmployee.emergencyContact as any)?.phone || "No phone"}
+                                        {(selectedEmployee.emergencyContact)?.name} •{" "}
+                                        {(selectedEmployee.emergencyContact)?.phone || "No phone"}
                                     </div>
                                 </div>
                             )}

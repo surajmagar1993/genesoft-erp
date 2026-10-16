@@ -200,7 +200,7 @@ export async function getTopRevenueContacts(limit = 5): Promise<TopRevenueContac
 
   for (const inv of invoices ?? []) {
     const id = inv.contact_id
-    const name = (inv.contacts as any)?.display_name ?? "Unknown"
+    const name = (inv.contacts)?.display_name ?? "Unknown"
     const raw = Number(inv.subtotal ?? inv.total ?? 0)
     const normalized = inv.currency_code === baseCurrency ? raw : (await convertAmount(raw, inv.currency_code, baseCurrency)).toNumber()
 

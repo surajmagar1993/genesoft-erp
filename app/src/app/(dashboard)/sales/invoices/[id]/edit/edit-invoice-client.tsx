@@ -18,7 +18,7 @@ export default function EditInvoiceClient({ invoice }: Props) {
     const router = useRouter()
     const [regime, setRegime] = useState<InvoiceTaxRegime | null>(null)
     useEffect(() => { getInvoiceTaxRegime().then(setRegime) }, [])
-    const [contacts, setContacts] = useState<any[]>([])
+    const [contacts, setContacts] = useState<unknown[]>([])
     const [products, setProducts] = useState<DocumentProduct[]>([])
     useEffect(() => { getProductsForDocuments().then(setProducts).catch(() => setProducts([])) }, [])
 

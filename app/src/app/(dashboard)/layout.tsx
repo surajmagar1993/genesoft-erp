@@ -479,7 +479,7 @@ export default function DashboardLayout({
 
     return (
         <SidebarProvider>
-            <Script {...({ id: "razorpay-checkout", src: "https://checkout.razorpay.com/v1/checkout.js", strategy: "lazyOnload" } as any)} />
+            <Script {...({ id: "razorpay-checkout", src: "https://checkout.razorpay.com/v1/checkout.js", strategy: "lazyOnload" })} />
             <AppSidebar
                 access={role && isAdminRole(role) ? null : access}
                 accessLoaded={role !== null}

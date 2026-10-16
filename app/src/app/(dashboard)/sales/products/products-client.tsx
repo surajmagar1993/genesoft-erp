@@ -95,7 +95,7 @@ export function ProductsClient({ initialProducts }: ProductsClientProps) {
             header: true,
             skipEmptyLines: true,
             complete: async (results) => {
-                const { error, count } = await importProducts(results.data as any[])
+                const { error, count } = await importProducts(results.data as unknown[])
                 setIsImporting(false)
                 if (error) {
                     toast.error(`Import failed: ${error}`)

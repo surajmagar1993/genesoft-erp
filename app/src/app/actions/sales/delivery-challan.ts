@@ -206,7 +206,7 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
         take: 30
     })
 
-    const challans: DeliveryChallanRecord[] = (challansRaw as any[]).map((dc: any) => ({
+    const challans: DeliveryChallanRecord[] = (challansRaw as unknown[]).map((dc: any) => ({
         id: dc.id,
         challanNumber: dc.challanNumber,
         challanDate: dc.challanDate,
@@ -275,7 +275,7 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
             totalDispatchedValue
         },
         challans,
-        contacts: (contactsRaw as any[]).map((c: any) => ({
+        contacts: (contactsRaw as any[]).map((c) => ({
             id: c.id,
             displayName: c.displayName,
             email: c.email,
@@ -284,7 +284,7 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
             billingAddress: c.billingAddress,
             shippingAddress: c.shippingAddress
         })),
-        products: (productsRaw as any[]).map((p: any) => ({
+        products: (productsRaw as any[]).map((p) => ({
             id: p.id,
             name: p.name,
             sku: p.sku,
@@ -292,7 +292,7 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
             unit: p.unit,
             unitPrice: Number(p.unitPrice)
         })),
-        warehouses: (warehousesRaw as any[]).map((wh: any) => ({
+        warehouses: (warehousesRaw as any[]).map((wh) => ({
             id: wh.id,
             name: wh.name,
             code: wh.code,
@@ -300,12 +300,12 @@ export async function getDeliveryChallansOverview(): Promise<DeliveryChallansOve
             city: wh.city,
             state: wh.state
         })),
-        salesOrders: (salesOrdersRaw as any[]).map((so: any) => ({
+        salesOrders: (salesOrdersRaw as any[]).map((so) => ({
             id: so.id,
             orderNumber: so.orderNumber,
             customerName: so.customerName,
             total: Number(so.total),
-            items: (so.items as any[]).map((item: any) => ({
+            items: (so.items as any[]).map((item) => ({
                 productName: item.productName,
                 qty: Number(item.qty),
                 unitPrice: Number(item.unitPrice),
@@ -532,7 +532,7 @@ async function _convertChallanToInvoice(challanId: string) {
         })
 
         return { success: true, invoice }
-    }).then(async (res: any) => {
+    }).then(async (res) => {
         await postToLedger(tenantId, { kind: "invoice", id: res.invoice.id })
         await postInvoiceStock(tenantId, { invoiceId: res.invoice.id })
         try {

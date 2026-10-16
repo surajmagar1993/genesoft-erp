@@ -139,7 +139,7 @@ export async function getUsTaxOverview(params?: {
   })
 
   // Format invoices
-  const rawInvoices: RawUsInvoice[] = invoicesDb.map((inv: any) => {
+  const rawInvoices: RawUsInvoice[] = invoicesDb.map((inv) => {
     const billTo = (inv.billTo as Record<string, any>) || {}
     const shipTo = (inv.shipTo as Record<string, any>) || {}
     const contactBilling = (inv.contact?.billingAddress as Record<string, any>) || {}
@@ -189,7 +189,7 @@ export async function getUsTaxOverview(params?: {
     },
   })
 
-  const rawBills: RawUsBill[] = billsDb.map((b: any) => ({
+  const rawBills: RawUsBill[] = billsDb.map((b) => ({
     id: b.id,
     billNumber: b.billNumber,
     billDate: b.billDate.toISOString().split("T")[0],
@@ -212,7 +212,7 @@ export async function getUsTaxOverview(params?: {
     },
   })
 
-  const exemptionCertificates: UsExemptionCertificate[] = exemptContacts.map((c: any) => {
+  const exemptionCertificates: UsExemptionCertificate[] = exemptContacts.map((c) => {
     const rawReason = (c.taxExemptionReason as ExemptionType) || "RESALE"
     const validReason: ExemptionType = EXEMPTION_STATUTES[rawReason] ? rawReason : "RESALE"
     const statute = EXEMPTION_STATUTES[validReason]
