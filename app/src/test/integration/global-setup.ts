@@ -43,11 +43,14 @@ export default async function setup(project: TestProject) {
     const url = `postgresql://postgres:postgres@127.0.0.1:${port}/postgres?sslmode=disable`
 
     const appRoot = path.resolve(__dirname, "../../..")
-    // Async: PGlite answers from this same process, so a sync exec would deadlock
-    await promisify(execFile)(process.execPath, [path.join(appRoot, "node_modules/prisma/build/index.js"), "db", "push", "--accept-data-loss"], {
-        cwd: appRoot,
-        env: { ...process.env, DATABASE_URL: url, DIRECT_URL: url },
-    })
+    // Tables from prisma/schema.prisma: Prisma only prints the SQL for an empty database
+    // (no database connection, nothing destructive), and it runs on this in-memory one.
+    const { stdout: schemaSql } = await promisify(execFile)(
+        process.execPath,
+        [path.join(appRoot, "node_modules/prisma/build/index.js"), "migrate", "diff", "--from-empty", "--to-schema", "prisma/schema.prisma", "--script"],
+        { cwd: appRoot, maxBuffer: 32 * 1024 * 1024 },
+    )
+    await db.exec(schemaSql)
 
     project.provide("databaseUrl", url)
 
