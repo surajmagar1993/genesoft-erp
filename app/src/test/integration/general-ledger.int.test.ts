@@ -7,6 +7,7 @@ import { getPnlReport } from "@/app/actions/finance/reports"
 import { rebuildLedger, syncLedger } from "@/lib/ledger"
 import { accountLedger, balanceSheet, getOpeningBalances, saveOpeningBalances, trialBalance } from "@/lib/accounting-reports"
 import { actAs, createCustomer, createTestTenant } from "./helpers"
+import { unwrap } from "@/lib/action-result"
 
 const line = { description: "", hsn_sac: "", cgst_percent: 0, sgst_percent: 0, igst_percent: 0, cgst_amount: 0, sgst_amount: 0, igst_amount: 0 }
 
@@ -56,7 +57,7 @@ describe("general ledger (India)", () => {
         const cn = await createCreditNote({ contactId: customer.id, invoiceId: inv.id!, issueDate: "2026-09-15", reason: "GOODS_RETURN" as never, items: [{ description: "Return", quantity: 1, unitPrice: 1000, taxRate: 18 }] })
         expect(await bal(t, "4150")).toBe(-1000) // contra revenue (debit balance)
         expect(await bal(t, "1200")).toBe(4620)
-        await applyCreditToInvoice({ creditNoteId: cn.id, invoiceId: inv.id!, amount: 590 })
+        unwrap(await applyCreditToInvoice({ creditNoteId: cn.id, invoiceId: inv.id!, amount: 590 }))
         expect(await bal(t, "1200")).toBe(4620) // applying credit moves no money
         await recordCreditNoteRefund({ creditNoteId: cn.id, amount: 590, refundDate: "2026-09-16", paymentMethod: "BANK_TRANSFER" } as never)
         expect(await bal(t, "1120")).toBe(4410)

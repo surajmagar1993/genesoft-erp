@@ -123,6 +123,7 @@ const billItemRows = (billId: string, lines: BillItem[]) =>
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { createNotification } from "@/app/actions/notifications"
 import { logTenantAudit } from "@/lib/tenant-audit"
+import { safeAction } from "@/lib/safe-action"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "finance" as const
@@ -351,7 +352,7 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
 /**
  * Update bill status manually
  */
-export async function updateBillStatus(id: string, status: BillStatus) {
+async function _updateBillStatus(id: string, status: BillStatus) {
   const tenantId = await getTenantManagerId(MODULE)
 
   const { count } = await prisma.bill.updateMany({ where: { id, tenantId }, data: { status } })
@@ -402,4 +403,9 @@ export async function getProducts(limit: number = 100) {
     hsn_sac_code: p.hsnSacCode,
   }))
   return { data, total }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function updateBillStatus(...args: Parameters<typeof _updateBillStatus>) {
+    return safeAction(() => _updateBillStatus(...args))
 }

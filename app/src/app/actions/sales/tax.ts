@@ -5,6 +5,7 @@ import { toRow, toRows } from "@/lib/pg-row"
 import { getTenantTaxContext } from "@/lib/tenant-tax"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { safeAction } from "@/lib/safe-action"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = ["sales", "finance"] as const
@@ -38,7 +39,7 @@ export async function getTaxGroups() {
   }
 }
 
-export async function createTaxGroup(data: {
+async function _createTaxGroup(data: {
   name: string
   country_code: string
   is_default: boolean
@@ -64,7 +65,7 @@ export async function createTaxGroup(data: {
   return toRow<TaxGroup>("TaxGroup", group)
 }
 
-export async function deleteTaxGroup(id: string) {
+async function _deleteTaxGroup(id: string) {
   const tenantId = await getTenantManagerId(MODULE)
   // Rates go with their group (the database won't delete a group that still has rates);
   // products using it keep working with no tax group.
@@ -108,4 +109,12 @@ export async function getInvoiceTaxRegime(): Promise<{
         supplierTaxId: ctx.supplierTaxId,
         countryCode: ctx.regime.countryCode,
     }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createTaxGroup(...args: Parameters<typeof _createTaxGroup>) {
+    return safeAction(() => _createTaxGroup(...args))
+}
+export async function deleteTaxGroup(...args: Parameters<typeof _deleteTaxGroup>) {
+    return safeAction(() => _deleteTaxGroup(...args))
 }

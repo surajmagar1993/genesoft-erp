@@ -277,7 +277,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
 
         startTransition(async () => {
             try {
-                const res = await createDeliveryChallan({
+                const res = unwrap(await createDeliveryChallan({
                     contactId: contactId || undefined,
                     recipientName,
                     recipientEmail: recipientEmail || undefined,
@@ -298,7 +298,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                     notes: notes || undefined,
                     terms: terms || undefined,
                     items: lineItems
-                })
+                }))
 
                 toast.success(`Delivery Challan ${res.challan.challanNumber} issued successfully!`)
                 setIsCreateModalOpen(false)

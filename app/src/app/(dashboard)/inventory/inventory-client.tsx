@@ -427,14 +427,14 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
 
         setIsSubmittingAdjust(true)
         try {
-            const res = await adjustStock({
+            const res = unwrap(await adjustStock({
                 productId: adjustProductId,
                 warehouseId: adjustWarehouseId,
                 type: adjustType,
                 quantity: qtyNum,
                 reason: adjustReason,
                 referenceNo: adjustReference
-            })
+            }))
 
             if (res.success) {
                 toast.success(`Stock successfully updated! New balance: ${res.newWarehouseQty} units`)
@@ -469,14 +469,14 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
 
         setIsSubmittingTransfer(true)
         try {
-            const res = await transferStock({
+            const res = unwrap(await transferStock({
                 productId: transferProductId,
                 fromWarehouseId: transferFromWarehouseId,
                 toWarehouseId: transferToWarehouseId,
                 quantity: qtyNum,
                 reason: transferReason,
                 referenceNo: transferReference
-            })
+            }))
 
             if (res.success) {
                 toast.success(`Transferred ${qtyNum} units between warehouses!`)
@@ -503,7 +503,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
         setIsSubmittingWh(true)
         try {
             if (selectedWarehouseForEdit) {
-                await updateWarehouse(selectedWarehouseForEdit.id, {
+                unwrap(await updateWarehouse(selectedWarehouseForEdit.id, {
                     name: whName,
                     code: whCode,
                     address: whAddress,
@@ -513,7 +513,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                     contactName: whContactName,
                     contactPhone: whContactPhone,
                     isDefault: whIsDefault
-                })
+                }))
                 toast.success("Warehouse updated successfully")
             } else {
                 unwrap(await createWarehouse({

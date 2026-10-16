@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { ShieldAlert, Clock, MessageSquare, Send, CheckCircle2, User, Globe } from "lucide-react"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
+import { unwrap } from "@/lib/action-result"
 
 export default function SupportAdminPage() {
   const [tickets, setTickets] = useState<any[]>([])
@@ -31,7 +32,7 @@ export default function SupportAdminPage() {
   const handleAdminReply = async () => {
     if (!adminReply || !selectedTicket) return
     try {
-      await addMessage(selectedTicket.id, adminReply, true)
+      unwrap(await addMessage(selectedTicket.id, adminReply, true))
       setAdminReply("")
       await loadAllTickets()
       // Refresh current view
@@ -47,7 +48,7 @@ export default function SupportAdminPage() {
   const handleResolve = async () => {
     if (!selectedTicket) return
     try {
-      await updateTicketStatus(selectedTicket.id, "RESOLVED")
+      unwrap(await updateTicketStatus(selectedTicket.id, "RESOLVED"))
       toast.success("Ticket resolved")
       await loadAllTickets()
       setSelectedTicket({ ...selectedTicket, status: "RESOLVED" })

@@ -8,6 +8,7 @@ import { updateWorkOrderStatus } from "@/app/actions/manufacturing"
 import { runCustomReportQuery } from "@/app/actions/reports/builder"
 import { DATASET_DEFINITIONS } from "@/types/report-builder"
 import { actAs, createCustomer, createTestTenant } from "./helpers"
+import { unwrap } from "@/lib/action-result"
 
 const uid = () => Math.random().toString(36).slice(2, 8)
 const warehouse = (tenantId: string, isDefault = true) =>
@@ -111,11 +112,11 @@ describe("H5 work orders", () => {
         const bom = await prisma.billOfMaterials.create({ data: { tenantId: tenant.id, bomNumber: "BOM-1", name: "Kit", productId: fg.id, quantity: 1, items: { create: [{ productId: raw.id, quantity: 2, scrapPercentage: 0 }] } } as never })
         const wo = await prisma.workOrder.create({ data: { tenantId: tenant.id, orderNumber: "WO-1", bomId: bom.id, productId: fg.id, plannedQuantity: 5, sourceWarehouseId: src.id, targetWarehouseId: dst.id, dueDate: new Date(), status: "IN_PROGRESS" } as never })
 
-        await updateWorkOrderStatus(wo.id, "COMPLETED" as never, 5, 0)
+        unwrap(await updateWorkOrderStatus(wo.id, "COMPLETED" as never, 5, 0))
         const rawLeft = async () => Number((await prisma.warehouseStock.findFirstOrThrow({ where: { warehouseId: src.id, productId: raw.id } })).quantity)
         expect(await rawLeft()).toBe(90)
-        await expect(updateWorkOrderStatus(wo.id, "COMPLETED" as never, 5, 0)).rejects.toThrow(/already completed/)
-        await expect(updateWorkOrderStatus(wo.id, "PLANNED" as never)).rejects.toThrow(/already completed/)
+        await expect(updateWorkOrderStatus(wo.id, "COMPLETED" as never, 5, 0).then(unwrap)).rejects.toThrow(/already completed/)
+        await expect(updateWorkOrderStatus(wo.id, "PLANNED" as never).then(unwrap)).rejects.toThrow(/already completed/)
         expect(await rawLeft()).toBe(90)
     })
 })

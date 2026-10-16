@@ -77,6 +77,7 @@ import {
 import { BudgetPeriodType, BudgetStatus } from "@prisma/client"
 import { formatCurrency } from "@/lib/utils"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 interface BudgetsClientProps {
     initialData: BudgetsOverviewData
@@ -225,7 +226,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
 
         startTransition(async () => {
             try {
-                await createBudget({
+                unwrap(await createBudget({
                     name: newPlan.name,
                     fiscalYear: newPlan.fiscalYear,
                     periodType: newPlan.periodType,
@@ -236,7 +237,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                     criticalThresholdPercent: Number(newPlan.criticalThresholdPercent) || 100,
                     notes: newPlan.notes || null,
                     items: validItems
-                })
+                }))
                 toast.success(`Budget plan "${newPlan.name}" created successfully!`)
                 setIsCreateModalOpen(false)
                 router.refresh()
@@ -251,7 +252,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
         if (!statusModalBudget) return
         startTransition(async () => {
             try {
-                await changeBudgetStatus(statusModalBudget.id, newStatus)
+                unwrap(await changeBudgetStatus(statusModalBudget.id, newStatus))
                 toast.success(`Budget status updated to ${newStatus}`)
                 setStatusModalBudget(null)
                 router.refresh()
@@ -266,7 +267,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
         if (!confirm(`Are you sure you want to delete budget "${name}"?`)) return
         startTransition(async () => {
             try {
-                await deleteBudget(id)
+                unwrap(await deleteBudget(id))
                 toast.success("Budget plan deleted successfully")
                 router.refresh()
             } catch (err: any) {

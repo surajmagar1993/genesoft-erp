@@ -6,6 +6,7 @@ import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import { BudgetPeriodType, BudgetStatus, AccountType } from "@prisma/client"
+import { safeAction } from "@/lib/safe-action"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "finance" as const
@@ -401,7 +402,7 @@ export async function getBudgetDetail(id: string): Promise<BudgetDetailData | nu
 /**
  * Creates a new Budget plan with line item allocations.
  */
-export async function createBudget(data: {
+async function _createBudget(data: {
     name: string
     fiscalYear: string
     periodType: BudgetPeriodType
@@ -477,7 +478,7 @@ export async function createBudget(data: {
 /**
  * Updates an existing Budget plan's metadata and line item allocations.
  */
-export async function updateBudget(
+async function _updateBudget(
     id: string,
     data: {
         name?: string
@@ -564,7 +565,7 @@ export async function updateBudget(
 /**
  * Transitions a budget's lifecycle status (DRAFT -> SUBMITTED -> APPROVED -> ACTIVE -> CLOSED).
  */
-export async function changeBudgetStatus(
+async function _changeBudgetStatus(
     id: string,
     status: BudgetStatus,
     approverName?: string
@@ -596,7 +597,7 @@ export async function changeBudgetStatus(
 /**
  * Deletes a draft or closed budget plan.
  */
-export async function deleteBudget(id: string) {
+async function _deleteBudget(id: string) {
     const tenantId = await getTenantManagerId(MODULE)
 
     const existing = await prisma.budget.findFirst({
@@ -614,4 +615,18 @@ export async function deleteBudget(id: string) {
 
     revalidatePath("/finance/budgets")
     return { success: true }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createBudget(...args: Parameters<typeof _createBudget>) {
+    return safeAction(() => _createBudget(...args))
+}
+export async function updateBudget(...args: Parameters<typeof _updateBudget>) {
+    return safeAction(() => _updateBudget(...args))
+}
+export async function changeBudgetStatus(...args: Parameters<typeof _changeBudgetStatus>) {
+    return safeAction(() => _changeBudgetStatus(...args))
+}
+export async function deleteBudget(...args: Parameters<typeof _deleteBudget>) {
+    return safeAction(() => _deleteBudget(...args))
 }

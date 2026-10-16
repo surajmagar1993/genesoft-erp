@@ -74,6 +74,7 @@ import {
     DepositStatus,
 } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 interface RentalClientProps {
     initialData: RentalOverviewData
@@ -241,7 +242,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
         startTransition(async () => {
             try {
-                await createRentalAgreement({
+                unwrap(await createRentalAgreement({
                     contactId: newAgreement.contactId,
                     startDate: newAgreement.startDate,
                     endDate: newAgreement.endDate,
@@ -256,7 +257,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                             rate: selectedAssetForNewAgreement?.dailyRate,
                         }
                     ]
-                })
+                }))
 
                 toast.success("Rental agreement created and asset checked out!")
                 setIsNewAgreementOpen(false)
@@ -279,7 +280,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
         startTransition(async () => {
             try {
-                await createRentalAsset({
+                unwrap(await createRentalAsset({
                     name: newAsset.name,
                     category: newAsset.category,
                     assetCode: newAsset.assetCode || undefined,
@@ -291,7 +292,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                     condition: newAsset.condition,
                     warehouseId: newAsset.warehouseId || undefined,
                     description: newAsset.description || undefined,
-                })
+                }))
 
                 toast.success("Rental asset registered successfully!")
                 setIsNewAssetOpen(false)
@@ -339,7 +340,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
         startTransition(async () => {
             try {
-                await processRentalReturn({
+                unwrap(await processRentalReturn({
                     agreementId: selectedAgreementForReturn.id,
                     assetId: selectedAssetIdForReturn,
                     returnDate: returnForm.returnDate,
@@ -349,7 +350,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                     lateFee: Number(returnForm.lateFee),
                     depositRefunded: Number(returnForm.depositRefunded),
                     inspectedBy: returnForm.inspectedBy || undefined,
-                })
+                }))
 
                 toast.success("Return processed, damages reconciled, and asset updated!")
                 setIsReturnModalOpen(false)
@@ -384,7 +385,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
         startTransition(async () => {
             try {
-                await updateRentalAgreementStatus(id, RentalStatus.CANCELLED)
+                unwrap(await updateRentalAgreementStatus(id, RentalStatus.CANCELLED))
                 toast.success("Agreement cancelled and assets released")
                 router.refresh()
             } catch (err: unknown) {
@@ -398,7 +399,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
         startTransition(async () => {
             try {
-                await deleteRentalAsset(id)
+                unwrap(await deleteRentalAsset(id))
                 toast.success("Asset deleted successfully")
                 router.refresh()
             } catch (err: unknown) {
@@ -412,7 +413,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
         startTransition(async () => {
             try {
-                await updateRentalAsset(selectedAssetForEdit.id, {
+                unwrap(await updateRentalAsset(selectedAssetForEdit.id, {
                     name: selectedAssetForEdit.name,
                     category: selectedAssetForEdit.category,
                     serialNumber: selectedAssetForEdit.serialNumber || undefined,
@@ -424,7 +425,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                     status: selectedAssetForEdit.status,
                     warehouseId: selectedAssetForEdit.warehouseId || undefined,
                     description: selectedAssetForEdit.description || undefined,
-                })
+                }))
 
                 toast.success("Asset updated successfully")
                 setIsEditAssetOpen(false)

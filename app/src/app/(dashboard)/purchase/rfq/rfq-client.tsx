@@ -87,6 +87,7 @@ import {
 import { formatCurrency } from "@/lib/utils"
 import { RfqStatus, RfqVendorStatus } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 interface RfqClientProps {
     initialData: RfqOverviewData
@@ -289,14 +290,14 @@ export function RfqClient({ initialData }: RfqClientProps) {
 
         startTransition(async () => {
             try {
-                const res = await createRfq({
+                const res = unwrap(await createRfq({
                     title: createTitle,
                     dueDate: createDueDate,
                     notes: createNotes,
                     terms: createTerms,
                     items: validItems,
                     invitedVendorIds: createInvitedVendorIds,
-                })
+                }))
                 toast.success(`RFQ Tender ${res.rfqNumber} created successfully!`)
                 setIsCreateOpen(false)
                 router.refresh()
@@ -363,7 +364,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
 
         startTransition(async () => {
             try {
-                await recordVendorQuote({
+                unwrap(await recordVendorQuote({
                     rfqId: activeRfq.id,
                     quoteId: biddingVendorQuote.id,
                     quoteReference: bidQuoteRef,
@@ -373,7 +374,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                     leadTimeDays: parseInt(bidLeadTimeDays, 10) || undefined,
                     notes: bidNotes,
                     items: itemPayload,
-                })
+                }))
                 toast.success(`Quotation recorded for ${biddingVendorQuote.vendorCompanyName || biddingVendorQuote.vendorName}`)
                 setIsBidModalOpen(false)
                 router.refresh()
@@ -390,7 +391,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
         if (confirm(`Award RFQ ${activeRfq.rfqNumber} to ${quote.vendorCompanyName || quote.vendorName} for ${formatCurrency(quote.totalAmount, quote.currencyCode)}?\n\nThis will automatically generate a Purchase Order (PO).`)) {
             startTransition(async () => {
                 try {
-                    const res = await awardVendorQuote(activeRfq.id, quote.id)
+                    const res = unwrap(await awardVendorQuote(activeRfq.id, quote.id))
                     toast.success(`RFQ Awarded! Purchase Order ${res.poNumber} created successfully.`, {
                         action: {
                             label: "View PO",
@@ -410,7 +411,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
         if (!activeRfq) return
         startTransition(async () => {
             try {
-                await updateRfqStatus(activeRfq.id, status)
+                unwrap(await updateRfqStatus(activeRfq.id, status))
                 toast.success(`RFQ status updated to ${status.replace("_", " ")}`)
                 router.refresh()
             } catch (err: any) {
@@ -424,7 +425,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
         if (confirm("Are you sure you want to delete this RFQ? This action cannot be undone.")) {
             startTransition(async () => {
                 try {
-                    await deleteRfq(rfqId)
+                    unwrap(await deleteRfq(rfqId))
                     toast.success("RFQ deleted successfully")
                     if (activeRfqId === rfqId) setActiveRfqId(null)
                     router.refresh()
@@ -440,7 +441,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
         if (!activeRfq || inviteVendorIds.length === 0) return
         startTransition(async () => {
             try {
-                await inviteVendorsToRfq(activeRfq.id, inviteVendorIds)
+                unwrap(await inviteVendorsToRfq(activeRfq.id, inviteVendorIds))
                 toast.success(`${inviteVendorIds.length} vendor(s) invited to bid`)
                 setIsInviteOpen(false)
                 setInviteVendorIds([])

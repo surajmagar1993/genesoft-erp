@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { getTaxGroups, createTaxGroup, deleteTaxGroup, TaxGroup } from "@/app/actions/sales/tax"
 import { toast } from "sonner"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 export default function TaxConfigClient() {
     const [taxGroups, setTaxGroups] = useState<TaxGroup[]>([])
@@ -39,7 +40,7 @@ export default function TaxConfigClient() {
     async function handleCreate() {
         if (!newGroup.name) return toast.error("Name is required")
         try {
-            await createTaxGroup(newGroup)
+            unwrap(await createTaxGroup(newGroup))
             toast.success("Tax group created")
             setIsAdding(false)
             setNewGroup({ name: "", country_code: "IN", is_default: false, rates: [{ name: "GST", rate: 18 }] })
@@ -52,7 +53,7 @@ export default function TaxConfigClient() {
     async function handleDelete(id: string) {
         if (!confirm("Are you sure? This cannot be undone.")) return
         try {
-            await deleteTaxGroup(id)
+            unwrap(await deleteTaxGroup(id))
             toast.success("Tax group deleted")
             loadTaxGroups()
         } catch (error: any) {

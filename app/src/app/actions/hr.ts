@@ -10,6 +10,7 @@ import { getTenantRole, getTenantId, getTenantManagerId, getTenantWriterId } fro
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { safeAction } from "@/lib/safe-action"
 import {
     EmployeeStatus,
     EmploymentType,
@@ -412,7 +413,7 @@ export async function getHROverview(selectedDateStr?: string): Promise<HROvervie
 /**
  * Creates a new employee with an auto-generated sequential ID (EMP-0001).
  */
-export async function createEmployee(data: CreateEmployeeInput) {
+async function _createEmployee(data: CreateEmployeeInput) {
     const tenantId = await getTenantManagerId(MODULE)
     await assertTenantRefs(tenantId, { department: data.departmentId, designation: data.designationId, employee: data.managerId })
 
@@ -478,7 +479,7 @@ export async function createEmployee(data: CreateEmployeeInput) {
 /**
  * Updates an employee's profile and organizational assignments.
  */
-export async function updateEmployee(employeeId: string, data: UpdateEmployeeInput) {
+async function _updateEmployee(employeeId: string, data: UpdateEmployeeInput) {
     const tenantId = await getTenantManagerId(MODULE)
     await assertTenantRefs(tenantId, { employee: [employeeId, data.managerId], department: data.departmentId, designation: data.designationId })
 
@@ -521,7 +522,7 @@ export async function updateEmployee(employeeId: string, data: UpdateEmployeeInp
 /**
  * Creates a department.
  */
-export async function createDepartment(data: {
+async function _createDepartment(data: {
     name: string
     code?: string
     description?: string
@@ -550,7 +551,7 @@ export async function createDepartment(data: {
 /**
  * Creates a designation / job title linked to a department.
  */
-export async function createDesignation(data: {
+async function _createDesignation(data: {
     title: string
     departmentId?: string
     description?: string
@@ -647,7 +648,7 @@ export async function recordAttendance(data: {
 /**
  * Submits a new leave request.
  */
-export async function submitLeaveRequest(data: {
+async function _submitLeaveRequest(data: {
     employeeId: string
     type: LeaveType
     startDate: string
@@ -701,7 +702,7 @@ export async function submitLeaveRequest(data: {
 /**
  * Updates leave request status (Approve / Reject).
  */
-export async function updateLeaveStatus(data: {
+async function _updateLeaveStatus(data: {
     leaveId: string
     status: LeaveStatus
     rejectionReason?: string
@@ -734,4 +735,24 @@ export async function updateLeaveStatus(data: {
 
     revalidatePath("/hr")
     return { success: true, leave: updated }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createEmployee(...args: Parameters<typeof _createEmployee>) {
+    return safeAction(() => _createEmployee(...args))
+}
+export async function updateEmployee(...args: Parameters<typeof _updateEmployee>) {
+    return safeAction(() => _updateEmployee(...args))
+}
+export async function createDepartment(...args: Parameters<typeof _createDepartment>) {
+    return safeAction(() => _createDepartment(...args))
+}
+export async function createDesignation(...args: Parameters<typeof _createDesignation>) {
+    return safeAction(() => _createDesignation(...args))
+}
+export async function submitLeaveRequest(...args: Parameters<typeof _submitLeaveRequest>) {
+    return safeAction(() => _submitLeaveRequest(...args))
+}
+export async function updateLeaveStatus(...args: Parameters<typeof _updateLeaveStatus>) {
+    return safeAction(() => _updateLeaveStatus(...args))
 }

@@ -84,6 +84,7 @@ import { PurchaseOrderStatus } from "@prisma/client"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 interface PurchaseClientProps {
     initialData: PurchaseOverviewData
@@ -329,7 +330,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
 
         setIsSubmittingVendor(true)
         try {
-            const res = await createVendor({
+            const res = unwrap(await createVendor({
                 displayName,
                 companyName: vendorCompanyName.trim() || undefined,
                 email: vendorEmail.trim() || undefined,
@@ -338,7 +339,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                 city: vendorCity.trim() || undefined,
                 state: vendorState.trim() || undefined,
                 countryCode: vendorCountryCode || "IN",
-            })
+            }))
 
             if (res.success) {
                 toast.success("Supplier created successfully")
@@ -403,14 +404,14 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
 
         setIsSubmittingPO(true)
         try {
-            const res = await createPurchaseOrder({
+            const res = unwrap(await createPurchaseOrder({
                 vendorId: poVendorId,
                 warehouseId: poWarehouseId || undefined,
                 expectedDeliveryDate: poDeliveryDate || undefined,
                 notes: poNotes.trim() || undefined,
                 terms: poTerms.trim() || undefined,
                 items: formattedItems,
-            })
+            }))
 
             if (res.success) {
                 toast.success(`Purchase order ${res.order.orderNumber} created successfully`)
@@ -431,7 +432,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
     const handleStatusTransition = async (orderId: string, newStatus: PurchaseOrderStatus) => {
         setIsUpdatingStatus(orderId)
         try {
-            const res = await updatePurchaseOrderStatus(orderId, newStatus)
+            const res = unwrap(await updatePurchaseOrderStatus(orderId, newStatus))
             if (res.success) {
                 toast.success(`Order status updated to ${newStatus}`)
                 startTransition(() => {
@@ -500,12 +501,12 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
 
         setIsSubmittingReceive(true)
         try {
-            const res = await receiveGoods({
+            const res = unwrap(await receiveGoods({
                 purchaseOrderId: selectedPO.id,
                 warehouseId: receiveWarehouseId,
                 receivedItems: itemsToReceive,
                 notes: receiveNotes.trim() || undefined,
-            })
+            }))
 
             if (res.success) {
                 toast.success(

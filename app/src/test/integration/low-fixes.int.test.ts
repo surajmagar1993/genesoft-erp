@@ -8,6 +8,7 @@ import { createBudget, getBudgetsOverview } from "@/app/actions/finance/budgets"
 import { getRentalOverview } from "@/app/actions/rental"
 import { markOverdueRentals } from "@/lib/rental-overdue"
 import { actAs, createCustomer, createTestTenant } from "./helpers"
+import { unwrap } from "@/lib/action-result"
 
 const uid = () => Math.random().toString(36).slice(2, 8)
 
@@ -72,7 +73,7 @@ describe("L7 budgets and L8 proration", () => {
         await approvePayRun((await prisma.payrollRun.findFirstOrThrow({ where: { tenantId: tenant.id } })).id)
 
         const salaries = await prisma.account.findFirstOrThrow({ where: { tenantId: tenant.id, code: "5200" } })
-        await createBudget({ name: "FY", fiscalYear: "2026", periodType: "ANNUAL" as never, startDate: "2026-01-01", endDate: "2026-12-31", items: [{ accountId: salaries.id, budgetedAmount: 200000 }] })
+        unwrap(await createBudget({ name: "FY", fiscalYear: "2026", periodType: "ANNUAL" as never, startDate: "2026-01-01", endDate: "2026-12-31", items: [{ accountId: salaries.id, budgetedAmount: 200000 }] }))
         const overview = await getBudgetsOverview()
         const lines = await prisma.journalEntryLine.aggregate({ where: { tenantId: tenant.id, accountId: salaries.id, journalEntry: { status: "POSTED" } }, _sum: { debit: true, credit: true } })
         const posted = Number(lines._sum.debit) - Number(lines._sum.credit)

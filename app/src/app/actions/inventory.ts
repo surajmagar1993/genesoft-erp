@@ -8,6 +8,7 @@ import { fireStockAlert } from "@/lib/workflow-engine"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { StockMovementType } from "@prisma/client"
+import { safeAction } from "@/lib/safe-action"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "inventory" as const
@@ -367,7 +368,7 @@ async function _createWarehouse(data: {
 /**
  * Updates an existing warehouse.
  */
-export async function updateWarehouse(id: string, data: {
+async function _updateWarehouse(id: string, data: {
     name: string
     code: string
     address?: string
@@ -426,7 +427,7 @@ export async function updateWarehouse(id: string, data: {
 /**
  * Records a stock adjustment (IN, OUT, ADJUSTMENT, DAMAGE, RETURN) atomically.
  */
-export async function adjustStock(data: {
+async function _adjustStock(data: {
     productId: string
     warehouseId: string
     type: StockMovementType
@@ -560,7 +561,7 @@ export async function adjustStock(data: {
 /**
  * Transfers stock between two physical warehouses atomically.
  */
-export async function transferStock(data: {
+async function _transferStock(data: {
     productId: string
     fromWarehouseId: string
     toWarehouseId: string
@@ -773,7 +774,7 @@ export async function quickScanAdjustStock(params: {
     reason: string
     referenceNo?: string
 }) {
-    return adjustStock({
+    return _adjustStock({
         productId: params.productId,
         warehouseId: params.warehouseId,
         quantity: params.quantity,
@@ -1044,4 +1045,15 @@ export async function getInventoryReportsData(
             }
         }
     }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function updateWarehouse(...args: Parameters<typeof _updateWarehouse>) {
+    return safeAction(() => _updateWarehouse(...args))
+}
+export async function adjustStock(...args: Parameters<typeof _adjustStock>) {
+    return safeAction(() => _adjustStock(...args))
+}
+export async function transferStock(...args: Parameters<typeof _transferStock>) {
+    return safeAction(() => _transferStock(...args))
 }

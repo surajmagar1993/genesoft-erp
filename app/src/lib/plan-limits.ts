@@ -20,6 +20,8 @@ export type PlanFeature = PlanModuleKey
 const TRIAL_TIER: PlanTier = "PRO"
 
 export class PlanLimitError extends Error {
+    /** Shown to the user as it is (src/lib/safe-action.ts) */
+    readonly userFacing = true
     constructor(message: string) {
         super(message)
         this.name = "PlanLimitError"

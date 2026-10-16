@@ -64,6 +64,7 @@ import {
     CreditNoteReason,
 } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 interface CreditNotesClientProps {
     initialData: CreditNotesOverviewData
@@ -300,11 +301,11 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
 
         startTransition(async () => {
             try {
-                await applyCreditToInvoice({
+                unwrap(await applyCreditToInvoice({
                     creditNoteId: selectedCreditNote.id,
                     invoiceId: applyForm.invoiceId,
                     amount: Number(applyForm.amount),
-                })
+                }))
 
                 toast.success("Credit applied successfully to invoice!")
                 setIsApplyModalOpen(false)

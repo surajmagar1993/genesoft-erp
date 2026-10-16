@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { requireTaxId } from "@/lib/tax-identity"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { COMPANY } from "@/lib/constants/company"
+import { safeAction } from "@/lib/safe-action"
 import {
   compileUsStateSalesTaxSchedule,
   compileUs1099Records,
@@ -347,7 +348,7 @@ export async function saveExemptionCertificateAction(data: {
   }
 }
 
-export async function updateVendorW9Action(data: {
+async function _updateVendorW9Action(data: {
   vendorId: string
   ein: string
 }): Promise<{ success: boolean; message: string }> {
@@ -372,4 +373,9 @@ export async function updateVendorW9Action(data: {
     success: true,
     message: `Vendor EIN updated to ${check.formatted}. W-9 status verified.`,
   }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function updateVendorW9Action(...args: Parameters<typeof _updateVendorW9Action>) {
+    return safeAction(() => _updateVendorW9Action(...args))
 }

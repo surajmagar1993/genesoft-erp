@@ -89,6 +89,7 @@ import {
     hireApplicant
 } from "@/app/actions/recruitment"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 interface RecruitmentClientProps {
     initialData: RecruitmentOverviewData
@@ -350,7 +351,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
 
         startTransition(async () => {
             try {
-                await scheduleInterview({
+                unwrap(await scheduleInterview({
                     applicantId: intCandidateId,
                     roundName: intRoundName,
                     interviewerId: intInterviewerId || undefined,
@@ -358,7 +359,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                     scheduledAt: intScheduledAt,
                     durationMinutes: Number(intDuration) || 45,
                     meetingLink: intMeetingLink || undefined
-                })
+                }))
                 toast.success("Interview round scheduled! Candidate moved to Interviewing.")
                 setIsScheduleInterviewOpen(false)
                 router.refresh()
@@ -431,7 +432,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
 
         startTransition(async () => {
             try {
-                const res = await hireApplicant(selectedCandidate.id, {
+                const res = unwrap(await hireApplicant(selectedCandidate.id, {
                     firstName: hireFirstName,
                     lastName: hireLastName || undefined,
                     email: hireEmail,
@@ -441,7 +442,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                     joiningDate: hireJoiningDate,
                     basicSalary: Number(hireSalary),
                     employmentType: hireEmploymentType
-                })
+                }))
                 toast.success(`Candidate hired! Created Employee record ${res.employee.employeeNumber}.`)
                 setIsHireModalOpen(false)
                 router.refresh()

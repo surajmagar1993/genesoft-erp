@@ -10,6 +10,7 @@ import { createInvoice, type CreateInvoicePayload } from "@/app/actions/sales/in
 import { convertOrderToInvoice, createOrder } from "@/app/actions/sales/orders"
 import { createQuote } from "@/app/actions/sales/quotes"
 import { actAs, addUser, createCustomer, createTestTenant } from "./helpers"
+import { unwrap } from "@/lib/action-result"
 
 const uid = () => Math.random().toString(36).slice(2, 8)
 
@@ -52,10 +53,10 @@ describe("M14 rental returns", () => {
                 items: { create: [{ tenantId: tenant.id, assetId: asset.id, quantity: 1, rentalDays: 5, rate: 100, totalAmount: 500 }] } } as never,
         })
         const base = { agreementId: ag.id, assetId: asset.id, returnDate: "2026-10-10", condition: "GOOD" as never }
-        await expect(processRentalReturn({ ...base, depositRefunded: 1500 })).rejects.toThrow(/between 0 and the deposit/)
-        await expect(processRentalReturn({ ...base, damageFee: -5 })).rejects.toThrow(/negative/)
-        await processRentalReturn({ ...base, depositRefunded: 1000 })
-        await expect(processRentalReturn({ ...base, depositRefunded: 1000 })).rejects.toThrow(/already/)
+        await expect(processRentalReturn({ ...base, depositRefunded: 1500 }).then(unwrap)).rejects.toThrow(/between 0 and the deposit/)
+        await expect(processRentalReturn({ ...base, damageFee: -5 }).then(unwrap)).rejects.toThrow(/negative/)
+        unwrap(await processRentalReturn({ ...base, depositRefunded: 1000 }))
+        await expect(processRentalReturn({ ...base, depositRefunded: 1000 }).then(unwrap)).rejects.toThrow(/already/)
     })
 })
 
@@ -65,11 +66,11 @@ describe("M12 leave", () => {
         const manager = await addUser(tenant.id, "MANAGER")
         const emp = await prisma.employee.create({ data: { tenantId: tenant.id, employeeNumber: `E-${uid()}`, firstName: "Mo", displayName: "Mo Manager", email: `mo-${uid()}@example.test`, userId: manager.id } as never })
         actAs(manager)
-        const lv = await submitLeaveRequest({ employeeId: emp.id, type: "CASUAL" as never, startDate: "2026-11-02", endDate: "2026-11-04", reason: "Trip" })
-        await expect(submitLeaveRequest({ employeeId: emp.id, type: "CASUAL" as never, startDate: "2026-11-04", endDate: "2026-11-05", reason: "Again" })).rejects.toThrow(/already a leave request/)
-        await expect(updateLeaveStatus({ leaveId: lv.leave.id, status: "APPROVED" as never })).rejects.toThrow(/your own leave/)
+        const lv = unwrap(await submitLeaveRequest({ employeeId: emp.id, type: "CASUAL" as never, startDate: "2026-11-02", endDate: "2026-11-04", reason: "Trip" }))
+        await expect(submitLeaveRequest({ employeeId: emp.id, type: "CASUAL" as never, startDate: "2026-11-04", endDate: "2026-11-05", reason: "Again" }).then(unwrap)).rejects.toThrow(/already a leave request/)
+        await expect(updateLeaveStatus({ leaveId: lv.leave.id, status: "APPROVED" as never }).then(unwrap)).rejects.toThrow(/your own leave/)
         actAs(user) // the workspace admin can
-        expect((await updateLeaveStatus({ leaveId: lv.leave.id, status: "APPROVED" as never })).success).toBe(true)
+        expect((unwrap(await updateLeaveStatus({ leaveId: lv.leave.id, status: "APPROVED" as never }))).success).toBe(true)
     })
 })
 
@@ -83,7 +84,7 @@ describe("M15 work order shortages", () => {
         await prisma.warehouseStock.create({ data: { tenantId: tenant.id, warehouseId: wh.id, productId: raw.id, quantity: 3 } })
         const bom = await prisma.billOfMaterials.create({ data: { tenantId: tenant.id, bomNumber: `B-${uid()}`, name: "Frame", productId: fg.id, quantity: 1, items: { create: [{ productId: raw.id, quantity: 2, scrapPercentage: 0 }] } } as never })
         const wo = await prisma.workOrder.create({ data: { tenantId: tenant.id, orderNumber: `WO-${uid()}`, bomId: bom.id, productId: fg.id, plannedQuantity: 5, sourceWarehouseId: wh.id, targetWarehouseId: wh.id, dueDate: new Date(), status: "IN_PROGRESS" } as never })
-        await expect(updateWorkOrderStatus(wo.id, "COMPLETED" as never, 5, 0)).rejects.toThrow(/Not enough raw material.*Steel \(need 10, have 3\)/)
+        await expect(updateWorkOrderStatus(wo.id, "COMPLETED" as never, 5, 0).then(unwrap)).rejects.toThrow(/Not enough raw material.*Steel \(need 10, have 3\)/)
         expect((await prisma.workOrder.findUniqueOrThrow({ where: { id: wo.id } })).status).toBe("IN_PROGRESS")
     })
 })

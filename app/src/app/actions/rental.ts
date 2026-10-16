@@ -12,6 +12,7 @@ import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
+import { safeAction } from "@/lib/safe-action"
 import {
     AssetCondition,
     RentalAssetStatus,
@@ -680,7 +681,7 @@ export async function getRentalOverview(): Promise<RentalOverviewData> {
 /**
  * Register a new rental asset.
  */
-export async function createRentalAsset(input: CreateRentalAssetInput) {
+async function _createRentalAsset(input: CreateRentalAssetInput) {
     const tenantId = await getTenantWriterId(MODULE)
     await assertPlanFeature(tenantId, "rentals")
     await assertTenantRefs(tenantId, { warehouse: input.warehouseId })
@@ -721,7 +722,7 @@ export async function createRentalAsset(input: CreateRentalAssetInput) {
 /**
  * Update an existing rental asset.
  */
-export async function updateRentalAsset(id: string, input: UpdateRentalAssetInput) {
+async function _updateRentalAsset(id: string, input: UpdateRentalAssetInput) {
     const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { warehouse: input.warehouseId })
     if (!tenantId) throw new Error("Unauthorized tenant context")
@@ -750,7 +751,7 @@ export async function updateRentalAsset(id: string, input: UpdateRentalAssetInpu
 /**
  * Delete an asset (only if not currently rented or linked to active agreements).
  */
-export async function deleteRentalAsset(id: string) {
+async function _deleteRentalAsset(id: string) {
     const tenantId = await getTenantManagerId(MODULE)
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
@@ -786,7 +787,7 @@ export async function deleteRentalAsset(id: string) {
 /**
  * Create a new rental agreement with asset checkout.
  */
-export async function createRentalAgreement(input: CreateRentalAgreementInput) {
+async function _createRentalAgreement(input: CreateRentalAgreementInput) {
     const tenantId = await getTenantWriterId(MODULE)
     await assertPlanFeature(tenantId, "rentals")
     await assertTenantRefs(tenantId, { contact: input.contactId, rentalAsset: input.items.map((i) => i.assetId) })
@@ -897,7 +898,7 @@ export async function createRentalAgreement(input: CreateRentalAgreementInput) {
 /**
  * Update rental agreement status (e.g. Cancel).
  */
-export async function updateRentalAgreementStatus(id: string, status: RentalStatus) {
+async function _updateRentalAgreementStatus(id: string, status: RentalStatus) {
     const tenantId = await getTenantWriterId(MODULE)
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
@@ -931,7 +932,7 @@ export async function updateRentalAgreementStatus(id: string, status: RentalStat
 /**
  * Process rental return and damage inspection.
  */
-export async function processRentalReturn(input: ProcessRentalReturnInput) {
+async function _processRentalReturn(input: ProcessRentalReturnInput) {
     const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { rentalAsset: input.assetId })
     if (!tenantId) throw new Error("Unauthorized tenant context")
@@ -1151,4 +1152,24 @@ export async function convertAgreementToInvoice(agreementId: string) {
     revalidatePath("/sales/rental")
     revalidatePath("/sales/invoices")
     return newInvoice
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createRentalAsset(...args: Parameters<typeof _createRentalAsset>) {
+    return safeAction(() => _createRentalAsset(...args))
+}
+export async function updateRentalAsset(...args: Parameters<typeof _updateRentalAsset>) {
+    return safeAction(() => _updateRentalAsset(...args))
+}
+export async function deleteRentalAsset(...args: Parameters<typeof _deleteRentalAsset>) {
+    return safeAction(() => _deleteRentalAsset(...args))
+}
+export async function createRentalAgreement(...args: Parameters<typeof _createRentalAgreement>) {
+    return safeAction(() => _createRentalAgreement(...args))
+}
+export async function updateRentalAgreementStatus(...args: Parameters<typeof _updateRentalAgreementStatus>) {
+    return safeAction(() => _updateRentalAgreementStatus(...args))
+}
+export async function processRentalReturn(...args: Parameters<typeof _processRentalReturn>) {
+    return safeAction(() => _processRentalReturn(...args))
 }

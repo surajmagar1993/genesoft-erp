@@ -7,6 +7,7 @@ import { assertTenantRefs as assertRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import { BatchStatus, SerialStatus, StockMovementType } from "@prisma/client"
 import { addMonths, isBefore, addDays } from "date-fns"
+import { safeAction } from "@/lib/safe-action"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "inventory" as const
@@ -300,7 +301,7 @@ async function assertTenantRefs(
 /**
  * Creates a new Product Lot / Batch entry with quantity and optional manufacturing / expiry dates.
  */
-export async function createBatch(data: {
+async function _createBatch(data: {
     productId: string
     warehouseId: string
     batchNumber: string
@@ -431,7 +432,7 @@ export async function createBatch(data: {
 /**
  * Updates batch properties (status, notes, expiryDate).
  */
-export async function updateBatch(
+async function _updateBatch(
     id: string,
     data: {
         status?: BatchStatus
@@ -468,7 +469,7 @@ export async function updateBatch(
 /**
  * Adjusts batch current quantity with reason and logs stock movement audit.
  */
-export async function adjustBatchQty(id: string, deltaQty: number, reason: string) {
+async function _adjustBatchQty(id: string, deltaQty: number, reason: string) {
     const tenantId = await getTenantWriterId(MODULE)
 
     if (!deltaQty || isNaN(deltaQty)) {
@@ -563,7 +564,7 @@ export async function adjustBatchQty(id: string, deltaQty: number, reason: strin
 /**
  * Initiates an emergency product recall on a specific lot number.
  */
-export async function recallBatch(id: string, recallReason: string) {
+async function _recallBatch(id: string, recallReason: string) {
     const tenantId = await getTenantManagerId(MODULE)
 
     if (!recallReason.trim()) {
@@ -598,7 +599,7 @@ export async function recallBatch(id: string, recallReason: string) {
 /**
  * Creates a single serial number asset registration.
  */
-export async function createSerial(data: {
+async function _createSerial(data: {
     productId: string
     warehouseId?: string | null
     batchId?: string | null
@@ -657,7 +658,7 @@ export async function createSerial(data: {
 /**
  * Bulk registers serial numbers, either from explicit list or sequential range generator (e.g. SN-0001 to SN-0050).
  */
-export async function createSerialsBulk(data: {
+async function _createSerialsBulk(data: {
     productId: string
     warehouseId?: string | null
     batchId?: string | null
@@ -750,7 +751,7 @@ export async function createSerialsBulk(data: {
 /**
  * Updates a serial number's lifecycle status (AVAILABLE, ALLOCATED, SOLD, DEFECTIVE, MAINTENANCE, RETURNED).
  */
-export async function updateSerialStatus(id: string, status: SerialStatus, notes?: string | null) {
+async function _updateSerialStatus(id: string, status: SerialStatus, notes?: string | null) {
     const tenantId = await getTenantWriterId(MODULE)
 
     const serial = await prisma.productSerial.findFirst({
@@ -987,4 +988,27 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
     }
 
     return { found: false }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createBatch(...args: Parameters<typeof _createBatch>) {
+    return safeAction(() => _createBatch(...args))
+}
+export async function updateBatch(...args: Parameters<typeof _updateBatch>) {
+    return safeAction(() => _updateBatch(...args))
+}
+export async function adjustBatchQty(...args: Parameters<typeof _adjustBatchQty>) {
+    return safeAction(() => _adjustBatchQty(...args))
+}
+export async function recallBatch(...args: Parameters<typeof _recallBatch>) {
+    return safeAction(() => _recallBatch(...args))
+}
+export async function createSerial(...args: Parameters<typeof _createSerial>) {
+    return safeAction(() => _createSerial(...args))
+}
+export async function createSerialsBulk(...args: Parameters<typeof _createSerialsBulk>) {
+    return safeAction(() => _createSerialsBulk(...args))
+}
+export async function updateSerialStatus(...args: Parameters<typeof _updateSerialStatus>) {
+    return safeAction(() => _updateSerialStatus(...args))
 }

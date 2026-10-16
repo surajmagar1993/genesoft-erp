@@ -59,3 +59,15 @@ describe("isDisconnectNoise", () => {
         expect(isDisconnectNoise("Cannot read properties of undefined (reading 'id')")).toBe(false)
     })
 })
+
+describe("safeAction message rules", async () => {
+    const { isUserMessage } = await import("@/lib/safe-action")
+    const { PlanLimitError } = await import("@/lib/plan-limits")
+    it("returns messages written for the user; treats everything else as a fault", () => {
+        expect(isUserMessage(new Error("Not enough stock in Main warehouse"))).toBe(true)
+        expect(isUserMessage(new PlanLimitError("Rentals need the Enterprise plan"))).toBe(true)
+        expect(isUserMessage(new TypeError("Cannot read properties of undefined"))).toBe(false)
+        expect(isUserMessage(new Error("Invalid `prisma.invoice.create()` invocation"))).toBe(false)
+        expect(isUserMessage("string")).toBe(false)
+    })
+})

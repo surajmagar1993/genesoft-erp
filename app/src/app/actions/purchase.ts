@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { planLimitError } from "@/lib/plan-limits"
 import { PurchaseOrderStatus, StockMovementType } from "@prisma/client"
+import { safeAction } from "@/lib/safe-action"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "purchase" as const
@@ -289,7 +290,7 @@ export async function getPurchaseOverview(): Promise<PurchaseOverviewData> {
 /**
  * Creates a new supplier / vendor in the system.
  */
-export async function createVendor(data: {
+async function _createVendor(data: {
     companyName?: string
     displayName: string
     email?: string
@@ -333,7 +334,7 @@ export async function createVendor(data: {
 /**
  * Creates a new Purchase Order with calculated totals and line items.
  */
-export async function createPurchaseOrder(data: CreatePurchaseOrderInput) {
+async function _createPurchaseOrder(data: CreatePurchaseOrderInput) {
     const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { contact: data.vendorId, warehouse: data.warehouseId, product: data.items.map((i) => i.productId) })
 
@@ -408,7 +409,7 @@ export async function createPurchaseOrder(data: CreatePurchaseOrderInput) {
 /**
  * Updates the lifecycle status of a Purchase Order.
  */
-export async function updatePurchaseOrderStatus(id: string, status: PurchaseOrderStatus) {
+async function _updatePurchaseOrderStatus(id: string, status: PurchaseOrderStatus) {
     const tenantId = await getTenantManagerId(MODULE)
 
     const existing = await prisma.purchaseOrder.findFirst({
@@ -429,7 +430,7 @@ export async function updatePurchaseOrderStatus(id: string, status: PurchaseOrde
  * Receives goods from an approved PO into a designated warehouse facility.
  * Atomically updates PO receivedQty, creates StockMovement (IN), and updates WarehouseStock + Product.stockQty.
  */
-export async function receiveGoods(data: {
+async function _receiveGoods(data: {
     purchaseOrderId: string
     warehouseId: string
     receivedItems: { itemId: string; quantity: number }[]
@@ -654,4 +655,18 @@ export async function convertPOToBill(data: string | {
     revalidatePath("/finance/bills")
     revalidatePath("/finance/payable")
     return { success: true, billId: result.id, billNumber: result.billNumber }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createVendor(...args: Parameters<typeof _createVendor>) {
+    return safeAction(() => _createVendor(...args))
+}
+export async function createPurchaseOrder(...args: Parameters<typeof _createPurchaseOrder>) {
+    return safeAction(() => _createPurchaseOrder(...args))
+}
+export async function updatePurchaseOrderStatus(...args: Parameters<typeof _updatePurchaseOrderStatus>) {
+    return safeAction(() => _updatePurchaseOrderStatus(...args))
+}
+export async function receiveGoods(...args: Parameters<typeof _receiveGoods>) {
+    return safeAction(() => _receiveGoods(...args))
 }

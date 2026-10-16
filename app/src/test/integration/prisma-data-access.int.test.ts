@@ -9,6 +9,7 @@ import { createNotification } from "@/app/actions/notifications"
 import { getTenantSettings, updateTenantSettings } from "@/app/actions/settings/tenant"
 import { createProduct, getProducts } from "@/app/actions/sales/products"
 import { actAs, createCustomer, createTestTenant } from "./helpers"
+import { unwrap } from "@/lib/action-result"
 
 const line = { product_name: "Work", description: "", qty: 2, unit_price: 500, tax_percent: 18 }
 const quotePayload = (contactId: string) => ({
@@ -74,11 +75,11 @@ describe("M17 one data path (Prisma) with tenant isolation", () => {
     it("a tax group with rates can be deleted; products keep working", async () => {
         const { user } = await createTestTenant()
         actAs(user)
-        const g = await createTaxGroup({ name: "GST 18", country_code: "IN", is_default: false, rates: [{ name: "CGST", rate: 9 }, { name: "SGST", rate: 9 }] })
+        const g = unwrap(await createTaxGroup({ name: "GST 18", country_code: "IN", is_default: false, rates: [{ name: "CGST", rate: 9 }, { name: "SGST", rate: 9 }] }))
         expect((await getTaxGroups())[0].tax_rates).toHaveLength(2)
         const p = await createProduct({ type: "PRODUCT", name: "Cable", unit_price: 10, tax_group_id: g.id })
         expect(p.error).toBeNull()
-        await deleteTaxGroup(g.id)
+        unwrap(await deleteTaxGroup(g.id))
         expect(await getTaxGroups()).toEqual([])
         expect((await getProducts()).data[0]).toMatchObject({ name: "Cable", unit_price: 10, tax_group_id: null })
     })

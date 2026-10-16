@@ -13,6 +13,7 @@ import { buildInvoiceLines, contactPlaceOfSupply } from "@/lib/invoice-lines"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
+import { safeAction } from "@/lib/safe-action"
 import {
     ChallanReason,
     ChallanStatus,
@@ -352,7 +353,7 @@ export interface CreateDeliveryChallanInput {
 /**
  * Create a new Delivery Challan (Rule 55) with sequential DC-YYYY-XXXX numbering
  */
-export async function createDeliveryChallan(input: CreateDeliveryChallanInput) {
+async function _createDeliveryChallan(input: CreateDeliveryChallanInput) {
     const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { contact: input.contactId, warehouse: input.sourceWarehouseId, salesOrder: input.salesOrderId, product: input.items.map((i) => i.productId) })
 
@@ -539,4 +540,9 @@ async function _convertChallanToInvoice(challanId: string) {
         revalidatePath("/sales/invoices")
         return res
     })
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createDeliveryChallan(...args: Parameters<typeof _createDeliveryChallan>) {
+    return safeAction(() => _createDeliveryChallan(...args))
 }

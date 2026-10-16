@@ -5,6 +5,7 @@ import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { safeAction } from "@/lib/safe-action"
 import {
     JobStatus,
     ApplicantStage,
@@ -450,7 +451,7 @@ export interface ScheduleInterviewInput {
 /**
  * Schedule an interview round and advance candidate stage if currently applied/screening
  */
-export async function scheduleInterview(input: ScheduleInterviewInput) {
+async function _scheduleInterview(input: ScheduleInterviewInput) {
     const tenantId = await getTenantWriterId(MODULE)
 
     const applicant = await prisma.jobApplicant.findUnique({
@@ -532,7 +533,7 @@ export interface HireApplicantInput {
 /**
  * 1-Click Hire: Convert Applicant into core HR Employee record atomically
  */
-export async function hireApplicant(applicantId: string, employeeData: HireApplicantInput) {
+async function _hireApplicant(applicantId: string, employeeData: HireApplicantInput) {
     const tenantId = await getTenantManagerId(MODULE)
 
     return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -613,4 +614,12 @@ export async function hireApplicant(applicantId: string, employeeData: HireAppli
         revalidatePath("/hr/recruitment")
         return res
     })
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function scheduleInterview(...args: Parameters<typeof _scheduleInterview>) {
+    return safeAction(() => _scheduleInterview(...args))
+}
+export async function hireApplicant(...args: Parameters<typeof _hireApplicant>) {
+    return safeAction(() => _hireApplicant(...args))
 }

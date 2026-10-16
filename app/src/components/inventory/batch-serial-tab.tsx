@@ -84,6 +84,7 @@ import {
 } from "@/app/actions/batch-serial"
 import { BatchStatus, SerialStatus } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 interface BatchSerialTabProps {
     data: BatchSerialOverviewData
@@ -243,7 +244,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
 
         startTransition(async () => {
             try {
-                await createBatch({
+                unwrap(await createBatch({
                     productId: newBatch.productId,
                     warehouseId: newBatch.warehouseId,
                     batchNumber: newBatch.batchNumber,
@@ -253,7 +254,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                     costPrice: newBatch.costPrice ? Number(newBatch.costPrice) : null,
                     supplierBatchNo: newBatch.supplierBatchNo || null,
                     notes: newBatch.notes || null,
-                })
+                }))
                 toast.success(`Lot / Batch "${newBatch.batchNumber.toUpperCase()}" created successfully!`)
                 setIsCreateBatchOpen(false)
                 setNewBatch({
@@ -285,7 +286,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
         startTransition(async () => {
             try {
                 if (serialMode === "RANGE") {
-                    const res = await createSerialsBulk({
+                    const res = unwrap(await createSerialsBulk({
                         productId: newSerials.productId,
                         warehouseId: newSerials.warehouseId || null,
                         batchId: newSerials.batchId || null,
@@ -295,7 +296,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                         padLength: Number(newSerials.padLength),
                         warrantyMonths: Number(newSerials.warrantyMonths) || null,
                         notes: newSerials.notes || null,
-                    })
+                    }))
                     toast.success(`Registered ${res.createdCount} serial numbers! (${res.skippedCount} skipped as duplicates)`)
                 } else {
                     const rawList = newSerials.manualInput
@@ -308,14 +309,14 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                         return
                     }
 
-                    const res = await createSerialsBulk({
+                    const res = unwrap(await createSerialsBulk({
                         productId: newSerials.productId,
                         warehouseId: newSerials.warehouseId || null,
                         batchId: newSerials.batchId || null,
                         serialNumbers: rawList,
                         warrantyMonths: Number(newSerials.warrantyMonths) || null,
                         notes: newSerials.notes || null,
-                    })
+                    }))
                     toast.success(`Registered ${res.createdCount} serial numbers! (${res.skippedCount} skipped as duplicates)`)
                 }
 
@@ -352,7 +353,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
 
         startTransition(async () => {
             try {
-                await adjustBatchQty(adjustBatchTarget.id, delta, adjustReason)
+                unwrap(await adjustBatchQty(adjustBatchTarget.id, delta, adjustReason))
                 toast.success(`Updated batch quantity for "${adjustBatchTarget.batchNumber}".`)
                 setAdjustBatchTarget(null)
                 setAdjustQty(0)
@@ -374,7 +375,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
 
         startTransition(async () => {
             try {
-                await recallBatch(recallBatchTarget.id, recallReason)
+                unwrap(await recallBatch(recallBatchTarget.id, recallReason))
                 toast.warning(`Emergency recall issued for Batch "${recallBatchTarget.batchNumber}".`)
                 setRecallBatchTarget(null)
                 setRecallReason("")
@@ -389,7 +390,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
     const handleSerialStatusChange = async (serialId: string, status: SerialStatus) => {
         startTransition(async () => {
             try {
-                await updateSerialStatus(serialId, status)
+                unwrap(await updateSerialStatus(serialId, status))
                 toast.success(`Serial status updated to ${status}`)
                 router.refresh()
                 onRefresh?.()

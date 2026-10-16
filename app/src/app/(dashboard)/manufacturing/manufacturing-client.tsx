@@ -54,6 +54,7 @@ import {
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { formatCurrency } from "@/lib/utils"
+import { unwrap } from "@/lib/action-result"
 import {
     ManufacturingOverviewData,
     WorkOrderRecord,
@@ -162,7 +163,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
         e.preventDefault()
         startTransition(async () => {
             try {
-                const res = await createWorkOrder({
+                const res = unwrap(await createWorkOrder({
                     bomId: woBOMId,
                     plannedQuantity: Number(woPlannedQty),
                     sourceWarehouseId: woSourceWh,
@@ -171,7 +172,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                     priority: woPriority,
                     assignedTo: woAssignedTo || undefined,
                     notes: woNotes || undefined
-                })
+                }))
 
                 if (res.success) {
                     if (res.hasShortages) {
@@ -195,13 +196,13 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
 
         startTransition(async () => {
             try {
-                const res = await updateWorkOrderStatus(
+                const res = unwrap(await updateWorkOrderStatus(
                     selectedOrder.id,
                     nextStatus,
                     nextStatus === "COMPLETED" ? Number(producedQty) : undefined,
                     nextStatus === "COMPLETED" ? Number(scrapQty) : undefined,
                     statusNotes || undefined
-                )
+                ))
 
                 if (res.success) {
                     if (nextStatus === "COMPLETED") {
@@ -224,7 +225,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
         e.preventDefault()
         startTransition(async () => {
             try {
-                const res = await createBOM({
+                const res = unwrap(await createBOM({
                     name: bomName,
                     productId: bomProductId,
                     quantity: Number(bomBatchQty),
@@ -240,7 +241,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                         unitCost: Number(c.unitCost),
                         scrapPercentage: Number(c.scrapPercentage)
                     }))
-                })
+                }))
 
                 if (res.success) {
                     toast.success(`Bill of Materials ${res.bomNumber} created successfully!`)

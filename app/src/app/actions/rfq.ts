@@ -7,6 +7,7 @@ import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-te
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
 import { RfqStatus, RfqVendorStatus, PurchaseOrderStatus } from "@prisma/client"
+import { safeAction } from "@/lib/safe-action"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "purchase" as const
@@ -368,7 +369,7 @@ export async function getRfqOverview(): Promise<RfqOverviewData> {
 /**
  * Creates a new Request for Quotation tender
  */
-export async function createRfq(input: CreateRfqInput) {
+async function _createRfq(input: CreateRfqInput) {
     const tenantId = await getTenantWriterId(MODULE)
     await assertTenantRefs(tenantId, { contact: input.invitedVendorIds, product: input.items.map((i) => i.productId) })
 
@@ -437,7 +438,7 @@ export async function createRfq(input: CreateRfqInput) {
 /**
  * Updates the lifecycle status of an RFQ
  */
-export async function updateRfqStatus(rfqId: string, status: RfqStatus) {
+async function _updateRfqStatus(rfqId: string, status: RfqStatus) {
     const tenantId = await getTenantWriterId(MODULE)
 
     const existing = await prisma.requestForQuotation.findFirst({
@@ -465,7 +466,7 @@ export async function updateRfqStatus(rfqId: string, status: RfqStatus) {
 /**
  * Invites additional vendors to an existing RFQ
  */
-export async function inviteVendorsToRfq(rfqId: string, vendorIds: string[]) {
+async function _inviteVendorsToRfq(rfqId: string, vendorIds: string[]) {
     const tenantId = await getTenantWriterId(MODULE)
 
     const rfq = await prisma.requestForQuotation.findFirst({
@@ -506,7 +507,7 @@ export async function inviteVendorsToRfq(rfqId: string, vendorIds: string[]) {
 /**
  * Records quotation pricing and terms submitted by a participating vendor
  */
-export async function recordVendorQuote(input: RecordVendorQuoteInput) {
+async function _recordVendorQuote(input: RecordVendorQuoteInput) {
     const tenantId = await getTenantWriterId(MODULE)
 
     const quote = await prisma.rfqVendorQuote.findFirst({
@@ -587,7 +588,7 @@ export async function recordVendorQuote(input: RecordVendorQuoteInput) {
 /**
  * Awards an RFQ to a winning vendor quote, automatically generating a Purchase Order
  */
-export async function awardVendorQuote(rfqId: string, quoteId: string) {
+async function _awardVendorQuote(rfqId: string, quoteId: string) {
     const tenantId = await getTenantManagerId(MODULE)
 
     const rfq = await prisma.requestForQuotation.findFirst({
@@ -711,7 +712,7 @@ export async function awardVendorQuote(rfqId: string, quoteId: string) {
 /**
  * Deletes a draft or cancelled RFQ
  */
-export async function deleteRfq(rfqId: string) {
+async function _deleteRfq(rfqId: string) {
     const tenantId = await getTenantManagerId(MODULE)
 
     const rfq = await prisma.requestForQuotation.findFirst({
@@ -733,4 +734,24 @@ export async function deleteRfq(rfqId: string) {
     revalidatePath("/purchase/rfq")
     revalidatePath("/purchase")
     return { success: true }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createRfq(...args: Parameters<typeof _createRfq>) {
+    return safeAction(() => _createRfq(...args))
+}
+export async function updateRfqStatus(...args: Parameters<typeof _updateRfqStatus>) {
+    return safeAction(() => _updateRfqStatus(...args))
+}
+export async function inviteVendorsToRfq(...args: Parameters<typeof _inviteVendorsToRfq>) {
+    return safeAction(() => _inviteVendorsToRfq(...args))
+}
+export async function recordVendorQuote(...args: Parameters<typeof _recordVendorQuote>) {
+    return safeAction(() => _recordVendorQuote(...args))
+}
+export async function awardVendorQuote(...args: Parameters<typeof _awardVendorQuote>) {
+    return safeAction(() => _awardVendorQuote(...args))
+}
+export async function deleteRfq(...args: Parameters<typeof _deleteRfq>) {
+    return safeAction(() => _deleteRfq(...args))
 }

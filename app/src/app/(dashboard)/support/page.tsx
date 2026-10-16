@@ -12,6 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { LifeBuoy, Clock, MessageSquare, Plus, Send, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
+import { unwrap } from "@/lib/action-result"
 
 export default function SupportPage() {
   const [tickets, setTickets] = useState<any[]>([])
@@ -40,7 +41,7 @@ export default function SupportPage() {
     if (!subject || !initialMsg) return
     setIsSubmitting(true)
     try {
-      await createTicket(subject, initialMsg, priority)
+      unwrap(await createTicket(subject, initialMsg, priority))
       toast.success("Support ticket created successfully")
       setShowNewDialog(false)
       setSubject("")
@@ -56,7 +57,7 @@ export default function SupportPage() {
   const handleSendMessage = async () => {
     if (!newMessage || !selectedTicket) return
     try {
-      await addMessage(selectedTicket.id, newMessage, false)
+      unwrap(await addMessage(selectedTicket.id, newMessage, false))
       setNewMessage("")
       // No need to manually refresh messages - the useChatMessages hook will catch the 'INSERT' event
       // However, we update the ticket list to refresh the 'updatedAt' timestamp in the sidebar

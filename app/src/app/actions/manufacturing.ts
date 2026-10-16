@@ -5,6 +5,7 @@ import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { safeAction } from "@/lib/safe-action"
 import {
     BOMStatus,
     WorkOrderStatus,
@@ -311,7 +312,7 @@ export async function getManufacturingOverview(): Promise<ManufacturingOverviewD
 /**
  * Create a new Bill of Materials (BOM) recipe
  */
-export async function createBOM(input: {
+async function _createBOM(input: {
     name: string
     productId: string
     quantity: number
@@ -404,7 +405,7 @@ export async function updateBOMStatus(bomId: string, status: BOMStatus) {
 /**
  * Create a new Work Order / Production Order
  */
-export async function createWorkOrder(input: {
+async function _createWorkOrder(input: {
     bomId: string
     plannedQuantity: number
     sourceWarehouseId: string
@@ -485,7 +486,7 @@ export async function createWorkOrder(input: {
 /**
  * Update Work Order status with automated raw material consumption & stock increment on completion
  */
-export async function updateWorkOrderStatus(
+async function _updateWorkOrderStatus(
     workOrderId: string,
     newStatus: WorkOrderStatus,
     producedQuantity?: number,
@@ -721,4 +722,15 @@ export async function recordQualityInspection(workOrderId: string, input: {
 
     revalidatePath("/manufacturing")
     return { success: true, inspectionNumber, status }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createBOM(...args: Parameters<typeof _createBOM>) {
+    return safeAction(() => _createBOM(...args))
+}
+export async function createWorkOrder(...args: Parameters<typeof _createWorkOrder>) {
+    return safeAction(() => _createWorkOrder(...args))
+}
+export async function updateWorkOrderStatus(...args: Parameters<typeof _updateWorkOrderStatus>) {
+    return safeAction(() => _updateWorkOrderStatus(...args))
 }

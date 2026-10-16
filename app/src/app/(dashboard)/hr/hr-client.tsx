@@ -89,6 +89,7 @@ import {
     LeaveStatus,
 } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
+import { unwrap } from "@/lib/action-result"
 
 interface HRClientProps {
     initialData: HROverviewData
@@ -270,7 +271,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
 
         setIsSubmittingEmployee(true)
         try {
-            const res = await createEmployee({
+            const res = unwrap(await createEmployee({
                 firstName: empFirstName.trim(),
                 lastName: empLastName.trim() || undefined,
                 email: empEmail.trim(),
@@ -287,7 +288,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                 city: empCity.trim() || undefined,
                 emergencyContactName: empEmergencyName.trim() || undefined,
                 emergencyContactPhone: empEmergencyPhone.trim() || undefined,
-            })
+            }))
 
             if (res.success) {
                 toast.success(`Employee ${res.employee.employeeNumber} registered successfully`)
@@ -330,7 +331,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
 
         setIsSubmittingEmployee(true)
         try {
-            const res = await updateEmployee(selectedEmployee.id, {
+            const res = unwrap(await updateEmployee(selectedEmployee.id, {
                 firstName: empFirstName.trim(),
                 lastName: empLastName.trim() || undefined,
                 email: empEmail.trim(),
@@ -344,7 +345,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                 country: empCountry.trim() || undefined,
                 state: empState.trim() || undefined,
                 city: empCity.trim() || undefined,
-            })
+            }))
 
             if (res.success) {
                 toast.success("Employee updated successfully")
@@ -423,13 +424,13 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
 
         setIsSubmittingLeave(true)
         try {
-            const res = await submitLeaveRequest({
+            const res = unwrap(await submitLeaveRequest({
                 employeeId: leaveEmployeeId,
                 type: leaveType,
                 startDate: leaveStartDate,
                 endDate: leaveEndDate,
                 reason: leaveReason.trim(),
-            })
+            }))
 
             if (res.success) {
                 toast.success("Leave request submitted for approval")
@@ -449,7 +450,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
     // Handle Leave Decision (Approve / Reject)
     const handleLeaveDecision = async (leaveId: string, status: LeaveStatus) => {
         try {
-            const res = await updateLeaveStatus({ leaveId, status })
+            const res = unwrap(await updateLeaveStatus({ leaveId, status }))
             if (res.success) {
                 toast.success(`Leave request ${status.toLowerCase()} successfully`)
                 startTransition(() => {
@@ -471,12 +472,12 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
 
         setIsSubmittingDept(true)
         try {
-            const res = await createDepartment({
+            const res = unwrap(await createDepartment({
                 name: deptName.trim(),
                 code: deptCode.trim() || undefined,
                 description: deptDescription.trim() || undefined,
                 managerId: deptManagerId || undefined,
-            })
+            }))
 
             if (res.success) {
                 toast.success("Department created successfully")
@@ -506,11 +507,11 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
 
         setIsSubmittingDesig(true)
         try {
-            const res = await createDesignation({
+            const res = unwrap(await createDesignation({
                 title: desigTitle.trim(),
                 departmentId: desigDeptId || undefined,
                 description: desigDescription.trim() || undefined,
-            })
+            }))
 
             if (res.success) {
                 toast.success("Designation created successfully")

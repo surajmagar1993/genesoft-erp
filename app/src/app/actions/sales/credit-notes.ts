@@ -16,6 +16,7 @@ import {
 } from "@prisma/client"
 import { recordTransaction } from "@/app/actions/crm/ledger"
 import { logTenantAudit } from "@/lib/tenant-audit"
+import { safeAction } from "@/lib/safe-action"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -652,7 +653,7 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
 /**
  * Apply available credit note balance to an open or partially-paid invoice.
  */
-export async function applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
+async function _applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
     const tenantId = await getTenantManagerId(MODULE)
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
@@ -849,4 +850,9 @@ export async function voidCreditNote(creditNoteId: string) {
     revalidatePath("/sales/credit-notes")
     await logTenantAudit(tenantId, "CREDIT_NOTE_VOIDED", { target: { type: "CREDIT_NOTE", id: creditNoteId }, metadata: { creditNoteNumber: creditNote.creditNoteNumber } })
     return { success: true }
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function applyCreditToInvoice(...args: Parameters<typeof _applyCreditToInvoice>) {
+    return safeAction(() => _applyCreditToInvoice(...args))
 }

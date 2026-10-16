@@ -69,6 +69,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
+import { unwrap } from "@/lib/action-result"
 
 interface Props {
   initialData: UsTaxOverviewReport
@@ -272,10 +273,10 @@ export function UsTaxClient({ initialData }: Props) {
     }
 
     try {
-      const res = await updateVendorW9Action({
+      const res = unwrap(await updateVendorW9Action({
         vendorId: w9Form.vendorId,
         ein: w9Form.ein,
-      })
+      }))
       toast.success(res.message)
       setIsW9ModalOpen(false)
       startTransition(() => {

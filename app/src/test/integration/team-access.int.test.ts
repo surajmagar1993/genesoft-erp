@@ -10,6 +10,7 @@ import { getHROverview, submitLeaveRequest } from "@/app/actions/hr"
 import { getMyAccess } from "@/lib/get-tenant-id"
 import { uniformAccess, type ModuleAccess } from "@/lib/access"
 import { actAs, addUser, createCustomer, createTestTenant } from "./helpers"
+import { unwrap } from "@/lib/action-result"
 
 /** Runs a server action that ends in redirect() and returns where it redirected to. */
 async function redirectOf(fn: () => Promise<unknown>): Promise<string> {
@@ -82,8 +83,8 @@ describe("team invitations and module access", () => {
         const own = await prisma.employee.create({ data: { tenantId: tenant.id, employeeNumber: "E-1", firstName: "Staff", displayName: "Staff", email, userId: member.id } as never })
         const other = await prisma.employee.create({ data: { tenantId: tenant.id, employeeNumber: "E-2", firstName: "Other", displayName: "Other", email: "o@example.test" } as never })
         actAs({ id: member.id, email })
-        expect((await submitLeaveRequest({ employeeId: own.id, type: "CASUAL" as never, startDate: "2026-11-02", endDate: "2026-11-03", reason: "Trip" })).leave).toBeTruthy()
-        await expect(submitLeaveRequest({ employeeId: other.id, type: "CASUAL" as never, startDate: "2026-11-02", endDate: "2026-11-03", reason: "x" })).rejects.toThrow(/your own/)
+        expect((unwrap(await submitLeaveRequest({ employeeId: own.id, type: "CASUAL" as never, startDate: "2026-11-02", endDate: "2026-11-03", reason: "Trip" }))).leave).toBeTruthy()
+        await expect(submitLeaveRequest({ employeeId: other.id, type: "CASUAL" as never, startDate: "2026-11-02", endDate: "2026-11-03", reason: "x" }).then(unwrap)).rejects.toThrow(/your own/)
     })
 
     it("cancelled invites stop working; admins edit access; the last admin is protected", async () => {

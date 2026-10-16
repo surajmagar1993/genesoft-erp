@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
+import { safeAction } from "@/lib/safe-action"
 
 export type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED"
 export type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT"
@@ -43,7 +44,7 @@ export async function getTicket(id: string) {
 /**
  * Create a new support ticket
  */
-export async function createTicket(subject: string, message: string, priority: TicketPriority = "MEDIUM") {
+async function _createTicket(subject: string, message: string, priority: TicketPriority = "MEDIUM") {
   const supabase = await createClient()
   const tenantId = await getTenantWriterId()
   const { data: { user } } = await supabase.auth.getUser()
@@ -81,7 +82,7 @@ export async function createTicket(subject: string, message: string, priority: T
 /**
  * Add a message to a ticket
  */
-export async function addMessage(ticketId: string, content: string, isFromAdmin: boolean = false) {
+async function _addMessage(ticketId: string, content: string, isFromAdmin: boolean = false) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -126,7 +127,7 @@ export async function addMessage(ticketId: string, content: string, isFromAdmin:
 /**
  * Update ticket status (Admin only)
  */
-export async function updateTicketStatus(id: string, status: TicketStatus) {
+async function _updateTicketStatus(id: string, status: TicketStatus) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error("Unauthorized")
@@ -149,4 +150,15 @@ export async function updateTicketStatus(id: string, status: TicketStatus) {
   revalidatePath(`/support/${id}`)
   revalidatePath("/admin/support")
   return ticket
+}
+
+/* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
+export async function createTicket(...args: Parameters<typeof _createTicket>) {
+    return safeAction(() => _createTicket(...args))
+}
+export async function addMessage(...args: Parameters<typeof _addMessage>) {
+    return safeAction(() => _addMessage(...args))
+}
+export async function updateTicketStatus(...args: Parameters<typeof _updateTicketStatus>) {
+    return safeAction(() => _updateTicketStatus(...args))
 }

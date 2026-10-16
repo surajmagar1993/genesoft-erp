@@ -14,6 +14,7 @@ import { getEffectivePricing } from "@/lib/plan-pricing"
 import { assertWithinLimit, effectivePlan } from "@/lib/plan-limits"
 import { uniformAccess } from "@/lib/access"
 import { actAs, addUser, createTestTenant } from "./helpers"
+import { unwrap } from "@/lib/action-result"
 
 const contact = (name: string) => ({ display_name: name, type: "INDIVIDUAL" as const, email: null }) as never
 
@@ -34,7 +35,7 @@ describe("plan limits", () => {
         const over = await createContact(contact("Number 26"))
         expect(over.error).toMatch(/Free plan allows up to 25 contacts.*Upgrade/)
 
-        const vendor = await createVendor({ displayName: "Supplier" })
+        const vendor = unwrap(await createVendor({ displayName: "Supplier" }))
         expect(vendor).toMatchObject({ success: false, error: expect.stringMatching(/25 contacts/) })
         expect((await importContacts([{ display_name: "Imported" }])).error).toMatch(/25 contacts/)
         expect(await prisma.contact.count({ where: { tenantId: tenant.id } })).toBe(25)
@@ -75,7 +76,7 @@ describe("plan limits", () => {
     it("Rentals need Enterprise", async () => {
         const { user } = await createTestTenant({ plan: "PRO" })
         actAs(user)
-        await expect(createRentalAsset({ name: "Drill", category: "Tools" } as never)).rejects.toThrow(/Enterprise/)
+        await expect(createRentalAsset({ name: "Drill", category: "Tools" } as never).then(unwrap)).rejects.toThrow(/Enterprise/)
     })
 })
 
@@ -143,7 +144,7 @@ describe("editable plan settings (Admin → Pricing & Plans → Limits & modules
         expect(mine.access.hr).toBe("NONE")
         expect(mine.planModules).toMatchObject({ hr: false, pos: true, rentals: false })
         await expect(getTenantId("hr")).rejects.toThrow(/HR.* is on the Free plan\. Upgrade/)
-        await expect(createEmployee({} as never)).rejects.toThrow(/Upgrade/)
+        await expect(createEmployee({} as never).then(unwrap)).rejects.toThrow(/Upgrade/)
 
         // Back to the defaults
         actAs(admin)
