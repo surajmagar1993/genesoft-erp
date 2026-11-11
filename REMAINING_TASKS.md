@@ -1,7 +1,7 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-10-14 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
+> **Last Updated:** 2026-11-12 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
 >
 > The ✅ entries below were written in September 2026 when each module was first built. Several overstate what shipped: the government-filing modules (GST returns, e-way bills, TDS, UAE VAT 201, KSA ZATCA phase 2, UK MTD, Australia BAS) only prepare figures and files, aren't connected to any government system, and are hidden behind `NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`; "official/NIC-compliant/statutory" means "follows the published format", not certified. Stripe/PayPal invoice checkout and portal online payment aren't live. See "Known Gaps" and "Open items".
 
@@ -201,6 +201,9 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 **Engineering:**
 - [ ] Prisma CLI dependencies carry 14 audit warnings (hono, lodash, mysql2… from `prisma dev` tooling, not the running app); fixed only in Prisma 8 (still a release candidate). Upgrade when 8 is stable.
 - [ ] Live database has drifted from `prisma/schema.prisma`: rebuild the schema from the live DB (`prisma db pull` on a copy) and move to real migrations.
-- [ ] ~1,000 lint errors (mostly `any`); browser tests.
+- [x] Lint errors: 0 (was ~1,000; done 2026-11-12). 25 warnings left (hook dependencies, `<img>`).
+- [ ] Browser tests.
+- [ ] Assumed defaults still in forms (found 2026-11-12): new contact falls back to country IN / currency INR / group "retail" (`contact-form.tsx`); new bank account form starts on INR; product import fills "Unknown Product", unit "Nos" and INR. Should come from the business's own country and currency.
+- [ ] `npm audit` run from `app/` reads the stale root lockfile and reports false results; audit a copy of `app/package.json` + `app/package-lock.json` instead (production deps: 0 known vulnerabilities on 2026-11-12, Next.js 16.4.6).
 - [ ] The root `package-lock.json` is out of date (Vercel builds from `app/` with `app/package-lock.json`); regenerate or remove it in a coordinated change.
 
