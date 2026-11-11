@@ -7,7 +7,7 @@ import { formatDistanceToNow } from "date-fns"
 export default async function SystemHealthPage() {
     const [health, externalServices] = await Promise.all([getDatabaseHealth(), getServiceHealth()])
 
-    const icons: Record<string, any> = {
+    const icons: Record<string, typeof Activity> = {
         "Auth (Supabase)": ShieldCheck,
         "Email (Resend)": Mail,
         "Payments (Razorpay)": CreditCard,
@@ -19,7 +19,7 @@ export default async function SystemHealthPage() {
             name: "Database (PostgreSQL)",
             status: health.status === "HEALTHY" ? "Operational" : "Down",
             latency: health.latency || "—",
-            detail: health.status === "HEALTHY" ? `Size: ${health.databaseSize}` : (health as any).error || "Unreachable",
+            detail: health.status === "HEALTHY" ? `Size: ${health.databaseSize}` : ("error" in health && health.error) || "Unreachable",
             icon: Database,
         },
         ...externalServices.map((svc) => ({
@@ -163,7 +163,7 @@ export default async function SystemHealthPage() {
     )
 }
 
-function Building2(props: any) {
+function Building2(props: React.SVGProps<SVGSVGElement>) {
     return (
         <svg
             {...props}
@@ -188,6 +188,6 @@ function Building2(props: any) {
     )
 }
 
-function cn(...classes: any[]) {
+function cn(...classes: (string | false | null | undefined)[]) {
     return classes.filter(Boolean).join(' ')
 }

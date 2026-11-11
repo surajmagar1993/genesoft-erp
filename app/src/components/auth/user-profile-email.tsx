@@ -8,7 +8,7 @@ export function UserProfileEmail() {
 
     useEffect(() => {
         const supabase = createClient()
-        supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
+        supabase.auth.getUser().then(({ data: { user } }) => {
             if (user) setUserEmail(user.email || "Unknown User")
             else setUserEmail("Not Logged In")
         })

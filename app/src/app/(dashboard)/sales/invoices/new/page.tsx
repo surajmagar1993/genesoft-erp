@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { InvoiceForm, InvoiceFormData, type InvoiceTaxRegime } from "@/components/sales/invoice-form"
 import { getInvoiceTaxRegime } from "@/app/actions/sales/tax"
 import { createInvoice, getNextInvoiceNumber } from "@/app/actions/sales/invoices"
-import { getContacts } from "@/app/actions/crm/contacts"
+import { getContacts, type Contact } from "@/app/actions/crm/contacts"
 import { getProductsForDocuments, type DocumentProduct } from "@/app/actions/sales/products"
 import { toast } from "sonner"
 import { computeLineItemGst, getSupplyTypeForRegime } from "@/lib/gst-engine"
@@ -19,7 +19,7 @@ function NewInvoiceFormWrapper() {
     const [regime, setRegime] = useState<InvoiceTaxRegime | null>(null)
     useEffect(() => { getInvoiceTaxRegime().then(setRegime) }, [])
     const [nextInvoiceNum, setNextInvoiceNum] = useState<string>("")
-    const [contacts, setContacts] = useState<unknown[]>([])
+    const [contacts, setContacts] = useState<Contact[]>([])
     const [products, setProducts] = useState<DocumentProduct[]>([])
     useEffect(() => { getProductsForDocuments().then(setProducts).catch(() => setProducts([])) }, [])
 

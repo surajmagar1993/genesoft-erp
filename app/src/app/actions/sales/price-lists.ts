@@ -979,7 +979,7 @@ export async function calculateEffectivePrice(
         let unitPrice = basePrice
 
         if (targetPriceList) {
-            const items: any[] = targetPriceList.items || []
+            const items = targetPriceList.items || []
 
             // Find matching volume tier where quantity >= minQuantity
             // Pick highest minQuantity match

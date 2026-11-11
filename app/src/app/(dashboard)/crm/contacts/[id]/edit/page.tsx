@@ -26,7 +26,7 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
     const phoneData = parsePhone(data.phone)
     const mobileData = parsePhone(data.mobile)
 
-    const billingAdd = (data.billing_address as any) || {}
+    const billingAdd = (data.billing_address || {}) as Record<string, string | undefined>
 
     const initialData = {
         ...emptyContactForm,

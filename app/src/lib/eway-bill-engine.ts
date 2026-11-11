@@ -288,7 +288,7 @@ export interface EwayBillInput {
  * Formats one or more E-Way bills into the official NIC Bulk Upload JSON payload structure
  * accepted by the government E-Way Bill portal (ewaybillgst.gov.in).
  */
-export function buildNicBulkUploadJson(bills: EwayBillInput[]): { version: string; billLists: any[] } {
+export function buildNicBulkUploadJson(bills: EwayBillInput[]): { version: string; billLists: (Record<string, unknown> & { itemList: Record<string, string | number>[] })[] } {
   return {
     version: "1.0.0123",
     billLists: bills.map((b) => ({

@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import type { Prisma } from "@prisma/client"
 import { getCurrentUser } from "@/lib/current-user"
 import { revalidatePath } from "next/cache"
 import {
@@ -30,7 +31,7 @@ async function ensureSuperAdmin() {
 /**
  * Logs an administrative action to AdminAuditLog for platform governance.
  */
-async function logAdminAction(action: string, targetId?: string, targetType?: string, metadata: any = {}) {
+async function logAdminAction(action: string, targetId?: string, targetType?: string, metadata: Prisma.InputJsonObject = {}) {
     try {
         const user = await ensureSuperAdmin()
         await prisma.adminAuditLog.create({
@@ -77,7 +78,7 @@ export async function getSystemEmailTemplates(): Promise<SystemEmailTemplatesOve
     const resendDomain = process.env.RESEND_DOMAIN || ""
 
     // 2. Fetch custom overrides from database if any exist
-    const customOverridesMap: Record<string, any> = {}
+    const customOverridesMap: Record<string, { subject?: string; bodyHtml?: string; bodyText?: string; isActive?: boolean; updatedAt: string }> = {}
     try {
         const auditLogs = await prisma.adminAuditLog.findMany({
             where: {
@@ -92,7 +93,7 @@ export async function getSystemEmailTemplates(): Promise<SystemEmailTemplatesOve
             const key = log.targetId
             if (key && !customOverridesMap[key] && log.metadata && typeof log.metadata === "object") {
                 customOverridesMap[key] = {
-                    ...(log.metadata as any),
+                    ...(log.metadata as { subject?: string; bodyHtml?: string; bodyText?: string; isActive?: boolean }),
                     updatedAt: log.createdAt.toISOString(),
                 }
             }

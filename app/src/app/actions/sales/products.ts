@@ -26,7 +26,7 @@ export interface ProductDB {
   sku: string | null
   hsn_sac_code: string | null
   description: string | null
-  custom_attributes: any
+  custom_attributes: Prisma.JsonValue
   unit_price: number
   currency: string
   unit: string
@@ -117,7 +117,7 @@ export interface CreateProductPayload {
   unit?: string
   stock_qty?: number
   is_active?: boolean
-  custom_attributes?: any
+  custom_attributes?: Prisma.InputJsonValue
   tax_group_id?: string | null
 }
 
@@ -186,7 +186,8 @@ export async function exportProducts(limit: number = 1000): Promise<ProductDB[]>
 }
 
 export async function importProducts(
-  products: any[]
+  // Rows of the uploaded file: column name → cell
+  products: Record<string, string | number | boolean | null | undefined>[]
 ): Promise<{ error: string | null; count: number }> {
   const tenantId = await getTenantWriterId(MODULE)
 
@@ -206,7 +207,7 @@ export async function importProducts(
             unit_price: p.unit_price ?? p.unitPrice ?? 0,
             currency: p.currency || tenant?.currencyCode || "INR",
             unit: p.unit || "Nos",
-            stock_qty: p.stock_qty !== undefined && p.stock_qty !== "" ? parseFloat(p.stock_qty) || 0 : 0,
+            stock_qty: p.stock_qty !== undefined && p.stock_qty !== "" ? parseFloat(String(p.stock_qty)) || 0 : 0,
             is_active: p.is_active === undefined || p.is_active === "" ? true : p.is_active === true || p.is_active === "true",
           }),
           tenant_id: tenantId,

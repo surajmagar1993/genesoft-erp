@@ -17,6 +17,8 @@ import {
     unmatchTransaction,
     createQuickExpenseAndReconcile,
     finalizeReconciliation,
+    type CreateBankAccountInput,
+    type ImportBankStatementInput,
 } from "@/app/actions/finance/bank-reconciliation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -88,7 +90,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
         ifscRoutingCode: "",
         swiftCode: "",
         currencyCode: "INR",
-        accountType: "CURRENT" as any,
+        accountType: "CURRENT" as NonNullable<CreateBankAccountInput["accountType"]>,
         chartOfAccountId: "",
         openingBalance: 0,
         currentBalance: 0,
@@ -293,7 +295,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
         if (!activeAccount) return
 
         // Parse CSV or build manual lines
-        const parsedLines: any[] = []
+        const parsedLines: ImportBankStatementInput["lines"] = []
         if (importForm.csvText.trim()) {
             const rows = importForm.csvText.trim().split("\n")
             for (let i = 0; i < rows.length; i++) {
@@ -1456,7 +1458,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                 <label className="font-semibold text-foreground">Account Type</label>
                                 <select
                                     value={accountForm.accountType}
-                                    onChange={(e) => setAccountForm({ ...accountForm, accountType: e.target.value as any })}
+                                    onChange={(e) => setAccountForm({ ...accountForm, accountType: e.target.value as typeof accountForm.accountType })}
                                     className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs"
                                 >
                                     <option value="CURRENT">Current Account</option>

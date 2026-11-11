@@ -17,6 +17,7 @@ import {
 } from "@prisma/client"
 import { differenceInBusinessDays, startOfDay, endOfDay, subDays } from "date-fns"
 import { errorMessage } from "@/lib/utils";
+import type { Prisma } from "@prisma/client"
 
 export interface EmployeeProfileRecord {
     id: string
@@ -35,8 +36,8 @@ export interface EmployeeProfileRecord {
     managerName: string | null
     basicSalary: number | null
     currencyCode: string
-    bankDetails: any
-    emergencyContact: any
+    bankDetails: Prisma.JsonValue
+    emergencyContact: Prisma.JsonValue
 }
 
 export interface TodayAttendanceRecord {

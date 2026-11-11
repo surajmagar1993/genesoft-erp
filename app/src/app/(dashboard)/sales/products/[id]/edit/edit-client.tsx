@@ -31,7 +31,7 @@ export function EditProductClient({ initialProduct }: EditProductClientProps) {
         isActive: initialProduct.is_active,
         taxGroupId: initialProduct.tax_group_id || "",
         customAttributes: Array.isArray(initialProduct.custom_attributes) 
-            ? initialProduct.custom_attributes 
+            ? (initialProduct.custom_attributes as { key: string; value: string }[])
             : []
     }
 

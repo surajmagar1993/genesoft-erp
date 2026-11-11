@@ -112,7 +112,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
         update("lineItems", [...form.lineItems, newItem])
     }
 
-    const updateLineItem = (id: string, field: keyof QuoteLineItem, value: any) => {
+    const updateLineItem = (id: string, field: keyof QuoteLineItem, value: QuoteLineItem[keyof QuoteLineItem]) => {
         update(
             "lineItems",
             form.lineItems.map((li) => (li.id === id ? { ...li, [field]: value } : li))

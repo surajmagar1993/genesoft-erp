@@ -51,7 +51,7 @@ export function DealForm({ initialData, mode }: DealFormProps) {
     const [form, setForm] = useState<DealFormData>(initialData || defaultDealForm)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const update = (field: keyof DealFormData, value: any) => {
+    const update = (field: keyof DealFormData, value: DealFormData[keyof DealFormData]) => {
         setForm((prev) => {
             const updated = { ...prev, [field]: value };
 

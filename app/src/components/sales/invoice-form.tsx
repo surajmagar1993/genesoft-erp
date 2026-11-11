@@ -31,6 +31,7 @@ import {
   TAX_EXEMPTION_REASONS,
 } from "@/lib/gst-engine"
 import type { DocumentProduct } from "@/app/actions/sales/products"
+import type { Contact } from "@/app/actions/crm/contacts"
 import { toast } from "sonner"
 
 /* ── Types ─────────────────────────────────────────────────────────────────── */
@@ -172,7 +173,7 @@ const INDIA_REGIME: InvoiceTaxRegime = {
 interface InvoiceFormProps {
   initialData?: InvoiceFormData | null
   nextInvoiceNumber?: string
-  contacts?: any[]
+  contacts?: Contact[]
   /** Catalog for the line picker (getProductsForDocuments) */
   products?: DocumentProduct[]
   onSave: (data: InvoiceFormData) => void
@@ -239,7 +240,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
     )
   }
 
-  const updateLineItem = (id: string, field: keyof InvoiceLineItem, value: any) => {
+  const updateLineItem = (id: string, field: keyof InvoiceLineItem, value: InvoiceLineItem[keyof InvoiceLineItem]) => {
     update(
       "lineItems",
       form.lineItems.map((li) => (li.id === id ? { ...li, [field]: value } : li))
@@ -413,9 +414,9 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                     onValueChange={(val) => {
                       const selected = contacts.find((c) => c.id === val)
                       if (selected) {
-                        const isExempt = Boolean(selected.is_tax_exempt || selected.isTaxExempt)
-                        const exemptReason = selected.tax_exemption_reason || selected.taxExemptionReason || ""
-                        const exemptCert = selected.tax_exemption_certificate || selected.taxExemptionCertificate || ""
+                        const isExempt = Boolean(selected.is_tax_exempt)
+                        const exemptReason = selected.tax_exemption_reason || ""
+                        const exemptCert = selected.tax_exemption_certificate || ""
 
                         setForm((prev) => ({
                           ...prev,

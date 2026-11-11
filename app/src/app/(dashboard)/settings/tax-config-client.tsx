@@ -69,7 +69,7 @@ export default function TaxConfigClient() {
         })
     }
 
-    const updateRate = (index: number, field: string, value: any) => {
+    const updateRate = (index: number, field: string, value: string | number) => {
         const updatedRates = [...newGroup.rates]
         updatedRates[index] = { ...updatedRates[index], [field]: value }
         setNewGroup({ ...newGroup, rates: updatedRates })

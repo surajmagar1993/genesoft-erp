@@ -11,9 +11,11 @@ import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
 import { unwrap } from "@/lib/action-result"
 
+type Ticket = Awaited<ReturnType<typeof getTickets>>[number]
+
 export default function SupportAdminPage() {
-  const [tickets, setTickets] = useState<any[]>([])
-  const [selectedTicket, setSelectedTicket] = useState<any>(null)
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [adminReply, setAdminReply] = useState("")
   const [isLoading, setIsLoading] = useState(true)
 
@@ -38,7 +40,7 @@ export default function SupportAdminPage() {
       // Refresh current view
       const updated = await getTickets()
       const t = updated.find((x) => x.id === selectedTicket.id)
-      setSelectedTicket(t)
+      setSelectedTicket(t ?? null)
       toast.success("Reply sent to customer")
     } catch {
             toast.error("Failed to send reply")
@@ -126,7 +128,7 @@ export default function SupportAdminPage() {
 
             <ScrollArea className="flex-1 p-8">
               <div className="max-w-4xl mx-auto space-y-6 pb-24">
-                {selectedTicket.messages?.map((msg: any) => (
+                {selectedTicket.messages?.map((msg) => (
                   <div key={msg.id} className={`flex ${msg.isFromAdmin ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[75%] rounded-2xl p-5 ${
                       msg.isFromAdmin ? "bg-indigo-900 text-white rounded-tr-none" : "bg-white border text-slate-800 shadow-sm rounded-tl-none"

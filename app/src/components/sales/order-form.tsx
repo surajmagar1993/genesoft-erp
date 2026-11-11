@@ -114,7 +114,7 @@ export function OrderForm({ initialData, onSave }: OrderFormProps) {
         update("lineItems", [...form.lineItems, newItem])
     }
 
-    const updateLineItem = (id: string, field: keyof OrderLineItem, value: any) => {
+    const updateLineItem = (id: string, field: keyof OrderLineItem, value: OrderLineItem[keyof OrderLineItem]) => {
         update(
             "lineItems",
             form.lineItems.map((li) => (li.id === id ? { ...li, [field]: value } : li))

@@ -163,7 +163,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
             setRecipientPhone(contact.phone || "")
             setRecipientGstin(contact.gstin || "")
             if (contact.shippingAddress && typeof contact.shippingAddress === "object") {
-                const addr = contact.shippingAddress as any
+                const addr = contact.shippingAddress as { street?: string; city?: string; state?: string; pincode?: string }
                 setDeliveryAddressText(`${addr.street || ""}, ${addr.city || ""}, ${addr.state || ""} ${addr.pincode || ""}`.trim())
             }
         }
@@ -204,7 +204,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
         setLineItems(prev => prev.filter((_, i) => i !== index))
     }
 
-    const handleItemChange = (index: number, field: keyof CreateChallanItemInput, val: any) => {
+    const handleItemChange = (index: number, field: keyof CreateChallanItemInput, val: CreateChallanItemInput[keyof CreateChallanItemInput]) => {
         setLineItems(prev => {
             const updated = [...prev]
             updated[index] = { ...updated[index], [field]: val }
@@ -1087,7 +1087,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                 Form Delivery Challan (Rule 55)
                             </DialogTitle>
                             <div className="flex items-center gap-2">
-                                <Select value={printCopyType} onValueChange={(v) => setPrintCopyType(v as any)}>
+                                <Select value={printCopyType} onValueChange={(v) => setPrintCopyType(v as typeof printCopyType)}>
                                     <SelectTrigger className="h-8 text-xs w-48">
                                         <SelectValue />
                                     </SelectTrigger>

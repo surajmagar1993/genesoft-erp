@@ -52,7 +52,7 @@ export default function DealsClient({ initialDeals, total }: Props) {
     // Sync state with URL params
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "")
     const [filterStage, setFilterStage] = useState<string>(searchParams.get("stage") || "all")
-    const [viewMode, setViewMode] = useState<"table" | "kanban">((searchParams.get("view") as any) || "table")
+    const [viewMode, setViewMode] = useState<"table" | "kanban">(searchParams.get("view") === "kanban" ? "kanban" : "table")
     const [pendingId, setPendingId] = useState<string | null>(null)
 
     // Update URL when filters change

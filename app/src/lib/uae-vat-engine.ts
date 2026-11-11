@@ -186,7 +186,7 @@ export interface RawUaeInvoice {
   total: number
   currencyCode?: string
   placeOfSupply?: string | null // Emirate or Country
-  billTo?: any
+  billTo?: { trn?: string; emirate?: string; state?: string } | null
   contact?: {
     id?: string
     displayName?: string

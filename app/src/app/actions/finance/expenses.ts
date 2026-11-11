@@ -336,7 +336,7 @@ async function autoSeedExpensesIfEmpty(tenantId: string) {
             const entryNum = `JE-2026-${String(jeCounter).padStart(4, "0")}`
             jeCounter++
 
-            const linesToCreate: any[] = [
+            const linesToCreate: Prisma.JournalEntryLineUncheckedCreateWithoutJournalEntryInput[] = [
                 {
                     tenantId,
                     accountId: item.accountId,
@@ -352,7 +352,7 @@ async function autoSeedExpensesIfEmpty(tenantId: string) {
                     accountId: itcAcc.id,
                     debit: item.taxAmount,
                     credit: 0,
-                    description: "Input GST (ITC 18%)",
+                    description: "Input tax",
                 })
             }
 
@@ -691,7 +691,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
             ) {
                 const entryNumber = await nextSequence(tx, "journalEntry", tenantId, `JE-${year}-`, 4)
 
-                const linesToCreate: any[] = [
+                const linesToCreate: Prisma.JournalEntryLineUncheckedCreateWithoutJournalEntryInput[] = [
                     {
                         tenantId,
                         accountId: data.accountId,
@@ -840,7 +840,7 @@ export async function updateExpenseStatus(
                 const year = new Date().getFullYear()
                 const entryNumber = await nextSequence(tx, "journalEntry", tenantId, `JE-${year}-`, 4)
 
-                const linesToCreate: any[] = [
+                const linesToCreate: Prisma.JournalEntryLineUncheckedCreateWithoutJournalEntryInput[] = [
                     {
                         tenantId,
                         accountId: expense.accountId,

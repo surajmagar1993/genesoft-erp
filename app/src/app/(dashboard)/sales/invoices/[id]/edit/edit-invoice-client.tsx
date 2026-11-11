@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { InvoiceForm, InvoiceFormData, type InvoiceTaxRegime } from "@/components/sales/invoice-form"
 import { getInvoiceTaxRegime } from "@/app/actions/sales/tax"
 import { updateInvoice, InvoiceDB } from "@/app/actions/sales/invoices"
-import { getContacts } from "@/app/actions/crm/contacts"
+import { getContacts, type Contact } from "@/app/actions/crm/contacts"
 import { getProductsForDocuments, type DocumentProduct } from "@/app/actions/sales/products"
 import { toast } from "sonner"
 import { computeLineItemGst, getSupplyTypeForRegime, GstRate } from "@/lib/gst-engine"
@@ -18,7 +18,7 @@ export default function EditInvoiceClient({ invoice }: Props) {
     const router = useRouter()
     const [regime, setRegime] = useState<InvoiceTaxRegime | null>(null)
     useEffect(() => { getInvoiceTaxRegime().then(setRegime) }, [])
-    const [contacts, setContacts] = useState<unknown[]>([])
+    const [contacts, setContacts] = useState<Contact[]>([])
     const [products, setProducts] = useState<DocumentProduct[]>([])
     useEffect(() => { getProductsForDocuments().then(setProducts).catch(() => setProducts([])) }, [])
 

@@ -23,8 +23,9 @@ interface CompanyProfileTabProps {
 export default function CompanyProfileTab({ initialSettings }: CompanyProfileTabProps) {
     const router = useRouter()
 
-    const parseAddress = (addr: any): TenantAddress => {
-        if (!addr) return { street: "", city: "", state: "", country: "India", postalCode: "" }
+    // A missing address stays empty (no assumed country)
+    const parseAddress = (addr: TenantAddress | string | null | undefined): TenantAddress => {
+        if (!addr) return { street: "", city: "", state: "", country: "", postalCode: "" }
         if (typeof addr === "string") {
             try {
                 const parsed = JSON.parse(addr)
@@ -32,19 +33,19 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                     street: parsed.street || "",
                     city: parsed.city || "",
                     state: parsed.state || "",
-                    country: parsed.country || "India",
+                    country: parsed.country || "",
                     postalCode: parsed.postalCode || parsed.postal_code || "",
                 }
             } catch {
-                return { street: addr, city: "", state: "", country: "India", postalCode: "" }
+                return { street: addr, city: "", state: "", country: "", postalCode: "" }
             }
         }
         return {
             street: addr.street || "",
             city: addr.city || "",
             state: addr.state || "",
-            country: addr.country || "India",
-            postalCode: addr.postalCode || addr.postal_code || "",
+            country: addr.country || "",
+            postalCode: addr.postalCode || (addr as { postal_code?: string }).postal_code || "",
         }
     }
 

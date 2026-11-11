@@ -123,12 +123,12 @@ export interface TdsOverviewData {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getTdsStore(tenantSettings: any): {
+function getTdsStore(tenantSettings: Prisma.JsonValue | null | undefined): {
   deductions: TdsDeductionRecord[]
   challans: TdsChallanRecord[]
   profile: TdsProfile
 } {
-  const s = tenantSettings || {}
+  const s = (tenantSettings || {}) as { tdsDeductions?: TdsDeductionRecord[]; tdsChallans?: TdsChallanRecord[]; tdsProfile?: TdsProfile }
   const deductions: TdsDeductionRecord[] = Array.isArray(s.tdsDeductions) ? s.tdsDeductions : []
   const challans: TdsChallanRecord[] = Array.isArray(s.tdsChallans) ? s.tdsChallans : []
   const profile: TdsProfile = s.tdsProfile || {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { submitPublicForm } from "@/app/actions/crm/forms"
+import type { FormValues } from "@/app/actions/crm/form-types"
 import { errorMessage } from "@/lib/utils";
 
 // Cross-Origin Resource Sharing (CORS) headers to allow embedded forms from any client website
@@ -26,21 +27,22 @@ export async function POST(
             )
         }
 
-        let bodyData: Record<string, any> = {}
+        let bodyData: FormValues = {}
         let honeypotValue: string | undefined
+        const filled = (v: unknown) => (v ? String(v) : undefined)
 
         const contentType = req.headers.get("content-type") || ""
 
         if (contentType.includes("application/json")) {
             const json = await req.json()
             bodyData = json.data || json
-            honeypotValue = json._hp_company || json.honeypot || bodyData._hp_company || bodyData.honeypot
+            honeypotValue = filled(json._hp_company || json.honeypot || bodyData._hp_company || bodyData.honeypot)
         } else if (
             contentType.includes("application/x-www-form-urlencoded") ||
             contentType.includes("multipart/form-data")
         ) {
             const formData = await req.formData()
-            const entries: Record<string, any> = {}
+            const entries: Record<string, string> = {}
             for (const [key, val] of formData.entries()) {
                 entries[key] = val.toString()
             }
@@ -51,7 +53,7 @@ export async function POST(
             try {
                 const text = await req.text()
                 bodyData = JSON.parse(text)
-                honeypotValue = bodyData._hp_company || bodyData.honeypot
+                honeypotValue = filled(bodyData._hp_company || bodyData.honeypot)
             } catch {
                 bodyData = {}
             }

@@ -33,12 +33,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu"
-import { deleteBill } from "@/app/actions/finance/bills"
+import { deleteBill, type BillListRow } from "@/app/actions/finance/bills"
 import { toast } from "sonner"
 import { RequireRole } from "@/components/auth/role-context"
 
 interface BillsClientProps {
-  bills: any[]
+  bills: BillListRow[]
   total: number
 }
 

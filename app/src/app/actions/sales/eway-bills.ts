@@ -206,7 +206,7 @@ export async function getEwayBillsOverview(
 
   const eligibleInvoices: EligibleInvoiceCandidate[] = invoices.map((inv) => {
     const totalAmount = Number(inv.total || 0)
-    const billTo = (inv.billTo as Record<string, any>) || {}
+    const billTo = ((inv.billTo ?? {}) as Record<string, string | undefined>)
     const ewbNo = existingEwbInvoiceMap.get(inv.id) || billTo.ewayBillNo
     return {
       id: inv.id,

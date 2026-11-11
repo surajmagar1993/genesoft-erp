@@ -10,7 +10,7 @@ import { ensureStripePrice, type PaidPlan } from "@/lib/stripe-plans"
 import { annualFromMonthly } from "@/lib/plan-pricing"
 import { PRICING_REGIONS } from "@/lib/pricing-regions"
 import { PLAN_CONFIG_ACTION, PLAN_ORDER, getPlanConfig, normalizePlanConfig, planName, type PlanConfig } from "@/lib/plan-config"
-import { getRegionalPricing } from "@/lib/saas-subscription-engine"
+import { getRegionalPricing, type SaaSPlatformInvoice } from "@/lib/saas-subscription-engine"
 import { calculatePlatformMrr } from "@/lib/platform-mrr"
 import { sendSystemEmail } from "@/lib/system-email"
 import { adaptTaxAccounts } from "@/lib/default-accounts"
@@ -1491,7 +1491,7 @@ export async function getPlatformSubscriptions() {
         // MRR (INR) from paying, active tenants at live prices; trials and suspended tenants don't count
         const { mrr: totalMrr, payingTenants, byCurrency: mrrByCurrency } = await calculatePlatformMrr(tenants)
         const planCounts: Record<string, number> = { FREE: 0, BASIC: 0, PRO: 0, ENTERPRISE: 0 }
-        const allInvoices: (Record<string, unknown> & { date?: string; tenantId: string; tenantName: string })[] = []
+        const allInvoices: SaaSPlatformInvoice[] = []
 
         tenants.forEach((t) => {
             const planKey = (t.plan || "FREE") as string
@@ -1499,7 +1499,7 @@ export async function getPlatformSubscriptions() {
 
             const subMeta = ((t.settings as { subscription?: { invoices?: unknown } } | null)?.subscription || {}) as { invoices?: unknown }
             if (Array.isArray(subMeta.invoices)) {
-                (subMeta.invoices as Record<string, unknown>[]).forEach((inv) => {
+                (subMeta.invoices as SaaSPlatformInvoice[]).forEach((inv) => {
                     allInvoices.push({
                         ...inv,
                         tenantId: t.id,
@@ -1509,7 +1509,8 @@ export async function getPlatformSubscriptions() {
             }
         })
 
-        allInvoices.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())
+        // Newest first (receipts carry issueDate; a missing date sorts last)
+        allInvoices.sort((a, b) => new Date(b.issueDate || 0).getTime() - new Date(a.issueDate || 0).getTime())
 
         return {
             totalTenants: tenants.length,

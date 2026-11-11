@@ -27,7 +27,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { deleteBill } from "@/app/actions/finance/bills"
+import { deleteBill, type BillDetail } from "@/app/actions/finance/bills"
 import { createPayment, deletePayment, CreatePaymentPayload, PaymentMethod } from "@/app/actions/finance/payments"
 import { RequireRole } from "@/components/auth/role-context"
 import { toast } from "sonner"
@@ -42,7 +42,7 @@ const formatDate = (dateStr: string | null | undefined) => {
 }
 
 interface Props {
-    bill: any // BillDB with related data
+    bill: BillDetail
 }
 
 export default function BillDetailsClient({ bill }: Props) {
@@ -63,7 +63,7 @@ export default function BillDetailsClient({ bill }: Props) {
 
     const payments = bill.payments || []
     const totalBillAmount = Number(bill.total || 0)
-    const totalPaid = payments.reduce((acc: number, p: any) => acc + Number(p.amount), 0)
+    const totalPaid = payments.reduce((acc: number, p) => acc + Number(p.amount), 0)
 
     const tdsInfo = useMemo(() => {
         if (!bill.notes || !bill.notes.includes("TDS_DEDUCTION:")) return null
@@ -327,7 +327,7 @@ export default function BillDetailsClient({ bill }: Props) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {(bill.bill_items || []).map((item: any) => (
+                                    {(bill.bill_items || []).map((item) => (
                                         <TableRow key={item.id}>
                                             <TableCell className="pl-6 font-medium">{item.description}</TableCell>
                                             <TableCell className="text-right">{Number(item.quantity)}</TableCell>
@@ -395,7 +395,7 @@ export default function BillDetailsClient({ bill }: Props) {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {bill.payments.map((p: any) => (
+                                            {bill.payments.map((p) => (
                                                 <TableRow key={p.id}>
                                                     <TableCell>{formatDate(p.payment_date)}</TableCell>
                                                     <TableCell>

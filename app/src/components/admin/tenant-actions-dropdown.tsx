@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation"
 
 import Link from "next/link"
 
-export function TenantActionsDropdown({ tenant }: { tenant: any }) {
+export function TenantActionsDropdown({ tenant }: { tenant: { id: string; isActive: boolean } }) {
     const router = useRouter()
     const [isLoading, setIsLoading] = useState(false)
 

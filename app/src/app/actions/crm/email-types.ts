@@ -113,7 +113,7 @@ export interface EmailMessageRecord {
         title: string
         value?: number | null
     } | null
-    attachments?: any
+    attachments?: unknown
     createdAt: string
     updatedAt: string
 }
@@ -126,7 +126,7 @@ export interface EmailTemplateRecord {
     subject: string
     bodyHtml: string
     bodyText?: string | null
-    mergeTags?: any
+    mergeTags?: unknown
     isActive: boolean
     createdAt: string
     updatedAt: string

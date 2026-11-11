@@ -77,7 +77,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
         title: "",
         description: "",
         contactId: initialData.customers[0]?.id || "",
-        frequency: "MONTHLY" as any,
+        frequency: "MONTHLY" as RecurringProfileRecord["frequency"],
         startDate: new Date().toISOString().split("T")[0],
         endDate: "",
         maxCycles: "",
@@ -157,7 +157,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
     const currentTotals = calculateTotals(formData.items)
 
     // Handle Item Change
-    const handleItemChange = (index: number, field: string, val: any) => {
+    const handleItemChange = (index: number, field: string, val: string | number) => {
         const newItems = [...formData.items]
         newItems[index] = { ...newItems[index], [field]: val }
 
@@ -1049,7 +1049,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                 <label className="font-semibold text-foreground">Billing Cadence *</label>
                                 <select
                                     value={formData.frequency}
-                                    onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
+                                    onChange={(e) => setFormData({ ...formData, frequency: e.target.value as typeof formData.frequency })}
                                     className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs"
                                 >
                                     <option value="WEEKLY">Weekly</option>

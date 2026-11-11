@@ -58,7 +58,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [saveError, setSaveError] = useState<string | null>(null)
 
-    const update = (field: keyof CompanyFormData, value: any) => setForm((p) => ({ ...p, [field]: value }))
+    const update = (field: keyof CompanyFormData, value: CompanyFormData[keyof CompanyFormData]) => setForm((p) => ({ ...p, [field]: value }))
 
     const handleSave = async () => {
         setSaveError(null)

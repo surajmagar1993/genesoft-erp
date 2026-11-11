@@ -40,17 +40,76 @@ export interface BillData {
   items: BillItem[]
 }
 
+/** A bill as the bills list shows it */
+export type BillListRow = {
+  id: string
+  bill_number: string
+  bill_date: string
+  due_date: string | null
+  status: BillStatus
+  total: number
+  currency_code: string
+  contact: { display_name: string; company_name: string | null } | null
+}
+
+/** A bill with its lines, supplier and payments, as the bill page shows it */
+export type BillDetail = {
+  id: string
+  contact_id: string
+  bill_number: string
+  bill_date: string
+  due_date: string | null
+  status: BillStatus
+  subtotal: number
+  tax_amount: number
+  discount: number
+  total: number
+  currency_code: string
+  notes: string | null
+  bill_items: {
+    id: string
+    product_id: string | null
+    description: string
+    quantity: number
+    unit_price: number
+    tax_percent: number
+    tax_amount: number
+    line_total: number
+  }[]
+  contacts: {
+    display_name: string
+    email: string | null
+    phone: string | null
+    company_name: string | null
+    pan: string | null
+  }
+  payments: { id: string; amount: number; payment_date: string; payment_method: string; reference: string | null }[]
+}
+
 /**
  * Fetch all bills for the current tenant
  */
-export async function getBills(page: number = 1, limit: number = 10) {
+export async function getBills(page: number = 1, limit: number = 10): Promise<{ data: BillListRow[]; total: number }> {
   try {
     const tenantId = await getTenantId(MODULE)
     const [rows, total] = await Promise.all([
-      prisma.bill.findMany({ where: { tenantId }, include: { items: true }, orderBy: { createdAt: "desc" }, skip: (page - 1) * limit, take: limit }),
+      prisma.bill.findMany({
+        where: { tenantId },
+        include: { contact: { select: { displayName: true, companyName: true } } },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
       prisma.bill.count({ where: { tenantId } }),
     ])
-    return { data: rows.map((b) => ({ ...toRow("Bill", b), bill_items: toRows("BillItem", b.items) })), total }
+    return {
+      data: rows.map((b) => ({
+        ...toRow<Omit<BillListRow, "contact">>("Bill", b),
+        // The supplier's name, which the list shows and searches
+        contact: b.contact ? { display_name: b.contact.displayName, company_name: b.contact.companyName } : null,
+      })),
+      total,
+    }
   } catch (err) {
     console.error("Error fetching bills:", err)
     return { data: [], total: 0 }
@@ -58,16 +117,16 @@ export async function getBills(page: number = 1, limit: number = 10) {
 }
 
 /* ── Read Single Bill ── */
-export async function getBill(id: string): Promise<PgRow | null> {
+export async function getBill(id: string): Promise<BillDetail | null> {
   if (!isUuid(id)) return null
   const tenantId = await getTenantId(MODULE)
   const b = await prisma.bill.findFirst({ where: { id, tenantId }, include: { items: true, contact: true, payments: true } })
   if (!b) return null
   return {
-    ...toRow("Bill", b),
-    bill_items: toRows("BillItem", b.items),
-    contacts: pick(toRow("Contact", b.contact), ["display_name", "email", "phone", "company_name", "billing_address"]),
-    payments: toRows("Payment", b.payments),
+    ...toRow<Omit<BillDetail, "bill_items" | "contacts" | "payments">>("Bill", b),
+    bill_items: toRows<BillDetail["bill_items"][number]>("BillItem", b.items),
+    contacts: pick(toRow("Contact", b.contact), ["display_name", "email", "phone", "company_name", "pan"]) as BillDetail["contacts"],
+    payments: toRows<BillDetail["payments"][number]>("Payment", b.payments),
   }
 }
 

@@ -2,6 +2,7 @@
 
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
+import { getCurrentUser } from "@/lib/current-user"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { revalidatePath } from "next/cache"
@@ -538,7 +539,7 @@ async function _updateBudget(
             })
         }
 
-        const updateData: any = {
+        const updateData: Prisma.BudgetUncheckedUpdateInput = {
             totalBudgetedAmount
         }
 
@@ -578,10 +579,11 @@ async function _changeBudgetStatus(
 
     if (!existing) throw new Error("Budget plan not found.")
 
-    const updateData: any = { status }
+    const updateData: Prisma.BudgetUncheckedUpdateInput = { status }
 
     if (status === BudgetStatus.APPROVED || status === BudgetStatus.ACTIVE) {
-        updateData.approvedBy = approverName || "Financial Controller"
+        // The person who approved it (no invented job title)
+        updateData.approvedBy = approverName || (await getCurrentUser())?.email || null
         updateData.approvedAt = new Date()
     }
 

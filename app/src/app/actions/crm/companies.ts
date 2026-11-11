@@ -147,10 +147,35 @@ export async function deleteCompany(id: string): Promise<{ error: string | null 
   }
 }
 
+/** A contact at the company, as the company page lists it */
+export type CompanyContactRow = {
+  id: string
+  display_name: string
+  email: string | null
+  phone: string | null
+  mobile: string | null
+  customer_group: string | null
+  balance: number | string | null
+  currency_code: string | null
+}
+
+/** A deal with a contact at the company, as the company page lists it */
+export type CompanyDealRow = {
+  id: string
+  title: string
+  value: number
+  stage: string
+  probability: number
+  expected_close: string | null
+  contact_name: string
+  company: string
+  created_at: string
+}
+
 export interface CompanyRelationsData {
   company: Company | null
-  contacts: any[]
-  deals: any[]
+  contacts: CompanyContactRow[]
+  deals: CompanyDealRow[]
   metrics: {
     totalContacts: number
     totalDeals: number
@@ -175,7 +200,7 @@ export async function getCompanyWithRelations(id: string): Promise<CompanyRelati
   const [contactsRes, dealsRes] = await Promise.all([
     prisma.contact
       .findMany({ where: { tenantId, companyName: company.name }, orderBy: { createdAt: "desc" } })
-      .then((rows) => ({ data: toRows("Contact", rows) })),
+      .then((rows) => ({ data: toRows<CompanyContactRow>("Contact", rows) })),
     // Deals don't store a company; they belong to a contact at this company
     prisma.deal
       .findMany({

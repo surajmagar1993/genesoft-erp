@@ -450,9 +450,9 @@ export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoicePr
   const supplierGstin = invoice.supplier_gstin || COMPANY.gstin
   const supplierState = invoice.supplier_state || COMPANY.state
 
-  const isTaxExempt = Boolean((invoice as any).is_tax_exempt)
-  const taxExemptionReason = (invoice as any).tax_exemption_reason
-  const taxExemptionCertificate = (invoice as any).tax_exemption_certificate
+  const isTaxExempt = Boolean(invoice.is_tax_exempt)
+  const taxExemptionReason = invoice.tax_exemption_reason ?? undefined
+  const taxExemptionCertificate = invoice.tax_exemption_certificate ?? undefined
 
   const summary = computeInvoiceGstSummary(
     items.map((li) => ({

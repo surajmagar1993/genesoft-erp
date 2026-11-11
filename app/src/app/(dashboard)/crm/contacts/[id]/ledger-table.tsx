@@ -9,8 +9,8 @@ import { ArrowUpRight, ArrowDownLeft, Receipt, CreditCard, History } from "lucid
 interface LedgerEntry {
   id: string
   type: string
-  amount: any
-  balance: any
+  amount: number | string
+  balance: number | string
   referenceId: string | null
   description: string | null
   date: string | Date

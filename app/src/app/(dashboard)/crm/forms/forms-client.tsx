@@ -159,7 +159,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
     // Live Simulator & Test Modal
     const [showSimulatorModal, setShowSimulatorModal] = useState(false)
     const [simulatingForm, setSimulatingForm] = useState<WebFormRecord | null>(null)
-    const [simulatedFormData, setSimulatedFormData] = useState<Record<string, any>>({})
+    const [simulatedFormData, setSimulatedFormData] = useState<Record<string, string>>({})
     const [simulatorSubmitted, setSimulatorSubmitted] = useState(false)
 
     // Submission Detail Modal
@@ -1210,7 +1210,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                         value={field.type}
                                                         onChange={(e) =>
                                                             handleUpdateField(idx, {
-                                                                type: e.target.value as any,
+                                                                type: e.target.value as typeof field.type,
                                                             })
                                                         }
                                                         className="w-full h-8 px-2 text-xs border rounded-md bg-white dark:bg-slate-900"

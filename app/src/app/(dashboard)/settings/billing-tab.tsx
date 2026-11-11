@@ -39,6 +39,7 @@ import {
     formatSaaSInvoiceReceiptHtml,
     getTierRank,
 } from "@/lib/saas-subscription-engine"
+import type { TenantSettingsJson } from "@/app/actions/settings/tenant"
 import {
     executePlanChange
 } from "@/app/actions/saas/subscription"
@@ -48,8 +49,19 @@ import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { errorMessage } from "@/lib/utils";
 
+/** The parts of the workspace record this tab reads */
+type BillingWorkspace = {
+    plan?: string
+    currency_code?: string
+    currencyCode?: string
+    email?: string | null
+    is_trial?: boolean
+    trial_ends_at?: string | null
+    settings?: TenantSettingsJson | null
+}
+
 interface BillingTabProps {
-    settings: any
+    settings: BillingWorkspace | null
     /** Live prices from Admin → Pricing for this workspace's currency */
     pricing?: EffectivePricing
     /** Set when Stripe Checkout sends the customer back (?success=true / ?canceled=true) */
@@ -96,11 +108,11 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
     // Calculate trial countdown (the time is read once, when the tab opens)
     const [openedAt] = useState(() => Date.now())
     const trialDaysRemaining =
-        settings?.isTrial && settings?.trialEndsAt
-            ? Math.max(0, Math.ceil((new Date(settings.trialEndsAt).getTime() - openedAt) / (1000 * 60 * 60 * 24)))
+        settings?.is_trial && settings?.trial_ends_at
+            ? Math.max(0, Math.ceil((new Date(settings.trial_ends_at).getTime() - openedAt) / (1000 * 60 * 60 * 24)))
             : 0
     // The trial counts (as Pro) only until it ends; afterwards the workspace's own plan applies
-    const trialActive = !!settings?.isTrial && trialDaysRemaining > 0
+    const trialActive = !!settings?.is_trial && trialDaysRemaining > 0
 
     // Real-time proration quote when targetPlan is selected
     const prorationQuote = useMemo(() => {
@@ -298,12 +310,12 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
                                     <span className="flex items-center gap-1.5 text-amber-600 dark:text-amber-400 font-semibold">
                                         <Clock className="h-4 w-4" />
                                         PRO Trial Active &bull; {trialDaysRemaining} {trialDaysRemaining === 1 ? "day" : "days"} remaining (ends{" "}
-                                        {new Date(settings.trialEndsAt).toLocaleDateString()})
+                                        {new Date(settings?.trial_ends_at ?? "").toLocaleDateString()})
                                     </span>
-                                ) : settings?.isTrial && currentPlan === "FREE" ? (
+                                ) : settings?.is_trial && currentPlan === "FREE" ? (
                                     <span className="flex items-center gap-1.5 text-muted-foreground">
                                         <Clock className="h-4 w-4" />
-                                        Trial ended{settings.trialEndsAt ? ` on ${new Date(settings.trialEndsAt).toLocaleDateString()}` : ""} &bull; You&apos;re on the Free plan. Choose a plan below to get more.
+                                        Trial ended{settings.trial_ends_at ? ` on ${new Date(settings.trial_ends_at).toLocaleDateString()}` : ""} &bull; You&apos;re on the Free plan. Choose a plan below to get more.
                                     </span>
                                 ) : currentPlan === "FREE" ? (
                                     <span className="flex items-center gap-1.5 text-muted-foreground">

@@ -109,7 +109,7 @@ export async function getUaeVatOverview(params?: {
     total: Number(inv.total || 0),
     currencyCode: inv.currencyCode,
     placeOfSupply: inv.placeOfSupply,
-    billTo: inv.billTo,
+    billTo: inv.billTo as RawUaeInvoice["billTo"],
     contact: inv.contact ? {
       id: inv.contact.id,
       displayName: inv.contact.displayName,

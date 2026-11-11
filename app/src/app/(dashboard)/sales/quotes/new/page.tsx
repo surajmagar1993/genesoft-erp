@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { QuoteForm, defaultQuoteForm } from "@/components/sales/quote-form"
+import { QuoteForm, defaultQuoteForm, type QuoteFormData } from "@/components/sales/quote-form"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createQuote } from "@/app/actions/sales/quotes"
 import { toast } from "sonner"
@@ -24,7 +24,7 @@ export default function NewQuotePage() {
         return undefined
     }, [searchParams])
 
-    const handleSave = async (data: any) => {
+    const handleSave = async (data: QuoteFormData) => {
         const { error } = await createQuote({
             quote_number: data.quoteNumber,
             customer_name: data.customerName,
@@ -38,8 +38,8 @@ export default function NewQuotePage() {
             discount_type: data.discountType,
             notes: data.notes,
             terms_and_conditions: data.termsAndConditions,
-            currency_code: data.currencyCode || "INR",
-            line_items: data.lineItems.map((li: any) => ({
+            currency_code: "", // set on the server from the business's currency
+            line_items: data.lineItems.map((li) => ({
                 product_name: li.productName,
                 description: li.description,
                 qty: li.qty,

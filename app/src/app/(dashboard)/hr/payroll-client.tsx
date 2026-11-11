@@ -88,7 +88,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
 
     // Active records for modals
     const [selectedRunForDisburse, setSelectedRunForDisburse] = useState<PayrollRunRecord | null>(null)
-    const [selectedPayslip, setSelectedPayslip] = useState<any | null>(null)
+    const [selectedPayslip, setSelectedPayslip] = useState<Awaited<ReturnType<typeof getPayslipDetails>> | null>(null)
 
     // Search & Filter
     const [slipSearch, setSlipSearch] = useState("")
@@ -364,7 +364,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
             </div>
 
             {/* Sub Tabs */}
-            <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="space-y-4">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-4">
                 <TabsList className="grid grid-cols-3 sm:flex sm:w-auto h-auto p-1 gap-1 border bg-muted/40">
                     <TabsTrigger value="payruns" className="text-xs py-1.5 px-3">
                         <Calendar className="h-3.5 w-3.5 mr-1.5" />
@@ -1121,19 +1121,19 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Designation</span>
-                                        <span>{selectedPayslip.slip.employee.designation?.title || "Staff"}</span>
+                                        <span>{selectedPayslip.slip.employee.designation?.title || "—"}</span>
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Department</span>
-                                        <span>{selectedPayslip.slip.employee.department?.name || "Operations"}</span>
+                                        <span>{selectedPayslip.slip.employee.department?.name || "—"}</span>
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Bank Name</span>
-                                        <span>{selectedPayslip.slip.bankName || "HDFC Bank"}</span>
+                                        <span>{selectedPayslip.slip.bankName || "—"}</span>
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Account #</span>
-                                        <span className="font-mono">{selectedPayslip.slip.bankAccountNumber ? `••••${selectedPayslip.slip.bankAccountNumber.slice(-4)}` : "••••4092"}</span>
+                                        <span className="font-mono">{selectedPayslip.slip.bankAccountNumber ? `••••${selectedPayslip.slip.bankAccountNumber.slice(-4)}` : "—"}</span>
                                     </div>
                                     <div>
                                         <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Days Worked</span>

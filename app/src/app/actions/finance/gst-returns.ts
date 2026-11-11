@@ -105,7 +105,7 @@ export async function getGstReturnsOverview(params?: {
     taxAmount: Number(inv.taxAmount || 0),
     total: Number(inv.total || 0),
     placeOfSupply: inv.placeOfSupply,
-    billTo: inv.billTo,
+    billTo: inv.billTo as RawInvoice["billTo"],
     contact: inv.contact ? {
       id: inv.contact.id,
       displayName: inv.contact.displayName,

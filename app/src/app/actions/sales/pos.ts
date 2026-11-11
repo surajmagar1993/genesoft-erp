@@ -2,6 +2,7 @@
 
 import { assertPlanFeature } from "@/lib/plan-limits"
 import { prisma } from "@/lib/prisma"
+import type { PaymentMethod } from "@prisma/client"
 import { postToLedger } from "@/lib/ledger"
 import { deductStockForSale } from "@/lib/stock"
 import { getTenantTaxContext, invoiceItemTaxColumns, productTaxRate } from "@/lib/tenant-tax"
@@ -56,7 +57,7 @@ export async function getPOSProducts(): Promise<POSProductItem[]> {
 
   return products.map((p) => {
     const attrs = (typeof p.customAttributes === "object" && p.customAttributes !== null) ? p.customAttributes : {}
-    const barcode = (attrs as any).barcode || p.sku || null
+    const barcode = (attrs as { barcode?: string }).barcode || p.sku || null
     return {
       id: p.id,
       name: p.name,
@@ -112,7 +113,7 @@ export async function searchPOSProducts(
 
   return products.map((p) => {
     const attrs = (typeof p.customAttributes === "object" && p.customAttributes !== null) ? p.customAttributes : {}
-    const barcode = (attrs as any).barcode || p.sku || null
+    const barcode = (attrs as { barcode?: string }).barcode || p.sku || null
     return {
       id: p.id,
       name: p.name,
@@ -269,7 +270,7 @@ export async function createPOSSale(
     })
 
     // 4. Record Payment via Prisma
-    const paymentMethodMap: Record<string, any> = {
+    const paymentMethodMap: Record<string, PaymentMethod> = {
       CASH: "CASH",
       CARD: "CREDIT_CARD",
       UPI: "UPI",

@@ -54,7 +54,7 @@ export interface SavedReportRecord {
 
 export interface ReportQueryResult {
     columns: { key: string; label: string; type: string }[]
-    rows: Record<string, any>[]
+    rows: Record<string, string | number | boolean | null>[]
     totalCount: number
     summary: {
         aggregateResult: number | null

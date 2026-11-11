@@ -67,7 +67,7 @@ export default async function WhatsAppHubPage() {
     const invoices = rawInvoices.map((inv) => ({
         id: inv.id,
         invoice_number: inv.invoiceNumber || "",
-        customer_name: inv.contact?.displayName || (inv.billTo as any)?.name || "Customer",
+        customer_name: inv.contact?.displayName || (inv.billTo as { name?: string } | null)?.name || "Customer",
         total_amount: Number(inv.total) || 0,
         status: inv.status,
         due_date: inv.dueDate ? inv.dueDate.toISOString() : null,
@@ -80,7 +80,7 @@ export default async function WhatsAppHubPage() {
             : null,
     }))
 
-    const settings = (tenant?.settings as any) || {}
+    const settings = (tenant?.settings ?? {}) as { whatsapp?: { messages?: unknown[] } }
     const rawMessages = Array.isArray(settings.whatsapp?.messages) ? settings.whatsapp.messages : []
     const messages = JSON.parse(JSON.stringify(rawMessages))
 

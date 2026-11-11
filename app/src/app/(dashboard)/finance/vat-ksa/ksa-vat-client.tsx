@@ -46,7 +46,7 @@ export function KsaVatClient({ initialData }: Props) {
   const [selectedQuarter, setSelectedQuarter] = useState<"Q1" | "Q2" | "Q3" | "Q4">(initialData.quarter)
 
   // Invoice Inspection Modals
-  const [inspectingPayload, setInspectingPayload] = useState<any | null>(null)
+  const [inspectingPayload, setInspectingPayload] = useState<Awaited<ReturnType<typeof generateZatcaInvoicePayload>> | null>(null)
   const [, setIsInspectingLoading] = useState(false)
   const [isXmlModalOpen, setIsXmlModalOpen] = useState(false)
   const [isPrintInvoiceModalOpen, setIsPrintInvoiceModalOpen] = useState(false)
@@ -61,7 +61,7 @@ export function KsaVatClient({ initialData }: Props) {
 
   // Interactive QR Decoder State
   const [decodeInput, setDecodeInput] = useState("")
-  const [decodedResult, setDecodedResult] = useState<any | null>(null)
+  const [decodedResult, setDecodedResult] = useState<ReturnType<typeof decodeZatcaTlv> | null>(null)
 
   // Interactive Zakat Calculator State
   const [zakatInputs, setZakatInputs] = useState<ZakatCalculationInputs>({
@@ -179,7 +179,7 @@ export function KsaVatClient({ initialData }: Props) {
   }
 
   // Recompute Zakat
-  const updateZakatInput = (field: keyof ZakatCalculationInputs, val: any) => {
+  const updateZakatInput = (field: keyof ZakatCalculationInputs, val: ZakatCalculationInputs[keyof ZakatCalculationInputs]) => {
     const updated = { ...zakatInputs, [field]: val }
     setZakatInputs(updated)
     setZakatResult(calculateZakatBase(updated))
@@ -696,7 +696,7 @@ export function KsaVatClient({ initialData }: Props) {
                   {decodedResult.error && <div className="text-red-600 dark:text-red-400 font-semibold">{decodedResult.error}</div>}
 
                   <div className="mt-2 space-y-1 divide-y divide-border/40 font-mono">
-                    {decodedResult.tags.map((t: any) => (
+                    {decodedResult.tags.map((t) => (
                       <div key={t.tag} className="pt-1 flex justify-between">
                         <span className="text-muted-foreground">{t.label}:</span>
                         <span className="font-bold text-foreground">{t.value}</span>

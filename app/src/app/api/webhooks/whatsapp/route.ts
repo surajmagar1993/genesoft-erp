@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import crypto from "crypto"
 import { prisma } from "@/lib/prisma"
+import type { Prisma } from "@prisma/client"
 import { openSecret } from "@/lib/secret-box"
 import { parseMetaWebhookEvent, verifyMetaWebhookChallenge } from "@/lib/whatsapp-engine"
 import { errorMessage } from "@/lib/utils";
+
+/** tenants.settings as this webhook reads it: the saved WhatsApp chat history */
+type WaStore = { whatsapp?: { messages?: (Record<string, unknown> & { wamid?: string; errorMessage?: string })[]; [key: string]: unknown }; [key: string]: unknown }
 
 export const dynamic = "force-dynamic"
 
@@ -100,7 +104,7 @@ export async function POST(req: NextRequest) {
             if (!isValidMetaSignature(rawBody, signature, ownerAppSecret)) continue
 
             verified++
-            const { statuses, messages } = parseMetaWebhookEvent({ object: body.object, entry: [{ changes }] })
+            const { statuses, messages } = parseMetaWebhookEvent({ object: body.object, entry: [{ changes }] } as Parameters<typeof parseMetaWebhookEvent>[0])
             await processEvents(owners[0].id, statuses, messages)
             processedStatuses += statuses.length
             processedMessages += messages.length
@@ -140,8 +144,8 @@ async function processEvents(ownerId: string, statuses: MetaEvents["statuses"], 
 
             if (tenants.length > 0) {
                 const tenant = tenants[0]
-                const settings = (tenant.settings as any) || {}
-                const msgs = (settings.whatsapp?.messages || []) as any[]
+                const settings = ((tenant.settings ?? {}) as WaStore)
+                const msgs = settings.whatsapp?.messages || []
 
                 const updatedMsgs = msgs.map((m) => {
                     if (m.wamid === statusEvent.wamid) {
@@ -164,7 +168,7 @@ async function processEvents(ownerId: string, statuses: MetaEvents["statuses"], 
                                 ...(settings.whatsapp || {}),
                                 messages: updatedMsgs,
                             },
-                        },
+                        } as unknown as Prisma.InputJsonObject,
                     },
                 })
             }
@@ -192,8 +196,8 @@ async function processEvents(ownerId: string, statuses: MetaEvents["statuses"], 
                 })
 
                 if (tenant) {
-                    const settings = (tenant.settings as any) || {}
-                    const msgs = (settings.whatsapp?.messages || []) as any[]
+                    const settings = ((tenant.settings ?? {}) as WaStore)
+                    const msgs = settings.whatsapp?.messages || []
 
                     const inboundMsg = {
                         id: `wa_in_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
@@ -216,7 +220,7 @@ async function processEvents(ownerId: string, statuses: MetaEvents["statuses"], 
                                     ...(settings.whatsapp || {}),
                                     messages: [inboundMsg, ...msgs].slice(0, 100),
                                 },
-                            },
+                            } as unknown as Prisma.InputJsonObject,
                         },
                     })
 

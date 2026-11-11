@@ -185,8 +185,8 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
 
         try {
             const result = mode === "create"
-                ? await createContact(payload as any)
-                : await updateContact(initialData!.id!, payload as any)
+                ? await createContact(payload as Parameters<typeof createContact>[0])
+                : await updateContact(initialData!.id!, payload as Parameters<typeof updateContact>[1])
 
             if (result.error) {
                 setSaveError(result.error)

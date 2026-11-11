@@ -53,7 +53,7 @@ export async function deliverTenantEmail(tenantId: string, data: SendEmailInput)
         let emailAccountId = data.emailAccountId
         let senderEmail = ""
         let senderName = ""
-        let accountRecord: any = null
+        let accountRecord: Awaited<ReturnType<typeof prisma.emailAccount.findFirst>> = null
 
         if (emailAccountId) {
             accountRecord = await prisma.emailAccount.findFirst({ where: { id: emailAccountId, tenantId } })

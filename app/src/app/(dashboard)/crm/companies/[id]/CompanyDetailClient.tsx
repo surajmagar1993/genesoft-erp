@@ -16,7 +16,7 @@ import {
   Briefcase, ShieldCheck, Loader2
 } from "lucide-react"
 import { toast } from "sonner"
-import type { Company } from "@/app/actions/crm/companies"
+import type { Company, CompanyContactRow, CompanyDealRow } from "@/app/actions/crm/companies"
 import { deleteCompany } from "@/app/actions/crm/companies"
 import { formatCurrency } from "@/lib/utils"
 import { RequireRole } from "@/components/auth/role-context"
@@ -37,8 +37,8 @@ const dealStageConfig: Record<string, { label: string; color: string }> = {
 
 interface Props {
   company: Company
-  contacts: any[]
-  deals: any[]
+  contacts: CompanyContactRow[]
+  deals: CompanyDealRow[]
   metrics: {
     totalContacts: number
     totalDeals: number

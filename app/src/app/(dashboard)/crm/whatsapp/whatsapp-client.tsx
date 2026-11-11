@@ -859,7 +859,7 @@ export default function WhatsAppClient({
                                     <Label className="text-xs font-semibold">Gateway Mode</Label>
                                     <select
                                         value={config.mode}
-                                        onChange={(e) => setConfig({ ...config, mode: e.target.value as any })}
+                                        onChange={(e) => setConfig({ ...config, mode: e.target.value as typeof config.mode })}
                                         className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
                                     >
                                         <option value="SIMULATION">Simulation Gateway (Zero API Key required - Sandbox)</option>
@@ -1128,7 +1128,7 @@ export default function WhatsAppClient({
                                 <Label className="text-xs font-semibold">Message Template</Label>
                                 <select
                                     value={dispatchType}
-                                    onChange={(e) => setDispatchType(e.target.value as any)}
+                                    onChange={(e) => setDispatchType(e.target.value as typeof dispatchType)}
                                     className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm"
                                 >
                                     <option value="INVOICE_DISPATCH">Standard Invoice Dispatch & Payment Link</option>

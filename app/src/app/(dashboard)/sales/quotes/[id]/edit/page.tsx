@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { QuoteForm } from "@/components/sales/quote-form"
+import { QuoteForm, type QuoteFormData } from "@/components/sales/quote-form"
 import { getQuoteById, updateQuote } from "@/app/actions/sales/quotes"
 import { toast } from "sonner"
 
@@ -11,7 +11,7 @@ export default function EditQuotePage() {
     const router = useRouter()
     const id = params.id as string
     
-    const [initialData, setInitialData] = useState<any>(null)
+    const [initialData, setInitialData] = useState<QuoteFormData | null>(null)
     const [loading, setLoading] = useState(true)
 
     const fetchQuote = async () => {
@@ -47,7 +47,6 @@ export default function EditQuotePage() {
                 termsAndConditions: data.terms_and_conditions || "",
                 discount: Number(data.discount),
                 discountType: data.discount_type,
-                currencyCode: data.currency_code
             })
         } catch {
                     toast.error("Failed to fetch quote")
@@ -63,7 +62,7 @@ export default function EditQuotePage() {
         }
     }, [id])
 
-    const handleSave = async (data: any) => {
+    const handleSave = async (data: QuoteFormData) => {
         const { error } = await updateQuote({
             id: id,
             quote_number: data.quoteNumber,
@@ -78,8 +77,8 @@ export default function EditQuotePage() {
             discount_type: data.discountType,
             notes: data.notes,
             terms_and_conditions: data.termsAndConditions,
-            currency_code: data.currencyCode || "INR",
-            line_items: data.lineItems.map((li: any) => ({
+            currency_code: "", // set on the server from the business's currency
+            line_items: data.lineItems.map((li) => ({
                 product_name: li.productName,
                 description: li.description,
                 qty: li.qty,

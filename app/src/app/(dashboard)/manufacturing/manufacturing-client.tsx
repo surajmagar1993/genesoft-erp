@@ -375,7 +375,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
             </div>
 
             {/* Sub Tabs */}
-            <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="space-y-4">
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-4">
                 <TabsList className="grid grid-cols-3 sm:flex sm:w-auto h-auto p-1 gap-1 border bg-muted/40">
                     <TabsTrigger value="orders" className="text-xs py-1.5 px-3">
                         <Wrench className="h-3.5 w-3.5 mr-1.5" />
@@ -811,7 +811,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                             </div>
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-medium">Priority *</Label>
-                                <Select value={woPriority} onValueChange={(v: any) => setWoPriority(v)}>
+                                <Select value={woPriority} onValueChange={(v) => setWoPriority(v as typeof woPriority)}>
                                     <SelectTrigger className="text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -943,7 +943,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
 
                         <div className="space-y-1.5">
                             <Label className="text-xs font-medium">Next Stage *</Label>
-                            <Select value={nextStatus} onValueChange={(v: any) => setNextStatus(v)}>
+                            <Select value={nextStatus} onValueChange={(v) => setNextStatus(v as typeof nextStatus)}>
                                 <SelectTrigger className="text-xs">
                                     <SelectValue />
                                 </SelectTrigger>

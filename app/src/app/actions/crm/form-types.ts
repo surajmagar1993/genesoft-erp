@@ -96,7 +96,7 @@ export interface FormSubmissionRecord {
         displayName: string
         email?: string | null
     } | null
-    data: Record<string, any>
+    data: FormValues
     ipAddress?: string | null
     userAgent?: string | null
     referer?: string | null
@@ -163,9 +163,12 @@ export interface UpdateWebFormInput {
     primaryColor?: string
 }
 
+/** What a visitor typed into a form: field name → value */
+export type FormValues = Record<string, string | number | boolean | null>
+
 export interface SubmitPublicFormPayload {
     formIdOrCode: string
-    data: Record<string, any>
+    data: FormValues
     honeypot?: string
     ipAddress?: string
     userAgent?: string

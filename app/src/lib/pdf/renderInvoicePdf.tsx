@@ -10,8 +10,8 @@ import React from "react"
 import QRCode from "qrcode"
 
 export async function renderInvoicePdf(invoice: InvoiceDB, templateId?: string): Promise<Buffer> {
-  const chosenTemplate = (templateId?.toUpperCase() || invoice.template_id || "MODERN") as any
+  const chosenTemplate = (templateId?.toUpperCase() || invoice.template_id || "MODERN") as React.ComponentProps<typeof TaxInvoice>["templateId"]
   // KSA ZATCA phase 1: the TLV payload rendered as a QR code on the invoice
   const zatcaQrDataUrl = invoice.zatca_tlv ? await QRCode.toDataURL(invoice.zatca_tlv, { margin: 1, width: 240 }) : null
-  return renderToBuffer(<TaxInvoice invoice={invoice} templateId={chosenTemplate} zatcaQrDataUrl={zatcaQrDataUrl} /> as any)
+  return renderToBuffer(<TaxInvoice invoice={invoice} templateId={chosenTemplate} zatcaQrDataUrl={zatcaQrDataUrl} />)
 }

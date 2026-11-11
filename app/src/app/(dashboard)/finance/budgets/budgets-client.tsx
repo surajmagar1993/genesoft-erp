@@ -179,7 +179,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
         }))
     }
 
-    const handleItemChange = (idx: number, field: string, value: any) => {
+    const handleItemChange = (idx: number, field: string, value: string | number) => {
         setNewPlan((prev) => {
             const updated = [...prev.items]
             updated[idx] = { ...updated[idx], [field]: value }
@@ -425,7 +425,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
             </div>
 
             {/* Navigation Tabs */}
-            <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-4">
+            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="space-y-4">
                 <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full max-w-2xl">
                     <TabsTrigger value="portfolio" className="gap-2 text-xs sm:text-sm">
                         <Target className="h-4 w-4" />

@@ -369,7 +369,21 @@ export function verifyMetaWebhookChallenge(params: {
 /**
  * Parses incoming Meta Cloud API webhook events (status updates & incoming messages).
  */
-export function parseMetaWebhookEvent(body: any): {
+/** The parts of a Meta Cloud API webhook body that are read here */
+type MetaWebhookBody = {
+    entry?: {
+        changes?: {
+            value?: {
+                statuses?: { id: string; status: string; recipient_id: string; timestamp?: string; errors?: { title?: string; message?: string }[] }[]
+                messages?: { id: string; from: string; type: string; timestamp?: string; text?: { body?: string } }[]
+                contacts?: { wa_id: string; profile?: { name?: string } }[]
+            }
+        }[]
+    }[]
+    [key: string]: unknown
+} | null | undefined
+
+export function parseMetaWebhookEvent(body: MetaWebhookBody): {
     statuses: Array<{
         wamid: string
         status: "sent" | "delivered" | "read" | "failed"
@@ -385,8 +399,8 @@ export function parseMetaWebhookEvent(body: any): {
         text: string
     }>
 } {
-    const statuses: any[] = []
-    const messages: any[] = []
+    const statuses: ReturnType<typeof parseMetaWebhookEvent>["statuses"] = []
+    const messages: ReturnType<typeof parseMetaWebhookEvent>["messages"] = []
 
     if (!body || !body.entry) return { statuses, messages }
 
@@ -400,7 +414,7 @@ export function parseMetaWebhookEvent(body: any): {
                 for (const s of value.statuses) {
                     statuses.push({
                         wamid: s.id,
-                        status: s.status,
+                        status: s.status as "sent" | "delivered" | "read" | "failed",
                         recipientId: s.recipient_id,
                         timestamp: s.timestamp ? new Date(Number(s.timestamp) * 1000).toISOString() : new Date().toISOString(),
                         error: s.errors?.[0]?.title || s.errors?.[0]?.message,

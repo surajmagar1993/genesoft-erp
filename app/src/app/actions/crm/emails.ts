@@ -27,6 +27,7 @@ import type {
     CreateEmailTemplateInput,
 } from "./email-types"
 import { errorMessage } from "@/lib/utils";
+import type { Prisma } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -85,7 +86,7 @@ export async function getEmailsOverview(
         null
 
     // 2. Fetch messages with filters
-    const whereClause: any = { tenantId }
+    const whereClause: Prisma.EmailMessageWhereInput = { tenantId }
 
     if (mailboxId) {
         whereClause.emailAccountId = mailboxId

@@ -75,7 +75,7 @@ export async function getAustralianBasOverview(params?: {
     },
   })
 
-  const tenantSettings = (tenant?.settings as Record<string, any>) || {}
+  const tenantSettings = ((tenant?.settings ?? {}) as Record<string, string | undefined>)
   const taxpayerAbn = tenantSettings.abn || tenantSettings.australia_abn || ""
   const taxpayerLegalName = tenant?.name || ""
   const taxpayerAddress = tenantSettings.address || ""
@@ -98,7 +98,7 @@ export async function getAustralianBasOverview(params?: {
     },
   })
 
-  const rawInvoices: RawAuInvoice[] = invoicesDb.map((inv: any) => ({
+  const rawInvoices: RawAuInvoice[] = invoicesDb.map((inv) => ({
     id: inv.id,
     invoiceNumber: inv.invoiceNumber,
     invoiceDate: inv.invoiceDate,
@@ -111,7 +111,7 @@ export async function getAustralianBasOverview(params?: {
       ? {
           id: inv.contact.id,
           displayName: inv.contact.displayName,
-          companyName: inv.contact.companyName,
+          companyName: inv.contact.companyName ?? undefined,
           trn: inv.contact.trn, // Customer ABN
         }
       : null,
@@ -135,7 +135,7 @@ export async function getAustralianBasOverview(params?: {
     },
   })
 
-  const rawBills: RawAuBill[] = billsDb.map((b: any) => ({
+  const rawBills: RawAuBill[] = billsDb.map((b) => ({
     id: b.id,
     billNumber: b.billNumber,
     billDate: b.billDate,
@@ -148,7 +148,7 @@ export async function getAustralianBasOverview(params?: {
       ? {
           id: b.contact.id,
           displayName: b.contact.displayName,
-          companyName: b.contact.companyName,
+          companyName: b.contact.companyName ?? undefined,
           trn: b.contact.trn,
         }
       : null,

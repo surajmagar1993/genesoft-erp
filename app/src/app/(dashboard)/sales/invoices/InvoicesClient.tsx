@@ -25,12 +25,12 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { InvoiceStatus, deleteInvoice, sendInvoiceEmail } from "@/app/actions/sales/invoices"
+import { InvoiceStatus, type InvoiceDB, deleteInvoice, sendInvoiceEmail } from "@/app/actions/sales/invoices"
 
 import { PageHeader } from "@/components/ui/page-header"
 import { RequireRole } from "@/components/auth/role-context"
 
-const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "outline" | "destructive" | "success"; icon: React.ComponentType<{ className?: string }> }> = {
+const statusConfig: Record<InvoiceStatus, { label: string; variant: "default" | "secondary" | "outline" | "destructive"; icon: React.ComponentType<{ className?: string }> }> = {
     DRAFT: { label: "Draft", variant: "secondary", icon: Clock },
     SENT: { label: "Sent", variant: "outline", icon: Send },
     ACCEPTED: { label: "Accepted", variant: "default", icon: CheckCircle2 },
@@ -52,7 +52,7 @@ const formatDate = (dateStr: string) => {
 }
 
 interface Props {
-    initialInvoices: any[]
+    initialInvoices: InvoiceDB[]
     total: number
 }
 
@@ -259,7 +259,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                             <TableCell className="text-sm font-medium text-slate-600 dark:text-slate-400">{formatDate(inv.invoice_date)}</TableCell>
                                             <TableCell className="text-right font-black text-slate-900 dark:text-slate-50">{formatCurrency(totalAmount, inv.currency_code || "INR")}</TableCell>
                                             <TableCell>
-                                                <Badge variant={cfg.variant as any} className="flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full ring-1 ring-inset shadow-sm">
+                                                <Badge variant={cfg.variant} className="flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full ring-1 ring-inset shadow-sm">
                                                     <StatusIcon className="h-3 w-3" />
                                                     <span className="capitalize">{cfg.label}</span>
                                                 </Badge>
@@ -285,7 +285,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                                                 <Eye className="mr-2 h-4 w-4" /> View Details
                                                             </DropdownMenuItem>
                                                             {inv.pdf_url && (
-                                                                <DropdownMenuItem onClick={() => window.open(inv.pdf_url, '_blank')}>
+                                                                <DropdownMenuItem onClick={() => window.open(inv.pdf_url ?? undefined, '_blank')}>
                                                                     <Download className="mr-2 h-4 w-4" /> Download PDF
                                                                 </DropdownMenuItem>
                                                             )}

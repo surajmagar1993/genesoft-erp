@@ -48,7 +48,7 @@ export function LeadForm({ initialData, mode }: LeadFormProps) {
     const [form, setForm] = useState<LeadFormData>(initialData || defaultLeadForm)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
-    const update = (field: keyof LeadFormData, value: any) => setForm((p) => ({ ...p, [field]: value }))
+    const update = (field: keyof LeadFormData, value: LeadFormData[keyof LeadFormData]) => setForm((p) => ({ ...p, [field]: value }))
 
     const handleSave = async () => {
         if (!form.title.trim()) {

@@ -14,9 +14,11 @@ import { toast } from "sonner"
 import { formatDistanceToNow } from "date-fns"
 import { unwrap } from "@/lib/action-result"
 
+type Ticket = Awaited<ReturnType<typeof getTickets>>[number]
+
 export default function SupportPage() {
-  const [tickets, setTickets] = useState<any[]>([])
-  const [selectedTicket, setSelectedTicket] = useState<any>(null)
+  const [tickets, setTickets] = useState<Ticket[]>([])
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null)
   const [newMessage, setNewMessage] = useState("")
   const [showNewDialog, setShowNewDialog] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -224,12 +226,12 @@ export default function SupportPage() {
                    <div className="space-y-2">
                       <label className="text-sm font-medium">Priority</label>
                       <div className="flex gap-2">
-                         {["LOW", "MEDIUM", "HIGH", "URGENT"].map((p) => (
+                         {(["LOW", "MEDIUM", "HIGH", "URGENT"] as const).map((p) => (
                            <Button 
                              key={p} 
                              variant={priority === p ? "default" : "outline"} 
                              size="sm" 
-                             onClick={() => setPriority(p as any)}
+                             onClick={() => setPriority(p)}
                              className={priority === p ? (p === "URGENT" ? "bg-red-600" : "bg-indigo-600") : ""}
                            >
                               {p}

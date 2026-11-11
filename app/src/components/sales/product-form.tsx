@@ -80,7 +80,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
         }
     }, [initialData])
 
-    const update = (field: keyof ProductFormData, value: any) => {
+    const update = (field: keyof ProductFormData, value: ProductFormData[keyof ProductFormData]) => {
         setForm((prev) => ({ ...prev, [field]: value }))
     }
 

@@ -40,7 +40,7 @@ export async function getReceivableSummary(): Promise<ReceivableSummary> {
 
   // Fetch all payments for these invoices to calculate real balance
   const invoiceIds = invoices?.map(inv => inv.id) || []
-  let payments: any[] = []
+  let payments: { invoice_id: string | null; amount: number }[] = []
   
   if (invoiceIds.length > 0) {
     payments = (await prisma.payment.findMany({ where: { tenantId, invoiceId: { in: invoiceIds } }, select: { invoiceId: true, amount: true } }))
@@ -115,7 +115,7 @@ export async function getTopDebtors(limit = 10): Promise<DebtorSummary[]> {
 
   // Fetch payments
   const invoiceIds = invoices?.map(inv => inv.id) || []
-  let payments: any[] = []
+  let payments: { invoice_id: string | null; amount: number }[] = []
   
   if (invoiceIds.length > 0) {
     payments = (await prisma.payment.findMany({ where: { tenantId, invoiceId: { in: invoiceIds } }, select: { invoiceId: true, amount: true } }))

@@ -1,4 +1,4 @@
-import { getInvoices, type InvoiceStatus } from "@/app/actions/sales/invoices"
+import { getInvoices, type InvoiceStatus, type InvoiceTypeEnum } from "@/app/actions/sales/invoices"
 import InvoicesClient from "./InvoicesClient"
 
 export const dynamic = "force-dynamic"
@@ -10,7 +10,7 @@ export default async function InvoicesPage({
 }) {
     const params = await searchParams
     const status = params.status as InvoiceStatus | undefined
-    const type = params.type as any
+    const type = params.type as InvoiceTypeEnum | undefined
     const search = params.search as string | undefined
     const page = params.page ? parseInt(params.page as string) : 1
     const limit = params.limit ? parseInt(params.limit as string) : 20

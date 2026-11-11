@@ -577,7 +577,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
             </div>
 
             {/* Main Tabs */}
-            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as any)} className="space-y-4">
+            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="space-y-4">
                 <TabsList className="grid w-full grid-cols-2 sm:flex sm:w-auto h-auto p-1 gap-1">
                     <TabsTrigger value="reviews" className="flex items-center gap-2">
                         <Award className="h-4 w-4 text-indigo-600" />

@@ -167,7 +167,7 @@ export interface RawInvoice {
   taxAmount: number
   total: number
   placeOfSupply?: string | null
-  billTo?: any
+  billTo?: { gstin?: string; state?: string; name?: string } | null
   contact?: {
     id?: string
     displayName?: string

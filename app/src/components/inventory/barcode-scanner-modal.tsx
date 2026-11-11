@@ -33,7 +33,7 @@ import { formatCurrency, errorMessage } from "@/lib/utils"
 // Web Audio API scan beep sound synthesizer
 function playScanSound() {
   try {
-    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
     if (!AudioCtx) return
     const ctx = new AudioCtx()
     const osc = ctx.createOscillator()
@@ -56,10 +56,16 @@ function playScanSound() {
       }
 }
 
+/** The product a scan found (getProductByBarcode) */
+export type ScannedProduct = NonNullable<Awaited<ReturnType<typeof getProductByBarcode>>["product"]>
+
+/** The browser's built-in barcode reader (not in TypeScript's DOM types yet) */
+type BarcodeDetectorCtor = new (options: { formats: string[] }) => { detect(source: HTMLVideoElement): Promise<{ rawValue?: string }[]> }
+
 export interface BarcodeScannerModalProps {
   isOpen: boolean
   onClose: () => void
-  onProductScanned?: (product: any) => void
+  onProductScanned?: (product: ScannedProduct) => void
   onStockUpdated?: () => void
   warehouses?: { id: string; name: string }[]
   mode?: "inventory" | "pos"
@@ -75,7 +81,7 @@ export function BarcodeScannerModal({
 }: BarcodeScannerModalProps) {
   const [manualCode, setManualCode] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [scannedProduct, setScannedProduct] = useState<any | null>(null)
+  const [scannedProduct, setScannedProduct] = useState<ScannedProduct | null>(null)
   const [cameraActive, setCameraActive] = useState(false)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
@@ -187,7 +193,7 @@ export function BarcodeScannerModal({
 
       // Start detection loop with BarcodeDetector if available
       if ("BarcodeDetector" in window) {
-        const detector = new (window as any).BarcodeDetector({
+        const detector = new (window as unknown as { BarcodeDetector: BarcodeDetectorCtor }).BarcodeDetector({
           formats: ["code_128", "ean_13", "ean_8", "qr_code", "upc_a", "upc_e"],
         })
         const detectFrame = async () => {
@@ -411,7 +417,7 @@ export function BarcodeScannerModal({
                     Facility Stock Breakdown
                   </p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                    {scannedProduct.warehouseBreakdown.map((wb: any) => (
+                    {scannedProduct.warehouseBreakdown.map((wb) => (
                       <div
                         key={wb.warehouseId}
                         className={`p-2 rounded-lg border flex flex-col ${selectedWarehouseId === wb.warehouseId ? "bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-300 dark:border-indigo-700" : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"}`}

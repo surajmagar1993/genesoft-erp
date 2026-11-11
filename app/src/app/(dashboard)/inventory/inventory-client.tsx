@@ -83,6 +83,8 @@ import { formatCurrency, errorMessage } from "@/lib/utils"
 import { StockMovementType } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
 
+type InventoryTab = "stocks" | "warehouses" | "movements" | "alerts" | "barcodes" | "reports" | "batch-serial"
+
 interface InventoryClientProps {
     initialData: InventoryOverviewData
     initialReportsData?: InventoryReportsResult
@@ -93,7 +95,7 @@ interface InventoryClientProps {
 export function InventoryClient({ initialData, initialReportsData, initialBatchSerialData, initialTab }: InventoryClientProps) {
     const router = useRouter()
     const [, startTransition] = useTransition()
-    const [activeTab, setActiveTab] = useState<"stocks" | "warehouses" | "movements" | "alerts" | "barcodes" | "reports" | "batch-serial">((initialTab as any) || "stocks")
+    const [activeTab, setActiveTab] = useState<InventoryTab>((initialTab as InventoryTab) || "stocks")
 
     const [batchSerialData, setBatchSerialData] = useState<BatchSerialOverviewData>(initialBatchSerialData || {
         telemetry: {
@@ -721,7 +723,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
             </div>
 
             {/* Navigation Tabs & Main Views */}
-            <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-4">
+            <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="space-y-4">
                 <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-7 max-w-5xl">
                     <TabsTrigger value="stocks" className="gap-2">
                         <Package className="h-4 w-4" />
@@ -2053,7 +2055,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
 
                             <div className="space-y-2">
                                 <Label className="text-xs font-medium">Adjustment Type *</Label>
-                                <Select value={adjustType} onValueChange={(val: any) => setAdjustType(val)}>
+                                <Select value={adjustType} onValueChange={(val) => setAdjustType(val as typeof adjustType)}>
                                     <SelectTrigger className="text-xs">
                                         <SelectValue placeholder="Select type" />
                                     </SelectTrigger>

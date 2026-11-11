@@ -12,11 +12,11 @@ const prismaClientSingleton = (): PrismaClient => {
     if (process.env.NODE_ENV === 'production' || process.env.NEXT_PHASE === 'phase-production-build') {
       console.warn("⚠️ [Prisma] DATABASE_URL missing during build. Routes must be marked dynamic if they use DB.")
       
-      const createRecursiveProxy = (path: string = ""): any => {
+      const createRecursiveProxy = (path: string = ""): unknown => {
         return new Proxy(() => {}, {
           get: (target, prop) => {
             if (prop === 'then') return undefined;
-            if (typeof prop === 'symbol') return (target as any)[prop];
+            if (typeof prop === 'symbol') return (target as unknown as Record<symbol, unknown>)[prop];
             return createRecursiveProxy(path ? `${path}.${String(prop)}` : String(prop));
           },
           apply: () => {

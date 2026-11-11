@@ -203,7 +203,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
         }))
     }
 
-    const handleItemChange = (index: number, field: keyof NewCreditNoteItemState, value: any) => {
+    const handleItemChange = (index: number, field: keyof NewCreditNoteItemState, value: NewCreditNoteItemState[keyof NewCreditNoteItemState]) => {
         setNewCreditNote(prev => {
             const updated = [...prev.items]
             updated[index] = { ...updated[index], [field]: value }

@@ -29,14 +29,15 @@ import {
     updateSecurityPolicy, 
     addBlockedIp, 
     removeBlockedIp, 
-    type SecuritySettings 
+    type SecuritySettings,
+    type getSecurityOverview
 } from "@/app/actions/saas/admin"
 import { errorMessage } from "@/lib/utils";
 
 interface SecurityDashboardClientProps {
     data: {
         settings: SecuritySettings
-        securityEvents: any[]
+        securityEvents: Awaited<ReturnType<typeof getSecurityOverview>>["securityEvents"]
         metrics: {
             blockedIpsCount: number
             suspendedTenantsCount: number

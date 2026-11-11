@@ -545,7 +545,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
 
             {/* Sub Navigation Bar & Quick Actions */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-card p-3 rounded-xl border shadow-sm">
-                <Tabs value={subTab} onValueChange={(val: any) => setSubTab(val)} className="w-full md:w-auto">
+                <Tabs value={subTab} onValueChange={(val) => setSubTab(val as typeof subTab)} className="w-full md:w-auto">
                     <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full md:w-[620px]">
                         <TabsTrigger value="batches" className="gap-2 text-xs sm:text-sm">
                             <Layers className="h-3.5 w-3.5" />

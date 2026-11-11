@@ -8,6 +8,8 @@ import { clearFolder, uploadPublicFile } from "@/lib/storage"
 import { toActionResult, type ActionResult } from "@/lib/action-result"
 import { logTenantAudit } from "@/lib/tenant-audit"
 import { errorMessage } from "@/lib/utils";
+import type { PlanTier, SaaSPlatformInvoice } from "@/lib/saas-subscription-engine"
+import { settingsForScreens } from "@/lib/tenant-settings-public"
 
 export interface TenantAddress {
   street?: string
@@ -17,19 +19,38 @@ export interface TenantAddress {
   postalCode?: string
 }
 
+/** The parts of tenants.settings the settings screens read */
+export type TenantSettingsJson = {
+  gstin?: string
+  state?: string
+  tax?: { label?: string; rates?: number[]; defaultRate?: number }
+  enable_multijurisdiction?: boolean
+  subscription?: {
+    billingCycle?: string
+    renewalDate?: string
+    intendedPlan?: PlanTier
+    scheduledDowngrade?: { targetPlan: PlanTier; effectiveDate: string } | null
+    invoices?: SaaSPlatformInvoice[]
+  }
+}
+
 export interface TenantSettings {
   id: string
   name: string
   email: string | null
   phone: string | null
   website: string | null
-  address: TenantAddress | any | null
+  address: TenantAddress | string | null
   logo_url: string | null
   currency_code: string
   country_code: string
-  gstin?: string
+  gstin?: string | null
   trn?: string
-  settings: any
+  plan?: string
+  is_trial?: boolean
+  trial_ends_at?: string | null
+  /** Only the keys in SETTINGS_FOR_SCREENS; the rest of tenants.settings never leaves the server */
+  settings: TenantSettingsJson | null
   /** Tax name and rates for countries without built-in rules (and US state rates) */
   tax_settings?: { label?: string; rates?: number[]; defaultRate?: number } | null
 }
@@ -41,7 +62,15 @@ export async function getTenantSettings(): Promise<TenantSettings | null> {
     if (!tenantId) return null
 
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } })
-    return tenant ? toRow<TenantSettings>("Tenant", tenant) : null
+    if (!tenant) return null
+    // Stripe ids stay on the server too
+    const { stripe_customer_id: _c, stripe_subscription_id: _s, ...row } = toRow<TenantSettings & { stripe_customer_id?: string; stripe_subscription_id?: string }>("Tenant", tenant)
+    return {
+      ...row,
+      // With its time zone, so the browser reads the same moment
+      trial_ends_at: tenant.trialEndsAt ? tenant.trialEndsAt.toISOString() : null,
+      settings: settingsForScreens(tenant.settings) as TenantSettingsJson,
+    }
   } catch (err) {
     console.error("Exception fetching tenant settings:", err)
     return null
@@ -56,7 +85,7 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
       return { success: false, error: "Authentication required or tenant not identified." }
     }
 
-    const payload: Record<string, any> = {}
+    const payload: Record<string, unknown> = {}
     if (data.name !== undefined) payload.name = data.name.trim()
     if (data.email !== undefined) payload.email = data.email?.trim() || null
     if (data.phone !== undefined) payload.phone = data.phone?.trim() || null

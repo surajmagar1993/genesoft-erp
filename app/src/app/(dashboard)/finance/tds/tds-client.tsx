@@ -466,7 +466,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
       </div>
 
       {/* Tabs Layout */}
-      <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="space-y-4">
         <div className="overflow-x-auto pb-1 scrollbar-none">
           <TabsList className="inline-flex h-auto p-1 bg-muted/60 border rounded-xl gap-1 shrink-0">
             <TabsTrigger
@@ -1077,7 +1077,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">Deductor Category *</Label>
-                    <Select value={profileCategory} onValueChange={(val: any) => setProfileCategory(val)}>
+                    <Select value={profileCategory} onValueChange={(val) => setProfileCategory(val as typeof profileCategory)}>
                       <SelectTrigger className="text-xs">
                         <SelectValue placeholder="Select Category" />
                       </SelectTrigger>
@@ -1234,7 +1234,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Major Head</Label>
-                <Select value={majorHead} onValueChange={(val: any) => setMajorHead(val)}>
+                <Select value={majorHead} onValueChange={(val) => setMajorHead(val as typeof majorHead)}>
                   <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>
@@ -1246,7 +1246,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-medium">Minor Head</Label>
-                <Select value={minorHead} onValueChange={(val: any) => setMinorHead(val)}>
+                <Select value={minorHead} onValueChange={(val) => setMinorHead(val as typeof minorHead)}>
                   <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>

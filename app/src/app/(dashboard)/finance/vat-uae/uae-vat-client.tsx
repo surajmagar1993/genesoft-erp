@@ -155,7 +155,7 @@ export default function UaeVatClient({ initialData }: Props) {
               </SelectContent>
             </Select>
 
-            <Select value={quarter} onValueChange={(val: any) => handlePeriodChange(year, val)}>
+            <Select value={quarter} onValueChange={(val) => handlePeriodChange(year, val as typeof quarter)}>
               <SelectTrigger className="w-[110px] h-8 text-xs font-semibold">
                 <SelectValue placeholder="Quarter" />
               </SelectTrigger>

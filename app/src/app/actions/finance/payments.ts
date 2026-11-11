@@ -34,9 +34,9 @@ export interface PaymentDB {
   created_at: string
   updated_at: string
   
-  invoices?: any
-  bills?: any
-  contacts?: any
+  invoices?: { invoice_number: string; total: number; currency_code: string } | null
+  bills?: { bill_number: string; total: number; currency_code: string } | null
+  contacts?: { display_name: string; company_name: string | null }
 }
 
 export interface CreatePaymentPayload {

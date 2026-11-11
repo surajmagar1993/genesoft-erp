@@ -251,8 +251,34 @@ export async function updateDealStage(
 
 export interface DealRelationsData {
   deal: Deal | null
-  contact: any | null
-  company: any | null
+  contact: DealContactRow | null
+  company: DealCompanyRow | null
+}
+
+/** The deal's contact, as the deal page shows it */
+export type DealContactRow = {
+  id: string
+  display_name: string
+  email: string | null
+  phone: string | null
+  mobile: string | null
+  customer_group: string | null
+  balance: number | string | null
+  currency_code: string | null
+}
+
+/** The deal's company, as the deal page shows it */
+export type DealCompanyRow = {
+  id: string
+  name: string
+  industry: string | null
+  website: string | null
+  phone: string | null
+  email: string | null
+  city: string | null
+  country: string | null
+  country_code: string | null
+  is_active: boolean
 }
 
 export async function getDealWithRelations(id: string): Promise<DealRelationsData> {
@@ -266,13 +292,13 @@ export async function getDealWithRelations(id: string): Promise<DealRelationsDat
     prisma.contact
       .findFirst({ where: { tenantId, id: (row as DealRow).contactId } })
       .then((c) => ({
-        data: c ? pick(toRow("Contact", c), ["id", "display_name", "email", "phone", "mobile", "customer_group", "balance", "currency_code"]) : null,
+        data: c ? pick(toRow("Contact", c), ["id", "display_name", "email", "phone", "mobile", "customer_group", "balance", "currency_code"]) as DealContactRow : null,
       })),
     deal.company
       ? prisma.company
           .findFirst({ where: { tenantId, name: deal.company } })
           .then((c) => ({
-            data: c ? pick(toRow("Company", c), ["id", "name", "industry", "website", "phone", "email", "city", "country", "country_code", "is_active"]) : null,
+            data: c ? pick(toRow("Company", c), ["id", "name", "industry", "website", "phone", "email", "city", "country", "country_code", "is_active"]) as DealCompanyRow : null,
           }))
       : Promise.resolve({ data: null }),
   ])

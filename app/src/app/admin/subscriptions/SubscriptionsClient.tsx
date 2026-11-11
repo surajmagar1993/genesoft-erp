@@ -26,11 +26,13 @@ import {
     DropdownMenuSeparator, 
     DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
-import { extendTenantTrial } from "@/app/actions/saas/admin"
+import { extendTenantTrial, type getPlatformSubscriptions } from "@/app/actions/saas/admin"
 import { formatSaaSInvoiceReceiptHtml } from "@/lib/saas-subscription-engine"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { errorMessage } from "@/lib/utils";
+
+type PlatformSubscriptions = Awaited<ReturnType<typeof getPlatformSubscriptions>>
 
 interface SubscriptionsClientProps {
     data: {
@@ -38,8 +40,8 @@ interface SubscriptionsClientProps {
         totalMrr: number
         payingTenants?: number
         planCounts: Record<string, number>
-        tenants: any[]
-        invoices: any[]
+        tenants: PlatformSubscriptions["tenants"]
+        invoices: PlatformSubscriptions["invoices"]
     }
 }
 
@@ -61,7 +63,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
         }
     }
 
-    const printReceipt = (inv: any) => {
+    const printReceipt = (inv: PlatformSubscriptions["invoices"][number]) => {
         const win = window.open("", "_blank")
         if (win) {
             win.document.write(formatSaaSInvoiceReceiptHtml(inv))
@@ -328,7 +330,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                                 </TableHeader>
                                 <TableBody>
                                     {data.invoices.map((inv) => (
-                                        <TableRow key={inv.id} className="hover:bg-primary/5 transition-colors">
+                                        <TableRow key={`${inv.tenantId}-${inv.invoiceNumber}`} className="hover:bg-primary/5 transition-colors">
                                             <TableCell className="font-mono text-xs font-semibold">
                                                 {inv.invoiceNumber}
                                             </TableCell>
@@ -336,12 +338,12 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                                                 {inv.tenantName}
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                                                {format(new Date(inv.date), "MMM d, yyyy")}
+                                                {inv.issueDate && !Number.isNaN(new Date(inv.issueDate).getTime()) ? format(new Date(inv.issueDate), "MMM d, yyyy") : "—"}
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1.5">
                                                     <Badge variant="outline" className="text-[10px] font-bold">
-                                                        {inv.plan}
+                                                        {inv.tier}
                                                     </Badge>
                                                     <span className="text-xs text-muted-foreground">
                                                         ({inv.billingCycle})
@@ -349,7 +351,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-sm font-bold">
-                                                {inv.currency} {Number(inv.total).toFixed(2)}
+                                                {inv.currency} {Number(inv.totalAmount || 0).toFixed(2)}
                                             </TableCell>
                                             <TableCell>
                                                 <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px] uppercase font-bold">

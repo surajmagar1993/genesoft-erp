@@ -40,7 +40,7 @@ export async function getPayableSummary(): Promise<PayableSummary> {
 
   // Fetch all outbound payments for these bills
   const billIds = bills?.map(b => b.id) || []
-  let payments: any[] = []
+  let payments: { bill_id: string | null; amount: number }[] = []
   
   if (billIds.length > 0) {
     payments = (await prisma.payment.findMany({ where: { tenantId, billId: { in: billIds }, type: "OUTBOUND" }, select: { billId: true, amount: true } }))
@@ -115,7 +115,7 @@ export async function getTopCreditors(limit = 10): Promise<CreditorSummary[]> {
 
   // Fetch payments
   const billIds = bills?.map(b => b.id) || []
-  let payments: any[] = []
+  let payments: { bill_id: string | null; amount: number }[] = []
   
   if (billIds.length > 0) {
     payments = (await prisma.payment.findMany({ where: { tenantId, billId: { in: billIds }, type: "OUTBOUND" }, select: { billId: true, amount: true } }))

@@ -16,6 +16,9 @@ import { createPayment } from "./payments"
 import { logTenantAudit } from "@/lib/tenant-audit"
 import { errorMessage } from "@/lib/utils";
 
+/** tenants.settings as these actions read it */
+type GatewaySettings = { paymentGateways?: Partial<PaymentGatewayConfig>; [key: string]: unknown }
+
 /**
  * Retrieves the tenant's payment gateway configuration from tenant settings.
  */
@@ -27,7 +30,7 @@ export async function getTenantPaymentGateways(): Promise<PaymentGatewayConfig> 
             select: { settings: true },
         })
 
-        const rawSettings = (tenant?.settings as any)?.paymentGateways || {}
+        const rawSettings = (tenant?.settings as GatewaySettings | null)?.paymentGateways || {}
         return {
             ...DEFAULT_PAYMENT_GATEWAY_CONFIG,
             ...rawSettings,
@@ -55,7 +58,7 @@ export async function saveTenantPaymentGateways(
             select: { settings: true },
         })
 
-        const existingSettings = (tenant?.settings as any) || {}
+        const existingSettings = ((tenant?.settings ?? {}) as GatewaySettings)
         const existingGateways = existingSettings.paymentGateways || {}
 
         // If the user provided masked secrets (contains •), preserve existing unmasked value

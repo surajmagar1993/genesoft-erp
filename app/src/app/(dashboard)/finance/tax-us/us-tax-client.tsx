@@ -314,7 +314,7 @@ export function UsTaxClient({ initialData }: Props) {
             <span className="text-muted-foreground">|</span>
             <select
               value={selectedQuarter}
-              onChange={(e) => handlePeriodChange(selectedYear, e.target.value as any)}
+              onChange={(e) => handlePeriodChange(selectedYear, e.target.value as typeof selectedQuarter)}
               className="bg-transparent px-2 py-1 text-xs font-semibold focus:outline-none"
             >
               <option value="ALL">Full Year</option>
@@ -434,7 +434,7 @@ export function UsTaxClient({ initialData }: Props) {
       </div>
 
       {/* ── Main Tabbed Interface ── */}
-      <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)}>
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)}>
         <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-flex lg:grid-cols-5">
           <TabsTrigger value="nexus_states" className="gap-2 text-xs">
             <Landmark className="h-3.5 w-3.5" /> State Nexus & Rates ({filteredStates.length})
@@ -988,7 +988,7 @@ export function UsTaxClient({ initialData }: Props) {
                       </label>
                       <select
                         value={simExemptType}
-                        onChange={(e) => setSimExemptType(e.target.value as any)}
+                        onChange={(e) => setSimExemptType(e.target.value as typeof simExemptType)}
                         className="w-full rounded-md border bg-background px-3 py-2 text-xs focus:outline-none"
                       >
                         {Object.entries(EXEMPTION_STATUTES).map(([key, item]) => (
@@ -1295,7 +1295,7 @@ export function UsTaxClient({ initialData }: Props) {
               <label className="font-medium text-foreground block mb-1">Exemption Category</label>
               <select
                 value={certForm.exemptionType}
-                onChange={(e) => setCertForm({ ...certForm, exemptionType: e.target.value as any })}
+                onChange={(e) => setCertForm({ ...certForm, exemptionType: e.target.value as typeof certForm.exemptionType })}
                 className="w-full rounded-md border bg-background px-3 py-2 text-xs focus:outline-none"
               >
                 {Object.entries(EXEMPTION_STATUTES).map(([key, item]) => (

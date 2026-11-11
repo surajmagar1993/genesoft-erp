@@ -330,7 +330,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
         orderBy: { issueDate: "desc" }
     })
 
-    const creditNotes: CreditNoteRecord[] = (rawCreditNotes as unknown[]).map((cn: any) => ({
+    const creditNotes: CreditNoteRecord[] = rawCreditNotes.map((cn) => ({
         id: cn.id,
         tenantId: cn.tenantId,
         creditNoteNumber: cn.creditNoteNumber,
@@ -353,7 +353,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
         terms: cn.terms,
         itemsCount: cn.items.length,
         refundsCount: cn.refunds.length,
-        items: cn.items.map((i: any) => ({
+        items: cn.items.map((i) => ({
             id: i.id,
             creditNoteId: i.creditNoteId,
             productId: i.productId,

@@ -233,7 +233,7 @@ export async function getPurchaseOverview(): Promise<PurchaseOverviewData> {
     })
 
     const vendors: VendorItem[] = rawVendors.map((v) => {
-        const billing = (v.billingAddress as any) || {}
+        const billing = ((v.billingAddress ?? {}) as Record<string, string | undefined>)
         return {
             id: v.id,
             displayName: v.displayName,

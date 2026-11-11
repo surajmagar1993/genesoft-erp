@@ -28,7 +28,7 @@ interface PublicFormClientProps {
 
 export function PublicFormClient({ form }: PublicFormClientProps) {
     const [isPending, startTransition] = useTransition()
-    const [formData, setFormData] = useState<Record<string, any>>({})
+    const [formData, setFormData] = useState<Record<string, string>>({})
     const [honeypot, setHoneypot] = useState("")
     const [isSubmitted, setIsSubmitted] = useState(false)
     const [errorMessage, setErrorMessage] = useState<string | null>(null)

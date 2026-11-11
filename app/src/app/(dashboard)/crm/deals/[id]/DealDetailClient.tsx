@@ -13,7 +13,7 @@ import {
   FileText, Briefcase, Loader2, Sparkles, ExternalLink
 } from "lucide-react"
 import { toast } from "sonner"
-import type { Deal, DealStage } from "@/app/actions/crm/deals"
+import type { Deal, DealStage, DealContactRow, DealCompanyRow } from "@/app/actions/crm/deals"
 import { updateDealStage, deleteDeal } from "@/app/actions/crm/deals"
 import { formatCurrency } from "@/lib/utils"
 import EntityTasks from "@/components/crm/EntityTasks"
@@ -57,8 +57,8 @@ const stageInfoMap: Record<DealStage, { label: string; badgeColor: string }> = {
 
 interface Props {
   deal: Deal
-  contact: any | null
-  company: any | null
+  contact: DealContactRow | null
+  company: DealCompanyRow | null
   initialTasks: Task[]
   initialLogs: CommunicationLog[]
 }

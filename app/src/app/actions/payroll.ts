@@ -456,7 +456,7 @@ async function _generatePayRun(
     let totalDeductionsAccum = 0
     let totalNetPayAccum = 0
 
-    const payslipsData: any[] = []
+    const payslipsData: Omit<Prisma.PayslipUncheckedCreateInput, "tenantId" | "payrollRunId">[] = []
 
     for (let i = 0; i < employees.length; i++) {
         const emp = employees[i]
@@ -555,7 +555,7 @@ async function _generatePayRun(
         totalNetPayAccum += netSalary
 
         // Extract employee bank details snapshot
-        const bank = (emp.bankDetails as any) || {}
+        const bank = ((emp.bankDetails ?? {}) as { bankName?: string; accountNumber?: string; ifscRoutingCode?: string })
 
         const slipNumber = `SLIP-${periodYear}${String(periodMonth).padStart(2, "0")}-${String(i + 1).padStart(3, "0")}`
 

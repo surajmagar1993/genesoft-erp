@@ -55,7 +55,7 @@ export function RevenueChart({ data, currencySymbol = "" }: ChartProps) {
                                     boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
                                     color: '#0f172a'
                                 }}
-                                formatter={(value: any) => [`${currencySymbol}${Number(value || 0).toLocaleString()}`, "Turnover"]}
+                                formatter={(value) => [`${currencySymbol}${Number(value || 0).toLocaleString()}`, "Turnover"]}
                             />
                             <Area 
                                 type="monotone" 
