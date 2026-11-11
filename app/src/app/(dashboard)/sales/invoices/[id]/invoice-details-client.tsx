@@ -91,8 +91,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
     const totalPaid = payments.reduce((acc, p) => acc + Number(p.amount), 0)
     const balanceDue = Math.max(0, totalInvoiceAmount - totalPaid)
 
-    const billTo = (invoice as any).billTo || (invoice as any).bill_to || {}
-    const ewayBillNo = billTo.ewayBillNo || (invoice as any).ewayBillNo
+    const ewayBillNo = invoice.eway_bill_no
 
     // PAYMENT FORM MODAL STATE
     const [openPaymentModal, setOpenPaymentModal] = useState(false)
@@ -110,7 +109,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
     // WHATSAPP DISPATCH MODAL STATE
     const [openWhatsAppModal, setOpenWhatsAppModal] = useState(false)
     const [whatsAppPhone, setWhatsAppPhone] = useState(
-        (invoice as any).contact?.phone || billTo.phone || ""
+        invoice.customer_phone || ""
     )
     const [whatsAppTemplate, setWhatsAppTemplate] = useState<"INVOICE_DISPATCH" | "PAYMENT_OVERDUE_REMINDER">("INVOICE_DISPATCH")
     const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false)
@@ -716,7 +715,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                             <Label htmlFor="waTmpl">Message Template</Label>
                             <Select
                                 value={whatsAppTemplate}
-                                onValueChange={(v: any) => setWhatsAppTemplate(v)}
+                                onValueChange={(v) => setWhatsAppTemplate(v as typeof whatsAppTemplate)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select template" />

@@ -15,8 +15,15 @@ import type {
 /** An invoice row with whichever relations the caller loaded */
 export type InvoiceWithRelations = Invoice & {
   items?: InvoiceItem[]
-  contact?: Pick<Contact, "displayName" | "email" | "taxNumber"> | null
+  contact?: (Pick<Contact, "displayName" | "email" | "taxNumber"> & { phone?: string | null }) | null
   tenant?: Tenant | null
+}
+
+/** The live (not cancelled) e-way bill draft saved for this invoice in the business's settings */
+function ewayBillNoFor(inv: InvoiceWithRelations): string | undefined {
+  const bills = (inv.tenant?.settings as { ewayBills?: { invoiceId?: string; ewayBillNo?: string; status?: string }[] } | null)?.ewayBills
+  if (!Array.isArray(bills)) return undefined
+  return bills.find((b) => b.invoiceId === inv.id && b.status !== "CANCELLED")?.ewayBillNo
 }
 
 export function mapPrismaInvoiceToDB(inv: InvoiceWithRelations): InvoiceDB & { tenants?: TenantDB } {
@@ -53,6 +60,8 @@ export function mapPrismaInvoiceToDB(inv: InvoiceWithRelations): InvoiceDB & { t
     customer_name: billTo.name || inv.contact?.displayName || "Customer",
     customer_email: billTo.email || inv.contact?.email || "",
     customer_gstin: billTo.gstin || inv.contact?.taxNumber || "",
+    customer_phone: billTo.phone || inv.contact?.phone || "",
+    eway_bill_no: ewayBillNoFor(inv) || billTo.ewayBillNo || "",
     invoice_date: inv.invoiceDate ? new Date(inv.invoiceDate).toISOString() : new Date().toISOString(),
     valid_until: inv.dueDate ? new Date(inv.dueDate).toISOString() : null,
     reference: billTo.reference || "",

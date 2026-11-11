@@ -277,7 +277,7 @@ export async function getBatchSerialOverview(): Promise<BatchSerialOverviewData>
             id: p.id,
             name: p.name,
             sku: p.sku,
-            barcode: (p.customAttributes as any)?.barcode || p.sku || null,
+            barcode: (p.customAttributes as { barcode?: string | null } | null)?.barcode || p.sku || null,
             unit: p.unit,
             stockQty: Number(p.stockQty)
         })),
@@ -450,7 +450,7 @@ async function _updateBatch(
         throw new Error("Batch record not found or access denied.")
     }
 
-    const updateData: any = {}
+    const updateData: Prisma.ProductBatchUncheckedUpdateInput = {}
     if (data.status) updateData.status = data.status
     if (data.notes !== undefined) updateData.notes = data.notes?.trim() || null
     if (data.expiryDate !== undefined) {
@@ -762,7 +762,7 @@ async function _updateSerialStatus(id: string, status: SerialStatus, notes?: str
         throw new Error("Serial number not found or unauthorized.")
     }
 
-    const updateData: any = { status }
+    const updateData: Prisma.ProductSerialUncheckedUpdateInput = { status }
     if (notes !== undefined) {
         updateData.notes = notes?.trim() || null
     }
@@ -870,7 +870,7 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
                 id: serial.product.id,
                 name: serial.product.name,
                 sku: serial.product.sku,
-                barcode: (serial.product.customAttributes as any)?.barcode || serial.product.sku || null,
+                barcode: (serial.product.customAttributes as { barcode?: string | null } | null)?.barcode || serial.product.sku || null,
                 category: serial.product.category,
                 stockQty: Number(serial.product.stockQty)
             },
@@ -971,7 +971,7 @@ export async function getTraceabilityAudit(query: string): Promise<TraceabilityA
                 id: batch.product.id,
                 name: batch.product.name,
                 sku: batch.product.sku,
-                barcode: (batch.product.customAttributes as any)?.barcode || batch.product.sku || null,
+                barcode: (batch.product.customAttributes as { barcode?: string | null } | null)?.barcode || batch.product.sku || null,
                 category: batch.product.category,
                 stockQty: Number(batch.product.stockQty)
             },

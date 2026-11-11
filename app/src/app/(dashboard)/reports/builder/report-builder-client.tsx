@@ -280,7 +280,7 @@ export function ReportBuilderClient({
         }
 
         const dataToExport = reportResult.rows.map(row => {
-            const exportRow: Record<string, any> = {}
+            const exportRow: Record<string, unknown> = {}
             reportResult.columns.forEach(col => {
                 exportRow[col.label] = row[col.key] !== undefined ? row[col.key] : ""
             })
@@ -543,7 +543,7 @@ export function ReportBuilderClient({
 
                                                     <Select
                                                         value={flt.operator}
-                                                        onValueChange={(val: any) => handleFilterChange(idx, { operator: val })}
+                                                        onValueChange={(val) => handleFilterChange(idx, { operator: val as ReportFilterCondition["operator"] })}
                                                     >
                                                         <SelectTrigger className="h-7 text-[10px] w-24">
                                                             <SelectValue />
@@ -606,7 +606,7 @@ export function ReportBuilderClient({
                                             <span className="text-[10px] text-muted-foreground">Function</span>
                                             <Select
                                                 value={config.aggregateFn || "none"}
-                                                onValueChange={(val: any) => setConfig({ ...config, aggregateFn: val === "none" ? null : val })}
+                                                onValueChange={(val) => setConfig({ ...config, aggregateFn: val === "none" ? null : (val as ReportConfig["aggregateFn"]) })}
                                             >
                                                 <SelectTrigger className="h-7 text-[10px]">
                                                     <SelectValue placeholder="None" />
@@ -664,7 +664,7 @@ export function ReportBuilderClient({
                                                 <button
                                                     key={c.id}
                                                     type="button"
-                                                    onClick={() => setConfig({ ...config, chartType: c.id as any })}
+                                                    onClick={() => setConfig({ ...config, chartType: c.id as ReportConfig["chartType"] })}
                                                     className={`flex flex-col items-center justify-center p-1.5 rounded border transition-all ${
                                                         isSelected
                                                             ? "bg-indigo-600 text-white border-indigo-600 font-medium"
@@ -764,7 +764,7 @@ export function ReportBuilderClient({
                                                 cx="50%"
                                                 cy="50%"
                                                 outerRadius={80}
-                                                label={({ name, percent }: any) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
+                                                label={({ name, percent }: { name?: string; percent?: number }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
                                                 labelLine={false}
                                             >
                                                 {reportResult.chartData.map((_, index) => (

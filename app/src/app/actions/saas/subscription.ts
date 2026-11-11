@@ -14,6 +14,7 @@ import {
     ProrationQuote,
 } from "@/lib/saas-subscription-engine"
 import { errorMessage } from "@/lib/utils";
+import type { Prisma } from "@prisma/client"
 
 /**
  * Resolves the signed-in caller. Super Admins may act on targetTenantId;
@@ -44,7 +45,19 @@ async function getCallerContext(targetTenantId?: string) {
  * Admin's go to the Super Admin log, and plan changes (which affect the
  * business) to the business's log as well, marked as done by the platform.
  */
-async function logAudit(action: string, targetId: string, metadata: any = {}, caller?: { userId: string; email: string; isSuperAdmin: boolean }) {
+/** tenants.settings as these actions read it */
+type SubSettings = {
+    subscription?: {
+        billingCycle?: string
+        renewalDate?: string
+        invoices?: SaaSPlatformInvoice[]
+        scheduledDowngrade?: { targetPlan: PlanTier; effectiveDate: string } | null
+        [key: string]: unknown
+    }
+    [key: string]: unknown
+}
+
+async function logAudit(action: string, targetId: string, metadata: Record<string, unknown> = {}, caller?: { userId: string; email: string; isSuperAdmin: boolean }) {
     try {
         caller ??= await getCallerContext()
         if (!caller.isSuperAdmin || action.startsWith("TENANT_PLAN")) {
@@ -62,7 +75,7 @@ async function logAudit(action: string, targetId: string, metadata: any = {}, ca
                 action,
                 targetId,
                 targetType: "TENANT_SUBSCRIPTION",
-                metadata,
+                metadata: metadata as Prisma.InputJsonObject,
             },
         })
     } catch (e) {
@@ -112,7 +125,7 @@ export async function getTenantSubscriptionDetails(targetTenantId?: string): Pro
 
     if (!tenant) throw new Error("Tenant record not found")
 
-    const settings = (tenant.settings as any) || {}
+    const settings = ((tenant.settings ?? {}) as SubSettings)
     const subMeta = settings.subscription || {}
 
     // Calculate trial days remaining
@@ -208,7 +221,7 @@ export async function executePlanChange(params: {
         if (targetPlan !== currentPlan && pricing.hidden.includes(targetPlan) && !caller.isSuperAdmin) {
             return { success: false, message: "", error: "This plan isn't available right now" }
         }
-        const settings = (tenant.settings as any) || {}
+        const settings = ((tenant.settings ?? {}) as SubSettings)
         const currentSub = settings.subscription || {}
 
         // Anything that costs money goes through checkout (createPlanCheckout),
@@ -238,7 +251,7 @@ export async function executePlanChange(params: {
                     settings: {
                         ...settings,
                         subscription: updatedSubscription,
-                    },
+                    } as unknown as Prisma.InputJsonObject,
                 },
             })
 
@@ -328,7 +341,7 @@ export async function generateSaaSInvoice(params: {
             pricing,
         })
 
-        const settings = (tenant.settings as any) || {}
+        const settings = ((tenant.settings ?? {}) as SubSettings)
         const currentSub = settings.subscription || {}
         const existingInvoices = Array.isArray(currentSub.invoices) ? currentSub.invoices : []
 
@@ -341,7 +354,7 @@ export async function generateSaaSInvoice(params: {
                         ...currentSub,
                         invoices: [invoice, ...existingInvoices],
                     },
-                },
+                } as unknown as Prisma.InputJsonObject,
             },
         })
 

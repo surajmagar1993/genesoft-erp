@@ -1,5 +1,5 @@
 import { getVendors, getProducts } from "@/app/actions/finance/bills"
-import { BillForm } from "@/components/finance/bill-form"
+import { BillForm, type BillVendor } from "@/components/finance/bill-form"
 
 export const metadata = {
   title: "New Vendor Bill | Genesoft ERP",
@@ -12,7 +12,7 @@ export default async function NewBillPage() {
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
-      <BillForm vendors={vendors} products={products} />
+      <BillForm vendors={vendors as unknown as BillVendor[]} products={products} />
     </div>
   )
 }

@@ -70,6 +70,9 @@ export interface InvoiceDB {
   customer_name: string
   customer_email: string
   customer_gstin?: string
+  customer_phone?: string
+  /** Draft e-way bill number for this invoice, if one was made */
+  eway_bill_no?: string
   invoice_date: string
   valid_until: string | null
   reference: string

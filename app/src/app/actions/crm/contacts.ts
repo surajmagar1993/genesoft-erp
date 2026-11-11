@@ -6,6 +6,8 @@ import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-te
 import { revalidatePath } from "next/cache"
 import { planLimitError } from "@/lib/plan-limits"
 import { errorMessage } from "@/lib/utils";
+import type { Prisma } from "@prisma/client"
+import type { AddressJson } from "@/lib/json-types"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -42,8 +44,8 @@ export interface Contact {
   currency_code: string
   credit_limit?: number | null
   balance: number
-  billing_address?: any
-  shipping_address?: any
+  billing_address?: AddressJson
+  shipping_address?: AddressJson
   notes?: string | null
   is_active: boolean
   tenant_id: string
@@ -59,7 +61,7 @@ export async function getContacts(
   const offset = (page - 1) * limit
 
   try {
-    const whereClause: any = { tenantId }
+    const whereClause: Prisma.ContactWhereInput = { tenantId }
     if (search) {
       whereClause.OR = [
         { displayName: { contains: search, mode: "insensitive" } },
@@ -109,8 +111,8 @@ export async function getContacts(
       tax_exemption_certificate: c.taxExemptionCertificate,
       credit_limit: c.creditLimit ? Number(c.creditLimit) : null,
       balance: Number(c.balance || 0),
-      billing_address: c.billingAddress,
-      shipping_address: c.shippingAddress,
+      billing_address: c.billingAddress as AddressJson,
+      shipping_address: c.shippingAddress as AddressJson,
       notes: c.notes,
       is_active: c.isActive,
       tenant_id: c.tenantId,
@@ -164,8 +166,8 @@ export async function getContactById(id: string): Promise<Contact | null> {
       tax_exemption_certificate: c.taxExemptionCertificate,
       credit_limit: c.creditLimit ? Number(c.creditLimit) : null,
       balance: Number(c.balance || 0),
-      billing_address: c.billingAddress,
-      shipping_address: c.shippingAddress,
+      billing_address: c.billingAddress as AddressJson,
+      shipping_address: c.shippingAddress as AddressJson,
       notes: c.notes,
       is_active: c.isActive,
       tenant_id: c.tenantId,
@@ -230,8 +232,8 @@ export async function createContact(
         taxExemptionCertificate: formData.tax_exemption_certificate || null,
         creditLimit: formData.credit_limit ? formData.credit_limit : null,
         balance: formData.balance || 0,
-        billingAddress: formData.billing_address || {},
-        shippingAddress: formData.shipping_address || {},
+        billingAddress: (formData.billing_address || {}) as Prisma.InputJsonObject,
+        shippingAddress: (formData.shipping_address || {}) as Prisma.InputJsonObject,
         notes: formData.notes || null,
         isActive: formData.is_active ?? true,
       },
@@ -294,8 +296,8 @@ export async function updateContact(
         taxExemptionCertificate: formData.tax_exemption_certificate,
         creditLimit: formData.credit_limit,
         balance: formData.balance,
-        billingAddress: formData.billing_address,
-        shippingAddress: formData.shipping_address,
+        billingAddress: formData.billing_address as Prisma.InputJsonObject | undefined,
+        shippingAddress: formData.shipping_address as Prisma.InputJsonObject | undefined,
         notes: formData.notes,
         isActive: formData.is_active,
       },
@@ -346,7 +348,7 @@ export async function exportContacts(limit: number = 1000): Promise<Contact[]> {
 }
 
 export async function importContacts(
-  contacts: any[]
+  contacts: Record<string, unknown>[]
 ): Promise<{ error: string | null; count: number; skipped?: number }> {
   try {
     const tenantId = await getTenantWriterId(MODULE)

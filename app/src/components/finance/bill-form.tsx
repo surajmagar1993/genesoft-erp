@@ -33,10 +33,33 @@ import { toast } from "sonner"
 import { unwrap } from "@/lib/action-result"
 import { errorMessage } from "@/lib/utils";
 
+/** The fields of an existing bill (snake_case row) this form reads */
+export type BillFormData = {
+  id: string
+  bill_number?: string
+  contact_id?: string
+  status?: BillStatus
+  bill_date?: string | Date
+  due_date?: string | Date | null
+  notes?: string | null
+  discount?: number
+  items: {
+    product_id?: string | null
+    description: string
+    quantity: number | string
+    unit_price: number | string
+    tax_percent: number | string
+    tax_amount: number | string
+    line_total: number | string
+  }[]
+}
+
+export type BillVendor = { id: string; display_name: string; company_name?: string | null; pan?: string | null; type?: string }
+
 interface BillFormProps {
-  initialData?: any
-  vendors: any[]
-  products: any[]
+  initialData?: BillFormData
+  vendors: BillVendor[]
+  products: unknown[]
 }
 
 export function BillForm({ initialData, vendors }: BillFormProps) {
@@ -51,8 +74,8 @@ export function BillForm({ initialData, vendors }: BillFormProps) {
   const [billDate, setBillDate] = useState(initialData?.bill_date ? new Date(initialData.bill_date).toISOString().split("T")[0] : new Date().toISOString().split("T")[0])
   const [dueDate, setDueDate] = useState(initialData?.due_date ? new Date(initialData.due_date).toISOString().split("T")[0] : "")
   const [notes, setNotes] = useState(initialData?.notes || "")
-  const [items, setItems] = useState<BillItem[]>(initialData?.items?.map((item: any) => ({
-    productId: item.product_id,
+  const [items, setItems] = useState<BillItem[]>(initialData?.items?.map((item) => ({
+    productId: item.product_id ?? undefined,
     description: item.description,
     quantity: Number(item.quantity),
     unitPrice: Number(item.unit_price),
@@ -116,7 +139,7 @@ export function BillForm({ initialData, vendors }: BillFormProps) {
     }])
   }
 
-  const updateLineItem = (index: number, field: keyof BillItem, value: any) => {
+  const updateLineItem = (index: number, field: keyof BillItem, value: BillItem[keyof BillItem]) => {
     const newItems = [...items]
     newItems[index] = { ...newItems[index], [field]: value }
     
@@ -180,7 +203,7 @@ export function BillForm({ initialData, vendors }: BillFormProps) {
       if (mode === "create") {
         unwrap(await createBill(data))
         toast.success("Bill created successfully")
-      } else {
+      } else if (initialData) {
         unwrap(await updateBill(initialData.id, data))
         toast.success("Bill updated successfully")
       }

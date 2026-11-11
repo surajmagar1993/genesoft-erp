@@ -55,7 +55,7 @@ type SubscriptionMeta = {
     invoices?: unknown
     billingCycle?: string
     currentPeriodEnd?: string
-    scheduledDowngrade?: { plan?: string; effectiveDate?: string } | null
+    scheduledDowngrade?: { targetPlan?: string; plan?: string; effectiveDate?: string } | null
 }
 
 export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
@@ -466,7 +466,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                     <div className="flex justify-between py-1.5 border-b border-border/50 bg-amber-500/10 px-2 rounded">
                                         <span className="text-amber-700 dark:text-amber-400 font-medium">Scheduled Downgrade</span>
                                         <span className="text-xs font-semibold text-amber-700 dark:text-amber-400">
-                                            To {subMeta.scheduledDowngrade.plan} on {format(inZone(subMeta.scheduledDowngrade.effectiveDate ?? ""), "MMM d, yyyy")}
+                                            To {subMeta.scheduledDowngrade.targetPlan ?? subMeta.scheduledDowngrade.plan} on {format(inZone(subMeta.scheduledDowngrade.effectiveDate ?? ""), "MMM d, yyyy")}
                                         </span>
                                     </div>
                                 )}

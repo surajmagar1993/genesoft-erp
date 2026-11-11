@@ -1,6 +1,6 @@
 import { isUuid } from "@/lib/utils"
 import { getBill, getVendors, getProducts } from "@/app/actions/finance/bills"
-import { BillForm } from "@/components/finance/bill-form"
+import { BillForm, type BillFormData, type BillVendor } from "@/components/finance/bill-form"
 import { notFound } from "next/navigation"
 
 export const metadata = {
@@ -30,11 +30,11 @@ export default async function EditBillPage({ params }: Props) {
   const initialData = {
     ...bill,
     items: bill.bill_items ?? [],
-  }
+  } as unknown as BillFormData
 
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
-      <BillForm initialData={initialData} vendors={vendors} products={products} />
+      <BillForm initialData={initialData} vendors={vendors as unknown as BillVendor[]} products={products} />
     </div>
   )
 }

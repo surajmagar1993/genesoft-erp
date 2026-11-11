@@ -18,6 +18,10 @@ import {
     interpolateWhatsAppTemplate,
     normalizeE164Phone,
 } from "@/lib/whatsapp-engine"
+import type { Prisma } from "@prisma/client"
+
+/** tenants.settings as these actions read it */
+type WaSettings = { whatsapp?: Partial<WhatsAppConfig> & { messages?: WhatsAppMessage[] }; [key: string]: unknown }
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -40,7 +44,7 @@ export async function getWhatsAppConfig(): Promise<WhatsAppConfig> {
             select: { settings: true, countryCode: true, name: true },
         })
 
-        const settings = (tenant?.settings as any) || {}
+        const settings = ((tenant?.settings ?? {}) as WaSettings)
         const wa = settings.whatsapp || {}
 
         return {
@@ -86,7 +90,7 @@ export async function saveWhatsAppConfig(payload: {
             select: { settings: true },
         })
 
-        const currentSettings = (tenant?.settings as any) || {}
+        const currentSettings = ((tenant?.settings ?? {}) as WaSettings)
         const currentWa = currentSettings.whatsapp || {}
 
         // Blank or masked values echoed back from the form keep the stored secret
@@ -139,7 +143,7 @@ export async function saveWhatsAppConfig(payload: {
                         ...currentWa,
                         ...updatedWa,
                     },
-                },
+                } as unknown as Prisma.InputJsonObject,
             },
         })
 
@@ -165,8 +169,8 @@ export async function testWhatsAppConnection(_testPhone?: string) {
             select: { settings: true, name: true },
         })
 
-        const settings = (tenant?.settings as any) || {}
-        const storedWa: WhatsAppConfig = settings.whatsapp || { mode: "SIMULATION", defaultCountryCode: "91" }
+        const settings = ((tenant?.settings ?? {}) as WaSettings)
+        const storedWa: WhatsAppConfig = { mode: "SIMULATION", defaultCountryCode: "91", ...settings.whatsapp }
         const wa: WhatsAppConfig = { ...storedWa, accessToken: openSecret(storedWa.accessToken) }
 
         if (wa.mode === "SIMULATION") {
@@ -236,8 +240,8 @@ export async function sendWhatsAppMessage(payload: {
             select: { settings: true, name: true },
         })
 
-        const settings = (tenant?.settings as any) || {}
-        const storedWa: WhatsAppConfig = settings.whatsapp || { mode: "SIMULATION", defaultCountryCode: "91" }
+        const settings = ((tenant?.settings ?? {}) as WaSettings)
+        const storedWa: WhatsAppConfig = { mode: "SIMULATION", defaultCountryCode: "91", ...settings.whatsapp }
         const waConfig: WhatsAppConfig = { ...storedWa, accessToken: openSecret(storedWa.accessToken) }
 
         // Determine message text
@@ -292,7 +296,7 @@ export async function sendWhatsAppMessage(payload: {
                         ...(settings.whatsapp || {}),
                         messages: updatedMessages,
                     },
-                },
+                } as unknown as Prisma.InputJsonObject,
             },
         })
 
@@ -414,7 +418,7 @@ export async function getWhatsAppChatHistory(contactId?: string): Promise<{
             select: { settings: true },
         })
 
-        const settings = (tenant?.settings as any) || {}
+        const settings = ((tenant?.settings ?? {}) as WaSettings)
         let messages: WhatsAppMessage[] = Array.isArray(settings.whatsapp?.messages)
             ? settings.whatsapp.messages
             : []

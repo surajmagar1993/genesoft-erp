@@ -16,6 +16,7 @@ import {
     PREBUILT_TEMPLATES
 } from "@/types/report-builder"
 import { errorMessage } from "@/lib/utils";
+import type { Prisma } from "@prisma/client"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "reports" as const
@@ -71,28 +72,28 @@ export async function runCustomReportQuery(config: ReportConfig): Promise<Report
         throw new Error(`Unsupported dataset: ${config.dataset}`)
     }
 
-    let rawData: Record<string, any>[] = []
+    let rawData: Record<string, string | number | boolean | null>[] = []
 
     // 1. Fetch raw entity records based on dataset
     switch (config.dataset) {
         case "INVOICES": {
             const invoices = await prisma.invoice.findMany({
                 where: { tenantId },
-                include: { contact: { select: { displayName: true } } },
+                include: { contact: { select: { displayName: true } }, payments: { select: { amount: true } } },
                 orderBy: { createdAt: "desc" },
                 take: 500
             })
-            rawData = invoices.map((inv: any) => ({
+            rawData = invoices.map((inv) => ({
                 invoiceNumber: inv.invoiceNumber,
                 customerName: inv.contact?.displayName || "Direct Customer",
                 status: inv.status,
-                issueDate: inv.issueDate ? inv.issueDate.toISOString().slice(0, 10) : "",
+                issueDate: inv.invoiceDate.toISOString().slice(0, 10),
                 dueDate: inv.dueDate ? inv.dueDate.toISOString().slice(0, 10) : "",
                 subtotal: Number(inv.subtotal || 0),
-                taxTotal: Number(inv.taxTotal || 0),
+                taxTotal: Number(inv.taxAmount || 0),
                 total: Number(inv.total || 0),
-                balanceDue: Number(inv.balanceDue !== null ? inv.balanceDue : inv.total || 0),
-                currencyCode: inv.currencyCode || "INR"
+                balanceDue: Math.round((Number(inv.total || 0) - inv.payments.reduce((sum, pay) => sum + Number(pay.amount || 0), 0)) * 100) / 100,
+                currencyCode: inv.currencyCode
             }))
             break
         }
@@ -249,6 +250,8 @@ export async function runCustomReportQuery(config: ReportConfig): Promise<Report
             const aVal = a[sortField]
             const bVal = b[sortField]
             if (aVal === bVal) return 0
+            if (aVal === null) return order
+            if (bVal === null) return -order
             if (aVal > bVal) return order
             return -order
         })
@@ -377,7 +380,7 @@ export async function saveCustomReport(input: {
                     name: input.name.trim(),
                     description: input.description?.trim() || null,
                     dataset: input.dataset,
-                    config: input.config as any
+                    config: input.config as unknown as Prisma.InputJsonObject
                 }
             })
             revalidatePath("/reports/builder")
@@ -389,7 +392,7 @@ export async function saveCustomReport(input: {
                     name: input.name.trim(),
                     description: input.description?.trim() || null,
                     dataset: input.dataset,
-                    config: input.config as any,
+                    config: input.config as unknown as Prisma.InputJsonObject,
                     isPrebuilt: false
                 }
             })

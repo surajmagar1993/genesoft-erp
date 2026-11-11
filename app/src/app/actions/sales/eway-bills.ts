@@ -136,30 +136,14 @@ export interface EwayOverviewData {
 
 // ── Store Helpers ─────────────────────────────────────────────────────────────
 
-function getEwayStore(tenantSettings: any): {
+function getEwayStore(tenantSettings: Prisma.JsonValue | null | undefined): {
   bills: EwayBillRecord[]
   transporters: TransporterRecord[]
 } {
-  const s = tenantSettings || {}
+  const s = (tenantSettings || {}) as { ewayBills?: unknown; ewayTransporters?: unknown }
   const bills: EwayBillRecord[] = Array.isArray(s.ewayBills) ? s.ewayBills : []
-  const transporters: TransporterRecord[] = Array.isArray(s.ewayTransporters)
-    ? s.ewayTransporters
-    : [
-        {
-          id: "trans-default-1",
-          name: "VRL Logistics Ltd",
-          gstin: "29AABCV1234F1Z1",
-          phone: "+91 98220 12345",
-          contactPerson: "Operations Desk",
-        },
-        {
-          id: "trans-default-2",
-          name: "Blue Dart Express",
-          gstin: "27AAACB1234D1Z2",
-          phone: "+91 99300 54321",
-          contactPerson: "Surface Cargo Booking",
-        },
-      ]
+  // Only transporters the business saved itself (no sample companies)
+  const transporters: TransporterRecord[] = Array.isArray(s.ewayTransporters) ? s.ewayTransporters : []
   return { bills, transporters }
 }
 
