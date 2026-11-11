@@ -173,7 +173,11 @@ These are marked done above but are simulated or not enforced. The UI now says s
 
 ---
 
-## 📋 Open items (review 2026-10-14)
+## 📋 Open items (review 2026-11-12)
+Done on 2026-11-12 (pushed, live on genesoftdev): lint at 0 errors; Next.js 16.4.6 and other security updates (production dependencies 0 known vulnerabilities); workspace settings no longer sent whole to the browser; fixed the Settings → Billing trial banner, bills list supplier name and PAN, Super Admin → Subscriptions receipts, report builder invoice fields; removed invented values (sample e-way transporters, payslip bank and designation, budget approver, "ITC 18%", address country "India").
+
+**Check next:** sign in on genesoftdev (Fixo test business) and look at Settings → Billing, Finance → Bills and Super Admin → Subscriptions; these were changed on 2026-11-12 and verified by tests and build only.
+
 Done on 2026-10-14: general ledger (all documents post double-entry journals; trial balance, balance sheet, account ledger, opening balances, rebuild); P&L fixed (expenses, payroll, credit notes were missing); built-in error monitoring (System Logs + email alerts, no Sentry); marketing emails with unsubscribe links; workspace data export + close workspace + super admin permanent delete; customer ledger no longer assumes INR (UAE/UK/… balances were converted from INR by mistake); payments moved to Prisma with tenant checks; integration test suite.
 
 **Deferred until go-live (decided by the owner):**
