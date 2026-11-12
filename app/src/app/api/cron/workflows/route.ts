@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { runWorkflowEvent } from "@/lib/workflow-engine"
 import { syncImapMailbox } from "@/lib/imap-sync"
+import { PARKED_MODULES_ENABLED } from "@/lib/features"
 import { generateInvoiceFromProfile } from "@/lib/recurring-runner"
 import { pruneSystemLogs, reportError } from "@/lib/error-reporting"
 import { markOverdueRentals } from "@/lib/rental-overdue"
@@ -122,9 +123,12 @@ export async function GET(req: Request) {
     }
 
     // Inbox sync for mailboxes with IMAP configured; one failing mailbox doesn't stop the rest
-    const mailboxes = await prisma.emailAccount.findMany({
-        where: { isActive: true, imapHost: { not: null }, imapUser: { not: null }, imapPassword: { not: null } },
-    })
+    // (skipped while the Emails module is switched off)
+    const mailboxes = PARKED_MODULES_ENABLED
+        ? await prisma.emailAccount.findMany({
+            where: { isActive: true, imapHost: { not: null }, imapUser: { not: null }, imapPassword: { not: null } },
+        })
+        : []
     let mailSynced = 0
     let mailFailed = 0
     for (const mailbox of mailboxes) {

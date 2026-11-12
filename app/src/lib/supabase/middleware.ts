@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { PlatformGate } from '@/lib/platform-security'
-import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute } from '@/lib/features'
+import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute, PARKED_MODULES_ENABLED, isParkedRoute } from '@/lib/features'
 
 export async function updateSession(request: NextRequest, gate?: PlatformGate) {
     let supabaseResponse = NextResponse.next({
@@ -106,6 +106,14 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
     if (!COMPLIANCE_MODULES_ENABLED && isComplianceRoute(request.nextUrl.pathname)) {
         const url = request.nextUrl.clone()
         url.pathname = '/finance/tax-summary'
+        url.search = ''
+        return NextResponse.redirect(url)
+    }
+
+    // Emails, WhatsApp, Web Forms and Bank Reconciliation are switched off
+    if (!PARKED_MODULES_ENABLED && isParkedRoute(request.nextUrl.pathname)) {
+        const url = request.nextUrl.clone()
+        url.pathname = request.nextUrl.pathname.startsWith('/finance/') ? '/finance/reports' : '/crm/contacts'
         url.search = ''
         return NextResponse.redirect(url)
     }

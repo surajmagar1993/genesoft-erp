@@ -14,7 +14,7 @@
  */
 
 export const MODULES = [
-    { key: "crm", label: "CRM", description: "Contacts, companies, leads, deals, emails, WhatsApp, forms, tasks" },
+    { key: "crm", label: "CRM", description: "Contacts, companies, leads, deals, tasks" },
     { key: "sales", label: "Sales", description: "Products, quotes, orders, invoices, challans, credit notes, rental, POS" },
     { key: "finance", label: "Finance", description: "Accounts, ledger, expenses, bank, budgets, bills, payments, tax" },
     { key: "purchase", label: "Purchase", description: "Purchase orders, RFQs, vendors" },

@@ -129,7 +129,7 @@ export const PLAN_TIERS: Record<PlanTier, PlanTierDefinition> = {
             "2 warehouses with stock tracking",
             "GST, VAT or sales tax for your country",
             "Customer self-service portal",
-            "Email and WhatsApp invoicing",
+            "Invoices by email",
             "Email support",
         ],
         limits: {
@@ -154,7 +154,6 @@ export const PLAN_TIERS: Record<PlanTier, PlanTierDefinition> = {
             "Everything in Growth Basic",
             "Up to 20 users",
             "Up to 10 warehouses with stock transfers",
-            "Bank reconciliation (statement upload)",
             "HR, attendance and payroll",
             "Projects and timesheets",
             "Workflow automation",

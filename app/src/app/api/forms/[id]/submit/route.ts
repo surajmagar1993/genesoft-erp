@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { submitPublicForm } from "@/app/actions/crm/forms"
 import type { FormValues } from "@/app/actions/crm/form-types"
 import { errorMessage } from "@/lib/utils";
+import { PARKED_MODULES_ENABLED } from "@/lib/features"
 
 // Cross-Origin Resource Sharing (CORS) headers to allow embedded forms from any client website
 const corsHeaders = {
@@ -18,6 +19,10 @@ export async function POST(
     req: NextRequest,
     context: { params: Promise<{ id: string }> }
 ) {
+    // Web Forms are switched off
+    if (!PARKED_MODULES_ENABLED) {
+        return NextResponse.json({ success: false, error: "This form is not available" }, { status: 404, headers: corsHeaders })
+    }
     try {
         const { id } = await context.params
         if (!id) {

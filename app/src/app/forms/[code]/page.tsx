@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { PublicFormClient } from "./public-form-client"
+import { PARKED_MODULES_ENABLED } from "@/lib/features"
 import { FormFieldConfig, WebFormType, WebFormStatus } from "@/app/actions/crm/form-types"
 
 // Form links use the short code; the UUID id is also accepted, but only when the value is a valid UUID (Postgres rejects anything else)
@@ -19,10 +20,12 @@ interface PublicFormPageProps {
 
 export async function generateMetadata({ params }: PublicFormPageProps): Promise<Metadata> {
     const { code } = await params
-    const form = await prisma.webForm.findFirst({
-        where: formLookup(code),
-        select: { title: true, description: true },
-    })
+    const form = PARKED_MODULES_ENABLED
+        ? await prisma.webForm.findFirst({
+            where: formLookup(code),
+            select: { title: true, description: true },
+        })
+        : null
 
     if (!form) {
         return {
@@ -37,6 +40,8 @@ export async function generateMetadata({ params }: PublicFormPageProps): Promise
 }
 
 export default async function PublicFormPage({ params }: PublicFormPageProps) {
+    // Web Forms are switched off
+    if (!PARKED_MODULES_ENABLED) notFound()
     const { code } = await params
 
     const rawForm = await prisma.webForm.findFirst({

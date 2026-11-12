@@ -88,7 +88,7 @@ import { useTheme } from "next-themes"
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import Script from "next/script"
 import { getTaxJurisdiction, isTaxRouteApplicable } from "@/lib/tax-jurisdiction"
-import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute } from "@/lib/features"
+import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute, PARKED_MODULES_ENABLED, isParkedRoute } from "@/lib/features"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
 import { getGlobalSettings } from "@/app/actions/saas/admin"
 
@@ -209,6 +209,10 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
         // Government-filing modules stay hidden until connected to the official APIs
         if (!COMPLIANCE_MODULES_ENABLED) {
             group = { ...group, items: group.items.filter((item) => !isComplianceRoute(item.href)) }
+        }
+        // Emails, WhatsApp, Web Forms and Bank Reconciliation are switched off
+        if (!PARKED_MODULES_ENABLED) {
+            group = { ...group, items: group.items.filter((item) => !isParkedRoute(item.href)) }
         }
         if (group.label === "Finance") {
             const items = group.items.filter((item) => {

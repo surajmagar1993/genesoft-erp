@@ -32,7 +32,7 @@ export const metadata = pageMeta({
 })
 
 const FEATURES = [
-    { icon: Users, title: "CRM", text: "Leads, deals, contacts and companies, with tasks, email and WhatsApp in one timeline." },
+    { icon: Users, title: "CRM", text: "Leads, deals, contacts and companies, with tasks and notes in one timeline." },
     { icon: FileText, title: "Quotes to invoices", text: "Quotes, sales orders, delivery challans, invoices, credit notes and recurring billing." },
     { icon: Boxes, title: "Inventory & purchasing", text: "Multiple warehouses, stock transfers, batches and serials, purchase orders and vendor bills." },
     { icon: Landmark, title: "Accounting", text: "Chart of accounts, expenses, payments, receivables, payables and bank statement matching." },
@@ -61,7 +61,7 @@ const TRUST = [
 const STEPS = [
     { n: "1", title: "Create your workspace", text: "Sign up, pick your country and currency. Your tax setup is ready straight away." },
     { n: "2", title: "Add customers and products", text: "Type them in or import a CSV. Invite your team and give each person a role." },
-    { n: "3", title: "Send your first invoice", text: "Email it, share it on WhatsApp, or let customers view and download it from their own portal." },
+    { n: "3", title: "Send your first invoice", text: "Email it, or let customers view and download it from their own portal." },
 ]
 
 const FAQ = [

@@ -22,3 +22,23 @@ export const COMPLIANCE_ROUTES = [
 export function isComplianceRoute(pathname: string): boolean {
     return COMPLIANCE_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
 }
+
+/**
+ * Switched-off modules: CRM Emails, WhatsApp and Web Forms, and Finance →
+ * Bank Reconciliation. They are out of the menu, their pages redirect, public
+ * form links answer "not found" and the daily inbox sync is skipped. The code
+ * and saved data stay; set NEXT_PUBLIC_ENABLE_PARKED_MODULES=true to bring
+ * them back.
+ */
+export const PARKED_MODULES_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PARKED_MODULES === "true"
+
+export const PARKED_ROUTES = [
+    "/crm/emails",
+    "/crm/whatsapp",
+    "/crm/forms",
+    "/finance/bank-reconciliation",
+]
+
+export function isParkedRoute(pathname: string): boolean {
+    return PARKED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
+}

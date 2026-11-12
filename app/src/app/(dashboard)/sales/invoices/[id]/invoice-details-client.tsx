@@ -1,6 +1,6 @@
 "use client"
 import { localeForCurrency, errorMessage } from "@/lib/utils"
-import { COMPLIANCE_MODULES_ENABLED } from "@/lib/features"
+import { COMPLIANCE_MODULES_ENABLED, PARKED_MODULES_ENABLED } from "@/lib/features"
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -259,15 +259,17 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                             PDF
                         </Button>
                     </a>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-semibold"
-                        onClick={() => setOpenWhatsAppModal(true)}
-                    >
-                        <MessageSquare className="mr-1.5 h-4 w-4 text-emerald-600" />
-                        WhatsApp
-                    </Button>
+                    {PARKED_MODULES_ENABLED && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-semibold"
+                            onClick={() => setOpenWhatsAppModal(true)}
+                        >
+                            <MessageSquare className="mr-1.5 h-4 w-4 text-emerald-600" />
+                            WhatsApp
+                        </Button>
+                    )}
                     {/* Online payment of invoices isn't live yet (PORTAL_ONLINE_PAYMENTS_ENABLED) */}
                     {PORTAL_ONLINE_PAYMENTS_ENABLED && (
                     <Button
