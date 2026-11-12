@@ -14,9 +14,12 @@ import {
     InvoiceStatus,
     Prisma,
 } from "@prisma/client"
-import { recordTransaction } from "@/app/actions/crm/ledger"
+import { recordContactTransaction } from "@/lib/contact-ledger"
 import { logTenantAudit } from "@/lib/tenant-audit"
 import { safeAction } from "@/lib/safe-action"
+import { reportCaught } from "@/lib/error-reporting"
+import { getTenantTaxContext } from "@/lib/tenant-tax"
+import { postInvoiceStock } from "@/lib/stock"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -493,13 +496,29 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
 /**
  * Issue a new Credit Note.
  */
-export async function createCreditNote(input: CreateCreditNoteInput) {
+async function _createCreditNote(input: CreateCreditNoteInput) {
     const tenantId = await getTenantManagerId(MODULE)
-    await assertTenantRefs(tenantId, { contact: input.contactId, invoice: input.invoiceId, product: input.items.map((i) => i.productId), warehouse: input.items.map((i) => i.warehouseId) })
-    if (!tenantId) throw new Error("Unauthorized tenant context")
-
     if (!input.contactId) throw new Error("Customer contact is required")
-    if (!input.items || input.items.length === 0) throw new Error("At least one line item is required")
+    if (!Array.isArray(input.items) || input.items.length === 0) throw new Error("At least one line item is required")
+    await assertTenantRefs(tenantId, { contact: input.contactId, invoice: input.invoiceId, product: input.items.map((i) => i.productId), warehouse: input.items.map((i) => i.warehouseId) })
+    for (const [i, item] of input.items.entries()) {
+        if (typeof item.quantity !== "number" || !Number.isFinite(item.quantity) || item.quantity <= 0) throw new Error(`Line ${i + 1}: enter a quantity above zero`)
+        if (typeof item.unitPrice !== "number" || !Number.isFinite(item.unitPrice) || item.unitPrice < 0) throw new Error(`Line ${i + 1}: enter a price of zero or more`)
+        const rate = item.taxRate ?? 0
+        if (typeof rate !== "number" || !Number.isFinite(rate) || rate < 0 || rate > 100) throw new Error(`Line ${i + 1}: tax must be between 0 and 100%`)
+        if (!String(item.description || "").trim()) throw new Error(`Line ${i + 1}: enter a description`)
+    }
+
+    // The note is in the invoice's currency, or the business's own when it isn't tied to an invoice
+    const sourceInvoice = input.invoiceId
+        ? await prisma.invoice.findFirst({
+              where: { id: input.invoiceId, tenantId },
+              select: { contactId: true, total: true, currencyCode: true, type: true, invoiceNumber: true, creditNotes: { where: { status: { not: CreditNoteStatus.VOID } }, select: { total: true } } },
+          })
+        : null
+    if (sourceInvoice && sourceInvoice.contactId !== input.contactId) throw new Error("This invoice belongs to a different customer")
+    if (sourceInvoice?.type === "PROFORMA") throw new Error("A credit note can't be issued against a proforma invoice")
+    const currencyCode = sourceInvoice?.currencyCode || (await getTenantTaxContext(tenantId)).currency
 
     // Sequential credit note number
     const currentYear = new Date().getFullYear()
@@ -509,10 +528,10 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
     let taxAmount = 0
 
     const itemsToCreate = input.items.map(item => {
-        const qty = item.quantity || 1
-        const price = item.unitPrice || 0
-        const itemSubtotal = qty * price
-        const rate = item.taxRate || 0
+        const qty = item.quantity
+        const price = item.unitPrice
+        const itemSubtotal = Math.round(qty * price * 100) / 100
+        const rate = item.taxRate ?? 0
         const itemTax = Math.round((itemSubtotal * (rate / 100)) * 100) / 100
         const itemTotal = itemSubtotal + itemTax
 
@@ -533,7 +552,18 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
         }
     })
 
-    const total = subtotal + taxAmount
+    subtotal = Math.round(subtotal * 100) / 100
+    taxAmount = Math.round(taxAmount * 100) / 100
+    const total = Math.round((subtotal + taxAmount) * 100) / 100
+    if (!(total > 0)) throw new Error("The credit note total must be more than zero")
+    if (sourceInvoice) {
+        // All credit against one invoice can't come to more than the invoice itself
+        const alreadyCredited = sourceInvoice.creditNotes.reduce((sum: number, cn: { total: unknown }) => sum + Number(cn.total), 0)
+        const room = Math.round((Number(sourceInvoice.total) - alreadyCredited) * 100) / 100
+        if (total > room + 0.005) {
+            throw new Error(`Invoice ${sourceInvoice.invoiceNumber} has ${currencyCode} ${Math.max(0, room).toFixed(2)} left that can be credited; this note is ${currencyCode} ${total.toFixed(2)}.`)
+        }
+    }
 
     const newCreditNote = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Create CreditNote
@@ -546,6 +576,7 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
                 issueDate: input.issueDate ? new Date(input.issueDate) : new Date(),
                 status: CreditNoteStatus.ISSUED,
                 reason: input.reason,
+                currencyCode,
                 subtotal,
                 taxAmount,
                 total,
@@ -631,23 +662,24 @@ export async function createCreditNote(input: CreateCreditNoteInput) {
 
     // Record ledger entry (CREDIT under customer reducing AR)
     try {
-        await recordTransaction({
+        await recordContactTransaction(tenantId, {
             contactId: input.contactId,
             type: "CREDIT_NOTE",
             amount: -Math.abs(total), // the customer owes less
+            currencyCode,
             referenceId: newCreditNote.id,
             description: `Credit Note #${newCreditNote.creditNoteNumber}`,
             date: newCreditNote.issueDate,
         })
-    } catch {
-        // Continue if optional ledger recording hook encounters non-critical sync discrepancy
+    } catch (err) {
+        await reportCaught(err, "createCreditNote: customer balance entry", { tenantId, creditNoteId: newCreditNote.id })
     }
 
     await postToLedger(tenantId, { kind: "creditNote", id: newCreditNote.id })
 
     revalidatePath("/sales/credit-notes")
     revalidatePath("/finance/receivable")
-    return newCreditNote
+    return { id: newCreditNote.id, creditNoteNumber: newCreditNote.creditNoteNumber }
 }
 
 /**
@@ -657,42 +689,42 @@ async function _applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
     const tenantId = await getTenantManagerId(MODULE)
     if (!tenantId) throw new Error("Unauthorized tenant context")
 
-    const { creditNoteId, invoiceId, amount } = input
-
-    if (amount <= 0) throw new Error("Amount to apply must be greater than zero")
-
-    const creditNote = await prisma.creditNote.findUnique({
-        where: { id: creditNoteId, tenantId }
-    })
-    if (!creditNote) throw new Error("Credit note not found")
-
-    const currentRemaining = Number(creditNote.remainingBalance)
-    if (amount > currentRemaining) {
-        throw new Error(`Amount cannot exceed the available credit balance (${creditNote.currencyCode} ${currentRemaining})`)
-    }
-
-    const invoice = await prisma.invoice.findUnique({
-        where: { id: invoiceId, tenantId }
-    })
-    if (!invoice) throw new Error("Invoice not found")
-    if (invoice.contactId !== creditNote.contactId) throw new Error("This credit note belongs to a different customer")
-
-    const newAllocated = Number(creditNote.allocatedAmount) + amount
-    const newRemaining = currentRemaining - amount
-    const newStatus = newRemaining === 0 ? CreditNoteStatus.APPLIED : CreditNoteStatus.ISSUED
+    const { creditNoteId, invoiceId } = input
+    const amount = Math.round(Number(input.amount) * 100) / 100
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error("Amount to apply must be greater than zero")
 
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-        // Update credit note
+        // Lock both documents, so two saves at the same moment can't use the same credit twice
+        const noteRows: { id: string }[] = await tx.$queryRaw`select id from credit_notes where id = ${creditNoteId}::uuid and tenant_id = ${tenantId}::uuid for update`
+        if (noteRows.length === 0) throw new Error("Credit note not found")
+        const creditNote = await tx.creditNote.findFirstOrThrow({ where: { id: creditNoteId, tenantId } })
+        if (creditNote.status === CreditNoteStatus.VOID) throw new Error("This credit note has been voided")
+
+        const invoiceRows: { id: string }[] = await tx.$queryRaw`select id from invoices where id = ${invoiceId} and tenant_id = ${tenantId}::uuid for update`
+        if (invoiceRows.length === 0) throw new Error("Invoice not found")
+        const invoice = await tx.invoice.findFirstOrThrow({ where: { id: invoiceId, tenantId } })
+        if (invoice.contactId !== creditNote.contactId) throw new Error("This credit note belongs to a different customer")
+        if (invoice.type === "PROFORMA") throw new Error("Credit can't be applied to a proforma invoice")
+        if (invoice.status === InvoiceStatus.DRAFT || invoice.status === InvoiceStatus.CANCELLED) throw new Error(`Credit can't be applied to a ${invoice.status.toLowerCase()} invoice`)
+        if (invoice.currencyCode !== creditNote.currencyCode) throw new Error(`This credit note is in ${creditNote.currencyCode} and the invoice is in ${invoice.currencyCode}`)
+
+        const remaining = Math.round(Number(creditNote.remainingBalance) * 100)
+        const cents = Math.round(amount * 100)
+        if (cents > remaining) throw new Error(`Amount cannot exceed the available credit balance (${creditNote.currencyCode} ${(remaining / 100).toFixed(2)})`)
+
+        const paidBefore = await tx.payment.aggregate({ where: { invoiceId, tenantId }, _sum: { amount: true } })
+        const dueCents = Math.round(Number(invoice.total) * 100) - Math.round(Number(paidBefore._sum.amount || 0) * 100)
+        if (cents > dueCents) throw new Error(`Invoice ${invoice.invoiceNumber} has ${invoice.currencyCode} ${(Math.max(0, dueCents) / 100).toFixed(2)} left to pay; you can't apply more than that`)
+
         await tx.creditNote.update({
             where: { id: creditNoteId, tenantId },
             data: {
-                allocatedAmount: newAllocated,
-                remainingBalance: newRemaining,
-                status: newStatus,
+                allocatedAmount: { increment: amount },
+                remainingBalance: { decrement: amount },
+                status: cents === remaining ? CreditNoteStatus.APPLIED : CreditNoteStatus.ISSUED,
             }
         })
 
-        // Record payment towards invoice from credit memo
         // Settles the invoice from the customer's credit: no money moves, so no ledger journal (see CREDIT_APPLICATION_PREFIX)
         await tx.payment.create({
             data: {
@@ -709,26 +741,15 @@ async function _applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
             }
         })
 
-        // Calculate total payments on invoice to update status
-        const totalPayments = await tx.payment.aggregate({
-            where: { invoiceId, tenantId },
-            _sum: { amount: true }
-        })
-        const paidAmount = Number(totalPayments._sum.amount || 0)
-        const invoiceTotal = Number(invoice.total)
-
-        let invoiceStatus = invoice.status
-        if (paidAmount >= invoiceTotal) {
-            invoiceStatus = InvoiceStatus.PAID
-        } else if (paidAmount > 0) {
-            invoiceStatus = InvoiceStatus.PARTIALLY_PAID
-        }
-
         await tx.invoice.update({
             where: { id: invoiceId, tenantId },
-            data: { status: invoiceStatus }
+            data: { status: cents === dueCents ? InvoiceStatus.PAID : InvoiceStatus.PARTIALLY_PAID }
         })
     })
+
+    // A status change can mean goods now leave stock (an invoice paid in full), same as a payment
+    await postInvoiceStock(tenantId, { invoiceId })
+    await logTenantAudit(tenantId, "CREDIT_NOTE_APPLIED", { target: { type: "CREDIT_NOTE", id: creditNoteId }, metadata: { invoiceId, amount } })
 
     revalidatePath("/sales/credit-notes")
     revalidatePath("/sales/invoices")
@@ -738,29 +759,25 @@ async function _applyCreditToInvoice(input: ApplyCreditToInvoiceInput) {
 /**
  * Record a direct cash or bank refund disbursement for a credit note.
  */
-export async function recordCreditNoteRefund(input: RecordCreditNoteRefundInput) {
+async function _recordCreditNoteRefund(input: RecordCreditNoteRefundInput) {
     const tenantId = await getTenantManagerId(MODULE)
-    if (!tenantId) throw new Error("Unauthorized tenant context")
 
-    const { creditNoteId, amount, refundDate, paymentMethod = "BANK_TRANSFER", reference, notes } = input
+    const { creditNoteId, refundDate, paymentMethod = "BANK_TRANSFER", reference, notes } = input
+    const amount = Math.round(Number(input.amount) * 100) / 100
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error("Refund amount must be greater than zero")
+    if (refundDate && Number.isNaN(new Date(refundDate).getTime())) throw new Error("The refund date isn't a valid date")
 
-    if (amount <= 0) throw new Error("Refund amount must be greater than zero")
+    const { refund, creditNote } = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        // Lock the note, so two saves at the same moment can't refund the same credit twice
+        const rows: { id: string }[] = await tx.$queryRaw`select id from credit_notes where id = ${creditNoteId}::uuid and tenant_id = ${tenantId}::uuid for update`
+        if (rows.length === 0) throw new Error("Credit note not found")
+        const creditNote = await tx.creditNote.findFirstOrThrow({ where: { id: creditNoteId, tenantId } })
+        if (creditNote.status === CreditNoteStatus.VOID) throw new Error("This credit note has been voided")
+        const remaining = Math.round(Number(creditNote.remainingBalance) * 100)
+        const cents = Math.round(amount * 100)
+        if (cents > remaining) throw new Error(`Refund amount cannot exceed the open credit balance (${creditNote.currencyCode} ${(remaining / 100).toFixed(2)})`)
+        const newStatus = cents === remaining ? CreditNoteStatus.REFUNDED : CreditNoteStatus.ISSUED
 
-    const creditNote = await prisma.creditNote.findUnique({
-        where: { id: creditNoteId, tenantId }
-    })
-    if (!creditNote) throw new Error("Credit note not found")
-
-    const currentRemaining = Number(creditNote.remainingBalance)
-    if (amount > currentRemaining) {
-        throw new Error(`Refund amount cannot exceed the open credit balance (${creditNote.currencyCode} ${currentRemaining})`)
-    }
-
-    const newAllocated = Number(creditNote.allocatedAmount) + amount
-    const newRemaining = currentRemaining - amount
-    const newStatus = newRemaining === 0 ? CreditNoteStatus.REFUNDED : CreditNoteStatus.ISSUED
-
-    const refund = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Create refund record
         const r = await tx.creditNoteRefund.create({
             data: {
@@ -778,63 +795,86 @@ export async function recordCreditNoteRefund(input: RecordCreditNoteRefundInput)
         await tx.creditNote.update({
             where: { id: creditNoteId, tenantId },
             data: {
-                allocatedAmount: newAllocated,
-                remainingBalance: newRemaining,
+                allocatedAmount: { increment: amount },
+                remainingBalance: { decrement: amount },
                 status: newStatus,
             }
         })
 
-        return r
+        return { refund: r, creditNote }
     })
 
     // Record ledger REFUND entry
     try {
-        await recordTransaction({
+        await recordContactTransaction(tenantId, {
             contactId: creditNote.contactId,
             type: "REFUND",
             amount,
+            currencyCode: creditNote.currencyCode,
             referenceId: creditNote.id,
             description: `Refund payout for Credit Note #${creditNote.creditNoteNumber} via ${paymentMethod}`,
             date: refund.refundDate,
         })
-    } catch {
-        // Handled silently
+    } catch (err) {
+        await reportCaught(err, "recordCreditNoteRefund: customer balance entry", { tenantId, creditNoteId })
     }
 
     await postToLedger(tenantId, { kind: "creditNoteRefund", id: refund.id })
+    await logTenantAudit(tenantId, "CREDIT_NOTE_REFUNDED", { target: { type: "CREDIT_NOTE", id: creditNoteId }, metadata: { creditNoteNumber: creditNote.creditNoteNumber, amount, paymentMethod } })
 
     revalidatePath("/sales/credit-notes")
-    return refund
+    return { id: refund.id }
 }
 
 /**
  * Void an unapplied credit note.
  */
-export async function voidCreditNote(creditNoteId: string) {
+async function _voidCreditNote(creditNoteId: string) {
     const tenantId = await getTenantManagerId(MODULE)
-    if (!tenantId) throw new Error("Unauthorized tenant context")
 
-    const creditNote = await prisma.creditNote.findUnique({
-        where: { id: creditNoteId, tenantId },
-        include: { refunds: true }
-    })
-    if (!creditNote) throw new Error("Credit note not found")
-
-    if (Number(creditNote.allocatedAmount) > 0 || creditNote.refunds.length > 0) {
-        throw new Error("Cannot void a credit note that has already been partially allocated or refunded")
-    }
-
-    await prisma.creditNote.update({
-        where: { id: creditNoteId, tenantId },
-        data: {
-            status: CreditNoteStatus.VOID,
-            remainingBalance: 0,
+    const creditNote = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        const rows: { id: string }[] = await tx.$queryRaw`select id from credit_notes where id = ${creditNoteId}::uuid and tenant_id = ${tenantId}::uuid for update`
+        if (rows.length === 0) throw new Error("Credit note not found")
+        const note = await tx.creditNote.findFirstOrThrow({ where: { id: creditNoteId, tenantId }, include: { refunds: true, items: true } })
+        if (note.status === CreditNoteStatus.VOID) throw new Error("This credit note is already voided")
+        if (Number(note.allocatedAmount) > 0 || note.refunds.length > 0) {
+            throw new Error("Cannot void a credit note that has already been partially allocated or refunded")
         }
+
+        await tx.creditNote.update({
+            where: { id: creditNoteId, tenantId },
+            data: { status: CreditNoteStatus.VOID, remainingBalance: 0 },
+        })
+
+        // Goods the note put back into stock leave it again
+        for (const item of note.items) {
+            if (!item.restockInventory || !item.productId || !item.warehouseId) continue
+            const qty = Number(item.quantity)
+            const stock = await tx.warehouseStock.findFirst({ where: { tenantId, warehouseId: item.warehouseId, productId: item.productId } })
+            const before = Number(stock?.quantity ?? 0)
+            if (stock) await tx.warehouseStock.update({ where: { id: stock.id }, data: { quantity: { decrement: qty } } })
+            await tx.product.update({ where: { id: item.productId, tenantId }, data: { stockQty: { decrement: qty } } })
+            await tx.stockMovement.create({
+                data: {
+                    tenantId,
+                    warehouseId: item.warehouseId,
+                    productId: item.productId,
+                    type: StockMovementType.ADJUSTMENT,
+                    quantity: -qty,
+                    previousQty: before,
+                    newQty: before - qty,
+                    referenceNo: note.creditNoteNumber,
+                    reason: `Credit Note #${note.creditNoteNumber} voided: return reversed`,
+                },
+            })
+        }
+        return note
     })
+
     await postToLedger(tenantId, { kind: "creditNote", id: creditNoteId })
     // Undo the credit on the customer's statement
     try {
-        await recordTransaction({
+        await recordContactTransaction(tenantId, {
             contactId: creditNote.contactId,
             type: "CREDIT_NOTE",
             amount: Math.abs(Number(creditNote.total)),
@@ -844,7 +884,7 @@ export async function voidCreditNote(creditNoteId: string) {
             date: new Date(),
         })
     } catch (err) {
-        console.error("Customer ledger update failed when voiding credit note:", err)
+        await reportCaught(err, "voidCreditNote: customer balance entry", { tenantId, creditNoteId })
     }
 
     revalidatePath("/sales/credit-notes")
@@ -855,4 +895,13 @@ export async function voidCreditNote(creditNoteId: string) {
 /* Exported as ActionResult (safeAction): the screen shows the real message; the client calls unwrap() */
 export async function applyCreditToInvoice(...args: Parameters<typeof _applyCreditToInvoice>) {
     return safeAction(() => _applyCreditToInvoice(...args))
+}
+export async function createCreditNote(...args: Parameters<typeof _createCreditNote>) {
+    return safeAction(() => _createCreditNote(...args))
+}
+export async function recordCreditNoteRefund(...args: Parameters<typeof _recordCreditNoteRefund>) {
+    return safeAction(() => _recordCreditNoteRefund(...args))
+}
+export async function voidCreditNote(...args: Parameters<typeof _voidCreditNote>) {
+    return safeAction(() => _voidCreditNote(...args))
 }

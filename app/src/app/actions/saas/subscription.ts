@@ -1,5 +1,6 @@
 "use server"
 
+import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import { prisma } from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/current-user"
 import { revalidatePath } from "next/cache"
@@ -235,25 +236,20 @@ export async function executePlanChange(params: {
             }
         }
 
-        if (quote.isDowngrade && !immediate) {
-            // Schedule downgrade at the end of current cycle
-            const updatedSubscription = {
-                ...currentSub,
-                scheduledDowngrade: {
-                    targetPlan,
-                    effectiveDate: quote.nextBillingDate,
+        // A business's own downgrade waits for the end of the period it paid for (as the Terms say);
+        // with nothing paid for the period there is nothing to wait for.
+        const paidTimeLeft = quote.unusedCredit > 0
+        if (quote.isDowngrade && (!immediate || (paidTimeLeft && !caller.isSuperAdmin))) {
+            // The current period's end, not a new period counted from today
+            const effectiveDate = currentSub.renewalDate || quote.nextBillingDate
+            quote.nextBillingDate = effectiveDate
+            await patchTenantSettings(tenantId, (latest) => ({
+                ...latest,
+                subscription: {
+                    ...((latest.subscription as Record<string, unknown>) || {}),
+                    scheduledDowngrade: { targetPlan, effectiveDate },
                 },
-            }
-
-            await prisma.tenant.update({
-                where: { id: tenantId },
-                data: {
-                    settings: {
-                        ...settings,
-                        subscription: updatedSubscription,
-                    } as unknown as Prisma.InputJsonObject,
-                },
-            })
+            }))
 
             await logAudit("TENANT_PLAN_DOWNGRADE_SCHEDULED", tenantId, {
                 fromPlan: currentPlan,
@@ -276,6 +272,8 @@ export async function executePlanChange(params: {
             billingCycle,
             paymentRef: caller.isSuperAdmin ? paymentReference : undefined,
             amountPaid: caller.isSuperAdmin ? undefined : 0,
+            // Nothing was paid: the business keeps its current period and renewal date
+            keepCycle: !caller.isSuperAdmin,
             paymentMethod: caller.isSuperAdmin ? "Manual (platform admin)" : "No charge",
             actor: { id: caller.userId, email: caller.email },
             actorIsSuperAdmin: caller.isSuperAdmin,

@@ -239,7 +239,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
 
         startTransition(async () => {
             try {
-                await createCreditNote({
+                unwrap(await createCreditNote({
                     contactId: newCreditNote.contactId,
                     invoiceId: newCreditNote.invoiceId || undefined,
                     issueDate: newCreditNote.issueDate,
@@ -256,7 +256,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                         restockInventory: item.restockInventory,
                         warehouseId: item.warehouseId || undefined,
                     }))
-                })
+                }))
 
                 toast.success("Credit Note issued successfully and posted to ledger!")
                 setIsNewCreditNoteOpen(false)
@@ -324,14 +324,14 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
 
         startTransition(async () => {
             try {
-                await recordCreditNoteRefund({
+                unwrap(await recordCreditNoteRefund({
                     creditNoteId: selectedCreditNote.id,
                     amount: Number(refundForm.amount),
                     refundDate: refundForm.refundDate,
                     paymentMethod: refundForm.paymentMethod,
                     reference: refundForm.reference || undefined,
                     notes: refundForm.notes || undefined,
-                })
+                }))
 
                 toast.success("Refund disbursement recorded and posted to customer ledger!")
                 setIsRefundModalOpen(false)
@@ -349,7 +349,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
 
         startTransition(async () => {
             try {
-                await voidCreditNote(cn.id)
+                unwrap(await voidCreditNote(cn.id))
                 toast.success(`Credit Note #${cn.creditNoteNumber} voided`)
                 router.refresh()
             } catch (err: unknown) {

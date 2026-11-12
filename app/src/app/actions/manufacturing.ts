@@ -693,6 +693,12 @@ export async function recordQualityInspection(workOrderId: string, input: {
     notes?: string
 }) {
     const tenantId = await getTenantWriterId(MODULE)
+    // The work order must be this business's own
+    if (!(await prisma.workOrder.count({ where: { id: workOrderId, tenantId } }))) throw new Error("Work order not found")
+    for (const [label, value] of [["inspected", input.inspectedQuantity], ["passed", input.passedQuantity], ["failed", input.failedQuantity]] as const) {
+        if (typeof value !== "number" || !Number.isFinite(value) || value < 0) throw new Error(`Enter the ${label} quantity as zero or more`)
+    }
+    if (input.passedQuantity + input.failedQuantity > input.inspectedQuantity + 1e-9) throw new Error("Passed and failed together can't be more than the quantity inspected")
     const now = new Date()
     const yearMonth = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}`
     const inspectionNumber = await nextSequence(prisma, "qualityInspection", tenantId, `QC-${yearMonth}-`, 3)
@@ -714,7 +720,7 @@ export async function recordQualityInspection(workOrderId: string, input: {
                 failedQuantity: input.failedQuantity,
                 status,
                 defectReason: input.defectReason,
-                inspectorName: input.inspectorName || "QA Specialist",
+                inspectorName: input.inspectorName?.trim() || null,
                 notes: input.notes
             }
         });

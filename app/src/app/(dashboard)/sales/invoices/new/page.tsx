@@ -19,13 +19,13 @@ function NewInvoiceFormWrapper() {
     const [regime, setRegime] = useState<InvoiceTaxRegime | null>(null)
     useEffect(() => { getInvoiceTaxRegime().then(setRegime) }, [])
     const [nextInvoiceNum, setNextInvoiceNum] = useState<string>("")
-    const [contacts, setContacts] = useState<Contact[]>([])
+    const [contacts, setContacts] = useState<Contact[] | undefined>(undefined)
     const [products, setProducts] = useState<DocumentProduct[]>([])
     useEffect(() => { getProductsForDocuments().then(setProducts).catch(() => setProducts([])) }, [])
 
     useEffect(() => {
         getNextInvoiceNumber().then(setNextInvoiceNum)
-        getContacts(1, 100).then((res) => setContacts(res.data))
+        getContacts(1, 500).then((res) => setContacts(res.data)).catch(() => setContacts([]))
     }, [])
 
     const handleSave = async (data: InvoiceFormData) => {

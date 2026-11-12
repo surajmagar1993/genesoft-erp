@@ -1,3 +1,4 @@
+import { reportCaught } from "@/lib/error-reporting"
 import type { Prisma } from "@prisma/client"
 import { planLimitError } from "@/lib/plan-limits"
 import { prisma } from "@/lib/prisma"
@@ -15,6 +16,19 @@ import {
     InvoiceType,
 } from "@prisma/client"
 
+/** Adds months and stays on the last day when the target month is shorter (31 Jan + 1 month = 28/29 Feb, not 3 Mar). */
+function addMonthsClamped(date: Date, months: number): Date {
+    const next = new Date(date)
+    const day = next.getDate()
+    next.setDate(1)
+    next.setMonth(next.getMonth() + months)
+    const lastDay = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate()
+    next.setDate(Math.min(day, lastDay))
+    return next
+}
+
+class AlreadyRunError extends Error {}
+
 export function computeNextRunDate(currentDate: Date, frequency: RecurringFrequency): Date {
     const next = new Date(currentDate)
     switch (frequency) {
@@ -25,17 +39,13 @@ export function computeNextRunDate(currentDate: Date, frequency: RecurringFreque
             next.setDate(next.getDate() + 14)
             break
         case RecurringFrequency.MONTHLY:
-            next.setMonth(next.getMonth() + 1)
-            break
+            return addMonthsClamped(currentDate, 1)
         case RecurringFrequency.QUARTERLY:
-            next.setMonth(next.getMonth() + 3)
-            break
+            return addMonthsClamped(currentDate, 3)
         case RecurringFrequency.BIANNUALLY:
-            next.setMonth(next.getMonth() + 6)
-            break
+            return addMonthsClamped(currentDate, 6)
         case RecurringFrequency.ANNUALLY:
-            next.setFullYear(next.getFullYear() + 1)
-            break
+            return addMonthsClamped(currentDate, 12)
     }
     return next
 }
@@ -63,7 +73,6 @@ if (!profile) return { error: "Recurring profile not found" }
     }
 
     const now = new Date()
-    now.getFullYear();
 
     // Same single numbering series as invoices created by hand
     const invoiceNumber = await nextInvoiceNumber(tenantId, "TAX_INVOICE", now)
@@ -89,7 +98,9 @@ if (!profile) return { error: "Recurring profile not found" }
     if (limit) return { error: limit }
 
     const taxCtx = await getTenantTaxContext(tenantId)
-    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    let result
+    try {
+    result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Create Invoice
         const invoice = await tx.invoice.create({
             data: {
@@ -133,15 +144,17 @@ if (!profile) return { error: "Recurring profile not found" }
         const nextRun = computeNextRunDate(profile.nextRunDate, profile.frequency)
         let updatedStatus: RecurringStatus = profile.status
 
-        if (profile.maxCycles && newCycles >= profile.maxCycles) {
+        if (profile.maxCycles != null && profile.maxCycles > 0 && newCycles >= profile.maxCycles) {
             updatedStatus = RecurringStatus.COMPLETED
         }
         if (profile.endDate && nextRun > profile.endDate) {
             updatedStatus = RecurringStatus.COMPLETED
         }
 
-        await tx.recurringProfile.update({
-            where: { id: profile.id },
+        // Claim this cycle: if "Run now" and the daily job reach here together, only one of them
+        // still finds the profile at this cycle; the other is rolled back (no second invoice)
+        const claimed = await tx.recurringProfile.updateMany({
+            where: { id: profile.id, tenantId, cyclesCompleted: profile.cyclesCompleted, nextRunDate: profile.nextRunDate },
             data: {
                 cyclesCompleted: newCycles,
                 lastRunDate: now,
@@ -149,6 +162,7 @@ if (!profile) return { error: "Recurring profile not found" }
                 status: updatedStatus,
             },
         })
+        if (claimed.count !== 1) throw new AlreadyRunError()
 
         // 3. Log execution
         await tx.recurringExecution.create({
@@ -164,6 +178,10 @@ if (!profile) return { error: "Recurring profile not found" }
 
         return invoice
     })
+    } catch (err) {
+        if (err instanceof AlreadyRunError) return { error: "This cycle's invoice has just been created by another run." }
+        throw err
+    }
 
     fireWorkflowEvent(tenantId, "INVOICE_CREATED", {
         total: Number(result.total),
@@ -179,7 +197,7 @@ if (!profile) return { error: "Recurring profile not found" }
         try {
             await recordContactTransaction(tenantId, { contactId: result.contactId, type: "INVOICE", amount: Number(result.total), currencyCode: result.currencyCode, referenceId: result.id, description: `Invoice ${result.invoiceNumber} (recurring)`, date: result.invoiceDate })
         } catch (err) {
-            console.error("Customer ledger entry failed for recurring invoice:", err)
+            await reportCaught(err, "recurring invoice: customer balance entry", { tenantId, invoiceId: result.id })
         }
     }
     return { invoice: { id: result.id, invoiceNumber: result.invoiceNumber } }

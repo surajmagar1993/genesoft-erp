@@ -80,11 +80,12 @@ export default function BillsClient({ bills }: BillsClientProps) {
   const handleDelete = async (id: string) => {
     if (confirm("Are you sure you want to delete this bill?")) {
       try {
-        await deleteBill(id)
-        toast.success("Bill deleted successfully")
+        const { error } = await deleteBill(id)
+        if (error) toast.error(error)
+        else toast.success("Bill deleted")
       } catch {
-                toast.error("Failed to delete bill")
-              }
+        toast.error("Failed to delete bill")
+      }
     }
   }
 

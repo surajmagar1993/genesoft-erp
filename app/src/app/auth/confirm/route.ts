@@ -9,7 +9,8 @@ const OTP_TYPES: EmailOtpType[] = ["signup", "invite", "magiclink", "recovery", 
 
 /** Only same-site paths, so the link can't be used to redirect anywhere else. */
 function safeNext(next: string | null, fallback: string): string {
-    return next && next.startsWith("/") && !next.startsWith("//") ? next : fallback
+    // One leading slash, and no backslash anywhere (browsers read "/\\host" as another site)
+    return next && /^\/(?![/\\])/.test(next) && !next.includes("\\") ? next : fallback
 }
 
 /**

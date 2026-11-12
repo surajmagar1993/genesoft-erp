@@ -51,7 +51,14 @@ export async function recordContactTransaction(tenantId: string, payload: Record
       amountInBaseCurrency = await convertAmount(transactionAmount, currencyCode, baseCurrency)
     }
 
-    const newBalance = new Prisma.Decimal(contact.balance).add(amountInBaseCurrency)
+    // Move the balance first and read back the result, so two entries saved at the
+    // same moment each record their own running balance (not the same stale one)
+    const updated = await tx.contact.update({
+      where: { id: contactId, tenantId },
+      data: { balance: { increment: amountInBaseCurrency } },
+      select: { balance: true },
+    })
+    const newBalance = new Prisma.Decimal(updated.balance)
 
     // 3. Create Ledger Entry (Saving original currency)
     const entry = await tx.ledgerEntry.create({
@@ -68,12 +75,6 @@ export async function recordContactTransaction(tenantId: string, payload: Record
           : description,
         date: date || new Date(),
       }
-    })
-
-    // 4. Update Contact Balance (Normalized)
-    await tx.contact.update({
-      where: { id: contactId, tenantId },
-      data: { balance: { increment: amountInBaseCurrency } }
     })
 
     return entry

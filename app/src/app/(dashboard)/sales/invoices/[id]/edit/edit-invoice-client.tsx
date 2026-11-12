@@ -18,12 +18,12 @@ export default function EditInvoiceClient({ invoice }: Props) {
     const router = useRouter()
     const [regime, setRegime] = useState<InvoiceTaxRegime | null>(null)
     useEffect(() => { getInvoiceTaxRegime().then(setRegime) }, [])
-    const [contacts, setContacts] = useState<Contact[]>([])
+    const [contacts, setContacts] = useState<Contact[] | undefined>(undefined)
     const [products, setProducts] = useState<DocumentProduct[]>([])
     useEffect(() => { getProductsForDocuments().then(setProducts).catch(() => setProducts([])) }, [])
 
     useEffect(() => {
-        getContacts(1, 100).then((res) => setContacts(res.data))
+        getContacts(1, 500).then((res) => setContacts(res.data)).catch(() => setContacts([]))
     }, [])
 
     // Adapt snake_case DB record → camelCase form data

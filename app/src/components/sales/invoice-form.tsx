@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { invoiceFormStatuses } from "@/lib/invoice-input"
 import { getCurrencySymbol } from "@/lib/utils"
 import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
@@ -27,6 +29,7 @@ import {
   getSupplyTypeForRegime,
   computeLineItemGst,
   computeInvoiceGstSummary,
+  invoiceDiscountFraction,
   isValidGstin,
   TAX_EXEMPTION_REASONS,
 } from "@/lib/gst-engine"
@@ -351,6 +354,8 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                   size="sm"
                   onClick={() => {
                     update("type", "TAX_INVOICE")
+                    // Accepted / Rejected / Expired only make sense for a proforma
+                    if (["ACCEPTED", "REJECTED", "EXPIRED"].includes(form.status)) update("status", "DRAFT")
                     if (form.invoiceNumber.startsWith("PI-")) {
                       update("invoiceNumber", form.invoiceNumber.replace(/^PI-/, "INV-"))
                     }
@@ -389,18 +394,29 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
               </div>
               <div className="space-y-2">
                 <Label>Status</Label>
-                <div className="flex gap-2 flex-wrap">
-                  {(["DRAFT", "SENT", "ACCEPTED", "REJECTED", "EXPIRED"] as const).map((s) => (
-                    <Badge
-                      key={s}
-                      variant={form.status === s ? "default" : "outline"}
-                      className="cursor-pointer px-3 py-1.5 text-xs capitalize"
-                      onClick={() => update("status", s)}
-                    >
-                      {s.toLowerCase()}
-                    </Badge>
-                  ))}
-                </div>
+                {invoiceFormStatuses(form.type === "PROFORMA").includes(form.status) ? (
+                  <div className="flex gap-2 flex-wrap" role="group" aria-label="Status">
+                    {(invoiceFormStatuses(form.type === "PROFORMA") as InvoiceStatus[]).map((s) => (
+                      <Button
+                        key={s}
+                        type="button"
+                        size="sm"
+                        variant={form.status === s ? "default" : "outline"}
+                        aria-pressed={form.status === s}
+                        className="h-8 px-3 text-xs capitalize"
+                        onClick={() => update("status", s)}
+                      >
+                        {s.toLowerCase()}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  // Paid, partially paid, overdue and cancelled come from payments and due dates
+                  <p className="text-sm">
+                    <Badge variant="secondary" className="capitalize">{form.status.toLowerCase().replace(/_/g, " ")}</Badge>
+                    <span className="ml-2 text-xs text-muted-foreground">Set by payments; it stays as it is when you save.</span>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -408,7 +424,9 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="contactId">Customer / Contact *</Label>
-                {contacts && contacts.length > 0 ? (
+                {contacts === undefined ? (
+                  <p className="h-9 flex items-center text-sm text-muted-foreground">Loading customers…</p>
+                ) : contacts.length > 0 ? (
                   <Select
                     value={form.contactId}
                     onValueChange={(val) => {
@@ -451,8 +469,8 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                       onChange={(e) => update("customerName", e.target.value)}
                       placeholder="Enter customer name"
                     />
-                    <p className="text-[11px] text-amber-500">
-                      No CRM contacts found. You should create a contact first.
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      You have no contacts yet. <Link href="/crm/contacts/new" className="underline">Add a contact</Link> first, then come back to create the invoice.
                     </p>
                   </div>
                 )}
@@ -685,8 +703,9 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                   const gst = computeLineItemGst(
                     item.qty,
                     item.unitPrice,
-                    item.gstRate,
-                    supplyType
+                    form.isTaxExempt ? 0 : item.gstRate,
+                    supplyType,
+                    invoiceDiscountFraction(form.lineItems, form.discount, form.discountType)
                   )
                   return (
                     <div

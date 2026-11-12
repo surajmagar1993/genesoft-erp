@@ -41,9 +41,12 @@ export function cleanTaxRate(rate: unknown): number {
     return n
 }
 
-/** Prisma InvoiceItem tax columns for one line, computed on the server. */
-export function invoiceItemTaxColumns(qty: number, unitPrice: number, rate: number, supplyType: SupplyType) {
-    const t = computeLineItemGst(qty, unitPrice, rate, supplyType)
+/**
+ * Prisma InvoiceItem tax columns for one line, computed on the server.
+ * `discountFraction` is the document discount's share (invoiceDiscountFraction).
+ */
+export function invoiceItemTaxColumns(qty: number, unitPrice: number, rate: number, supplyType: SupplyType, discountFraction: number = 0) {
+    const t = computeLineItemGst(qty, unitPrice, rate, supplyType, discountFraction)
     return {
         cgstRate: t.cgstPercent,
         cgstAmount: t.cgstAmount,

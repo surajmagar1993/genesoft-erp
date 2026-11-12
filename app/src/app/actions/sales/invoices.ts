@@ -8,16 +8,18 @@ import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
 import { COMPANY } from "@/lib/constants/company"
-import { computeInvoiceGstSummary } from "@/lib/gst-engine"
+import { computeInvoiceGstSummary, invoiceDiscountFraction } from "@/lib/gst-engine"
+import { documentDateError, documentDiscountError, documentLinesError, resolveInvoiceStatus } from "@/lib/invoice-input"
 import { formatCurrency, errorMessage } from "@/lib/utils"
 import { cleanTaxRate, getTenantTaxContext, invoiceItemTaxColumns, supplyTypeFor } from "@/lib/tenant-tax"
-import { recordTransaction } from "@/app/actions/crm/ledger"
+import { recordContactTransaction } from "@/lib/contact-ledger"
 import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
 import { postToLedger } from "@/lib/ledger"
 import { postInvoiceStock } from "@/lib/stock"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { planLimitError } from "@/lib/plan-limits"
 import { logTenantAudit } from "@/lib/tenant-audit"
+import { reportCaught } from "@/lib/error-reporting"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "sales" as const
@@ -283,6 +285,17 @@ export async function createInvoice(
   const tenantId = await getTenantWriterId(MODULE)
 
   try {
+    const inputError =
+      documentLinesError(payload.line_items) ||
+      documentDiscountError(payload.line_items, payload.discount, payload.discount_type) ||
+      documentDateError(payload.invoice_date, "invoice date", false) ||
+      documentDateError(payload.valid_until, "due date", false)
+    if (inputError) return { id: null, error: inputError }
+    const resolved = resolveInvoiceStatus({ requested: payload.status, isProforma: payload.type === "PROFORMA" })
+    if ("error" in resolved) return { id: null, error: resolved.error }
+    payload = { ...payload, status: resolved.status as InvoiceStatus }
+    const numberWasGiven = Boolean(payload.invoice_number?.trim())
+
     // No number given: the next one in the business's sequence (never a made-up one)
     if (!payload.invoice_number?.trim()) {
       payload = { ...payload, invoice_number: await nextInvoiceNumber(tenantId, payload.type === "PROFORMA" ? "PROFORMA" : "TAX_INVOICE") }
@@ -326,6 +339,7 @@ export async function createInvoice(
       gstRate: isTaxExempt ? 0 : cleanTaxRate(li.tax_percent),
       isExempt: isTaxExempt,
     }))
+    const discountFraction = invoiceDiscountFraction(items, payload.discount || 0, payload.discount_type || "PERCENT")
     const summary = computeInvoiceGstSummary(
       items,
       supplyType,
@@ -344,7 +358,7 @@ export async function createInvoice(
       gstin: payload.customer_gstin,
       reference: payload.reference,
       declaration: payload.declaration || "We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct.",
-      signatoryName: payload.signatory_name || "Authorized Representative",
+      signatoryName: payload.signatory_name || "",
       signatoryDesignation: payload.signatory_designation || "Authorized Signatory",
       supplierGstin: payload.supplier_gstin,
       supplierState: payload.supplier_state,
@@ -360,11 +374,11 @@ export async function createInvoice(
       if (limit) return { id: null, error: limit }
     }
 
-    const invoice = await prisma.invoice.create({
+    const createWithNumber = (invoiceNumber: string) => prisma.invoice.create({
       data: {
         tenantId,
         contactId: payload.contact_id,
-        invoiceNumber: payload.invoice_number,
+        invoiceNumber,
         type: finalType as InvoiceType,
         status: (payload.status as DbInvoiceStatus) || "DRAFT",
         invoiceDate: new Date(payload.invoice_date || Date.now()),
@@ -392,27 +406,41 @@ export async function createInvoice(
               hsnSacCode: li.hsn_sac || null,
               quantity: li.qty,
               unitPrice: li.unit_price,
-              ...invoiceItemTaxColumns(li.qty, li.unit_price, isTaxExempt ? 0 : cleanTaxRate(li.tax_percent), supplyType),
+              ...invoiceItemTaxColumns(li.qty, li.unit_price, isTaxExempt ? 0 : cleanTaxRate(li.tax_percent), supplyType, discountFraction),
             }
           }),
         },
       },
     })
 
+    // Two people saving at once can be given the same next number: take the following one.
+    // A number the user typed is never changed; they're told it's taken.
+    let invoice: Awaited<ReturnType<typeof createWithNumber>> | null = null
+    for (let attempt = 0; !invoice; attempt++) {
+      try {
+        invoice = await createWithNumber(payload.invoice_number)
+      } catch (err) {
+        if ((err as { code?: unknown }).code !== "P2002") throw err
+        if (numberWasGiven) return { id: null, error: `Invoice number ${payload.invoice_number} is already used. Choose another number.` }
+        if (attempt >= 4) throw err
+        payload = { ...payload, invoice_number: await nextInvoiceNumber(tenantId, isProforma ? "PROFORMA" : "TAX_INVOICE") }
+      }
+    }
+
     // ─── LEDGER INTEGRATION ───
     // If invoice is created as non-draft and is an official Tax Invoice (not proforma)
     if (!isProforma && payload.status !== "DRAFT" && payload.contact_id) {
       try {
-        await recordTransaction({
+        await recordContactTransaction(tenantId, {
           contactId: payload.contact_id,
           type: "INVOICE",
           amount: summary.grandTotal,
           referenceId: invoice.id,
           description: `Invoice ${payload.invoice_number} created`,
-          date: new Date(payload.invoice_date),
+          date: new Date(payload.invoice_date || Date.now()),
         })
       } catch (ledgerError) {
-        console.error("Ledger recording failed:", ledgerError)
+        await reportCaught(ledgerError, "createInvoice: customer balance entry", { tenantId, invoiceId: invoice.id })
       }
     }
 
@@ -445,6 +473,12 @@ export async function updateInvoice(
   const tenantId = await getTenantWriterId(MODULE)
 
   try {
+    const inputError =
+      documentLinesError(payload.line_items) ||
+      documentDiscountError(payload.line_items, payload.discount, payload.discount_type) ||
+      documentDateError(payload.invoice_date, "invoice date", false) ||
+      documentDateError(payload.valid_until, "due date", false)
+    if (inputError) return { error: inputError }
     await assertLineProducts(tenantId, payload.line_items)
     const isProforma = payload.type === "PROFORMA"
     const finalType: InvoiceTypeEnum = isProforma ? "PROFORMA" : "TAX_INVOICE"
@@ -462,6 +496,7 @@ export async function updateInvoice(
       gstRate: isTaxExempt ? 0 : cleanTaxRate(li.tax_percent),
       isExempt: isTaxExempt,
     }))
+    const discountFraction = invoiceDiscountFraction(items, payload.discount || 0, payload.discount_type || "PERCENT")
     const summary = computeInvoiceGstSummary(
       items,
       supplyType,
@@ -480,7 +515,7 @@ export async function updateInvoice(
       gstin: payload.customer_gstin,
       reference: payload.reference,
       declaration: payload.declaration || "We declare that this invoice shows the actual price of the goods or services described and that all particulars are true and correct.",
-      signatoryName: payload.signatory_name || "Authorized Representative",
+      signatoryName: payload.signatory_name || "",
       signatoryDesignation: payload.signatory_designation || "Authorized Signatory",
       supplierGstin: payload.supplier_gstin,
       supplierState: payload.supplier_state,
@@ -489,6 +524,9 @@ export async function updateInvoice(
     // Credit limit: only the increase over what this invoice already added to the balance
     const before = await prisma.invoice.findFirst({ where: { id: payload.id, tenantId }, select: { total: true, status: true, type: true, contactId: true } })
     if (!before) return { error: "Invoice not found" }
+    const resolved = resolveInvoiceStatus({ requested: payload.status, isProforma, current: before.status })
+    if ("error" in resolved) return { error: resolved.error }
+    payload = { ...payload, status: resolved.status as InvoiceStatus }
     if (!isProforma && LIVE_FOR_CREDIT.includes(payload.status)) {
       const already = before.type !== "PROFORMA" && LIVE_FOR_CREDIT.includes(before.status) && before.contactId === payload.contact_id ? Number(before.total) : 0
       await assertCreditLimit(tenantId, payload.contact_id, summary.grandTotal - already)
@@ -531,7 +569,7 @@ export async function updateInvoice(
                 hsnSacCode: li.hsn_sac || null,
                 quantity: li.qty,
                 unitPrice: li.unit_price,
-                ...invoiceItemTaxColumns(li.qty, li.unit_price, isTaxExempt ? 0 : cleanTaxRate(li.tax_percent), supplyType),
+                ...invoiceItemTaxColumns(li.qty, li.unit_price, isTaxExempt ? 0 : cleanTaxRate(li.tax_percent), supplyType, discountFraction),
               }
             }),
           },
@@ -570,17 +608,17 @@ export async function updateInvoice(
             })
           }
         } else {
-          await recordTransaction({
+          await recordContactTransaction(tenantId, {
             contactId,
             type: "INVOICE",
             amount: newTotal,
             referenceId: payload.id,
             description: `Invoice ${payload.invoice_number} updated`,
-            date: new Date(payload.invoice_date),
+            date: new Date(payload.invoice_date || Date.now()),
           })
         }
       } catch (ledgerError) {
-        console.error("Ledger update failed for invoice:", ledgerError)
+        await reportCaught(ledgerError, "updateInvoice: customer balance entry", { tenantId, invoiceId: payload.id })
       }
     }
 
@@ -593,6 +631,7 @@ export async function updateInvoice(
     return { error: null }
   } catch (error) {
     console.error("updateInvoice error:", errorMessage(error))
+    if ((error as { code?: unknown }).code === "P2002") return { error: `Invoice number ${payload.invoice_number} is already used. Choose another number.` }
     return { error: errorMessage(error) || "Failed to update invoice" }
   }
 }
@@ -644,7 +683,7 @@ export async function convertProformaToInvoice(
     // Record in Customer Ledger
     if (proforma.contactId) {
       try {
-        await recordTransaction({
+        await recordContactTransaction(tenantId, {
           contactId: proforma.contactId,
           type: "INVOICE",
           amount: Number(proforma.total),

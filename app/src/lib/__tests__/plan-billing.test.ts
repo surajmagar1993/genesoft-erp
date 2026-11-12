@@ -4,6 +4,9 @@ const db = vi.hoisted(() => ({
     pricingPlan: { findMany: vi.fn() },
     tenant: { findUnique: vi.fn(), update: vi.fn() },
     adminAuditLog: { create: vi.fn() },
+    // The plan change runs in one transaction with the settings row locked
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
 }))
 vi.mock("@/lib/prisma", () => ({ prisma: db }))
 
@@ -24,6 +27,8 @@ beforeEach(() => {
     vi.clearAllMocks()
     db.pricingPlan.findMany.mockResolvedValue([])
     db.tenant.findUnique.mockResolvedValue(tenant())
+    db.$transaction.mockImplementation(async (fn: (tx: typeof db) => unknown) => fn(db))
+    db.$queryRaw.mockImplementation(async () => [{ settings: (await db.tenant.findUnique())?.settings ?? {} }])
 })
 
 describe("getEffectivePricing", () => {

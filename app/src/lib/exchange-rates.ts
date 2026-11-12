@@ -29,16 +29,18 @@ export async function getExchangeRate(fromCurrency: string, toCurrency: string):
 
   // 2. Fetch Fresh Rates
   try {
+    if (!/^[A-Z]{3}$/.test(fromCurrency) || !/^[A-Z]{3}$/.test(toCurrency)) throw new Error(`Not a currency pair: ${fromCurrency} -> ${toCurrency}`)
     const response = await fetch(
-      `https://api.frankfurter.app/latest?from=${fromCurrency}&to=${toCurrency}`
+      `https://api.frankfurter.app/latest?from=${fromCurrency}&to=${toCurrency}`,
+      { signal: AbortSignal.timeout(5000), cache: "no-store" }
     )
+    if (!response.ok) throw new Error(`Rate service answered ${response.status}`)
     const data = await response.json()
 
-    if (!data.rates || !data.rates[toCurrency]) {
+    const rate = Number(data.rates?.[toCurrency])
+    if (!Number.isFinite(rate) || rate <= 0) {
       throw new Error(`Rate not found for ${fromCurrency} -> ${toCurrency}`)
     }
-
-    const rate = data.rates[toCurrency]
 
     // 3. Update Cache
     await prisma.exchangeRateCache.upsert({
@@ -62,18 +64,13 @@ export async function getExchangeRate(fromCurrency: string, toCurrency: string):
 
     return rate
   } catch (error) {
-    console.error("Exchange Rate Fetch Error:", error)
-    // If fetch fails, fallback to old cache if available, or a hardcoded fallback
-    if (cached) return Number(cached.rate)
-    
-    // Hardcoded Fallbacks for P1
-    const fallbacks: Record<string, number> = {
-      "USD_INR": 83.00,
-      "AED_INR": 22.60,
-      "SAR_INR": 22.10,
-      "INR_USD": 0.012,
+    // The last real rate we saw is better than none. With no rate at all there is nothing
+    // honest to convert with: the caller is told, and money isn't posted at a made-up rate.
+    if (cached) {
+      console.error(`Exchange rate ${fromCurrency} -> ${toCurrency}: using the rate saved on ${cached.updatedAt.toISOString()}`, error)
+      return Number(cached.rate)
     }
-    return fallbacks[`${fromCurrency}_${toCurrency}`] || 1
+    throw new Error(`No exchange rate available for ${fromCurrency} to ${toCurrency} right now. Try again in a few minutes.`)
   }
 }
 

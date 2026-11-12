@@ -331,15 +331,22 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
         case "creditNote": {
             const cn = await tx.creditNote.findFirst({
                 where: { id: src.id, tenantId },
-                select: { creditNoteNumber: true, status: true, issueDate: true, subtotal: true, taxAmount: true, total: true, currencyCode: true, contactId: true },
+                select: {
+                    creditNoteNumber: true, status: true, issueDate: true, subtotal: true, taxAmount: true, total: true, currencyCode: true, contactId: true,
+                    invoice: { select: { items: { select: { igstAmount: true } } } },
+                },
             })
             const sourceId = `credit-note:${src.id}`
             if (!cn || !LIVE_CREDIT_NOTE.includes(cn.status)) return [{ sourceType: "INVOICE", sourceId, draft: null }]
             const tax = n(cn.taxAmount)
             const total = n(cn.total)
-            // Credit note lines don't keep a CGST/SGST/IGST split: Indian tax goes back half CGST, half SGST unless the note is all IGST
+            // Credit note lines don't keep a CGST/SGST/IGST split. Indian tax goes back the way the
+            // invoice charged it: IGST for an inter-state sale, otherwise half CGST and half SGST.
+            const interState = (cn.invoice?.items ?? []).some((it: { igstAmount: unknown }) => n(it.igstAmount) > 0)
             const taxLines: DraftLine[] = tax === 0 ? [] : mode === "IN_GST"
-                ? [{ role: "CGST", debit: tax / 2, contactId: cn.contactId }, { role: "SGST", debit: tax / 2, contactId: cn.contactId }]
+                ? interState
+                    ? [{ role: "IGST", debit: tax, contactId: cn.contactId }]
+                    : [{ role: "CGST", debit: tax / 2, contactId: cn.contactId }, { role: "SGST", debit: tax / 2, contactId: cn.contactId }]
                 : [{ role: "OUTPUT_TAX", debit: tax, contactId: cn.contactId }]
             return [{
                 sourceType: "INVOICE",

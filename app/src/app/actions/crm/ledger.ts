@@ -1,9 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
-import { revalidatePath } from "next/cache"
-import { recordContactTransaction, type RecordTransactionPayload } from "@/lib/contact-ledger"
+import { getTenantId } from "@/lib/get-tenant-id"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = ["crm", "sales", "finance"] as const
@@ -33,17 +31,6 @@ export interface LedgerSummary {
 export interface CustomerLedgerData {
   entries: LedgerEntry[]
   summary: LedgerSummary
-}
-
-/**
- * Records a financial transaction in the ledger and updates the contact's running balance.
- * Normalizes the amount to the tenant's base currency for balance tracking.
- */
-export async function recordTransaction(payload: RecordTransactionPayload) {
-  const tenantId = await getTenantWriterId(MODULE)
-  const entry = await recordContactTransaction(tenantId, payload)
-  revalidatePath(`/crm/contacts/${payload.contactId}`)
-  return entry
 }
 
 /**

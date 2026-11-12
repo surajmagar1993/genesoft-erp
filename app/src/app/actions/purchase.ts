@@ -439,31 +439,47 @@ async function _receiveGoods(data: {
     const tenantId = await getTenantWriterId(MODULE)
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    const performedBy = user?.email || "Procurement Officer"
+    const performedBy = user?.email || null
 
     const po = await prisma.purchaseOrder.findFirst({
         where: { id: data.purchaseOrderId, tenantId },
-        include: { items: true, warehouse: true }
+        select: { id: true, orderNumber: true, status: true, warehouseId: true }
     })
     if (!po) throw new Error("Purchase Order not found")
+    if (po.status === "DRAFT") throw new Error("Send or approve this purchase order before receiving goods against it")
+    if (po.status === "CANCELLED") throw new Error("A cancelled purchase order can't receive goods")
+    if (po.status === "RECEIVED") throw new Error("This purchase order has already been received in full")
 
     const targetWarehouseId = data.warehouseId || po.warehouseId
     if (!targetWarehouseId) throw new Error("Receiving warehouse is required")
+    // The warehouse must be this business's own
+    await assertTenantRefs(tenantId, { warehouse: targetWarehouseId })
+    if (!Array.isArray(data.receivedItems) || data.receivedItems.length === 0) throw new Error("Enter the quantity received for at least one line")
 
     // Transactional Goods Receipt Intake
     const txResult = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+        // Lock the order and read its lines again inside the transaction, so two receipts
+        // saved at the same moment can't both count the same goods
+        await tx.$queryRaw`select id from purchase_orders where id = ${po.id}::uuid and tenant_id = ${tenantId}::uuid for update`
+        const items = await tx.purchaseOrderItem.findMany({ where: { purchaseOrderId: po.id } })
         let allItemsFullyReceived = true
+        let receivedSomething = false
 
         for (const itemInput of data.receivedItems) {
             const qtyReceivedNow = Number(itemInput.quantity)
-            if (qtyReceivedNow <= 0) continue
+            if (!Number.isFinite(qtyReceivedNow) || qtyReceivedNow < 0) throw new Error("Enter each received quantity as zero or more")
+            if (qtyReceivedNow === 0) continue
 
-            const itemRecord = po.items.find((i) => i.id === itemInput.itemId)
-            if (!itemRecord) continue
+            const itemRecord = items.find((i) => i.id === itemInput.itemId)
+            if (!itemRecord) throw new Error("A line doesn't belong to this purchase order")
 
             const prevReceived = Number(itemRecord.receivedQty)
             const orderedQty = Number(itemRecord.quantity)
             const newReceived = prevReceived + qtyReceivedNow
+            if (newReceived > orderedQty + 1e-9) {
+                throw new Error(`"${itemRecord.description}": ${orderedQty - prevReceived} left to receive, you entered ${qtyReceivedNow}`)
+            }
+            receivedSomething = true
 
             if (newReceived < orderedQty) {
                 allItemsFullyReceived = false
@@ -472,25 +488,13 @@ async function _receiveGoods(data: {
             // 1. Update receivedQty on PurchaseOrderItem
             await tx.purchaseOrderItem.update({
                 where: { id: itemRecord.id },
-                data: { receivedQty: newReceived }
+                data: { receivedQty: { increment: qtyReceivedNow } }
             })
 
             // 2. If item is mapped to a product catalog item, increment inventory
             if (itemRecord.productId) {
-                // Fetch existing warehouse stock
-                const existingStock = await tx.warehouseStock.findUnique({
-                    where: {
-                        warehouseId_productId: {
-                            warehouseId: targetWarehouseId,
-                            productId: itemRecord.productId
-                        }
-                    }
-                })
-                const prevWhQty = existingStock ? Number(existingStock.quantity) : 0
-                const newWhQty = prevWhQty + qtyReceivedNow
-
-                // Upsert WarehouseStock
-                await tx.warehouseStock.upsert({
+                // Add to the warehouse's stock (an atomic increment, read back for the movement record)
+                const stock = await tx.warehouseStock.upsert({
                     where: {
                         warehouseId_productId: {
                             warehouseId: targetWarehouseId,
@@ -501,23 +505,20 @@ async function _receiveGoods(data: {
                         tenantId,
                         warehouseId: targetWarehouseId,
                         productId: itemRecord.productId,
-                        quantity: newWhQty,
-                        reorderPoint: 10
+                        quantity: qtyReceivedNow,
                     },
                     update: {
-                        quantity: newWhQty
-                    }
+                        quantity: { increment: qtyReceivedNow }
+                    },
+                    select: { quantity: true }
                 })
+                const newWhQty = Number(stock.quantity)
+                const prevWhQty = newWhQty - qtyReceivedNow
 
                 // Increment Product Aggregate Stock
-                const prod = await tx.product.findUnique({
-                    where: { id: itemRecord.productId },
-                    select: { stockQty: true }
-                })
-                const prevProdQty = prod ? Number(prod.stockQty) : 0
-                await tx.product.update({
-                    where: { id: itemRecord.productId },
-                    data: { stockQty: prevProdQty + qtyReceivedNow }
+                await tx.product.updateMany({
+                    where: { id: itemRecord.productId, tenantId },
+                    data: { stockQty: { increment: qtyReceivedNow } }
                 })
 
                 // Record immutable StockMovement ledger entry
@@ -530,13 +531,14 @@ async function _receiveGoods(data: {
                         quantity: qtyReceivedNow,
                         previousQty: prevWhQty,
                         newQty: newWhQty,
-                        reason: data.notes?.trim() || `Goods receipt for ${po.orderNumber}`,
+                        reason: data.notes?.trim().slice(0, 500) || `Goods receipt for ${po.orderNumber}`,
                         referenceNo: po.orderNumber,
                         performedBy
                     }
                 })
             }
         }
+        if (!receivedSomething) throw new Error("Enter the quantity received for at least one line")
 
         // Determine new PO status
         const updatedItems = await tx.purchaseOrderItem.findMany({

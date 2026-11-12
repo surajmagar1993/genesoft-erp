@@ -139,6 +139,27 @@ export async function reportError(report: ErrorReport): Promise<void> {
     }
 }
 
+
+/**
+ * For a failure the code caught and carried on from (a side step of a save, a
+ * background job): puts it in System Logs and the alert email like any other
+ * server error. `where` says what was being done ("createInvoice: customer
+ * balance entry"); `ids` are record ids that help find it (never secrets).
+ * Never throws.
+ */
+export async function reportCaught(err: unknown, where: string, ids: Record<string, string | number | null | undefined> = {}): Promise<void> {
+    const detail = Object.entries(ids).filter(([, v]) => v !== null && v !== undefined && v !== "").map(([k, v]) => `${k}=${v}`).join(" ")
+    const message = err instanceof Error ? err.message : String(err)
+    console.error(`${where}:`, err)
+    await reportError({
+        message: `${where}: ${message}${detail ? ` (${detail})` : ""}`,
+        stack: err instanceof Error ? err.stack : undefined,
+        path: where,
+        source: "server",
+        kind: "caught",
+    })
+}
+
 /** Deletes logs older than the retention period (SYSTEM_LOG_RETENTION_DAYS, default 30). */
 export async function pruneSystemLogs(): Promise<number> {
     const days = Math.max(1, Number(process.env.SYSTEM_LOG_RETENTION_DAYS) || 30)

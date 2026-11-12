@@ -1,5 +1,6 @@
 "use server"
 
+import { maskSecret, openSecret, sealSecret } from "@/lib/secret-box"
 import { prisma } from "@/lib/prisma"
 import { nextSequence } from "@/lib/sequence"
 import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
@@ -14,6 +15,29 @@ import type {
 import { PREBUILT_RECIPES } from "@/types/workflows"
 import { errorMessage } from "@/lib/utils";
 import type { Prisma } from "@prisma/client"
+
+/**
+ * A webhook's signing secret is stored sealed and never sent back to the
+ * browser: screens get a masked value, and saving that masked value again
+ * keeps the stored secret.
+ */
+function sealActionSecrets(actions: WorkflowAction[], existing: WorkflowAction[] = []): WorkflowAction[] {
+    return (actions || []).map((action, i) => {
+        const secret = action.params?.webhookSecret
+        if (!secret) return action
+        const kept = existing[i]?.params?.webhookSecret
+        const unchanged = kept && (secret === maskSecret(openSecret(kept)) || secret === kept)
+        return { ...action, params: { ...action.params, webhookSecret: unchanged ? kept : sealSecret(String(secret).slice(0, 500)) } }
+    })
+}
+
+function maskActionSecrets(actions: WorkflowAction[]): WorkflowAction[] {
+    return (actions || []).map((action) =>
+        action.params?.webhookSecret
+            ? { ...action, params: { ...action.params, webhookSecret: maskSecret(openSecret(action.params.webhookSecret)) } }
+            : action
+    )
+}
 
 export async function getWorkflowsOverview(): Promise<{
     rules: WorkflowRuleItem[]
@@ -55,7 +79,7 @@ export async function getWorkflowsOverview(): Promise<{
         triggerEvent: r.triggerEvent as TriggerEventType,
         entityType: r.entityType,
         conditions: (r.conditions as unknown as WorkflowCondition[]) || [],
-        actions: (r.actions as unknown as WorkflowAction[]) || [],
+        actions: maskActionSecrets((r.actions as unknown as WorkflowAction[]) || []),
         isActive: r.isActive,
         executionCount: r.executionCount,
         lastRunAt: r.lastRunAt,
@@ -121,7 +145,7 @@ export async function createWorkflowRule(input: {
                 triggerEvent: input.triggerEvent,
                 entityType: input.entityType,
                 conditions: input.conditions as unknown as Prisma.InputJsonValue,
-                actions: input.actions as unknown as Prisma.InputJsonValue,
+                actions: sealActionSecrets(input.actions) as unknown as Prisma.InputJsonValue,
                 isActive: input.isActive ?? true,
                 executionCount: 0
             }
@@ -138,7 +162,7 @@ export async function createWorkflowRule(input: {
                 triggerEvent: created.triggerEvent as TriggerEventType,
                 entityType: created.entityType,
                 conditions: (created.conditions as unknown as WorkflowCondition[]) || [],
-                actions: (created.actions as unknown as WorkflowAction[]) || [],
+                actions: maskActionSecrets((created.actions as unknown as WorkflowAction[]) || []),
                 isActive: created.isActive,
                 executionCount: created.executionCount,
                 lastRunAt: created.lastRunAt,
@@ -167,6 +191,8 @@ export async function updateWorkflowRule(
     try {
         const tenantId = await getTenantAdminId()
 
+        const current = await prisma.workflowRule.findFirst({ where: { id, tenantId }, select: { actions: true } })
+        if (!current) return { success: false, error: "Workflow rule not found" }
         const updated = await prisma.workflowRule.update({
             where: { id, tenantId },
             data: {
@@ -175,7 +201,7 @@ export async function updateWorkflowRule(
                 triggerEvent: input.triggerEvent,
                 entityType: input.entityType,
                 conditions: input.conditions as unknown as Prisma.InputJsonValue,
-                actions: input.actions as unknown as Prisma.InputJsonValue,
+                actions: sealActionSecrets(input.actions, (current.actions as unknown as WorkflowAction[]) || []) as unknown as Prisma.InputJsonValue,
                 isActive: input.isActive ?? true
             }
         })
@@ -191,7 +217,7 @@ export async function updateWorkflowRule(
                 triggerEvent: updated.triggerEvent as TriggerEventType,
                 entityType: updated.entityType,
                 conditions: (updated.conditions as unknown as WorkflowCondition[]) || [],
-                actions: (updated.actions as unknown as WorkflowAction[]) || [],
+                actions: maskActionSecrets((updated.actions as unknown as WorkflowAction[]) || []),
                 isActive: updated.isActive,
                 executionCount: updated.executionCount,
                 lastRunAt: updated.lastRunAt,

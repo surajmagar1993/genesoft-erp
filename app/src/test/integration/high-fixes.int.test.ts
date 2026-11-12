@@ -43,7 +43,7 @@ describe("H2 credit note with restock", () => {
         const wh = await warehouse(tenant.id)
         const p = await product(tenant.id, 5)
         await prisma.warehouseStock.create({ data: { tenantId: tenant.id, warehouseId: wh.id, productId: p.id, quantity: 5 } })
-        await createCreditNote({ contactId: customer.id, reason: "GOODS_RETURN" as never, items: [{ productId: p.id, description: "Returned", quantity: 2, unitPrice: 100, taxRate: 18, restockInventory: true, warehouseId: wh.id }] })
+        unwrap(await createCreditNote({ contactId: customer.id, reason: "GOODS_RETURN" as never, items: [{ productId: p.id, description: "Returned", quantity: 2, unitPrice: 100, taxRate: 18, restockInventory: true, warehouseId: wh.id }] }))
         expect(Number((await prisma.warehouseStock.findFirstOrThrow({ where: { warehouseId: wh.id, productId: p.id } })).quantity)).toBe(7)
         const mv = await prisma.stockMovement.findFirstOrThrow({ where: { tenantId: tenant.id, productId: p.id } })
         expect(mv).toMatchObject({ type: "RETURN", referenceNo: expect.stringMatching(/^CN-/) })

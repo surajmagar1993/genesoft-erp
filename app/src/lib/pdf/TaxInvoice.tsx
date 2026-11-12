@@ -13,7 +13,7 @@ import {
   Image,
 } from "@react-pdf/renderer"
 import type { InvoiceDB, InvoiceLineItemDB } from "@/app/actions/sales/invoices"
-import { computeInvoiceGstSummary, computeHsnSummary } from "@/lib/gst-engine"
+import { computeInvoiceGstSummary, computeHsnSummary, invoiceDiscountFraction } from "@/lib/gst-engine"
 import { COMPANY } from "@/lib/constants/company"
 import { getCurrencySymbol } from "@/lib/utils"
 
@@ -481,7 +481,8 @@ export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoicePr
       hsnSac: li.hsn_sac,
       isExempt: isTaxExempt,
     })),
-    supplyType
+    supplyType,
+    invoiceDiscountFraction(items.map((li) => ({ qty: li.qty, unitPrice: li.unit_price })), invoice.discount ?? 0, invoice.discount_type ?? "PERCENT")
   )
 
   // Bank Info from tenant.settings

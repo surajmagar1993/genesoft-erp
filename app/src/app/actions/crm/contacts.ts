@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { recordContactTransaction } from "@/lib/contact-ledger"
-import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
+import { getTenantId, getTenantManagerId, getTenantWriterId, hasModuleAccess } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { planLimitError } from "@/lib/plan-limits"
 import { getTenantDefaults } from "@/lib/tenant-defaults"
@@ -196,9 +196,14 @@ export async function createContact(
       } else if (formData.email) {
         displayName = formData.email.split("@")[0]
       } else {
-        displayName = "New Contact"
+        // A contact is known by a name or an email; never by a made-up name
+        return { error: "Enter a name, a company name or an email." }
       }
     }
+    // The credit limit is a finance control: only people with full Finance access set it
+    const mayControlCredit = await hasModuleAccess("finance", "FULL")
+    const openingBalance = Number(formData.balance || 0)
+    if (!Number.isFinite(openingBalance)) return { error: "The opening balance isn't a number." }
 
     const limit = await planLimitError(tenantId, "contacts")
     if (limit) return { error: limit }
@@ -233,14 +238,19 @@ export async function createContact(
         isTaxExempt: Boolean(formData.is_tax_exempt),
         taxExemptionReason: formData.tax_exemption_reason || null,
         taxExemptionCertificate: formData.tax_exemption_certificate || null,
-        creditLimit: formData.credit_limit ? formData.credit_limit : null,
-        balance: formData.balance || 0,
+        creditLimit: mayControlCredit && formData.credit_limit ? formData.credit_limit : null,
+        balance: 0,
         billingAddress: (formData.billing_address || {}) as Prisma.InputJsonObject,
         shippingAddress: (formData.shipping_address || {}) as Prisma.InputJsonObject,
         notes: formData.notes || null,
         isActive: formData.is_active ?? true,
       },
     })
+
+    // An opening balance is an entry on the customer's statement, not a bare number
+    if (openingBalance !== 0) {
+      await recordContactTransaction(tenantId, { contactId: created.id, type: "OPENING_BALANCE", amount: openingBalance, description: "Opening balance" })
+    }
 
     revalidatePath("/crm/contacts")
     return { error: null, id: created.id }
@@ -265,6 +275,10 @@ export async function updateContact(
         displayName = `${formData.first_name || ""} ${formData.last_name || ""}`.trim()
       }
     }
+
+    // The balance belongs to the ledger (invoices, payments, credit notes): the form never writes it.
+    // The credit limit changes only for people with full Finance access.
+    const mayControlCredit = await hasModuleAccess("finance", "FULL")
 
     await prisma.contact.update({
       where: {
@@ -298,8 +312,7 @@ export async function updateContact(
         isTaxExempt: formData.is_tax_exempt !== undefined ? Boolean(formData.is_tax_exempt) : undefined,
         taxExemptionReason: formData.tax_exemption_reason,
         taxExemptionCertificate: formData.tax_exemption_certificate,
-        creditLimit: formData.credit_limit,
-        balance: formData.balance,
+        creditLimit: mayControlCredit ? formData.credit_limit : undefined,
         billingAddress: formData.billing_address as Prisma.InputJsonObject | undefined,
         shippingAddress: formData.shipping_address as Prisma.InputJsonObject | undefined,
         notes: formData.notes,

@@ -119,28 +119,48 @@ export interface LineItemGst extends GstSplit {
 }
 
 /**
- * Compute all GST amounts for a single line item.
+ * The share of every line that a document-level discount takes off (0 to 1).
+ * A discount is never negative and never more than the lines add up to.
+ */
+export function invoiceDiscountFraction(
+  lineItems: { qty: number; unitPrice: number }[],
+  discount: number,
+  discountType: "PERCENT" | "FIXED"
+): number {
+  const subtotal = lineItems.reduce((sum, l) => sum + l.qty * l.unitPrice, 0)
+  if (!(subtotal > 0) || !Number.isFinite(discount) || discount <= 0) return 0
+  if (discountType === "PERCENT") return Math.min(discount, 100) / 100
+  return Math.min(discount, subtotal) / subtotal
+}
+
+/**
+ * Compute all GST amounts for a single line item. Tax is charged on the value
+ * after the document's discount (`discountFraction`, from
+ * invoiceDiscountFraction); `taxableAmount` stays the line's value before it,
+ * so the document reads: lines, less discount, plus tax.
  */
 export function computeLineItemGst(
   qty: number,
   unitPrice: number,
   gstRate: number,
-  supplyType: SupplyType
+  supplyType: SupplyType,
+  discountFraction: number = 0
 ): LineItemGst {
   const taxableAmount = qty * unitPrice
+  const taxBase = taxableAmount * (1 - Math.min(Math.max(discountFraction, 0), 1))
   const split = computeGstSplit(gstRate, supplyType)
 
   const cgstAmount = parseFloat(
-    ((taxableAmount * split.cgstPercent) / 100).toFixed(2)
+    ((taxBase * split.cgstPercent) / 100).toFixed(2)
   )
   const sgstAmount = parseFloat(
-    ((taxableAmount * split.sgstPercent) / 100).toFixed(2)
+    ((taxBase * split.sgstPercent) / 100).toFixed(2)
   )
   const igstAmount = parseFloat(
-    ((taxableAmount * split.igstPercent) / 100).toFixed(2)
+    ((taxBase * split.igstPercent) / 100).toFixed(2)
   )
   const vatAmount = parseFloat(
-    ((taxableAmount * split.vatPercent) / 100).toFixed(2)
+    ((taxBase * split.vatPercent) / 100).toFixed(2)
   )
   const totalTaxAmount = cgstAmount + sgstAmount + igstAmount + vatAmount
 
@@ -217,11 +237,13 @@ export function computeInvoiceGstSummary(
   let exemptSubtotal = 0
 
   const invoiceIsExempt = Boolean(options?.isTaxExempt)
+  // The discount comes off before tax: tax is charged on what the customer actually pays for the goods
+  const discountFraction = invoiceDiscountFraction(lineItems, discount, discountType)
 
   for (const item of lineItems) {
     const itemIsExempt = invoiceIsExempt || Boolean(item.isExempt)
     const effectiveRate = itemIsExempt ? 0 : item.gstRate
-    const gst = computeLineItemGst(item.qty, item.unitPrice, effectiveRate, supplyType)
+    const gst = computeLineItemGst(item.qty, item.unitPrice, effectiveRate, supplyType, discountFraction)
     subtotal += gst.taxableAmount
     if (itemIsExempt) {
       exemptSubtotal += gst.taxableAmount
@@ -233,14 +255,11 @@ export function computeInvoiceGstSummary(
     }
   }
 
-  const discountAmount =
-    discountType === "PERCENT"
-      ? parseFloat(((subtotal * discount) / 100).toFixed(2))
-      : parseFloat(discount.toFixed(2))
+  const discountAmount = parseFloat((subtotal * discountFraction).toFixed(2))
 
   const totalTax = parseFloat((cgstTotal + sgstTotal + igstTotal + vatTotal).toFixed(2))
   const grandTotal = parseFloat(
-    (subtotal + totalTax - discountAmount).toFixed(2)
+    (subtotal - discountAmount + totalTax).toFixed(2)
   )
 
   let taxExemptionNotice: string | undefined
@@ -285,14 +304,17 @@ export interface HsnSummaryLineItem extends SummaryLineItem {
 
 export function computeHsnSummary(
   lineItems: HsnSummaryLineItem[],
-  supplyType: SupplyType
+  supplyType: SupplyType,
+  /** From invoiceDiscountFraction: the summary shows the value tax was charged on */
+  discountFraction: number = 0
 ): HsnSummaryItem[] {
   const map = new Map<string, HsnSummaryItem>()
 
   for (const item of lineItems) {
     const hsn = item.hsnSac || "Unspecified"
     const effectiveRate = item.isExempt ? 0 : item.gstRate
-    const gst = computeLineItemGst(item.qty, item.unitPrice, effectiveRate, supplyType)
+    const gross = computeLineItemGst(item.qty, item.unitPrice, effectiveRate, supplyType, discountFraction)
+    const gst = { ...gross, taxableAmount: parseFloat((gross.taxableAmount * (1 - discountFraction)).toFixed(2)) }
 
     const existing = map.get(hsn)
     if (existing) {

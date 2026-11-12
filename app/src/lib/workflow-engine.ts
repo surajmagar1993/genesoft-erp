@@ -1,3 +1,4 @@
+import { openSecret } from "@/lib/secret-box"
 import { createHmac } from "node:crypto"
 import { after } from "next/server"
 import { Resend } from "resend"
@@ -132,7 +133,8 @@ async function runAction(
             const body = JSON.stringify({ event, rule: ruleName, data: payload, sentAt: new Date().toISOString() })
             const headers: Record<string, string> = { "content-type": "application/json" }
             if (params.webhookSecret) {
-                headers["x-genesoft-signature"] = createHmac("sha256", params.webhookSecret).update(body).digest("hex")
+                // Stored sealed (older rules may still hold it as plain text; openSecret returns those as they are)
+                headers["x-genesoft-signature"] = createHmac("sha256", openSecret(params.webhookSecret)).update(body).digest("hex")
             }
             const res = await fetch(url, { method: "POST", headers, body, redirect: "manual", signal: AbortSignal.timeout(5000) })
             return { actionType: action.actionType, summary: `POST ${new URL(url).host} → ${res.status}`, success: res.ok }

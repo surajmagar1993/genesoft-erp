@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 import { pick, toRow, toRows, type PgRow } from "@/lib/pg-row"
-import { computeInvoiceGstSummary, computeLineItemGst } from "@/lib/gst-engine"
+import { computeInvoiceGstSummary, computeLineItemGst, invoiceDiscountFraction } from "@/lib/gst-engine"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { isUuid, errorMessage } from "@/lib/utils"
 
@@ -147,17 +147,22 @@ export async function getBillById(id: string) {
  * is kept.
  */
 function billFigures(items: BillItem[], discount: number, formTotal?: number) {
+  if (!Array.isArray(items) || items.length === 0) throw new Error("Add at least one line item")
+  const d = Number(discount || 0)
+  if (!Number.isFinite(d) || d < 0) throw new Error("Discount must be zero or more")
+  const gross = items.reduce((sum, it) => sum + Number(it.quantity) * Number(it.unitPrice), 0)
+  if (d > gross + 0.005) throw new Error("The discount can't be more than the total of the lines")
+  // The discount comes off before tax, as on invoices
+  const fraction = invoiceDiscountFraction(items.map((it) => ({ qty: Number(it.quantity), unitPrice: Number(it.unitPrice) })), d, "FIXED")
   const variants = (["intra", "inter"] as const).map((supply) => {
     const lines = items.map((it, i) => {
       const q = Number(it.quantity), p = Number(it.unitPrice), t = Number(it.taxPercent ?? 0)
       if (!Number.isFinite(q) || q <= 0) throw new Error(`Line ${i + 1}: quantity must be more than 0`)
       if (!Number.isFinite(p) || p < 0) throw new Error(`Line ${i + 1}: price must be zero or more`)
       if (!Number.isFinite(t) || t < 0 || t > 100) throw new Error(`Line ${i + 1}: tax must be between 0 and 100%`)
-      const g = computeLineItemGst(q, p, t, supply)
+      const g = computeLineItemGst(q, p, t, supply, fraction)
       return { ...it, quantity: q, unitPrice: p, taxPercent: t, taxAmount: g.totalTaxAmount, lineTotal: g.lineTotal }
     })
-    const d = Number(discount || 0)
-    if (!Number.isFinite(d) || d < 0) throw new Error("Discount must be zero or more")
     const sum = computeInvoiceGstSummary(lines.map((l) => ({ qty: l.quantity, unitPrice: l.unitPrice, gstRate: l.taxPercent })), supply, d, "FIXED")
     return { lines, subtotal: sum.subtotal, taxAmount: sum.totalTax, discount: d, total: sum.grandTotal }
   })
@@ -179,7 +184,7 @@ const billItemRows = (billId: string, lines: BillItem[]) =>
     id: crypto.randomUUID(),
   }))
 
-import { recordTransaction } from "@/app/actions/crm/ledger"
+import { recordContactTransaction } from "@/lib/contact-ledger"
 import { createNotification } from "@/app/actions/notifications"
 import { logTenantAudit } from "@/lib/tenant-audit"
 import { safeAction } from "@/lib/safe-action"
@@ -244,7 +249,7 @@ async function _createBill(data: BillData) {
   // 3. LEDGER INTEGRATION (AP)
   if (data.status !== "DRAFT") {
     try {
-        await recordTransaction({
+        await recordContactTransaction(tenantId, {
             contactId: data.contactId,
             type: "INVOICE", // Technically a Vendor Invoice
             amount: -Math.abs(data.total), // Credit to vendor (we owe them more)
@@ -348,7 +353,7 @@ async function _updateBill(id: string, data: Partial<BillData>) {
             }
         } else {
             // Create if missing
-            await recordTransaction({
+            await recordContactTransaction(tenantId, {
                 contactId: data.contactId,
                 type: "INVOICE",
                 amount: newTotal,

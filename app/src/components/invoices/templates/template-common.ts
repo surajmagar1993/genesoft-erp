@@ -1,5 +1,5 @@
 import { InvoiceDB } from "@/app/actions/sales/invoices"
-import { computeInvoiceGstSummary, computeHsnSummary, SupplyType } from "@/lib/gst-engine"
+import { computeInvoiceGstSummary, computeHsnSummary, invoiceDiscountFraction, SupplyType } from "@/lib/gst-engine"
 import { COMPANY } from "@/lib/constants/company"
 import { localeForCurrency } from "@/lib/utils"
 
@@ -55,7 +55,7 @@ export function getInvoiceSummary(invoice: InvoiceDB) {
         }
     )
 
-    const hsnSummary = computeHsnSummary(lineItemsForGst, supplyType)
+    const hsnSummary = computeHsnSummary(lineItemsForGst, supplyType, invoiceDiscountFraction(lineItemsForGst, invoice.discount, invoice.discount_type || "FIXED"))
 
     const companyName = invoice.tenants?.name || COMPANY.name
     const companyGstin = invoice.supplier_gstin || COMPANY.gstin

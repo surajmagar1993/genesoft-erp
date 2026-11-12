@@ -54,7 +54,18 @@ export function wrapEmailHtml(params: {
     companyName?: string
     actionButton?: { label: string; url: string }
 }): string {
-    const { title, bodyContent, previewText = "", companyName = "Genesoft ERP", actionButton } = params
+    // Everything except the body is plain text that may come from a business or a customer
+    // (a subject built from a company name or a ticket title): it is escaped here, so it can
+    // never add markup to an email sent from the platform's address. The body arrives already
+    // compiled with escaped values.
+    const title = escapeHtml(params.title)
+    const previewText = escapeHtml(params.previewText ?? "")
+    const companyName = escapeHtml(params.companyName ?? "Genesoft ERP")
+    const { bodyContent } = params
+    // A button only for a real web link
+    const actionButton = params.actionButton && /^https?:\/\//i.test(params.actionButton.url.trim())
+        ? { label: escapeHtml(params.actionButton.label), url: escapeHtml(params.actionButton.url.trim()) }
+        : undefined
 
     const buttonSnippet = actionButton
         ? `

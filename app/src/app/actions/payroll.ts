@@ -376,7 +376,10 @@ async function _generatePayRun(
     notes?: string
 ) {
     const tenantId = await getTenantManagerId(MODULE)
+    if (!Number.isInteger(periodMonth) || periodMonth < 1 || periodMonth > 12) throw new Error("Choose a month from 1 to 12")
+    if (!Number.isInteger(periodYear) || periodYear < 2000 || periodYear > 2100) throw new Error("Enter a valid year")
     const payDate = new Date(payDateString)
+    if (Number.isNaN(payDate.getTime())) throw new Error("Enter a valid pay date")
 
     // Check if a run already exists for this period
     const existing = await prisma.payrollRun.findUnique({
@@ -654,14 +657,17 @@ async function _approvePayRun(payRunId: string) {
     if (!run) throw new Error("Payroll run not found")
     if (run.status !== "DRAFT") throw new Error("Only draft pay runs can be approved")
 
-    const updated = await prisma.payrollRun.update({
-        where: { id: payRunId },
+    // Only a run that is still a draft changes: two approvals at once can't both go through
+    const changed = await prisma.payrollRun.updateMany({
+        where: { id: payRunId, tenantId, status: "DRAFT" },
         data: {
             status: "APPROVED",
             approvedAt: new Date(),
             approvedById: user?.id || null
         }
     })
+    if (changed.count !== 1) throw new Error("This pay run has already been approved")
+    const updated = await prisma.payrollRun.findFirstOrThrow({ where: { id: payRunId, tenantId } })
 
     await postToLedger(tenantId, { kind: "payrollRun", id: payRunId })
     revalidatePath("/hr")
@@ -685,18 +691,21 @@ async function _processPayRun(
     })
 
     if (!run) throw new Error("Payroll run not found")
+    if (run.status === "PAID") throw new Error("This pay run has already been paid")
+    if (run.status !== "APPROVED") throw new Error("Approve the pay run before marking it paid")
 
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-        // Update run
-        await tx.payrollRun.update({
-            where: { id: payRunId },
+        // Only an approved, unpaid run is paid (a second click or a second person changes nothing)
+        const changed = await tx.payrollRun.updateMany({
+            where: { id: payRunId, tenantId, status: "APPROVED" },
             data: {
                 status: "PAID",
                 paidAt: new Date(),
-                paymentMethod,
-                paymentReference
+                paymentMethod: String(paymentMethod || "DIRECT_DEPOSIT").slice(0, 50),
+                paymentReference: paymentReference ? String(paymentReference).slice(0, 200) : null
             }
         })
+        if (changed.count !== 1) throw new Error("This pay run has already been paid")
 
         // Update all payslips
         await tx.payslip.updateMany({
