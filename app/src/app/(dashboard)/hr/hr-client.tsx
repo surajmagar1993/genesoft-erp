@@ -1605,7 +1605,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                 <Label htmlFor="emp-country">Country</Label>
                                 <AutoSuggestInput
                                     id="emp-country"
-                                    placeholder="e.g. India"
+                                    placeholder="Enter country"
                                     value={empCountry}
                                     onChange={(e) => setEmpCountry(e.target.value)}
                                     options={searchCountries(empCountry).map((c) => ({
@@ -1622,7 +1622,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                 <Label htmlFor="emp-state">State / Province</Label>
                                 <AutoSuggestInput
                                     id="emp-state"
-                                    placeholder="e.g. Maharashtra"
+                                    placeholder="Enter state or province"
                                     value={empState}
                                     onChange={(e) => setEmpState(e.target.value)}
                                     options={searchStates(empState, empCountry).map((s) => ({
@@ -1638,7 +1638,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                 <Label htmlFor="emp-city">City</Label>
                                 <AutoSuggestInput
                                     id="emp-city"
-                                    placeholder="e.g. Mumbai"
+                                    placeholder="Enter city"
                                     value={empCity}
                                     onChange={(e) => setEmpCity(e.target.value)}
                                     options={searchCities(empCity, empState, empCountry).map((c) => ({
@@ -1794,7 +1794,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                             <div className="space-y-1">
                                 <Label>Country</Label>
                                 <AutoSuggestInput
-                                    placeholder="e.g. India"
+                                    placeholder="Enter country"
                                     value={empCountry}
                                     onChange={(e) => setEmpCountry(e.target.value)}
                                     options={searchCountries(empCountry).map((c) => ({
@@ -1810,7 +1810,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                             <div className="space-y-1">
                                 <Label>State / Province</Label>
                                 <AutoSuggestInput
-                                    placeholder="e.g. Maharashtra"
+                                    placeholder="Enter state or province"
                                     value={empState}
                                     onChange={(e) => setEmpState(e.target.value)}
                                     options={searchStates(empState, empCountry).map((s) => ({
@@ -1825,7 +1825,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                             <div className="space-y-1">
                                 <Label>City</Label>
                                 <AutoSuggestInput
-                                    placeholder="e.g. Mumbai"
+                                    placeholder="Enter city"
                                     value={empCity}
                                     onChange={(e) => setEmpCity(e.target.value)}
                                     options={searchCities(empCity, empState, empCountry).map((c) => ({
@@ -1955,7 +1955,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                             <Label htmlFor="att-n">Notes / Remarks</Label>
                             <Input
                                 id="att-n"
-                                placeholder="Add notes (e.g., approved late arrival, remote shift)"
+                                placeholder="Add notes"
                                 value={attNotes}
                                 onChange={(e) => setAttNotes(e.target.value)}
                             />

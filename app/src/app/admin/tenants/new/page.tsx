@@ -112,7 +112,7 @@ export default function NewTenantPage() {
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-bold tracking-tight">Provision New Business Tenant</h1>
-                        <span className="bg-primary/10 text-primary text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                             Super Admin
                         </span>
                     </div>
@@ -162,7 +162,7 @@ export default function NewTenantPage() {
                                     placeholder="Enter administrative contact email"
                                     className="bg-background"
                                 />
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="text-xs text-muted-foreground">
                                     Saved as the workspace contact. No login is created for it: inviting users from here needs the
                                     Supabase service-role key, which isn&apos;t configured yet.
                                 </p>
@@ -181,7 +181,7 @@ export default function NewTenantPage() {
                                     placeholder="Enter unique subdomain or domain name"
                                     className="bg-background"
                                 />
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="text-xs text-muted-foreground">
                                     Leave blank to allow auto-generation or multi-tenant wildcard routing.
                                 </p>
                             </div>
@@ -319,7 +319,7 @@ export default function NewTenantPage() {
                                 placeholder="Enter trial duration in days"
                                 className="bg-background"
                             />
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                                 Set to 0 to provision without an active trial window.
                             </p>
                         </div>

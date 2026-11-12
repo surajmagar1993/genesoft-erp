@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { localeForCurrency } from "@/lib/utils"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition } from "react"
@@ -237,9 +238,9 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
     }
 
     // Finalize Statement Action
-    const handleFinalizeStatement = () => {
+    const handleFinalizeStatement = async () => {
         if (!data.activeStatement) return
-        if (!confirm(`Finalize and lock statement "${data.activeStatement.statementNumber}"? This will mark all matched transactions as audited & reconciled.`)) {
+        if (!(await confirmAction(`Finalize and lock statement "${data.activeStatement.statementNumber}"? This will mark all matched transactions as audited & reconciled.`))) {
             return
         }
         startTransition(async () => {
@@ -283,8 +284,8 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
     }
 
     // Delete Bank Account
-    const handleDeleteAccount = (acc: BankAccountRecord) => {
-        if (!confirm(`Are you sure you want to delete bank account "${acc.accountName}"?`)) return
+    const handleDeleteAccount = async (acc: BankAccountRecord) => {
+        if (!(await confirmAction(`Are you sure you want to delete bank account "${acc.accountName}"?`))) return
         startTransition(async () => {
             const res = await deleteBankAccount(acc.id)
             if (res.error) {
@@ -660,7 +661,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                         {data.kpis.unmatchedCount > 0 && (
                             <Badge
                                 variant="secondary"
-                                className="ml-1 px-1.5 py-0 text-[10px] bg-amber-500/20 text-amber-300 font-semibold"
+                                className="ml-1 px-1.5 py-0 text-xs bg-amber-500/20 text-amber-300 font-semibold"
                             >
                                 {data.kpis.unmatchedCount}
                             </Badge>
@@ -792,7 +793,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                                 </span>
                                                                 <Badge
                                                                     variant="outline"
-                                                                    className={`text-[10px] px-1.5 py-0 ${
+                                                                    className={`text-xs px-1.5 py-0 ${
                                                                         isDeposit
                                                                             ? "border-emerald-500/30 text-emerald-400 bg-emerald-500/5"
                                                                             : "border-rose-500/30 text-rose-400 bg-rose-500/5"
@@ -801,7 +802,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                                     {isDeposit ? "Deposit" : "Withdrawal"}
                                                                 </Badge>
                                                                 {isMatched ? (
-                                                                    <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-[10px] px-1.5 py-0 flex items-center gap-1">
+                                                                    <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 text-xs px-1.5 py-0 flex items-center gap-1">
                                                                         <Check className="h-2.5 w-2.5" />
                                                                         {txn.status}
                                                                         {txn.matchConfidence && ` (${txn.matchConfidence})`}
@@ -809,7 +810,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                                 ) : (
                                                                     <Badge
                                                                         variant="secondary"
-                                                                        className="bg-amber-500/10 text-amber-300 border-amber-500/30 text-[10px] px-1.5 py-0"
+                                                                        className="bg-amber-500/10 text-amber-300 border-amber-500/30 text-xs px-1.5 py-0"
                                                                     >
                                                                         Unmatched
                                                                     </Badge>
@@ -818,7 +819,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                             <p className="text-xs text-muted-foreground leading-relaxed">
                                                                 {txn.description}
                                                             </p>
-                                                            <div className="flex items-center gap-3 text-[11px] text-muted-foreground/80">
+                                                            <div className="flex items-center gap-3 text-xs text-muted-foreground/80">
                                                                 <span>Date: {formatDate(txn.transactionDate)}</span>
                                                                 {txn.reference && (
                                                                     <span>Ref: <code className="text-foreground">{txn.reference}</code></span>
@@ -883,7 +884,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                                 </>
                                                             ) : (
                                                                 <div className="flex items-center gap-1.5">
-                                                                    <span className="text-[11px] text-muted-foreground font-medium">
+                                                                    <span className="text-xs text-muted-foreground font-medium">
                                                                         {txn.payment && `Pmt: ${txn.payment.reference || txn.payment.id.substring(0, 6)}`}
                                                                         {txn.expense && `Exp: ${txn.expense.expenseNumber}`}
                                                                     </span>
@@ -941,7 +942,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                     <div className="flex items-center gap-1.5">
                                                         <Badge
                                                             variant="outline"
-                                                            className={`text-[9px] px-1 py-0 ${
+                                                            className={`text-xs px-1 py-0 ${
                                                                 c.source === "PAYMENT"
                                                                     ? "border-blue-500/30 text-blue-400"
                                                                     : "border-purple-500/30 text-purple-400"
@@ -956,7 +957,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                     <p className="text-muted-foreground mt-0.5 truncate max-w-[200px]">
                                                         {c.titleOrParty}
                                                     </p>
-                                                    <p className="text-[10px] text-muted-foreground/70 mt-1">
+                                                    <p className="text-xs text-muted-foreground/70 mt-1">
                                                         Date: {formatDate(c.date)}
                                                     </p>
                                                 </div>
@@ -968,14 +969,14 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                     {c.matchedTransactionId ? (
                                                         <Badge
                                                             variant="secondary"
-                                                            className="text-[9px] px-1 py-0 bg-emerald-500/10 text-emerald-400 mt-1"
+                                                            className="text-xs px-1 py-0 bg-emerald-500/10 text-emerald-400 mt-1"
                                                         >
                                                             Matched
                                                         </Badge>
                                                     ) : (
                                                         <Badge
                                                             variant="outline"
-                                                            className="text-[9px] px-1 py-0 text-muted-foreground mt-1"
+                                                            className="text-xs px-1 py-0 text-muted-foreground mt-1"
                                                         >
                                                             Open
                                                         </Badge>
@@ -1046,11 +1047,11 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                         {acc.bankName}
                                                     </CardTitle>
                                                     {acc.isPrimary && (
-                                                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+                                                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
                                                             Primary
                                                         </Badge>
                                                     )}
-                                                    <Badge variant="outline" className="text-[10px]">
+                                                    <Badge variant="outline" className="text-xs">
                                                         {acc.accountType}
                                                     </Badge>
                                                 </div>
@@ -1104,25 +1105,25 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                 <CardContent className="space-y-3 pt-0">
                                     <div className="p-3 rounded-lg bg-muted/40 grid grid-cols-2 gap-2 text-xs">
                                         <div>
-                                            <span className="text-muted-foreground block text-[11px]">Account Number</span>
+                                            <span className="text-muted-foreground block text-xs">Account Number</span>
                                             <code className="font-semibold text-foreground tracking-wide">
                                                 {acc.accountNumber}
                                             </code>
                                         </div>
                                         <div>
-                                            <span className="text-muted-foreground block text-[11px]">IFSC / Routing</span>
+                                            <span className="text-muted-foreground block text-xs">IFSC / Routing</span>
                                             <span className="font-medium text-foreground">
                                                 {acc.ifscRoutingCode || "N/A"}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-muted-foreground block text-[11px]">Branch</span>
+                                            <span className="text-muted-foreground block text-xs">Branch</span>
                                             <span className="text-muted-foreground truncate block">
                                                 {acc.branchName || "Main"}
                                             </span>
                                         </div>
                                         <div>
-                                            <span className="text-muted-foreground block text-[11px]">General Ledger Map</span>
+                                            <span className="text-muted-foreground block text-xs">General Ledger Map</span>
                                             <span className="text-emerald-400 font-medium">
                                                 {acc.chartOfAccount
                                                     ? `${acc.chartOfAccount.code} — ${acc.chartOfAccount.name}`
@@ -1133,13 +1134,13 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
 
                                     <div className="flex items-center justify-between pt-1 border-t border-border/40 text-xs">
                                         <div>
-                                            <span className="text-muted-foreground block text-[10px]">Book Balance</span>
+                                            <span className="text-muted-foreground block text-xs">Book Balance</span>
                                             <span className="font-bold text-foreground text-sm">
                                                 {formatCurrency(acc.currentBalance, acc.currencyCode)}
                                             </span>
                                         </div>
                                         <div className="text-right">
-                                            <span className="text-muted-foreground block text-[10px]">Unreconciled Lines</span>
+                                            <span className="text-muted-foreground block text-xs">Unreconciled Lines</span>
                                             <span className="font-semibold text-amber-400">
                                                 {acc.unreconciledCount || 0} pending
                                             </span>
@@ -1187,7 +1188,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
 
                     <div className="border border-border/60 rounded-xl overflow-hidden bg-card shadow-sm">
                         <table className="w-full text-left text-xs">
-                            <thead className="bg-muted/50 border-b border-border/50 text-muted-foreground font-medium uppercase tracking-wider text-[11px]">
+                            <thead className="bg-muted/50 border-b border-border/50 text-muted-foreground font-medium uppercase tracking-wider text-xs">
                                 <tr>
                                     <th className="p-3.5 pl-4">Statement #</th>
                                     <th className="p-3.5">Period Dates</th>
@@ -1229,14 +1230,14 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                 <td className="p-3.5 min-w-[140px]">
                                                     <div className="flex items-center gap-2">
                                                         <Progress value={progressPercent} className="h-1.5 flex-1" />
-                                                        <span className="text-[10px] text-muted-foreground font-medium">
+                                                        <span className="text-xs text-muted-foreground font-medium">
                                                             {progressPercent}%
                                                         </span>
                                                     </div>
                                                 </td>
                                                 <td className="p-3.5">
                                                     <Badge
-                                                        className={`text-[10px] ${
+                                                        className={`text-xs ${
                                                             stmt.status === "RECONCILED"
                                                                 ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                                                                 : "bg-blue-500/20 text-blue-400 border-blue-500/30"
@@ -1356,7 +1357,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                     <div className="p-6 text-center text-muted-foreground">
                                         <CheckCircle2 className="h-6 w-6 mx-auto text-emerald-400 mb-2" />
                                         <p className="font-medium text-foreground">Zero unreconciled items!</p>
-                                        <p className="text-[11px] mt-1">
+                                        <p className="text-xs mt-1">
                                             All bank line items have been paired with ERP records.
                                         </p>
                                     </div>
@@ -1371,7 +1372,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                     <span className="font-semibold text-foreground block">
                                                         {t.description}
                                                     </span>
-                                                    <span className="text-[11px] text-muted-foreground">
+                                                    <span className="text-xs text-muted-foreground">
                                                         {formatDate(t.transactionDate)} • Ref: {t.reference || "None"}
                                                     </span>
                                                 </div>
@@ -1388,7 +1389,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            className="h-6 text-[10px] px-2 mt-1"
+                                                            className="h-6 text-xs px-2 mt-1"
                                                             onClick={() => {
                                                                 setQuickExpenseTxn(t)
                                                                 setQuickExpenseForm({
@@ -1435,7 +1436,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                 <label className="font-semibold text-foreground">Bank Name *</label>
                                 <Input
                                     required
-                                    placeholder="e.g. HDFC Bank, ICICI Bank, Chase"
+                                    placeholder="Enter bank name"
                                     value={accountForm.bankName}
                                     onChange={(e) => setAccountForm({ ...accountForm, bankName: e.target.value })}
                                 />
@@ -1444,7 +1445,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                 <label className="font-semibold text-foreground">Account Name *</label>
                                 <Input
                                     required
-                                    placeholder="e.g. Primary Corporate Operating Account"
+                                    placeholder="Enter account name"
                                     value={accountForm.accountName}
                                     onChange={(e) => setAccountForm({ ...accountForm, accountName: e.target.value })}
                                 />
@@ -1456,7 +1457,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                 <label className="font-semibold text-foreground">Account Number *</label>
                                 <Input
                                     required
-                                    placeholder="e.g. 50200098765432"
+                                    placeholder="Enter account number"
                                     value={accountForm.accountNumber}
                                     onChange={(e) => setAccountForm({ ...accountForm, accountNumber: e.target.value })}
                                 />
@@ -1481,7 +1482,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                             <div className="space-y-1.5">
                                 <label className="font-semibold text-foreground">IFSC / Routing Code</label>
                                 <Input
-                                    placeholder="e.g. HDFC0000240"
+                                    placeholder="Enter IFSC code"
                                     value={accountForm.ifscRoutingCode}
                                     onChange={(e) => setAccountForm({ ...accountForm, ifscRoutingCode: e.target.value })}
                                 />
@@ -1489,7 +1490,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                             <div className="space-y-1.5">
                                 <label className="font-semibold text-foreground">SWIFT / BIC Code</label>
                                 <Input
-                                    placeholder="e.g. HDFCINBBXXX"
+                                    placeholder="Enter SWIFT code"
                                     value={accountForm.swiftCode}
                                     onChange={(e) => setAccountForm({ ...accountForm, swiftCode: e.target.value })}
                                 />
@@ -1659,7 +1660,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                 <label className="font-semibold text-foreground">
                                     CSV Transaction Feed Data *
                                 </label>
-                                <span className="text-[10px] text-muted-foreground">
+                                <span className="text-xs text-muted-foreground">
                                     Format: Date, Type, Amount, Payee, Narration, Reference
                                 </span>
                             </div>
@@ -1708,7 +1709,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                     <span className="font-semibold text-foreground block">
                                         {matchingTxn.description}
                                     </span>
-                                    <span className="text-[11px] text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground">
                                         {formatDate(matchingTxn.transactionDate)} • Ref: {matchingTxn.reference || "None"}
                                     </span>
                                 </div>
@@ -1752,19 +1753,19 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                             >
                                                 <div className="space-y-1">
                                                     <div className="flex items-center gap-1.5">
-                                                        <Badge variant="outline" className="text-[9px]">
+                                                        <Badge variant="outline" className="text-xs">
                                                             {cand.source}
                                                         </Badge>
                                                         <span className="font-semibold text-foreground">
                                                             {cand.numberOrRef}
                                                         </span>
                                                         {isExactAmount && (
-                                                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[9px]">
+                                                            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
                                                                 Exact Amount
                                                             </Badge>
                                                         )}
                                                     </div>
-                                                    <p className="text-muted-foreground text-[11px]">
+                                                    <p className="text-muted-foreground text-xs">
                                                         {cand.titleOrParty} • {formatDate(cand.date)}
                                                     </p>
                                                 </div>

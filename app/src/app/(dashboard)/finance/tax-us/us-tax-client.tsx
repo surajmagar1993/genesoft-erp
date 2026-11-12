@@ -520,7 +520,7 @@ export function UsTaxClient({ initialData }: Props) {
               <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted/40 text-[11px]">
+                    <TableRow className="bg-muted/40 text-xs">
                       <TableHead className="w-12">State</TableHead>
                       <TableHead>Jurisdiction</TableHead>
                       <TableHead>Sourcing</TableHead>
@@ -542,14 +542,14 @@ export function UsTaxClient({ initialData }: Props) {
                         </TableCell>
                         <TableCell>
                           <div className="font-medium text-foreground">{s.stateName}</div>
-                          <div className="text-[10px] text-muted-foreground truncate max-w-[160px]">
+                          <div className="text-xs text-muted-foreground truncate max-w-[160px]">
                             {s.filingAgency}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className={`text-[10px] px-1.5 py-0 font-normal ${
+                            className={`text-xs px-1.5 py-0 font-normal ${
                               s.sourcingRule === "DESTINATION"
                                 ? "border-blue-500/30 text-blue-600 dark:text-blue-400"
                                 : "border-purple-500/30 text-purple-600 dark:text-purple-400"
@@ -575,7 +575,7 @@ export function UsTaxClient({ initialData }: Props) {
                         </TableCell>
                         <TableCell>
                           <div className="space-y-1">
-                            <div className="flex justify-between text-[10px] text-muted-foreground">
+                            <div className="flex justify-between text-xs text-muted-foreground">
                               <span>${s.grossSales.toLocaleString("en-US")}</span>
                               <span>${s.nexusThreshold.toLocaleString("en-US")}</span>
                             </div>
@@ -597,24 +597,24 @@ export function UsTaxClient({ initialData }: Props) {
                         </TableCell>
                         <TableCell>
                           {s.nexusStatus === "ACTIVE_NEXUS" ? (
-                            <Badge className="bg-red-500/15 text-red-600 hover:bg-red-500/20 border-red-500/30 text-[10px]">
+                            <Badge className="bg-red-500/15 text-red-600 hover:bg-red-500/20 border-red-500/30 text-xs">
                               Nexus Active
                             </Badge>
                           ) : s.nexusStatus === "APPROACHING" ? (
-                            <Badge className="bg-amber-500/15 text-amber-600 hover:bg-amber-500/20 border-amber-500/30 text-[10px]">
+                            <Badge className="bg-amber-500/15 text-amber-600 hover:bg-amber-500/20 border-amber-500/30 text-xs">
                               Approaching ({s.nexusProgressPct}%)
                             </Badge>
                           ) : s.nexusStatus === "EXEMPT_NOMAD" ? (
-                            <Badge className="bg-blue-500/15 text-blue-600 hover:bg-blue-500/20 border-blue-500/30 text-[10px]">
+                            <Badge className="bg-blue-500/15 text-blue-600 hover:bg-blue-500/20 border-blue-500/30 text-xs">
                               NOMAD 0%
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-muted-foreground text-[10px]">
+                            <Badge variant="outline" className="text-muted-foreground text-xs">
                               Monitored ({s.nexusProgressPct}%)
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-[11px]">
+                        <TableCell className="text-muted-foreground text-xs">
                           {s.filingDueDate}
                         </TableCell>
                       </TableRow>
@@ -692,7 +692,7 @@ export function UsTaxClient({ initialData }: Props) {
                 <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/40 text-[11px]">
+                      <TableRow className="bg-muted/40 text-xs">
                         <TableHead>Vendor / Payee</TableHead>
                         <TableHead>TIN / EIN</TableHead>
                         <TableHead>W-9 Status</TableHead>
@@ -708,7 +708,7 @@ export function UsTaxClient({ initialData }: Props) {
                         <TableRow key={v.vendorId} className="hover:bg-muted/30 text-xs">
                           <TableCell>
                             <div className="font-medium text-foreground">{v.vendorName}</div>
-                            <div className="text-[10px] text-muted-foreground">ID: {v.vendorId.substring(0, 8)}...</div>
+                            <div className="text-xs text-muted-foreground">ID: {v.vendorId.substring(0, 8)}...</div>
                           </TableCell>
                           <TableCell className="font-mono">
                             {v.tin ? (
@@ -721,24 +721,24 @@ export function UsTaxClient({ initialData }: Props) {
                                 )}
                               </div>
                             ) : (
-                              <span className="text-red-500 text-[11px] font-semibold flex items-center gap-1">
+                              <span className="text-red-500 text-xs font-semibold flex items-center gap-1">
                                 <AlertTriangle className="h-3 w-3" /> Missing TIN
                               </span>
                             )}
                           </TableCell>
                           <TableCell>
                             {v.w9Status === "VERIFIED" ? (
-                              <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]">
+                              <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-xs">
                                 W-9 Verified
                               </Badge>
                             ) : (
-                              <Badge className="bg-red-500/15 text-red-600 border-red-500/30 text-[10px]">
+                              <Badge className="bg-red-500/15 text-red-600 border-red-500/30 text-xs">
                                 W-9 Needed
                               </Badge>
                             )}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="text-[10px] font-mono">
+                            <Badge variant="outline" className="text-xs font-mono">
                               {v.formType}
                             </Badge>
                           </TableCell>
@@ -750,11 +750,11 @@ export function UsTaxClient({ initialData }: Props) {
                           </TableCell>
                           <TableCell>
                             {v.filingStatus === "REQUIRED" ? (
-                              <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30 text-[10px]">
+                              <Badge className="bg-blue-500/15 text-blue-600 border-blue-500/30 text-xs">
                                 1099 Required (&ge;$600)
                               </Badge>
                             ) : (
-                              <Badge variant="outline" className="text-muted-foreground text-[10px]">
+                              <Badge variant="outline" className="text-muted-foreground text-xs">
                                 &lt; $600 Exemption
                               </Badge>
                             )}
@@ -765,7 +765,7 @@ export function UsTaxClient({ initialData }: Props) {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleOpen1099Modal(v)}
-                                className="h-7 px-2 text-[11px] gap-1"
+                                className="h-7 px-2 text-xs gap-1"
                               >
                                 <FileText className="h-3 w-3" /> Form 1099
                               </Button>
@@ -780,7 +780,7 @@ export function UsTaxClient({ initialData }: Props) {
                                   })
                                   setIsW9ModalOpen(true)
                                 }}
-                                className="h-7 px-2 text-[11px]"
+                                className="h-7 px-2 text-xs"
                               >
                                 Edit W-9
                               </Button>
@@ -845,7 +845,7 @@ export function UsTaxClient({ initialData }: Props) {
                 <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/40 text-[11px]">
+                      <TableRow className="bg-muted/40 text-xs">
                         <TableHead>Customer Entity</TableHead>
                         <TableHead>Certificate #</TableHead>
                         <TableHead>Issuing State</TableHead>
@@ -865,7 +865,7 @@ export function UsTaxClient({ initialData }: Props) {
                             {c.certificateNumber}
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className="font-mono text-[10px]">
+                            <Badge variant="outline" className="font-mono text-xs">
                               {c.issuingState}
                             </Badge>
                           </TableCell>
@@ -874,7 +874,7 @@ export function UsTaxClient({ initialData }: Props) {
                               {EXEMPTION_STATUTES[c.exemptionType as ExemptionType]?.title || c.exemptionType}
                             </span>
                           </TableCell>
-                          <TableCell className="text-[11px] text-muted-foreground max-w-[200px] truncate">
+                          <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
                             {c.statutoryClause}
                           </TableCell>
                           <TableCell className="font-mono text-muted-foreground">
@@ -882,15 +882,15 @@ export function UsTaxClient({ initialData }: Props) {
                           </TableCell>
                           <TableCell>
                             {c.status === "ACTIVE" ? (
-                              <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px]">
+                              <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-xs">
                                 Active ({c.daysToExpiry}d left)
                               </Badge>
                             ) : c.status === "EXPIRING_SOON" ? (
-                              <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px]">
+                              <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-xs">
                                 Expiring Soon ({c.daysToExpiry}d)
                               </Badge>
                             ) : (
-                              <Badge className="bg-red-500/15 text-red-600 border-red-500/30 text-[10px]">
+                              <Badge className="bg-red-500/15 text-red-600 border-red-500/30 text-xs">
                                 Expired
                               </Badge>
                             )}
@@ -1019,31 +1019,31 @@ export function UsTaxClient({ initialData }: Props) {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-3 gap-3">
                   <div className="rounded-lg border bg-card p-3 text-center">
-                    <div className="text-[11px] text-muted-foreground">State Base Rate</div>
+                    <div className="text-xs text-muted-foreground">State Base Rate</div>
                     <div className="text-lg font-bold font-mono text-foreground mt-0.5">
                       {simResult.baseRate.toFixed(2)}%
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       ${simResult.baseTax.toFixed(2)}
                     </div>
                   </div>
 
                   <div className="rounded-lg border bg-card p-3 text-center">
-                    <div className="text-[11px] text-muted-foreground">Avg Local Rate</div>
+                    <div className="text-xs text-muted-foreground">Avg Local Rate</div>
                     <div className="text-lg font-bold font-mono text-foreground mt-0.5">
                       {simResult.localRate.toFixed(2)}%
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       ${simResult.localTax.toFixed(2)}
                     </div>
                   </div>
 
                   <div className="rounded-lg border bg-primary/10 border-primary/30 p-3 text-center">
-                    <div className="text-[11px] text-primary font-medium">Effective Combined</div>
+                    <div className="text-xs text-primary font-medium">Effective Combined</div>
                     <div className="text-lg font-bold font-mono text-primary mt-0.5">
                       {simResult.effectiveRate.toFixed(2)}%
                     </div>
-                    <div className="text-[11px] font-semibold text-primary mt-1">
+                    <div className="text-xs font-semibold text-primary mt-1">
                       ${simResult.totalTax.toFixed(2)}
                     </div>
                   </div>
@@ -1163,11 +1163,11 @@ export function UsTaxClient({ initialData }: Props) {
               <div className="flex justify-between items-center border-b pb-2">
                 <div>
                   <span className="font-bold text-red-600 dark:text-red-400 text-sm">FORM 1099-NEC</span>
-                  <div className="text-[10px] text-muted-foreground">(Rev. January 2024)</div>
+                  <div className="text-xs text-muted-foreground">(Rev. January 2024)</div>
                 </div>
                 <div className="text-right">
                   <span className="font-bold text-foreground">Nonemployee Compensation</span>
-                  <div className="text-[10px] text-muted-foreground">Copy B - For Recipient</div>
+                  <div className="text-xs text-muted-foreground">Copy B - For Recipient</div>
                 </div>
               </div>
 
@@ -1176,18 +1176,18 @@ export function UsTaxClient({ initialData }: Props) {
                 {/* Left Column: Payer & Recipient */}
                 <div className="space-y-3 border-r pr-4">
                   <div className="p-2 border rounded bg-muted/20">
-                    <div className="text-[10px] text-muted-foreground font-semibold">PAYER&apos;S name & address</div>
+                    <div className="text-xs text-muted-foreground font-semibold">PAYER&apos;S name & address</div>
                     <div className="font-bold text-foreground">Your business (from Settings → Organization)</div>
-                    <div className="text-[10px] font-mono mt-1 text-muted-foreground">PAYER&apos;S TIN: your EIN</div>
+                    <div className="text-xs font-mono mt-1 text-muted-foreground">PAYER&apos;S TIN: your EIN</div>
                   </div>
 
                   <div className="p-2 border rounded bg-muted/20">
-                    <div className="text-[10px] text-muted-foreground font-semibold">RECIPIENT&apos;S name & TIN</div>
+                    <div className="text-xs text-muted-foreground font-semibold">RECIPIENT&apos;S name & TIN</div>
                     <div className="font-bold text-foreground">{selected1099Record.vendorName}</div>
-                    <div className="text-[11px] font-mono font-semibold text-foreground mt-0.5">
+                    <div className="text-xs font-mono font-semibold text-foreground mt-0.5">
                       TIN: {selected1099Record.tin || "NOT ON FILE"}
                     </div>
-                    <div className="text-[10px] text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       W-9 Status: {selected1099Record.w9Status}
                     </div>
                   </div>
@@ -1196,7 +1196,7 @@ export function UsTaxClient({ initialData }: Props) {
                 {/* Right Column: Boxes */}
                 <div className="space-y-2">
                   <div className="p-2 border rounded border-red-500/20 bg-red-500/5">
-                    <div className="text-[10px] font-bold text-red-600 dark:text-red-400">
+                    <div className="text-xs font-bold text-red-600 dark:text-red-400">
                       1 Nonemployee compensation
                     </div>
                     <div className="text-xl font-bold font-mono text-foreground mt-1">
@@ -1208,13 +1208,13 @@ export function UsTaxClient({ initialData }: Props) {
 
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-2 border rounded">
-                      <div className="text-[10px] text-muted-foreground">4 Federal tax withheld</div>
+                      <div className="text-xs text-muted-foreground">4 Federal tax withheld</div>
                       <div className="font-mono text-foreground font-semibold mt-1">
                         ${selected1099Record.box4FederalTaxWithheld.toFixed(2)}
                       </div>
                     </div>
                     <div className="p-2 border rounded">
-                      <div className="text-[10px] text-muted-foreground">5 State tax withheld</div>
+                      <div className="text-xs text-muted-foreground">5 State tax withheld</div>
                       <div className="font-mono text-foreground font-semibold mt-1">
                         ${selected1099Record.box5StateTaxWithheld.toFixed(2)}
                       </div>
@@ -1222,8 +1222,8 @@ export function UsTaxClient({ initialData }: Props) {
                   </div>
 
                   <div className="p-2 border rounded bg-muted/10">
-                    <div className="text-[10px] text-muted-foreground">Filing Statutory Notice</div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                    <div className="text-xs text-muted-foreground">Filing Statutory Notice</div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       Reportable to IRS per IRC § 6041A. File Copy A with IRS by January 31 of following calendar year.
                     </p>
                   </div>
@@ -1257,7 +1257,7 @@ export function UsTaxClient({ initialData }: Props) {
             <div>
               <label className="font-medium text-foreground block mb-1">Customer / Entity Name</label>
               <Input
-                placeholder="e.g. Acme Wholesale Corp"
+                placeholder="Enter customer name"
                 value={certForm.customerName}
                 onChange={(e) => setCertForm({ ...certForm, customerName: e.target.value })}
                 className="text-xs"
@@ -1268,7 +1268,7 @@ export function UsTaxClient({ initialData }: Props) {
               <div>
                 <label className="font-medium text-foreground block mb-1">Certificate #</label>
                 <Input
-                  placeholder="e.g. ST-120-NY-8849"
+                  placeholder="Enter certificate number"
                   value={certForm.certificateNumber}
                   onChange={(e) => setCertForm({ ...certForm, certificateNumber: e.target.value })}
                   className="text-xs font-mono"
@@ -1352,7 +1352,7 @@ export function UsTaxClient({ initialData }: Props) {
                 onChange={(e) => setW9Form({ ...w9Form, ein: e.target.value })}
                 className="text-xs font-mono"
               />
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Format: 2-digit IRS campus prefix followed by 7 digits (e.g. 12-3456789).
               </p>
             </div>

@@ -462,7 +462,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="font-medium text-foreground">{wo.productName}</div>
-                                                        <div className="text-[11px] text-muted-foreground font-mono">
+                                                        <div className="text-xs text-muted-foreground font-mono">
                                                             {wo.productSku || "No SKU"}
                                                         </div>
                                                     </TableCell>
@@ -474,13 +474,13 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                             {wo.producedQuantity} / {wo.plannedQuantity}
                                                         </div>
                                                         {wo.scrapQuantity > 0 && (
-                                                            <span className="text-[10px] text-red-500 font-mono block">
+                                                            <span className="text-xs text-red-500 font-mono block">
                                                                 ({wo.scrapQuantity} scrap)
                                                             </span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <div className="text-[11px] text-muted-foreground">
+                                                        <div className="text-xs text-muted-foreground">
                                                             <span className="font-medium text-foreground">{wo.sourceWarehouseName}</span>
                                                             <ArrowRight className="inline h-3 w-3 mx-1 opacity-50" />
                                                             <span className="font-medium text-foreground">{wo.targetWarehouseName}</span>
@@ -492,7 +492,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                     <TableCell className="text-center">
                                                         <Badge
                                                             variant="outline"
-                                                            className={`text-[10px] ${
+                                                            className={`text-xs ${
                                                                 wo.priority === "URGENT" || wo.priority === "HIGH"
                                                                     ? "border-red-400 text-red-600 bg-red-50 dark:bg-red-950/20"
                                                                     : "border-slate-300 text-slate-600"
@@ -503,32 +503,32 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                     </TableCell>
                                                     <TableCell className="text-center">
                                                         {wo.status === "PLANNED" && (
-                                                            <Badge variant="outline" className="border-slate-300 text-slate-600 text-[10px]">
+                                                            <Badge variant="outline" className="border-slate-300 text-slate-600 text-xs">
                                                                 PLANNED
                                                             </Badge>
                                                         )}
                                                         {wo.status === "CONFIRMED" && (
-                                                            <Badge variant="outline" className="border-blue-400 text-blue-600 bg-blue-50 dark:bg-blue-950/20 text-[10px]">
+                                                            <Badge variant="outline" className="border-blue-400 text-blue-600 bg-blue-50 dark:bg-blue-950/20 text-xs">
                                                                 CONFIRMED
                                                             </Badge>
                                                         )}
                                                         {wo.status === "IN_PROGRESS" && (
-                                                            <Badge variant="outline" className="border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20 text-[10px]">
+                                                            <Badge variant="outline" className="border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20 text-xs">
                                                                 IN PROGRESS
                                                             </Badge>
                                                         )}
                                                         {wo.status === "QUALITY_CHECK" && (
-                                                            <Badge variant="outline" className="border-indigo-400 text-indigo-600 bg-indigo-50 dark:bg-indigo-950/20 text-[10px]">
+                                                            <Badge variant="outline" className="border-indigo-400 text-indigo-600 bg-indigo-50 dark:bg-indigo-950/20 text-xs">
                                                                 QUALITY CHECK
                                                             </Badge>
                                                         )}
                                                         {wo.status === "COMPLETED" && (
-                                                            <Badge variant="outline" className="border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 text-[10px]">
+                                                            <Badge variant="outline" className="border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 text-xs">
                                                                 COMPLETED
                                                             </Badge>
                                                         )}
                                                         {wo.status === "CANCELLED" && (
-                                                            <Badge variant="outline" className="border-red-400 text-red-600 bg-red-50 dark:bg-red-950/20 text-[10px]">
+                                                            <Badge variant="outline" className="border-red-400 text-red-600 bg-red-50 dark:bg-red-950/20 text-xs">
                                                                 CANCELLED
                                                             </Badge>
                                                         )}
@@ -550,13 +550,13 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                                     setIsAdvanceStatusModalOpen(true)
                                                                 }}
                                                                 disabled={isPending}
-                                                                className="h-7 px-2 text-[11px]"
+                                                                className="h-7 px-2 text-xs"
                                                             >
                                                                 <Sliders className="h-3 w-3 mr-1" />
                                                                 Advance
                                                             </Button>
                                                         ) : (
-                                                            <span className="text-[11px] text-muted-foreground">Archived</span>
+                                                            <span className="text-xs text-muted-foreground">Archived</span>
                                                         )}
                                                     </TableCell>
                                                 </TableRow>
@@ -619,17 +619,17 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="font-medium text-foreground">{bom.name}</div>
-                                                        <div className="text-[10px] text-muted-foreground">Version {bom.version}</div>
+                                                        <div className="text-xs text-muted-foreground">Version {bom.version}</div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="font-medium text-foreground">{bom.productName}</div>
-                                                        <div className="text-[11px] text-muted-foreground font-mono">{bom.productSku}</div>
+                                                        <div className="text-xs text-muted-foreground font-mono">{bom.productSku}</div>
                                                     </TableCell>
                                                     <TableCell className="text-center font-mono">
                                                         {bom.quantity} {bom.unit}
                                                     </TableCell>
                                                     <TableCell className="text-center">
-                                                        <Badge variant="secondary" className="font-mono text-[11px]">
+                                                        <Badge variant="secondary" className="font-mono text-xs">
                                                             {bom.itemsCount} parts
                                                         </Badge>
                                                     </TableCell>
@@ -640,7 +640,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                         {formatCurrency(bom.estimatedTotalCost)}
                                                     </TableCell>
                                                     <TableCell className="text-center">
-                                                        <Badge variant="outline" className="border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 text-[10px]">
+                                                        <Badge variant="outline" className="border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 text-xs">
                                                             {bom.status}
                                                         </Badge>
                                                     </TableCell>
@@ -652,7 +652,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                                 setSelectedBOM(bom)
                                                                 setIsBOMDetailOpen(true)
                                                             }}
-                                                            className="h-7 px-2 text-[11px]"
+                                                            className="h-7 px-2 text-xs"
                                                         >
                                                             <Eye className="h-3 w-3 mr-1" />
                                                             View Components
@@ -739,7 +739,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                                     <TableCell className="text-center">
                                                         <Badge
                                                             variant="outline"
-                                                            className={`text-[10px] ${
+                                                            className={`text-xs ${
                                                                 qc.status === "PASSED"
                                                                     ? "border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20"
                                                                     : qc.status === "FAILED"
@@ -873,7 +873,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-medium">Assigned Floor Supervisor</Label>
                                 <Input
-                                    placeholder="e.g. Ramesh K. (Shift A)"
+                                    placeholder="Enter assigned floor supervisor"
                                     value={woAssignedTo}
                                     onChange={(e) => setWoAssignedTo(e.target.value)}
                                     className="text-xs"
@@ -937,7 +937,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                             </div>
                             <div className="flex justify-between text-muted-foreground">
                                 <span>Current Status:</span>
-                                <Badge variant="secondary" className="text-[10px]">{selectedOrder?.status}</Badge>
+                                <Badge variant="secondary" className="text-xs">{selectedOrder?.status}</Badge>
                             </div>
                         </div>
 
@@ -984,7 +984,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                         />
                                     </div>
                                 </div>
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="text-xs text-muted-foreground">
                                     Completing this work order will deduct all component materials from <b>{selectedOrder?.sourceWarehouseName}</b> and add <b>{producedQty} units</b> into <b>{selectedOrder?.targetWarehouseName}</b>.
                                 </p>
                             </div>
@@ -1039,7 +1039,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-medium">Formula / BOM Name *</Label>
                                 <Input
-                                    placeholder="e.g. Standard 1000W Motor Assembly"
+                                    placeholder="Enter BOM name"
                                     value={bomName}
                                     onChange={(e) => setBomName(e.target.value)}
                                     required
@@ -1109,7 +1109,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                             { productId: initialData.availableProducts[0]?.id || "", quantity: "1", unit: "Nos", unitCost: "50", scrapPercentage: "0" }
                                         ])
                                     }}
-                                    className="h-7 text-[11px]"
+                                    className="h-7 text-xs"
                                 >
                                     <Plus className="h-3 w-3 mr-1" />
                                     Add Part
@@ -1120,7 +1120,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                 {bomComponents.map((comp, idx) => (
                                     <div key={idx} className="p-2.5 bg-muted/40 rounded-lg border grid grid-cols-12 gap-2 items-center text-xs">
                                         <div className="col-span-5">
-                                            <Label className="text-[10px] text-muted-foreground">Raw Material *</Label>
+                                            <Label className="text-xs text-muted-foreground">Raw Material *</Label>
                                             <Select
                                                 value={comp.productId}
                                                 onValueChange={(val) => {
@@ -1143,7 +1143,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                         </div>
 
                                         <div className="col-span-2">
-                                            <Label className="text-[10px] text-muted-foreground">Qty</Label>
+                                            <Label className="text-xs text-muted-foreground">Qty</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -1158,7 +1158,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                         </div>
 
                                         <div className="col-span-2">
-                                            <Label className="text-[10px] text-muted-foreground">Unit Cost</Label>
+                                            <Label className="text-xs text-muted-foreground">Unit Cost</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -1173,7 +1173,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                         </div>
 
                                         <div className="col-span-2">
-                                            <Label className="text-[10px] text-muted-foreground">Scrap %</Label>
+                                            <Label className="text-xs text-muted-foreground">Scrap %</Label>
                                             <Input
                                                 type="number"
                                                 step="any"
@@ -1323,7 +1323,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                         <div className="space-y-1.5">
                             <Label className="text-xs font-medium">Defect Classification (If any)</Label>
                             <Input
-                                placeholder="e.g. Dimensions out of tolerance, surface finish scratch"
+                                placeholder="Enter defect classification"
                                 value={qcDefectReason}
                                 onChange={(e) => setQcDefectReason(e.target.value)}
                                 className="text-xs"
@@ -1402,7 +1402,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                             <TableCell className="font-medium">
                                                 {item.productName}
                                                 {item.productSku && (
-                                                    <span className="text-[10px] text-muted-foreground font-mono block">
+                                                    <span className="text-xs text-muted-foreground font-mono block">
                                                         {item.productSku}
                                                     </span>
                                                 )}

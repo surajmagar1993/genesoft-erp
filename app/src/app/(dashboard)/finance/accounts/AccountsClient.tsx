@@ -294,14 +294,14 @@ export default function AccountsClient({ initialAccounts }: Props) {
                             {account.name}
                           </span>
                           {account.is_system && (
-                            <Badge variant="outline" className="text-[9px] h-4 px-1 ml-1 text-muted-foreground">
+                            <Badge variant="outline" className="text-xs h-4 px-1 ml-1 text-muted-foreground">
                               SYS
                             </Badge>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`text-[10px] h-5 px-1.5 ${config.color}`}>
+                        <Badge variant="outline" className={`text-xs h-5 px-1.5 ${config.color}`}>
                           {config.icon}
                           <span className="ml-1">{config.label}</span>
                         </Badge>
@@ -310,7 +310,7 @@ export default function AccountsClient({ initialAccounts }: Props) {
                         {!account.is_group && formatCurrency(Number(account.balance), account.currency_code || baseCurrency)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={account.is_active ? "default" : "secondary"} className="text-[10px] h-5">
+                        <Badge variant={account.is_active ? "default" : "secondary"} className="text-xs h-5">
                           {account.is_active ? "Active" : "Inactive"}
                         </Badge>
                       </TableCell>

@@ -70,7 +70,7 @@ function RegionRow({ region }: { region: PricingRegionRow }) {
                     {region.currency} · Razorpay
                 </div>
                 {unsaved && (
-                    <Badge variant="outline" className="mt-1 h-5 border-amber-500/40 text-[10px] text-amber-600 dark:text-amber-400">
+                    <Badge variant="outline" className="mt-1 h-5 border-amber-500/40 text-xs text-amber-600 dark:text-amber-400">
                         Default prices, not saved
                     </Badge>
                 )}
@@ -103,7 +103,7 @@ function RegionRow({ region }: { region: PricingRegionRow }) {
                                 title={d.isActive ? "Shown on the pricing page" : "Hidden from the pricing page"}
                             />
                         </div>
-                        <div className="mt-1 text-[11px] text-muted-foreground">
+                        <div className="mt-1 text-xs text-muted-foreground">
                             {monthly > 0 ? `${symbol} ${annualFromMonthly(monthly).toLocaleString()} / year` : "Enter a price"}
                             {!d.isActive && <span className="font-medium text-amber-600 dark:text-amber-400"> · Hidden</span>}
                         </div>

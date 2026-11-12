@@ -88,7 +88,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-bold tracking-tight">Platform Subscriptions & Billing</h1>
-                        <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5">
+                        <Badge variant="outline" className="text-xs font-bold border-primary/20 bg-primary/5">
                             Revenue Engine
                         </Badge>
                     </div>
@@ -115,7 +115,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                             <div className="text-xl font-bold mt-1 text-foreground">
                                 {formatCurrency(data.totalMrr)}
                             </div>
-                            <span className="text-[10px] text-emerald-600 font-semibold">
+                            <span className="text-xs text-emerald-600 font-semibold">
                                 From {data.payingTenants ?? 0} paying tenant{data.payingTenants === 1 ? "" : "s"} (trials excluded)
                             </span>
                         </div>
@@ -132,7 +132,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                             <div className="text-xl font-bold mt-1 text-foreground">
                                 {formatCurrency(data.totalMrr * 12)}
                             </div>
-                            <span className="text-[10px] text-blue-600 font-semibold">Annual Projected</span>
+                            <span className="text-xs text-blue-600 font-semibold">Annual Projected</span>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
                             <Receipt className="h-5 w-5" />
@@ -147,7 +147,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                             <div className="text-xl font-bold mt-1 text-foreground">
                                 {data.totalTenants}
                             </div>
-                            <span className="text-[10px] text-muted-foreground">Across all regions</span>
+                            <span className="text-xs text-muted-foreground">Across all regions</span>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center">
                             <Building2 className="h-5 w-5" />
@@ -162,7 +162,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                             <div className="text-xl font-bold mt-1 text-foreground">
                                 {data.tenants.filter(t => t.isTrial).length}
                             </div>
-                            <span className="text-[10px] text-amber-600 font-semibold">Grace Window Active</span>
+                            <span className="text-xs text-amber-600 font-semibold">Grace Window Active</span>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
                             <Clock className="h-5 w-5" />
@@ -239,7 +239,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                                                     <span className="font-semibold text-sm group-hover:underline truncate text-foreground">
                                                         {t.name}
                                                     </span>
-                                                    <span className="text-[10px] text-muted-foreground font-mono">
+                                                    <span className="text-xs text-muted-foreground font-mono">
                                                         {t.domain || t.countryCode} • {t.currencyCode}
                                                     </span>
                                                 </div>
@@ -247,7 +247,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                                         </TableCell>
 
                                         <TableCell>
-                                            <Badge variant={t.plan === "FREE" ? "outline" : "default"} className="font-bold text-[10px]">
+                                            <Badge variant={t.plan === "FREE" ? "outline" : "default"} className="font-bold text-xs">
                                                 {t.plan}
                                             </Badge>
                                         </TableCell>
@@ -342,7 +342,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center gap-1.5">
-                                                    <Badge variant="outline" className="text-[10px] font-bold">
+                                                    <Badge variant="outline" className="text-xs font-bold">
                                                         {inv.tier}
                                                     </Badge>
                                                     <span className="text-xs text-muted-foreground">
@@ -354,7 +354,7 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                                                 {inv.currency} {Number(inv.totalAmount || 0).toFixed(2)}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px] uppercase font-bold">
+                                                <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-xs uppercase font-bold">
                                                     {inv.status || "PAID"}
                                                 </Badge>
                                             </TableCell>

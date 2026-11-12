@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -54,8 +55,8 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
   const [, startTransition] = useTransition()
   const [isDeleting, setIsDeleting] = useState(false)
 
-  const handleDelete = () => {
-    if (!confirm(`Are you sure you want to delete ${company.name}? This cannot be undone.`)) return
+  const handleDelete = async () => {
+    if (!(await confirmAction(`Are you sure you want to delete ${company.name}? This cannot be undone.`))) return
     setIsDeleting(true)
     startTransition(async () => {
       const { error } = await deleteCompany(company.id)
@@ -378,7 +379,7 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
                         <TableCell className="text-xs text-muted-foreground">{contact.phone || contact.mobile || "—"}</TableCell>
                         <TableCell>
                           {contact.customer_group ? (
-                            <Badge variant="outline" className="text-[11px] capitalize">{contact.customer_group.toLowerCase()}</Badge>
+                            <Badge variant="outline" className="text-xs capitalize">{contact.customer_group.toLowerCase()}</Badge>
                           ) : (
                             <span className="text-muted-foreground text-xs">—</span>
                           )}

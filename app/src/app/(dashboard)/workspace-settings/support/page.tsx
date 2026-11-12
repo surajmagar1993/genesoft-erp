@@ -89,7 +89,7 @@ export default function SupportAdminPage() {
                     <h3 className="font-medium text-sm truncate">{ticket.subject}</h3>
                     {ticket.status === "OPEN" && <Badge className="bg-red-500">Urgent</Badge>}
                   </div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-500">
+                  <div className="flex items-center justify-between text-xs text-slate-500">
                     <span className="flex items-center gap-1 uppercase tracking-tighter">
                       <Globe className="w-3 h-3" />
                       {ticket.tenantId.split("-")[0]}...
@@ -133,7 +133,7 @@ export default function SupportAdminPage() {
                     <div className={`max-w-[75%] rounded-2xl p-5 ${
                       msg.isFromAdmin ? "bg-indigo-900 text-white rounded-tr-none" : "bg-white border text-slate-800 shadow-sm rounded-tl-none"
                     }`}>
-                      <div className="flex items-center justify-between gap-4 mb-2 opacity-60 text-[10px] font-bold uppercase">
+                      <div className="flex items-center justify-between gap-4 mb-2 opacity-60 text-xs font-bold uppercase">
                          <span>{msg.isFromAdmin ? "Me (Admin)" : "Customer"}</span>
                          <span>{formatDistanceToNow(new Date(msg.createdAt))} ago</span>
                       </div>

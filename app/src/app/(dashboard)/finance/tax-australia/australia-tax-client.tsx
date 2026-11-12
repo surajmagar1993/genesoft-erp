@@ -154,11 +154,11 @@ export function AustraliaTaxClient({ initialData }: Props) {
           </div>
 
           <div className="border-l border-emerald-700/60 pl-3">
-            <div className="text-[11px] text-amber-200 font-medium">ATO Lodgment Due:</div>
+            <div className="text-xs text-amber-200 font-medium">ATO Lodgment Due:</div>
             <div className="text-xs font-bold text-white flex items-center gap-1.5">
               <span>{report.period.dueDate}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                className={`text-xs px-1.5 py-0.5 rounded font-bold ${
                   telemetry.status === "OVERDUE"
                     ? "bg-red-500 text-white"
                     : telemetry.status === "DUE_SOON"
@@ -459,7 +459,7 @@ export function AustraliaTaxClient({ initialData }: Props) {
                 type="text"
                 value={testAbn}
                 onChange={(e) => handleAbnCheck(e.target.value)}
-                placeholder="e.g. 51 824 753 556"
+                placeholder="Enter an ABN to check"
                 className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono focus:border-emerald-500 focus:outline-none"
               />
             </div>
@@ -483,7 +483,7 @@ export function AustraliaTaxClient({ initialData }: Props) {
                 {abnValidation.isValid ? (
                   <div>
                     Standard Formatted ABN: <strong className="font-mono">{abnValidation.formattedAbn}</strong>
-                    <div className="text-[11px] text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       Status: Active and compliant for Australian GST invoicing and input tax credits.
                     </div>
                   </div>
@@ -540,7 +540,7 @@ export function AustraliaTaxClient({ initialData }: Props) {
                 <div className="text-xl font-bold font-mono text-foreground">
                   AUD ${report.boxW1GrossWages.toFixed(2)}
                 </div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   Gross wages subject to PAYG withholding in {report.period.quarterLabel}
                 </div>
               </div>
@@ -552,7 +552,7 @@ export function AustraliaTaxClient({ initialData }: Props) {
                 <div className="text-xl font-bold font-mono text-purple-600 dark:text-purple-400">
                   AUD ${report.boxW2TaxWithheld.toFixed(2)}
                 </div>
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-xs text-muted-foreground">
                   Statutory tax withheld on behalf of the Commissioner of Taxation
                 </div>
               </div>
@@ -616,7 +616,7 @@ export function AustraliaTaxClient({ initialData }: Props) {
                 <p className="text-muted-foreground">
                   For GST-inclusive pricing at 10%, the GST portion is calculated as exactly <strong>1/11th</strong> of the total price.
                 </p>
-                <div className="p-2 rounded bg-background font-mono text-[11px] border border-border">
+                <div className="p-2 rounded bg-background font-mono text-xs border border-border">
                   GST = Total Inclusive Amount / 11<br />
                   e.g. $1,100.00 AUD total includes $100.00 AUD GST ($1,100 / 11)
                 </div>
@@ -683,7 +683,7 @@ export function AustraliaTaxClient({ initialData }: Props) {
                   <div className="text-xs text-emerald-800 font-semibold">
                     Registered for Australian GST (10%)
                   </div>
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-xs text-slate-500">
                     Complies with Section 29-70 of A New Tax System (GST) Act 1999.
                   </div>
                 </div>
@@ -716,7 +716,7 @@ export function AustraliaTaxClient({ initialData }: Props) {
                 </tfoot>
               </table>
 
-              <div className="text-[10px] text-slate-500 text-center border-t pt-3">
+              <div className="text-xs text-slate-500 text-center border-t pt-3">
                 Total price includes GST. Please pay within 14 days of invoice date.
               </div>
             </div>

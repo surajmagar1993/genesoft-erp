@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useTransition, useMemo, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -339,8 +340,8 @@ export function FormsClient({ initialData }: FormsClientProps) {
     }
 
     // Delete Form
-    const handleDeleteForm = (formId: string, title: string) => {
-        if (!confirm(`Are you sure you want to delete form "${title}"? This will also remove submission records.`)) {
+    const handleDeleteForm = async (formId: string, title: string) => {
+        if (!(await confirmAction(`Are you sure you want to delete form "${title}"? This will also remove submission records.`))) {
             return
         }
 
@@ -801,7 +802,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                 <div className="flex flex-col items-end gap-1.5">
                                                     {getTypeBadge(form.type)}
                                                     <span
-                                                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                                        className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                                                             isActive
                                                                 ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                                                                 : "bg-slate-500/10 text-slate-500 border border-slate-500/20"
@@ -971,7 +972,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                         value={studioTitle}
                                         onChange={(e) => setStudioTitle(e.target.value)}
                                         className="h-9 text-xs"
-                                        placeholder="e.g. Enterprise Solution Inquiry"
+                                        placeholder="Enter form title"
                                     />
                                 </div>
 
@@ -1177,7 +1178,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
 
                                             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
                                                 <div className="space-y-1">
-                                                    <label className="text-[11px] font-medium text-slate-500">
+                                                    <label className="text-xs font-medium text-slate-500">
                                                         Field Label
                                                     </label>
                                                     <Input
@@ -1190,7 +1191,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                 </div>
 
                                                 <div className="space-y-1">
-                                                    <label className="text-[11px] font-medium text-slate-500">
+                                                    <label className="text-xs font-medium text-slate-500">
                                                         Key / Name
                                                     </label>
                                                     <Input
@@ -1203,7 +1204,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                 </div>
 
                                                 <div className="space-y-1">
-                                                    <label className="text-[11px] font-medium text-slate-500">
+                                                    <label className="text-xs font-medium text-slate-500">
                                                         Input Type
                                                     </label>
                                                     <select
@@ -1244,7 +1245,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                             {/* Dropdown Options if select type */}
                                             {field.type === "select" && (
                                                 <div className="space-y-1 pt-1">
-                                                    <label className="text-[11px] font-medium text-slate-500">
+                                                    <label className="text-xs font-medium text-slate-500">
                                                         Options (comma-separated)
                                                     </label>
                                                     <Input
@@ -1277,7 +1278,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                     <Laptop className="h-4 w-4 text-indigo-600" />
                                     Live Preview & Styling
                                 </h3>
-                                <span className="text-[11px] text-slate-400">Updates in real time</span>
+                                <span className="text-xs text-slate-400">Updates in real time</span>
                             </div>
 
                             {/* Rendered Mock Form */}
@@ -1339,7 +1340,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                         {studioButtonText || "Submit"}
                                     </Button>
 
-                                    <p className="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1 pt-1">
+                                    <p className="text-xs text-center text-slate-400 flex items-center justify-center gap-1 pt-1">
                                         <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                                         Spam protected by Honeypot & CRM Lead Gateway
                                     </p>
@@ -1401,7 +1402,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                             <td colSpan={6} className="py-12 text-center text-slate-400">
                                                 <Inbox className="h-8 w-8 mx-auto mb-2 opacity-50" />
                                                 <p className="font-medium">No form submissions received yet</p>
-                                                <p className="text-[11px] text-slate-500 mt-0.5">
+                                                <p className="text-xs text-slate-500 mt-0.5">
                                                     Submissions from embedded forms or the test simulator will show up here.
                                                 </p>
                                             </td>
@@ -1435,7 +1436,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                     key={sub.id}
                                                     className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
                                                 >
-                                                    <td className="py-3 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                                                    <td className="py-3 px-4 font-mono text-xs text-slate-500 whitespace-nowrap">
                                                         {subDate}
                                                     </td>
                                                     <td className="py-3 px-4 whitespace-nowrap">
@@ -1443,7 +1444,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                             <span className="font-semibold text-slate-800 dark:text-slate-200">
                                                                 {formTitle}
                                                             </span>
-                                                            <span className="block text-[10px] font-mono text-slate-400">
+                                                            <span className="block text-xs font-mono text-slate-400">
                                                                 {formCode}
                                                             </span>
                                                         </div>
@@ -1452,7 +1453,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                         <div className="font-medium text-slate-900 dark:text-slate-100">
                                                             {submitterName}
                                                         </div>
-                                                        <div className="text-[11px] text-slate-500 font-mono">
+                                                        <div className="text-xs text-slate-500 font-mono">
                                                             {submitterEmail}
                                                         </div>
                                                     </td>
@@ -1467,12 +1468,12 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                                                 <ArrowUpRight className="h-3 w-3" />
                                                             </Link>
                                                         ) : (
-                                                            <span className="text-slate-400 text-[11px]">Unlinked</span>
+                                                            <span className="text-slate-400 text-xs">Unlinked</span>
                                                         )}
                                                     </td>
                                                     <td className="py-3 px-4 whitespace-nowrap">
                                                         <span
-                                                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                                            className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                                                                 sub.status === FormSubmissionStatus.PROCESSED
                                                                     ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
                                                                     : sub.status === FormSubmissionStatus.SPAM
@@ -1752,7 +1753,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                     General Inbound Contact
                                 </h4>
                             </div>
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                            <p className="text-xs text-slate-500 leading-relaxed">
                                 Full Name, Email, Phone, Company, and Inquiry message.
                             </p>
                         </div>
@@ -1769,7 +1770,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                     Request for Quote (RFQ)
                                 </h4>
                             </div>
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                            <p className="text-xs text-slate-500 leading-relaxed">
                                 Project Scope, Estimated Budget, Timeline, and Requirements.
                             </p>
                         </div>
@@ -1786,7 +1787,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                     Enterprise Demo Booking
                                 </h4>
                             </div>
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                            <p className="text-xs text-slate-500 leading-relaxed">
                                 Work Email, Job Title, Team Size, and Platform interests.
                             </p>
                         </div>
@@ -1803,7 +1804,7 @@ export function FormsClient({ initialData }: FormsClientProps) {
                                     Partnership & Integrations
                                 </h4>
                             </div>
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                            <p className="text-xs text-slate-500 leading-relaxed">
                                 Inbound partner requests, ecosystem alliances, and custom integrations.
                             </p>
                         </div>
@@ -2072,25 +2073,25 @@ export function FormsClient({ initialData }: FormsClientProps) {
                         <div className="space-y-4 py-2">
                             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border">
                                 <div>
-                                    <span className="text-slate-400 block text-[11px]">Origin Form:</span>
+                                    <span className="text-slate-400 block text-xs">Origin Form:</span>
                                     <span className="font-semibold text-slate-800 dark:text-slate-200">
                                         {selectedSubmission.webForm?.title || "Web Form"}
                                     </span>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400 block text-[11px]">Submitted At:</span>
+                                    <span className="text-slate-400 block text-xs">Submitted At:</span>
                                     <span className="font-mono text-slate-600 dark:text-slate-300">
                                         {new Date(selectedSubmission.createdAt).toLocaleString()}
                                     </span>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400 block text-[11px]">Client IP:</span>
+                                    <span className="text-slate-400 block text-xs">Client IP:</span>
                                     <span className="font-mono text-slate-600 dark:text-slate-300">
                                         {selectedSubmission.ipAddress || "127.0.0.1"}
                                     </span>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400 block text-[11px]">CRM Lead:</span>
+                                    <span className="text-slate-400 block text-xs">CRM Lead:</span>
                                     {selectedSubmission.lead ? (
                                         <Link
                                             href="/crm/leads"

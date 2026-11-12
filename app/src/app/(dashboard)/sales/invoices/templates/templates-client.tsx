@@ -199,11 +199,11 @@ export function TemplatesClient({ defaultTemplate: initialDefault }: TemplatesCl
                                     </div>
                                     <div className="flex flex-col items-end gap-1">
                                         {isDefault && (
-                                            <Badge className="bg-emerald-600 hover:bg-emerald-700 text-[9px] h-4 px-1.5">
+                                            <Badge className="bg-emerald-600 hover:bg-emerald-700 text-xs h-4 px-1.5">
                                                 Default
                                             </Badge>
                                         )}
-                                        <Badge variant="outline" className="text-[9px] h-4 px-1 text-muted-foreground">
+                                        <Badge variant="outline" className="text-xs h-4 px-1 text-muted-foreground">
                                             {meta.badgeText}
                                         </Badge>
                                     </div>
@@ -211,17 +211,17 @@ export function TemplatesClient({ defaultTemplate: initialDefault }: TemplatesCl
                                 <CardTitle className="text-sm font-bold text-foreground">
                                     {meta.name}
                                 </CardTitle>
-                                <CardDescription className="text-[11px] line-clamp-1 font-medium text-primary">
+                                <CardDescription className="text-xs line-clamp-1 font-medium text-primary">
                                     {meta.category}
                                 </CardDescription>
                             </CardHeader>
 
                             <CardContent className="p-4 pt-0 space-y-3">
-                                <p className="text-[11px] text-muted-foreground line-clamp-3 leading-relaxed">
+                                <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed">
                                     {meta.description}
                                 </p>
 
-                                <div className="pt-2 border-t border-border/40 space-y-1 text-[10px] text-muted-foreground">
+                                <div className="pt-2 border-t border-border/40 space-y-1 text-xs text-muted-foreground">
                                     <p><strong>Recommended:</strong> {meta.recommendedFor}</p>
                                 </div>
 
@@ -243,7 +243,7 @@ export function TemplatesClient({ defaultTemplate: initialDefault }: TemplatesCl
                                             variant="ghost"
                                             size="sm"
                                             disabled={isPending}
-                                            className="h-7 px-2 text-[10px] shrink-0 hover:bg-primary/10 hover:text-primary"
+                                            className="h-7 px-2 text-xs shrink-0 hover:bg-primary/10 hover:text-primary"
                                             onClick={(e) => {
                                                 e.stopPropagation()
                                                 handleSetDefault(key)

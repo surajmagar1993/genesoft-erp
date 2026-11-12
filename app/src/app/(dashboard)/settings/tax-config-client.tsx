@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useEffect } from "react"
 import { Plus, Trash2, CheckCircle2, ShieldCheck } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -52,7 +53,7 @@ export default function TaxConfigClient() {
     }
 
     async function handleDelete(id: string) {
-        if (!confirm("Are you sure? This cannot be undone.")) return
+        if (!(await confirmAction({ title: "Delete this tax?", description: "This can't be undone.", confirmLabel: "Delete" }))) return
         try {
             unwrap(await deleteTaxGroup(id))
             toast.success("Tax group deleted")
@@ -175,7 +176,7 @@ export default function TaxConfigClient() {
                                 <div className="space-y-1">
                                     <CardTitle className="text-base flex items-center gap-2">
                                         {group.name}
-                                        {group.is_default && <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] h-5">Default</Badge>}
+                                        {group.is_default && <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-xs h-5">Default</Badge>}
                                     </CardTitle>
                                     <CardDescription className="text-xs">{group.country_code} • {group.is_active ? "Active" : "Inactive"}</CardDescription>
                                 </div>

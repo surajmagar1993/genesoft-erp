@@ -64,7 +64,7 @@ export function NotificationsDropdown() {
                     {unreadCount > 0 && (
                         <Badge
                             variant="destructive"
-                            className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]"
+                            className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-xs"
                         >
                             {unreadCount > 9 ? "9+" : unreadCount}
                         </Badge>
@@ -104,7 +104,7 @@ export function NotificationsDropdown() {
                                     <span className={`text-sm ${!n.is_read ? 'font-semibold text-primary' : 'font-medium'}`}>
                                         {n.title}
                                     </span>
-                                    <span className="text-[10px] text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground">
                                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
                                     </span>
                                 </div>
@@ -114,7 +114,7 @@ export function NotificationsDropdown() {
                                 {n.link && (
                                     <Link 
                                         href={n.link} 
-                                        className="text-[10px] text-primary hover:underline mt-1 font-medium"
+                                        className="text-xs text-primary hover:underline mt-1 font-medium"
                                         onClick={(e: React.MouseEvent) => e.stopPropagation()}
                                     >
                                         View details

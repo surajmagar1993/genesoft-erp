@@ -153,12 +153,12 @@ export function InvoiceTemplateDialog({
                                         <div className="flex items-center gap-1.5">
                                             <span className="text-xs font-bold text-foreground">{meta.name}</span>
                                             {isSelected && (
-                                                <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-primary text-primary-foreground">
+                                                <Badge variant="secondary" className="text-xs h-4 px-1 bg-primary text-primary-foreground">
                                                     Active
                                                 </Badge>
                                             )}
                                         </div>
-                                        <p className="text-[10px] text-muted-foreground line-clamp-1">{meta.category}</p>
+                                        <p className="text-xs text-muted-foreground line-clamp-1">{meta.category}</p>
                                     </div>
                                 </button>
                             )

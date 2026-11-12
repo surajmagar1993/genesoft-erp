@@ -63,7 +63,7 @@ export default async function AdminAuditPage() {
                                         <TableCell className="text-sm text-muted-foreground">
                                             {formatDistanceToNow(new Date(log.createdAt))} ago
                                         </TableCell>
-                                        <TableCell className="text-right pr-6 text-[10px] font-mono opacity-50">
+                                        <TableCell className="text-right pr-6 text-xs font-mono opacity-50">
                                             {JSON.stringify(log.metadata)}
                                         </TableCell>
                                     </TableRow>

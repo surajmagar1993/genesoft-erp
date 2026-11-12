@@ -74,7 +74,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-bold tracking-tight">Platform System Settings</h1>
-                        <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5">
+                        <Badge variant="outline" className="text-xs font-bold border-primary/20 bg-primary/5">
                             Global Config
                         </Badge>
                     </div>
@@ -100,12 +100,12 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                                 <CardTitle className="text-base">System-wide Announcement Broadcast</CardTitle>
                             </div>
                             {(initialSettings.bannerMessage || "").trim() ? (
-                                <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 text-[10px] uppercase font-bold flex items-center gap-1">
+                                <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 text-xs uppercase font-bold flex items-center gap-1">
                                     <Radio className="h-3 w-3 animate-pulse" />
                                     Live now
                                 </Badge>
                             ) : (
-                                <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                                <Badge variant="outline" className="text-xs text-muted-foreground">
                                     Nothing showing
                                 </Badge>
                             )}
@@ -133,7 +133,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                         {/* Live Preview of Banner */}
                         {bannerMessage.trim() && (
                             <div className="space-y-1.5 pt-2">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                     Live Preview (as seen by tenants)
                                 </span>
                                 <div className="p-3.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-300 flex items-center justify-between text-xs font-semibold shadow-sm">
@@ -141,7 +141,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                                         <Megaphone className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                                         <span>{bannerMessage}</span>
                                     </div>
-                                    <span className="text-[10px] uppercase opacity-70">Global Notice</span>
+                                    <span className="text-xs uppercase opacity-70">Global Notice</span>
                                 </div>
                             </div>
                         )}
@@ -227,7 +227,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                                     <Database className="h-3.5 w-3.5 text-emerald-500" />
                                 </div>
                                 <div className="font-bold text-foreground">PostgreSQL (Supabase)</div>
-                                <div className="text-[10px] text-emerald-600 font-semibold">Active & Pooling Connected</div>
+                                <div className="text-xs text-emerald-600 font-semibold">Active & Pooling Connected</div>
                             </div>
 
                             <div className="p-3.5 rounded-lg border bg-muted/20 space-y-1">
@@ -236,7 +236,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                                     <Mail className="h-3.5 w-3.5 text-blue-500" />
                                 </div>
                                 <div className="font-bold text-foreground">Resend API Gateway</div>
-                                <div className="text-[10px] text-blue-600 font-semibold">Transactional v2.0</div>
+                                <div className="text-xs text-blue-600 font-semibold">Transactional v2.0</div>
                             </div>
 
                             <div className="p-3.5 rounded-lg border bg-muted/20 space-y-1">
@@ -245,7 +245,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                                     <ShieldCheck className="h-3.5 w-3.5 text-purple-500" />
                                 </div>
                                 <div className="font-bold text-foreground">Razorpay</div>
-                                <div className="text-[10px] text-purple-600 font-semibold">All regions</div>
+                                <div className="text-xs text-purple-600 font-semibold">All regions</div>
                             </div>
                         </div>
                     </CardContent>

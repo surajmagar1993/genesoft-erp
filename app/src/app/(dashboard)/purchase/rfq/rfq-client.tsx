@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -374,10 +375,10 @@ export function RfqClient({ initialData }: RfqClientProps) {
     }
 
     // Award Winning Bid -> Convert to PO
-    const handleAwardQuote = (quote: RfqVendorRecord) => {
+    const handleAwardQuote = async (quote: RfqVendorRecord) => {
         if (!activeRfq) return
 
-        if (confirm(`Award RFQ ${activeRfq.rfqNumber} to ${quote.vendorCompanyName || quote.vendorName} for ${formatCurrency(quote.totalAmount, quote.currencyCode)}?\n\nThis will automatically generate a Purchase Order (PO).`)) {
+        if (await confirmAction(`Award RFQ ${activeRfq.rfqNumber} to ${quote.vendorCompanyName || quote.vendorName} for ${formatCurrency(quote.totalAmount, quote.currencyCode)}?\n\nThis will automatically generate a Purchase Order (PO).`)) {
             startTransition(async () => {
                 try {
                     const res = unwrap(await awardVendorQuote(activeRfq.id, quote.id))
@@ -410,8 +411,8 @@ export function RfqClient({ initialData }: RfqClientProps) {
     }
 
     // Delete RFQ
-    const handleDeleteRfq = (rfqId: string) => {
-        if (confirm("Are you sure you want to delete this RFQ? This action cannot be undone.")) {
+    const handleDeleteRfq = async (rfqId: string) => {
+        if (await confirmAction("Are you sure you want to delete this RFQ? This action cannot be undone.")) {
             startTransition(async () => {
                 try {
                     unwrap(await deleteRfq(rfqId))
@@ -721,7 +722,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                             </span>
                                                             {renderStatusBadge(rfq.status)}
                                                             {isOverdue && (
-                                                                <Badge variant="destructive" className="text-[10px] py-0 px-1.5">
+                                                                <Badge variant="destructive" className="text-xs py-0 px-1.5">
                                                                     Deadline Passed
                                                                 </Badge>
                                                             )}
@@ -737,7 +738,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                 ? formatCurrency(rfq.lowestQuoteTotal)
                                                                 : formatCurrency(rfq.targetTotalBudget)}
                                                         </p>
-                                                        <p className="text-[11px] text-muted-foreground">
+                                                        <p className="text-xs text-muted-foreground">
                                                             {rfq.lowestQuoteTotal !== null ? "Lowest Bid" : "Target Est."}
                                                         </p>
                                                     </div>
@@ -759,7 +760,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                         <Calendar className="w-3.5 h-3.5" />
                                                         <span>Due {format(new Date(rfq.dueDate), "MMM dd")}</span>
                                                         {daysLeft >= 0 && rfq.status === RfqStatus.SENT && (
-                                                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                                                            <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                                                                 ({daysLeft}d left)
                                                             </span>
                                                         )}
@@ -980,7 +981,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                         <div className="font-bold truncate text-foreground">
                                                                             {vendorQuote.vendorCompanyName || vendorQuote.vendorName}
                                                                         </div>
-                                                                        <div className="text-[10px] text-muted-foreground font-normal">
+                                                                        <div className="text-xs text-muted-foreground font-normal">
                                                                             {vendorQuote.quoteReference ? `Ref: ${vendorQuote.quoteReference}` : "Pending Bid"}
                                                                         </div>
                                                                     </div>
@@ -1007,7 +1008,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                     <TableCell className="font-medium text-xs">
                                                                         <div className="font-semibold text-foreground">{rfqItem.description}</div>
                                                                         {rfqItem.hsnSacCode && (
-                                                                            <span className="text-[10px] text-muted-foreground font-mono">
+                                                                            <span className="text-xs text-muted-foreground font-mono">
                                                                                 HSN: {rfqItem.hsnSacCode}
                                                                             </span>
                                                                         )}
@@ -1036,11 +1037,11 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                                         <div className={`font-semibold ${isLowest ? "text-emerald-700 dark:text-emerald-400" : "text-foreground"}`}>
                                                                                             {formatCurrency(quoteItem.unitPrice, vendorQuote.currencyCode)}
                                                                                         </div>
-                                                                                        <div className="text-[10px] text-muted-foreground">
+                                                                                        <div className="text-xs text-muted-foreground">
                                                                                             Total: {formatCurrency(quoteItem.lineTotal, vendorQuote.currencyCode)}
                                                                                         </div>
                                                                                         {isLowest && (
-                                                                                            <span className="inline-block text-[9px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1 rounded font-bold">
+                                                                                            <span className="inline-block text-xs bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-1 rounded font-bold">
                                                                                                 Lowest
                                                                                             </span>
                                                                                         )}
@@ -1088,7 +1089,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                                     {formatCurrency(vendorQuote.totalAmount, vendorQuote.currencyCode)}
                                                                                 </div>
                                                                                 {isLowestTotal && (
-                                                                                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                                                                                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
                                                                                         ⭐ Best Bid
                                                                                     </span>
                                                                                 )}
@@ -1192,7 +1193,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                         )}
 
                                                                         {vendorQuote.isWinner && (
-                                                                            <Badge className="bg-emerald-600 text-white text-[10px] w-full justify-center">
+                                                                            <Badge className="bg-emerald-600 text-white text-xs w-full justify-center">
                                                                                 Won Tender
                                                                             </Badge>
                                                                         )}
@@ -1338,12 +1339,12 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                             <TableCell>
                                                                 <div className="font-medium text-xs text-foreground">{item.description}</div>
                                                                 {item.productName && (
-                                                                    <p className="text-[11px] text-muted-foreground">
+                                                                    <p className="text-xs text-muted-foreground">
                                                                         Linked to: {item.productName}
                                                                     </p>
                                                                 )}
                                                                 {item.notes && (
-                                                                    <p className="text-[10px] text-muted-foreground italic">
+                                                                    <p className="text-xs text-muted-foreground italic">
                                                                         Note: {item.notes}
                                                                     </p>
                                                                 )}
@@ -1451,7 +1452,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                                 <td className="p-2 font-medium">
                                                                     {it.description}
                                                                     {it.notes && (
-                                                                        <div className="text-[10px] text-zinc-500 italic">
+                                                                        <div className="text-xs text-zinc-500 italic">
                                                                             Specs: {it.notes}
                                                                         </div>
                                                                     )}
@@ -1483,7 +1484,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                 <p>Generated automatically via Genesoft Procurement Engine.</p>
                                                 <div className="text-right space-y-8">
                                                     <p>Authorized Procurement Officer</p>
-                                                    <p className="border-t pt-1 font-mono text-[10px]">SIGNATURE & STAMP</p>
+                                                    <p className="border-t pt-1 font-mono text-xs">SIGNATURE & STAMP</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -1528,7 +1529,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                 <Label htmlFor="rfq-title">Tender Title *</Label>
                                 <Input
                                     id="rfq-title"
-                                    placeholder="e.g. Q4 Raw Material Steel Procurement"
+                                    placeholder="Enter tender title"
                                     value={createTitle}
                                     onChange={(e) => setCreateTitle(e.target.value)}
                                 />
@@ -1648,7 +1649,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                 <Label className="text-xs">HSN / SAC</Label>
                                                 <Input
                                                     className="h-8 text-xs font-mono"
-                                                    placeholder="e.g. 7208"
+                                                    placeholder="Enter HSN/SAC code"
                                                     value={item.hsnSacCode}
                                                     onChange={(e) => handleUpdateItemLine(item.id, "hsnSacCode", e.target.value)}
                                                 />
@@ -1701,7 +1702,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                     <div className="font-semibold text-foreground">
                                                         {v.companyName || v.displayName}
                                                     </div>
-                                                    <div className="text-[11px] text-muted-foreground">
+                                                    <div className="text-xs text-muted-foreground">
                                                         {v.email || v.phone || "No contact info"}
                                                     </div>
                                                 </div>
@@ -1710,7 +1711,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                     })
                                 )}
                             </div>
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                                 {createInvitedVendorIds.length} supplier(s) selected
                             </p>
                         </div>
@@ -1772,7 +1773,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                     <Label className="text-xs">Supplier Quote Ref #</Label>
                                     <Input
                                         className="h-8 text-xs font-mono"
-                                        placeholder="e.g. QT-2026-901"
+                                        placeholder="Enter the supplier's quote reference"
                                         value={bidQuoteRef}
                                         onChange={(e) => setBidQuoteRef(e.target.value)}
                                     />
@@ -1830,7 +1831,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                         <TableCell className="text-xs font-medium">
                                                             <div className="text-foreground">{rfqItem.description}</div>
                                                             {rfqItem.targetUnitPrice && (
-                                                                <span className="text-[10px] text-muted-foreground font-mono">
+                                                                <span className="text-xs text-muted-foreground font-mono">
                                                                     Target: {formatCurrency(rfqItem.targetUnitPrice)}
                                                                 </span>
                                                             )}
@@ -1950,7 +1951,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                 <div className="font-semibold text-foreground">
                                                     {v.companyName || v.displayName}
                                                 </div>
-                                                <div className="text-[11px] text-muted-foreground">
+                                                <div className="text-xs text-muted-foreground">
                                                     {v.email || v.phone || "No contact info"}
                                                 </div>
                                             </div>

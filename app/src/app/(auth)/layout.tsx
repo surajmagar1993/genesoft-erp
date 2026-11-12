@@ -38,7 +38,7 @@ export default function AuthLayout({
                 className="rounded-lg border border-border/50 bg-card/40 p-3 space-y-1"
               >
                 <p className="text-xs font-semibold text-primary">{item.label}</p>
-                <p className="text-[11px] text-muted-foreground leading-tight">
+                <p className="text-xs text-muted-foreground leading-tight">
                   {item.desc}
                 </p>
               </div>

@@ -285,11 +285,11 @@ export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Pr
              <CardContent className="space-y-4 pt-1">
                 <div className="space-y-2">
                    <div className="flex items-start gap-2">
-                      <div className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</div>
+                      <div className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs shrink-0 mt-0.5">1</div>
                       <p className="text-xs leading-relaxed">Schedule initial discovery call to identify core pain points.</p>
                    </div>
                    <div className="flex items-start gap-2">
-                      <div className="h-5 w-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</div>
+                      <div className="h-5 w-5 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs shrink-0 mt-0.5">2</div>
                       <p className="text-xs leading-relaxed text-muted-foreground">Send professional proposal with &quot;Retail Business&quot; case study.</p>
                    </div>
                 </div>

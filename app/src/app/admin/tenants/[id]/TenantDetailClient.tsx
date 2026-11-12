@@ -215,14 +215,14 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-2xl font-bold tracking-tight">{tenant.name}</h1>
-                                <Badge variant={tenant.isActive ? "default" : "destructive"} className="text-[10px] font-bold">
+                                <Badge variant={tenant.isActive ? "default" : "destructive"} className="text-xs font-bold">
                                     {tenant.isActive ? "Active" : closure?.status === "PURGED" ? "Data deleted" : closure ? "Closed" : "Suspended"}
                                 </Badge>
-                                <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5">
+                                <Badge variant="outline" className="text-xs font-bold border-primary/20 bg-primary/5">
                                     {tenant.plan}
                                 </Badge>
                                 {tenant.isTrial && (
-                                    <span className="text-[10px] bg-amber-500/10 text-amber-600 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-amber-500/20">
+                                    <span className="text-xs bg-amber-500/10 text-amber-600 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-amber-500/20">
                                         Trial Active
                                     </span>
                                 )}
@@ -538,7 +538,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center gap-1.5">
-                                                        <Badge variant="outline" className="text-[11px] font-bold">
+                                                        <Badge variant="outline" className="text-xs font-bold">
                                                             {inv.plan}
                                                         </Badge>
                                                         <span className="text-xs text-muted-foreground">
@@ -548,7 +548,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                                 </TableCell>
                                                 <TableCell className="text-xs">
                                                     <div>{inv.currency} {Number(inv.subtotal).toFixed(2)}</div>
-                                                    <div className="text-[10px] text-muted-foreground">
+                                                    <div className="text-xs text-muted-foreground">
                                                         Tax ({inv.taxRate}%): {inv.currency} {Number(inv.taxAmount).toFixed(2)}
                                                     </div>
                                                 </TableCell>
@@ -556,7 +556,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                                     {inv.currency} {Number(inv.total).toFixed(2)}
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-[10px] uppercase font-bold">
+                                                    <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-xs uppercase font-bold">
                                                         {inv.status || "PAID"}
                                                     </Badge>
                                                 </TableCell>
@@ -635,7 +635,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                                 {u.email}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className="text-[10px] font-bold">
+                                                <Badge variant="outline" className="text-xs font-bold">
                                                     {u.role}
                                                 </Badge>
                                             </TableCell>
@@ -763,7 +763,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                                 {format(inZone(log.createdAt), "MMM d, yyyy (HH:mm)")}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className="font-mono text-[10px] font-bold">
+                                                <Badge variant="outline" className="font-mono text-xs font-bold">
                                                     {log.action}
                                                 </Badge>
                                             </TableCell>
@@ -887,7 +887,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                         id="editCountry"
                                         value={editForm.countryCode}
                                         onChange={e => setEditForm(prev => ({ ...prev, countryCode: e.target.value }))}
-                                        placeholder="e.g. IN, US, AE"
+                                        placeholder="Enter country code"
                                         className="bg-background text-sm"
                                     />
                                 </div>
@@ -897,7 +897,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                         id="editCurrency"
                                         value={editForm.currencyCode}
                                         onChange={e => setEditForm(prev => ({ ...prev, currencyCode: e.target.value }))}
-                                        placeholder="e.g. INR, USD, AED"
+                                        placeholder="Enter currency code"
                                         className="bg-background text-sm"
                                     />
                                 </div>

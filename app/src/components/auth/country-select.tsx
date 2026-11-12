@@ -43,11 +43,11 @@ export function CountrySelect() {
                 <div className="grid grid-cols-2 gap-3 pt-1">
                     <div className="space-y-1">
                         <Label htmlFor="otherCountry" className="text-xs">Country code</Label>
-                        <Input id="otherCountry" name="otherCountry" required maxLength={2} placeholder="2 letters, e.g. SG" className="h-9 uppercase" />
+                        <Input id="otherCountry" name="otherCountry" required maxLength={2} placeholder="2-letter country code" className="h-9 uppercase" />
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="otherCurrency" className="text-xs">Currency</Label>
-                        <Input id="otherCurrency" name="otherCurrency" required maxLength={3} placeholder="3 letters, e.g. SGD" className="h-9 uppercase" />
+                        <Input id="otherCurrency" name="otherCurrency" required maxLength={3} placeholder="3-letter currency code" className="h-9 uppercase" />
                     </div>
                     <p className="col-span-2 text-xs text-muted-foreground">Set your tax name and rates in Settings after signing in.</p>
                 </div>

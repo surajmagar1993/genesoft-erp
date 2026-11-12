@@ -86,7 +86,7 @@ export default async function TenantsPage(props: {
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="font-semibold text-sm hover:underline">{tenant.name}</span>
-                                                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
+                                                <span className="text-xs text-muted-foreground uppercase font-bold tracking-tight">
                                                     ID: {tenant.id.split('-')[0]}...
                                                 </span>
                                             </div>
@@ -94,11 +94,11 @@ export default async function TenantsPage(props: {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col gap-1">
-                                            <Badge variant={tenant.plan === "FREE" ? "outline" : "default"} className="w-fit text-[10px]">
+                                            <Badge variant={tenant.plan === "FREE" ? "outline" : "default"} className="w-fit text-xs">
                                                 {tenant.plan}
                                             </Badge>
                                             {tenant.isTrial && (
-                                                <span className="text-[10px] text-amber-500 font-bold uppercase tracking-widest">
+                                                <span className="text-xs text-amber-500 font-bold uppercase tracking-widest">
                                                     Trial Active
                                                 </span>
                                             )}

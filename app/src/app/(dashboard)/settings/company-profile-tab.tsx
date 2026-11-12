@@ -199,7 +199,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                     id="entityName"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    placeholder="e.g. Acme Tech Solutions Pvt Ltd"
+                                    placeholder="Enter company name"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -211,7 +211,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                     placeholder={`Your ${regime?.taxIdLabel || "tax registration number"}`}
                                     className="uppercase font-mono"
                                 />
-                                <p className="text-[11px] text-muted-foreground">Printed on invoices and required for tax exports.</p>
+                                <p className="text-xs text-muted-foreground">Printed on invoices and required for tax exports.</p>
                             </div>
                         </div>
 
@@ -227,7 +227,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="taxRates">Rates (%)</Label>
-                                    <Input id="taxRates" value={taxRates} onChange={(e) => setTaxRates(e.target.value)} placeholder="Comma-separated, e.g. 5, 9" />
+                                    <Input id="taxRates" value={taxRates} onChange={(e) => setTaxRates(e.target.value)} placeholder="Enter rates separated by commas" />
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="taxDefault">Default rate (%)</Label>
@@ -259,7 +259,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                         id="phone"
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
-                                        placeholder="+91 9876543210"
+                                        placeholder="Enter phone number with country code"
                                         className="pl-9"
                                     />
                                 </div>
@@ -364,7 +364,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                         id="postalCode"
                                         value={address.postalCode}
                                         onChange={(e) => setAddress((prev) => ({ ...prev, postalCode: e.target.value }))}
-                                        placeholder="e.g. 400001 or 94107"
+                                        placeholder="Enter postal or PIN code"
                                     />
                                 </div>
                             </div>
@@ -447,7 +447,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                         </Button>
                                     )}
                                 </div>
-                                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                <p className="text-xs text-muted-foreground leading-relaxed">
                                     PNG or JPG, up to 1 MB. A transparent PNG at least 300px wide prints best. Changes apply straight away.
                                 </p>
                             </div>

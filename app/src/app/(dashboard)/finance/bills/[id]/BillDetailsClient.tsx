@@ -1,4 +1,5 @@
 "use client"
+import { confirmAction } from "@/components/confirm-dialog"
 import { localeForCurrency } from "@/lib/utils"
 import { COMPLIANCE_MODULES_ENABLED } from "@/lib/features"
 
@@ -109,8 +110,8 @@ export default function BillDetailsClient({ bill }: Props) {
         })
     }
 
-    const handleDeletePayment = (paymentId: string) => {
-        if (!confirm("Are you sure you want to delete this payment?")) return
+    const handleDeletePayment = async (paymentId: string) => {
+        if (!(await confirmAction("Are you sure you want to delete this payment?"))) return
         startTransition(async () => {
             const { error } = await deletePayment(paymentId)
             if (error) {
@@ -121,8 +122,8 @@ export default function BillDetailsClient({ bill }: Props) {
         })
     }
 
-    const handleDeleteBill = () => {
-        if (!confirm("Are you sure you want to delete this bill?")) return
+    const handleDeleteBill = async () => {
+        if (!(await confirmAction("Are you sure you want to delete this bill?"))) return
         startTransition(async () => {
             const { error } = await deleteBill(bill.id)
             if (!error) {
@@ -191,7 +192,7 @@ export default function BillDetailsClient({ bill }: Props) {
                                 <p className="text-xs text-amber-700 dark:text-amber-400 font-medium uppercase tracking-wider">
                                     TDS Withheld ({tdsInfo.sectionCode})
                                 </p>
-                                <Badge variant="outline" className="text-[10px] bg-amber-100 text-amber-800 border-amber-300">
+                                <Badge variant="outline" className="text-xs bg-amber-100 text-amber-800 border-amber-300">
                                     {tdsInfo.tdsRate}%
                                 </Badge>
                             </div>
@@ -440,7 +441,7 @@ export default function BillDetailsClient({ bill }: Props) {
                                     </span>
                                     <span>- {formatCurrency(tdsAmount, bill.currency_code)}</span>
                                 </div>
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="text-xs text-muted-foreground">
                                     Gross Bill: {formatCurrency(totalBillAmount, bill.currency_code)} | Net Vendor Payable: {formatCurrency(netPayable, bill.currency_code)}
                                 </p>
                             </div>

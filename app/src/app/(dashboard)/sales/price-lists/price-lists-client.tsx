@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import {
@@ -12,7 +13,6 @@ import {
     createPriceList,
     deletePriceList,
     upsertPriceListItem,
-    deletePriceListItem,
     assignContactPriceList,
     calculateEffectivePrice,
 } from "@/app/actions/sales/price-lists"
@@ -260,8 +260,8 @@ export default function PriceListsClient({
     }
 
     // Handlers: Delete Price List
-    const handleDeletePriceList = (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to delete rate card "${name}"?`)) return
+    const handleDeletePriceList = async (id: string, name: string) => {
+        if (!(await confirmAction(`Are you sure you want to delete rate card "${name}"?`))) return
 
         startTransition(async () => {
             const res = await deletePriceList(id)
@@ -272,20 +272,6 @@ export default function PriceListsClient({
             }
         })
     }
-
-    // Handlers: Delete Price List Item Override
-    (itemId: string) => {
-            if (!confirm("Are you sure you want to delete this volume price override?")) return
-
-            startTransition(async () => {
-                const res = await deletePriceListItem(itemId)
-                if (res.error) {
-                    toast.error(res.error)
-                } else {
-                    window.location.reload()
-                }
-            })
-        };
 
     // Simulator Calculation
     const handleRunSimulation = async () => {
@@ -512,7 +498,7 @@ export default function PriceListsClient({
                                                         {pl.code}
                                                     </span>
                                                     {pl.isDefault && (
-                                                        <Badge variant="secondary" className="text-[10px] bg-indigo-50 text-indigo-700 border-indigo-200">
+                                                        <Badge variant="secondary" className="text-xs bg-indigo-50 text-indigo-700 border-indigo-200">
                                                             Default
                                                         </Badge>
                                                     )}
@@ -611,7 +597,7 @@ export default function PriceListsClient({
                                         {priceLists.map((pl) => (
                                             <th key={pl.id} className="py-3.5 px-4 text-right whitespace-nowrap">
                                                 {pl.name}
-                                                <span className="block text-[10px] text-muted-foreground font-mono font-normal">
+                                                <span className="block text-xs text-muted-foreground font-mono font-normal">
                                                     {pl.code}
                                                 </span>
                                             </th>
@@ -636,7 +622,7 @@ export default function PriceListsClient({
                                                 </td>
                                                 <td className="py-3.5 px-4 text-right font-mono font-bold text-foreground whitespace-nowrap">
                                                     {formatINR(prod.basePrice)}
-                                                    <span className="text-[11px] text-muted-foreground block font-sans">
+                                                    <span className="text-xs text-muted-foreground block font-sans">
                                                         per {prod.unit}
                                                     </span>
                                                 </td>
@@ -658,7 +644,7 @@ export default function PriceListsClient({
                                                                 {priceInfo.discountPercent > 0 && (
                                                                     <Badge
                                                                         variant="outline"
-                                                                        className="text-[10px] text-emerald-600 border-emerald-300 font-mono"
+                                                                        className="text-xs text-emerald-600 border-emerald-300 font-mono"
                                                                     >
                                                                         -{priceInfo.discountPercent}%
                                                                     </Badge>
@@ -666,7 +652,7 @@ export default function PriceListsClient({
                                                                 {priceInfo.hasVolumeTiers && (
                                                                     <Badge
                                                                         variant="secondary"
-                                                                        className="text-[9px] bg-indigo-50 text-indigo-700"
+                                                                        className="text-xs bg-indigo-50 text-indigo-700"
                                                                     >
                                                                         Volume Tiers
                                                                     </Badge>
@@ -708,10 +694,10 @@ export default function PriceListsClient({
                             <Card key={pl.id} className="border-border/60 shadow-sm flex flex-col justify-between">
                                 <CardHeader className="pb-2">
                                     <div className="flex items-center justify-between">
-                                        <Badge variant="outline" className="font-mono text-[11px] text-indigo-600">
+                                        <Badge variant="outline" className="font-mono text-xs text-indigo-600">
                                             {pl.code}
                                         </Badge>
-                                        <Badge variant="secondary" className="text-[10px]">
+                                        <Badge variant="secondary" className="text-xs">
                                             {pl.targetGroup || "ALL"}
                                         </Badge>
                                     </div>
@@ -733,7 +719,7 @@ export default function PriceListsClient({
                                             >
                                                 <div>
                                                     <div className="font-medium text-foreground">{it.productName}</div>
-                                                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                                                    <div className="text-xs text-muted-foreground mt-0.5">
                                                         Min Order: <span className="font-bold">{it.minQuantity} units</span>
                                                     </div>
                                                 </div>
@@ -742,7 +728,7 @@ export default function PriceListsClient({
                                                         {formatINR(it.effectiveUnitPrice)}
                                                     </div>
                                                     {it.discountPercent !== null && (
-                                                        <span className="text-[10px] text-emerald-600 font-mono block">
+                                                        <span className="text-xs text-emerald-600 font-mono block">
                                                             {it.discountPercent}% off
                                                         </span>
                                                     )}
@@ -932,7 +918,7 @@ export default function PriceListsClient({
                                 </label>
                                 <Input
                                     required
-                                    placeholder="e.g. PL-GOVERNMENT"
+                                    placeholder="Enter rate card code"
                                     value={plForm.code}
                                     onChange={(e) => setPlForm({ ...plForm, code: e.target.value })}
                                 />
@@ -944,7 +930,7 @@ export default function PriceListsClient({
                                 </label>
                                 <Input
                                     required
-                                    placeholder="e.g. Institutional Non-Profit Rate Card"
+                                    placeholder="Enter rate card name"
                                     value={plForm.name}
                                     onChange={(e) => setPlForm({ ...plForm, name: e.target.value })}
                                 />
@@ -1151,7 +1137,7 @@ export default function PriceListsClient({
                                         step="0.1"
                                         min="0"
                                         max="100"
-                                        placeholder="e.g. 20%"
+                                        placeholder="Enter discount percent"
                                         value={overrideForm.discountPercent}
                                         onChange={(e) =>
                                             setOverrideForm({ ...overrideForm, discountPercent: e.target.value })

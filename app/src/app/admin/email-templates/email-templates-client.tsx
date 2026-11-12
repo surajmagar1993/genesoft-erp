@@ -399,7 +399,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                             </span>
                             <Badge
                                 variant="outline"
-                                className={`text-[10px] uppercase font-bold px-1.5 py-0 ${
+                                className={`text-xs uppercase font-bold px-1.5 py-0 ${
                                     gatewayStatus.isConfigured
                                         ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
                                         : "bg-amber-500/10 text-amber-600 border-amber-500/20"
@@ -500,7 +500,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                         </div>
                                         <Badge
                                             variant="outline"
-                                            className={`text-[10px] font-bold px-2 py-0.5 border ${categoryBadgeVariant(t.category)}`}
+                                            className={`text-xs font-bold px-2 py-0.5 border ${categoryBadgeVariant(t.category)}`}
                                         >
                                             {t.category}
                                         </Badge>
@@ -510,14 +510,14 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                         {t.description}
                                     </p>
 
-                                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50 text-[11px] text-muted-foreground">
-                                        <span className="font-mono text-[10px] text-primary/80">
+                                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50 text-xs text-muted-foreground">
+                                        <span className="font-mono text-xs text-primary/80">
                                             {t.key}
                                         </span>
                                         <div className="flex items-center gap-2">
                                             <Badge
                                                 variant="outline"
-                                                className="text-[10px] py-0 px-1.5"
+                                                className="text-xs py-0 px-1.5"
                                                 title={(t as { sentAutomatically?: boolean }).sentAutomatically
                                                     ? "The platform sends this email automatically"
                                                     : "Not sent automatically yet; preview and test sends only"}
@@ -525,7 +525,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                                 {(t as { sentAutomatically?: boolean }).sentAutomatically ? "Sent automatically" : "Preview only"}
                                             </Badge>
                                             {t.isCustomized ? (
-                                                <Badge variant="secondary" className="text-[10px] py-0 px-1.5">
+                                                <Badge variant="secondary" className="text-xs py-0 px-1.5">
                                                     Customized
                                                 </Badge>
                                             ) : (
@@ -604,7 +604,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                             <div className="space-y-2">
                                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                                     <span>Subject Line</span>
-                                    <span className="text-[11px] font-normal text-muted-foreground">
+                                    <span className="text-xs font-normal text-muted-foreground">
                                         Click a token to inject into subject
                                     </span>
                                 </label>
@@ -617,7 +617,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
 
                                 {/* Token pills */}
                                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                                    <span className="text-[11px] text-muted-foreground font-semibold mr-1 flex items-center gap-1">
+                                    <span className="text-xs text-muted-foreground font-semibold mr-1 flex items-center gap-1">
                                         <Tag className="h-3 w-3" /> Tokens:
                                     </span>
                                     {currentTemplate.mergeTags.slice(0, 6).map((mt) => (
@@ -625,7 +625,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                             key={mt.tag}
                                             type="button"
                                             onClick={() => insertTagIntoSubject(mt.tag)}
-                                            className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-mono hover:bg-primary/10 hover:text-primary transition-colors border border-border"
+                                            className="px-2 py-0.5 rounded-md bg-muted text-xs font-mono hover:bg-primary/10 hover:text-primary transition-colors border border-border"
                                             title={mt.description}
                                         >
                                             +&#123;&#123;{mt.tag}&#125;&#125;
@@ -649,7 +649,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                         </TabsTrigger>
                                     </TabsList>
 
-                                    <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                    <div className="text-xs text-muted-foreground flex items-center gap-1">
                                         <span>Template Key:</span>
                                         <span className="font-mono font-bold text-foreground">
                                             {currentTemplate.key}
@@ -663,7 +663,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                         <span className="text-xs text-muted-foreground">
                                             Edit the inner HTML body content. Standard styling and tables are supported.
                                         </span>
-                                        <span className="text-[11px] font-mono text-muted-foreground">
+                                        <span className="text-xs font-mono text-muted-foreground">
                                             {editBodyHtml.length} characters
                                         </span>
                                     </div>
@@ -682,7 +682,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                         <span className="text-xs text-muted-foreground">
                                             Fallback plain text format for clients that do not render rich HTML.
                                         </span>
-                                        <span className="text-[11px] font-mono text-muted-foreground">
+                                        <span className="text-xs font-mono text-muted-foreground">
                                             {editBodyText.length} characters
                                         </span>
                                     </div>
@@ -755,7 +755,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                                         {liveCompiled.subject}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                     <span>From:</span>
                                                     <span className="font-mono">
                                                         Platform &lt;notifications@{gatewayStatus.fromDomain}&gt;
@@ -786,7 +786,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                         <Code2 className="h-4 w-4 text-primary" />
                                         Supported Merge Tags for {currentTemplate.name} ({currentTemplate.mergeTags.length})
                                     </span>
-                                    <span className="text-[11px] text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground">
                                         Click any token to copy to clipboard
                                     </span>
                                 </div>
@@ -805,11 +805,11 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                                         <code className="text-xs font-bold text-primary font-mono group-hover:underline">
                                                             &#123;&#123;{mt.tag}&#125;&#125;
                                                         </code>
-                                                        <span className="text-[11px] text-muted-foreground">
+                                                        <span className="text-xs text-muted-foreground">
                                                             ({mt.label})
                                                         </span>
                                                     </div>
-                                                    <div className="text-[11px] text-muted-foreground truncate mt-0.5">
+                                                    <div className="text-xs text-muted-foreground truncate mt-0.5">
                                                         {mt.description} &bull; <span className="italic font-mono">e.g. &quot;{mt.sampleValue}&quot;</span>
                                                     </div>
                                                 </div>
@@ -866,7 +866,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                         <div className="p-3.5 rounded-lg border bg-muted/30 text-xs space-y-1.5">
                             <div className="flex items-center justify-between">
                                 <span className="font-semibold text-foreground">Active Gateway:</span>
-                                <Badge variant="outline" className="text-[10px] font-bold">
+                                <Badge variant="outline" className="text-xs font-bold">
                                     {gatewayStatus.provider}
                                 </Badge>
                             </div>

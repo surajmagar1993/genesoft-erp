@@ -538,7 +538,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                                 {challan.challanNumber}
                                             </div>
                                             {challan.convertedInvoiceNumber && (
-                                                <div className="text-[10px] text-purple-600 font-mono mt-0.5">
+                                                <div className="text-xs text-purple-600 font-mono mt-0.5">
                                                     ➔ {challan.convertedInvoiceNumber}
                                                 </div>
                                             )}
@@ -547,13 +547,13 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                             <div className="text-xs font-medium text-foreground">
                                                 {format(new Date(challan.challanDate), "dd MMM yyyy")}
                                             </div>
-                                            <Badge variant="secondary" className="text-[10px] h-4.5 px-1 font-normal mt-0.5">
+                                            <Badge variant="secondary" className="text-xs h-4.5 px-1 font-normal mt-0.5">
                                                 {reasonLabels[challan.reason]}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
                                             <div className="font-medium text-xs text-foreground">{challan.recipientName}</div>
-                                            <div className="text-[11px] text-muted-foreground font-mono">
+                                            <div className="text-xs text-muted-foreground font-mono">
                                                 {challan.recipientGstin || "Unregistered"}
                                             </div>
                                         </TableCell>
@@ -561,7 +561,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                             <div className="text-xs font-mono font-medium text-foreground">
                                                 {challan.vehicleNumber || "No vehicle logged"}
                                             </div>
-                                            <div className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                            <div className="text-xs text-muted-foreground flex items-center gap-1">
                                                 <span>{challan.transportMode}</span>
                                                 {challan.transporterName && <span>• {challan.transporterName}</span>}
                                             </div>
@@ -570,7 +570,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                             <div className="text-xs text-foreground">
                                                 {challan.sourceWarehouseName || "Primary Hub"}
                                             </div>
-                                            <div className="text-[11px] text-muted-foreground">
+                                            <div className="text-xs text-muted-foreground">
                                                 {challan.itemsCount} item{challan.itemsCount !== 1 ? "s" : ""}
                                             </div>
                                         </TableCell>
@@ -578,7 +578,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                             <div className="font-medium text-xs text-foreground font-mono">
                                                 {formatCurrency(challan.totalValue)}
                                             </div>
-                                            <div className="text-[10px] text-muted-foreground">
+                                            <div className="text-xs text-muted-foreground">
                                                 Taxable: {formatCurrency(challan.taxableAmount)}
                                             </div>
                                         </TableCell>
@@ -786,7 +786,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                             <div className="space-y-1">
                                 <Label className="text-xs font-semibold">Transporter Name</Label>
                                 <Input
-                                    placeholder="e.g. Blue Dart / V-Trans"
+                                    placeholder="Enter transporter name"
                                     value={transporterName}
                                     onChange={(e) => setTransporterName(e.target.value)}
                                     className="h-9 text-xs"
@@ -796,7 +796,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                             <div className="space-y-1">
                                 <Label className="text-xs font-semibold">LR / Consignment No</Label>
                                 <Input
-                                    placeholder="LR-987654"
+                                    placeholder="Enter LR number"
                                     value={lrNumber}
                                     onChange={(e) => setLrNumber(e.target.value)}
                                     className="h-9 text-xs font-mono"
@@ -844,7 +844,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                             <div className="border rounded-lg overflow-x-auto">
                                 <Table>
                                     <TableHeader>
-                                        <TableRow className="bg-muted/40 text-[11px]">
+                                        <TableRow className="bg-muted/40 text-xs">
                                             <TableHead className="w-[280px]">Product / Item</TableHead>
                                             <TableHead className="w-[100px]">HSN/SAC</TableHead>
                                             <TableHead className="w-[90px]">Qty</TableHead>
@@ -863,7 +863,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                                     <TableCell>
                                                         <div className="space-y-1">
                                                             <Select onValueChange={(pId) => handleSelectProduct(index, pId)}>
-                                                                <SelectTrigger className="h-7 text-[11px]">
+                                                                <SelectTrigger className="h-7 text-xs">
                                                                     <SelectValue placeholder="Pick from catalog..." />
                                                                 </SelectTrigger>
                                                                 <SelectContent>
@@ -1110,28 +1110,28 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                         <div className="p-6 bg-white text-black border rounded-lg shadow-sm print:border-0 print:shadow-none space-y-4 font-sans text-xs">
                             {/* Header Banner */}
                             <div className="border-b pb-4 text-center relative">
-                                <div className="absolute right-0 top-0 border px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-gray-50">
+                                <div className="absolute right-0 top-0 border px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider bg-gray-50">
                                     {printCopyType === "CONSIGNEE" ? "Original for Consignee" : printCopyType === "TRANSPORTER" ? "Duplicate for Transporter" : "Triplicate for Consignor"}
                                 </div>
                                 <h2 className="text-lg font-extrabold uppercase tracking-wide">
                                     DELIVERY CHALLAN
                                 </h2>
-                                <p className="text-[10px] text-gray-600">
+                                <p className="text-xs text-gray-600">
                                     (Issued under Rule 55 of the Central Goods and Services Tax Rules, 2017)
                                 </p>
                             </div>
 
                             {/* Metadata Grid */}
-                            <div className="grid grid-cols-2 gap-4 border p-3 rounded text-[11px]">
+                            <div className="grid grid-cols-2 gap-4 border p-3 rounded text-xs">
                                 <div>
-                                    <span className="font-bold text-gray-500 uppercase text-[9px] block">Challan Details:</span>
+                                    <span className="font-bold text-gray-500 uppercase text-xs block">Challan Details:</span>
                                     <div><strong>Challan No:</strong> <span className="font-mono font-bold">{selectedChallan.challanNumber}</span></div>
                                     <div><strong>Challan Date:</strong> {format(new Date(selectedChallan.challanDate), "dd/MM/yyyy")}</div>
                                     <div><strong>Purpose of Transport:</strong> <span className="font-semibold text-primary">{reasonLabels[selectedChallan.reason]}</span></div>
                                     <div><strong>Place of Supply:</strong> {selectedChallan.placeOfSupply || "State-wide"}</div>
                                 </div>
                                 <div>
-                                    <span className="font-bold text-gray-500 uppercase text-[9px] block">Transport Details:</span>
+                                    <span className="font-bold text-gray-500 uppercase text-xs block">Transport Details:</span>
                                     <div><strong>Mode:</strong> {selectedChallan.transportMode}</div>
                                     <div><strong>Vehicle Number:</strong> <span className="font-mono font-bold">{selectedChallan.vehicleNumber || "N/A"}</span></div>
                                     <div><strong>Transporter:</strong> {selectedChallan.transporterName || "Direct / Self"}</div>
@@ -1140,15 +1140,15 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                             </div>
 
                             {/* Addresses Grid */}
-                            <div className="grid grid-cols-2 gap-4 border p-3 rounded text-[11px]">
+                            <div className="grid grid-cols-2 gap-4 border p-3 rounded text-xs">
                                 <div>
-                                    <span className="font-bold text-gray-500 uppercase text-[9px] block">Dispatch From (Consignor):</span>
+                                    <span className="font-bold text-gray-500 uppercase text-xs block">Dispatch From (Consignor):</span>
                                     <div className="font-bold text-sm">{initialData.supplier.name}</div>
                                     <div className="text-gray-600 mt-0.5">{String(selectedChallan.dispatchAddress?.address || "") || initialData.supplier.address}</div>
                                     {initialData.supplier.taxId && <div className="mt-1"><strong>{initialData.supplier.taxIdLabel}:</strong> {initialData.supplier.taxId}</div>}
                                 </div>
                                 <div>
-                                    <span className="font-bold text-gray-500 uppercase text-[9px] block">Deliver To (Consignee):</span>
+                                    <span className="font-bold text-gray-500 uppercase text-xs block">Deliver To (Consignee):</span>
                                     <div className="font-bold text-sm">{selectedChallan.recipientName}</div>
                                     <div className="text-gray-600 mt-0.5">{String(selectedChallan.deliveryAddress?.address || "")}</div>
                                     <div className="mt-1"><strong>GSTIN:</strong> {selectedChallan.recipientGstin || "Unregistered / Consumer"}</div>
@@ -1158,7 +1158,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
 
                             {/* Goods Table */}
                             <div className="border rounded overflow-hidden">
-                                <table className="w-full text-left border-collapse text-[11px]">
+                                <table className="w-full text-left border-collapse text-xs">
                                     <thead>
                                         <tr className="bg-gray-100 border-b">
                                             <th className="p-2 border-r w-8 text-center">#</th>
@@ -1200,7 +1200,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                             </div>
 
                             {/* Statutory Rule 55 Declaration */}
-                            <div className="border p-2.5 rounded bg-gray-50 text-[10px] space-y-1">
+                            <div className="border p-2.5 rounded bg-gray-50 text-xs space-y-1">
                                 <span className="font-bold uppercase text-gray-700 block">Statutory Rule 55 Declaration:</span>
                                 <p className="text-gray-600">
                                     Certified that the particulars given above are true and correct. The goods described above are being transported for the purpose of <strong>{reasonLabels[selectedChallan.reason]}</strong> in accordance with the provisions of Rule 55 of the CGST Rules, 2017 and not as an outright sale at the time of removal.
@@ -1208,14 +1208,14 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                             </div>
 
                             {/* Signatures */}
-                            <div className="grid grid-cols-2 gap-8 pt-8 text-[11px]">
+                            <div className="grid grid-cols-2 gap-8 pt-8 text-xs">
                                 <div className="border-t pt-2 text-center">
                                     <p className="font-bold">Receiver&apos;s / Consignee&apos;s Signature</p>
-                                    <p className="text-[10px] text-gray-500">(Received goods in good condition)</p>
+                                    <p className="text-xs text-gray-500">(Received goods in good condition)</p>
                                 </div>
                                 <div className="border-t pt-2 text-center">
                                     <p className="font-bold">For {initialData.supplier.name}</p>
-                                    <p className="text-[10px] text-gray-500">Authorized Signatory</p>
+                                    <p className="text-xs text-gray-500">Authorized Signatory</p>
                                 </div>
                             </div>
                         </div>

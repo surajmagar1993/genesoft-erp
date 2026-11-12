@@ -137,7 +137,7 @@ export default function EntityTasks({ entityId, entityType, initialTasks }: Prop
                                       </div>
                                   </div>
                               </div>
-                              <Badge variant="secondary" className="text-[10px] h-5 uppercase px-1.5 flex-shrink-0">
+                              <Badge variant="secondary" className="text-xs h-5 uppercase px-1.5 flex-shrink-0">
                                   {task.status}
                               </Badge>
                           </CardContent>

@@ -1,5 +1,6 @@
 "use client"
 
+import { ConfirmHost } from "@/components/confirm-dialog"
 import { SkipLink } from "@/components/skip-link"
 import { LogoutMenuItem } from '@/components/auth/logout-button'
 import Link from "next/link"
@@ -119,7 +120,7 @@ function AdminSidebar() {
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-bold text-base tracking-tight">Super Admin</span>
-                                    <span className="truncate text-[10px] uppercase font-bold text-primary tracking-widest">
+                                    <span className="truncate text-xs uppercase font-bold text-primary tracking-widest">
                                         Platform Console
                                     </span>
                                 </div>
@@ -180,7 +181,7 @@ function AdminSidebar() {
                                     </Avatar>
                                     <div className="grid flex-1 text-left text-sm leading-tight">
                                         <span className="truncate font-semibold text-sm">Super Admin</span>
-                                        <span className="truncate text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                                        <span className="truncate text-xs text-muted-foreground uppercase font-bold tracking-tighter">
                                             <UserProfileEmail />
                                         </span>
                                     </div>
@@ -275,6 +276,7 @@ export function AdminShell({
     return (
         <SidebarProvider>
             <SkipLink />
+            <ConfirmHost />
             <AdminSidebar />
             <SidebarInset id="main-content" tabIndex={-1} className="bg-muted/10 focus:outline-none">
                 <AdminTopBar />

@@ -184,7 +184,7 @@ export default function ContactDetailClient({ contact, ledger, initialTasks, ini
                               <TableCell>
                                 <Badge
                                   variant="outline"
-                                  className={`text-[10px] h-5 uppercase px-1.5 ${
+                                  className={`text-xs h-5 uppercase px-1.5 ${
                                     entry.type === "INVOICE"
                                       ? "bg-blue-50 text-blue-700 border-blue-200"
                                       : "bg-emerald-50 text-emerald-700 border-emerald-200"

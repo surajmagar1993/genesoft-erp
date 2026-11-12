@@ -90,7 +90,7 @@ export function RentalQuoteForm({ categories, whatsapp = PLATFORM.whatsapp }: { 
                         </label>
                         <label className={cn(labelClass, "col-span-2 sm:col-span-1")}>
                             Specs (optional)
-                            <input value={l.specs} maxLength={200} onChange={(e) => update(l.id, { specs: e.target.value })} placeholder="e.g. i5, 16 GB RAM, Windows 11" className={fieldClass} />
+                            <input value={l.specs} maxLength={200} onChange={(e) => update(l.id, { specs: e.target.value })} placeholder="Enter specifications" className={fieldClass} />
                         </label>
                         <button
                             type="button"

@@ -495,7 +495,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                 <div className="space-y-0.5 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-emerald-800">Statutory Tax Exemption Applied</span>
-                    <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 text-[10px] py-0">0.00% Tax</Badge>
+                    <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 text-xs py-0">0.00% Tax</Badge>
                   </div>
                   <p className="text-emerald-700">
                     Customer is tax exempt ({TAX_EXEMPTION_REASONS.find(r => r.id === form.taxExemptionReason)?.label || form.taxExemptionReason || "Statutory Exemption"})
@@ -944,7 +944,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                 <Label htmlFor="declaration" className="text-sm font-semibold">
                   Statutory GST Declaration
                 </Label>
-                <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                <Badge variant="outline" className="text-xs text-muted-foreground">
                   Statutory Rule
                 </Badge>
               </div>
@@ -964,7 +964,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
             <div className="rounded-lg border p-4 bg-card space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold">Authorized Signatory &amp; Seal</Label>
-                <Badge variant="outline" className="text-[10px] text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
+                <Badge variant="outline" className="text-xs text-emerald-600 dark:text-emerald-400 border-emerald-500/30">
                   Digital Authenticated
                 </Badge>
               </div>
@@ -977,7 +977,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                     id="signatoryName"
                     value={form.signatoryName ?? "Authorized Representative"}
                     onChange={(e) => update("signatoryName", e.target.value)}
-                    placeholder="e.g. John Doe / Founder"
+                    placeholder="Enter signatory name"
                     className="text-sm h-8"
                   />
                 </div>
@@ -989,7 +989,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                     id="signatoryDesignation"
                     value={form.signatoryDesignation ?? "Authorized Signatory"}
                     onChange={(e) => update("signatoryDesignation", e.target.value)}
-                    placeholder="e.g. Director / Partner / Manager"
+                    placeholder="Enter signatory designation"
                     className="text-sm h-8"
                   />
                 </div>

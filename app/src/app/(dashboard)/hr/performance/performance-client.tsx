@@ -687,48 +687,48 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="font-medium text-xs">{r.employeeName}</div>
-                                                        <div className="text-[10px] text-muted-foreground">
+                                                        <div className="text-xs text-muted-foreground">
                                                             {r.employeeNumber} {r.departmentName ? `• ${r.departmentName}` : ""}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="text-xs">
                                                         <div className="font-medium">{r.cycleTitle}</div>
-                                                        <div className="text-[10px] font-mono text-muted-foreground">{r.cycleCode}</div>
+                                                        <div className="text-xs font-mono text-muted-foreground">{r.cycleCode}</div>
                                                     </TableCell>
                                                     <TableCell className="text-xs text-muted-foreground">
                                                         {r.reviewerName || "Unassigned"}
                                                     </TableCell>
                                                     <TableCell className="text-center text-xs">
                                                         {r.selfRating ? (
-                                                            <Badge variant="outline" className="font-mono text-[11px] bg-slate-50 dark:bg-slate-900">
+                                                            <Badge variant="outline" className="font-mono text-xs bg-slate-50 dark:bg-slate-900">
                                                                 ⭐ {r.selfRating}
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-muted-foreground text-[11px]">—</span>
+                                                            <span className="text-muted-foreground text-xs">—</span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-center text-xs">
                                                         {r.managerRating ? (
-                                                            <Badge variant="outline" className="font-mono text-[11px] bg-slate-50 dark:bg-slate-900">
+                                                            <Badge variant="outline" className="font-mono text-xs bg-slate-50 dark:bg-slate-900">
                                                                 ⭐ {r.managerRating}
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-muted-foreground text-[11px]">—</span>
+                                                            <span className="text-muted-foreground text-xs">—</span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-center text-xs">
                                                         {r.finalRating ? (
-                                                            <Badge className="font-mono text-[11px] bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-300">
+                                                            <Badge className="font-mono text-xs bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-300">
                                                                 ⭐ {r.finalRating}
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-muted-foreground text-[11px]">—</span>
+                                                            <span className="text-muted-foreground text-xs">—</span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell>
                                                         <Badge
                                                             variant="secondary"
-                                                            className={`text-[10px] font-medium ${
+                                                            className={`text-xs font-medium ${
                                                                 r.status === "COMPLETED"
                                                                     ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                                                                     : r.status === "MANAGER_REVIEW"
@@ -741,7 +741,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                             {r.status.replace("_", " ")}
                                                         </Badge>
                                                         {r.promotionRecommended && (
-                                                            <Badge variant="outline" className="ml-1 text-[9px] border-purple-400 text-purple-600">
+                                                            <Badge variant="outline" className="ml-1 text-xs border-purple-400 text-purple-600">
                                                                 PROMO
                                                             </Badge>
                                                         )}
@@ -818,12 +818,12 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                         <Card key={g.id} className="border-border/60 shadow-xs flex flex-col justify-between">
                                             <CardHeader className="pb-2">
                                                 <div className="flex items-center justify-between gap-2">
-                                                    <Badge variant="outline" className="text-[10px] font-mono">
+                                                    <Badge variant="outline" className="text-xs font-mono">
                                                         {g.goalCode}
                                                     </Badge>
                                                     <Badge
                                                         variant="secondary"
-                                                        className={`text-[10px] ${
+                                                        className={`text-xs ${
                                                             g.category === "PERFORMANCE"
                                                                 ? "bg-blue-500/10 text-blue-700 dark:text-blue-400"
                                                                 : g.category === "DEVELOPMENT"
@@ -850,7 +850,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                 </div>
 
                                                 {g.targetMetric && (
-                                                    <div className="bg-muted/40 p-2 rounded text-[11px] text-muted-foreground border">
+                                                    <div className="bg-muted/40 p-2 rounded text-xs text-muted-foreground border">
                                                         🎯 <span className="font-medium text-foreground">Target:</span> {g.targetMetric}
                                                     </div>
                                                 )}
@@ -869,14 +869,14 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                 </div>
 
                                                 <div className="flex items-center justify-between pt-1 border-t text-xs">
-                                                    <span className="text-muted-foreground text-[10px]">
+                                                    <span className="text-muted-foreground text-xs">
                                                         {g.dueDate ? `Due ${format(new Date(g.dueDate), "dd MMM yyyy")}` : "No due date"}
                                                     </span>
                                                     <div className="flex items-center gap-1">
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            className="h-6 px-1.5 text-[10px]"
+                                                            className="h-6 px-1.5 text-xs"
                                                             onClick={() => handleQuickGoalProgress(g.id, g.progress, -10)}
                                                             disabled={g.progress <= 0 || isPending}
                                                         >
@@ -885,7 +885,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            className="h-6 px-1.5 text-[10px]"
+                                                            className="h-6 px-1.5 text-xs"
                                                             onClick={() => handleQuickGoalProgress(g.id, g.progress, 10)}
                                                             disabled={g.progress >= 100 || isPending}
                                                         >
@@ -893,7 +893,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                         </Button>
                                                         <Button
                                                             size="sm"
-                                                            className="h-6 px-2 text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                            className="h-6 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
                                                             onClick={() => handleQuickGoalProgress(g.id, g.progress, 100 - g.progress)}
                                                             disabled={g.progress === 100 || isPending}
                                                         >
@@ -958,12 +958,12 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                         <Card key={p.id} className="border-border/60 shadow-xs flex flex-col justify-between">
                                             <CardHeader className="pb-2">
                                                 <div className="flex items-center justify-between gap-2">
-                                                    <Badge variant="outline" className="text-[10px] font-mono">
+                                                    <Badge variant="outline" className="text-xs font-mono">
                                                         {p.programCode}
                                                     </Badge>
                                                     <Badge
                                                         variant="secondary"
-                                                        className={`text-[10px] ${
+                                                        className={`text-xs ${
                                                             p.status === "ACTIVE"
                                                                 ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                                                                 : p.status === "UPCOMING"
@@ -988,10 +988,10 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                 </div>
 
                                                 <div className="flex items-center gap-2">
-                                                    <Badge variant="outline" className="text-[10px] bg-slate-50 dark:bg-slate-900">
+                                                    <Badge variant="outline" className="text-xs bg-slate-50 dark:bg-slate-900">
                                                         {p.mode}
                                                     </Badge>
-                                                    <Badge variant="outline" className="text-[10px]">
+                                                    <Badge variant="outline" className="text-xs">
                                                         {p.category}
                                                     </Badge>
                                                 </div>
@@ -1073,13 +1073,13 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                 <TableRow key={e.id} className="hover:bg-muted/40 transition-colors">
                                                     <TableCell>
                                                         <div className="font-medium text-xs">{e.employeeName}</div>
-                                                        <div className="text-[10px] text-muted-foreground">
+                                                        <div className="text-xs text-muted-foreground">
                                                             {e.employeeNumber} {e.departmentName ? `• ${e.departmentName}` : ""}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="text-xs">
                                                         <div className="font-medium">{e.programTitle}</div>
-                                                        <div className="text-[10px] font-mono text-muted-foreground">{e.programCode}</div>
+                                                        <div className="text-xs font-mono text-muted-foreground">{e.programCode}</div>
                                                     </TableCell>
                                                     <TableCell className="text-xs text-muted-foreground">
                                                         {format(new Date(e.enrolledAt), "dd MMM yyyy")}
@@ -1087,7 +1087,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                     <TableCell>
                                                         <Badge
                                                             variant="secondary"
-                                                            className={`text-[10px] font-medium ${
+                                                            className={`text-xs font-medium ${
                                                                 e.status === "COMPLETED"
                                                                     ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
                                                                     : e.status === "IN_PROGRESS"
@@ -1102,11 +1102,11 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                     </TableCell>
                                                     <TableCell className="text-center text-xs">
                                                         {e.score !== null ? (
-                                                            <Badge variant="outline" className="font-mono text-[11px] bg-slate-50 dark:bg-slate-900">
+                                                            <Badge variant="outline" className="font-mono text-xs bg-slate-50 dark:bg-slate-900">
                                                                 {e.score}%
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-muted-foreground text-[11px]">—</span>
+                                                            <span className="text-muted-foreground text-xs">—</span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-xs">
@@ -1116,7 +1116,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                                                 <span>Certified</span>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-muted-foreground text-[11px]">Pending Completion</span>
+                                                            <span className="text-muted-foreground text-xs">Pending Completion</span>
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-right">
@@ -1154,7 +1154,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Cycle Title</Label>
                             <Input
-                                placeholder="e.g. Q1 2026 Performance Appraisal"
+                                placeholder="Enter cycle title"
                                 value={cycleForm.title}
                                 onChange={(e) => setCycleForm({ ...cycleForm, title: e.target.value })}
                                 className="text-xs h-9"
@@ -1369,7 +1369,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                         <span>Employee Self Rating: ⭐ {selectedReview.selfRating} / 5.0</span>
                                     </div>
                                     {selectedReview.selfFeedback && (
-                                        <p className="text-muted-foreground italic text-[11px]">
+                                        <p className="text-muted-foreground italic text-xs">
                                             &ldquo;{selectedReview.selfFeedback}&rdquo;
                                         </p>
                                     )}
@@ -1382,7 +1382,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                                 <div className="grid grid-cols-2 gap-3 text-xs">
                                     {Object.entries(mgrEvalForm.competencies).map(([key, val]) => (
                                         <div key={key} className="space-y-1">
-                                            <div className="flex justify-between text-[11px] font-medium capitalize">
+                                            <div className="flex justify-between text-xs font-medium capitalize">
                                                 <span>{key.replace(/([A-Z])/g, " $1")}</span>
                                                 <span className="font-mono">{val} ★</span>
                                             </div>
@@ -1534,7 +1534,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Goal Title</Label>
                             <Input
-                                placeholder="e.g. Implement automated test coverage >= 85%"
+                                placeholder="Enter goal title"
                                 value={goalForm.title}
                                 onChange={(e) => setGoalForm({ ...goalForm, title: e.target.value })}
                                 className="text-xs h-9"
@@ -1574,7 +1574,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Target Metric / Measurable Outcome</Label>
                             <Input
-                                placeholder="e.g. Zero critical bugs in release & 100% on-time delivery"
+                                placeholder="Enter the measurable outcome"
                                 value={goalForm.targetMetric}
                                 onChange={(e) => setGoalForm({ ...goalForm, targetMetric: e.target.value })}
                                 className="text-xs h-9"
@@ -1642,7 +1642,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Course Title</Label>
                             <Input
-                                placeholder="e.g. Cloud Architecture & Microservices Masterclass"
+                                placeholder="Enter course title"
                                 value={programForm.title}
                                 onChange={(e) => setProgramForm({ ...programForm, title: e.target.value })}
                                 className="text-xs h-9"
@@ -1689,7 +1689,7 @@ export function PerformanceClient({ initialData }: PerformanceClientProps) {
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-semibold">Trainer / Faculty</Label>
                                 <Input
-                                    placeholder="e.g. Lead Architect"
+                                    placeholder="Enter trainer name"
                                     value={programForm.trainer}
                                     onChange={(e) => setProgramForm({ ...programForm, trainer: e.target.value })}
                                     className="text-xs h-9"

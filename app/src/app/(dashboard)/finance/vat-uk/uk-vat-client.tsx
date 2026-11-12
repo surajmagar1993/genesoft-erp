@@ -153,11 +153,11 @@ export function UkVatClient({ initialData }: Props) {
           </div>
 
           <div className="border-l border-blue-700/60 pl-3">
-            <div className="text-[11px] text-blue-200 font-medium">HMRC Submission Due:</div>
+            <div className="text-xs text-blue-200 font-medium">HMRC Submission Due:</div>
             <div className="text-xs font-bold text-white flex items-center gap-1.5">
               <span>{report.period.dueDate}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                className={`text-xs px-1.5 py-0.5 rounded font-bold ${
                   telemetry.status === "OVERDUE"
                     ? "bg-red-500 text-white"
                     : telemetry.status === "DUE_SOON"
@@ -460,7 +460,7 @@ export function UkVatClient({ initialData }: Props) {
                 type="text"
                 value={testVrn}
                 onChange={(e) => handleVrnCheck(e.target.value)}
-                placeholder="e.g. GB 999 9999 73 or 123456782"
+                placeholder="Enter a VAT number to check"
                 className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-mono focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -484,7 +484,7 @@ export function UkVatClient({ initialData }: Props) {
                 {vrnValidation.isValid ? (
                   <div>
                     Standard Formatted VRN: <strong className="font-mono">{vrnValidation.formattedVrn}</strong>
-                    <div className="text-[11px] text-muted-foreground mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       HMRC Modulus 97 Verification: Passed. Eligible for MTD digital linking.
                     </div>
                   </div>
@@ -655,7 +655,7 @@ export function UkVatClient({ initialData }: Props) {
                 </div>
               </div>
 
-              <div className="border-t pt-4 text-[10px] text-slate-500 text-center">
+              <div className="border-t pt-4 text-xs text-slate-500 text-center">
                 I declare that the information given on this return is true and complete to the best of my knowledge and belief.
               </div>
             </div>

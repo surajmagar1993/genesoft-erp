@@ -344,7 +344,7 @@ export default function TasksClient({ initialTasks, total }: Props) {
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className={`text-[10px] uppercase font-bold tracking-tighter ${priority.color}`}>
+                                            <Badge variant="outline" className={`text-xs uppercase font-bold tracking-tighter ${priority.color}`}>
                                                 {priority.label}
                                             </Badge>
                                         </TableCell>

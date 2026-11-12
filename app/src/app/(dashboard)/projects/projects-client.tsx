@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
@@ -412,7 +413,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     }
 
     const handleDeleteTask = async (taskId: string) => {
-        if (!confirm("Are you sure you want to delete this task?")) return
+        if (!(await confirmAction("Are you sure you want to delete this task?"))) return
         startTransition(async () => {
             const res = await deleteProjectTask(taskId)
             if (res.success) {
@@ -480,7 +481,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     }
 
     const handleDeleteMilestone = async (id: string) => {
-        if (!confirm("Delete this milestone?")) return
+        if (!(await confirmAction("Delete this milestone?"))) return
         startTransition(async () => {
             const res = await deleteMilestone(id)
             if (res.success) {
@@ -523,7 +524,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     }
 
     const handleRemoveMember = async (memberId: string) => {
-        if (!confirm("Remove this member from the project?")) return
+        if (!(await confirmAction("Remove this member from the project?"))) return
         startTransition(async () => {
             const res = await removeProjectMember(memberId)
             if (res.success) {
@@ -577,7 +578,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     }
 
     const handleDeleteTime = async (id: string) => {
-        if (!confirm("Delete this timesheet log?")) return
+        if (!(await confirmAction("Delete this timesheet log?"))) return
         startTransition(async () => {
             const res = await deleteProjectTime(id)
             if (res.success) {
@@ -590,7 +591,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     }
 
     const handleDeleteProject = async (id: string) => {
-        if (!confirm("Are you sure? This will delete the project, all its tasks, milestones, and time records.")) return
+        if (!(await confirmAction("Are you sure? This will delete the project, all its tasks, milestones, and time records."))) return
         startTransition(async () => {
             const res = await deleteProject(id)
             if (res.success) {
@@ -812,7 +813,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                         <div className="text-xs text-muted-foreground flex items-center gap-2">
                             <span>Showing {scopedTasks.length} tasks</span>
                             {selectedProjectId !== "all" && (
-                                <Badge variant="secondary" className="font-mono text-[10px]">
+                                <Badge variant="secondary" className="font-mono text-xs">
                                     {data.projects.find(p => p.id === selectedProjectId)?.projectCode}
                                 </Badge>
                             )}
@@ -865,7 +866,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                             tasksInCol.map((task) => (
                                                 <Card key={task.id} className="p-3 shadow-xs hover:border-primary/50 transition-all group">
                                                     <div className="flex items-start justify-between gap-1.5 mb-1.5">
-                                                        <span className="font-mono text-[11px] font-semibold text-primary">
+                                                        <span className="font-mono text-xs font-semibold text-primary">
                                                             {task.taskCode}
                                                         </span>
                                                         {getPriorityBadge(task.priority)}
@@ -876,12 +877,12 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                     </h4>
 
                                                     {task.description && (
-                                                        <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2">
+                                                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                                                             {task.description}
                                                         </p>
                                                     )}
 
-                                                    <div className="flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground mb-2">
+                                                    <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mb-2">
                                                         <span className="font-mono px-1 py-0.5 bg-muted rounded">
                                                             {task.projectCode}
                                                         </span>
@@ -892,12 +893,12 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                         )}
                                                     </div>
 
-                                                    <div className="flex items-center justify-between text-[11px] pt-2 border-t text-muted-foreground">
+                                                    <div className="flex items-center justify-between text-xs pt-2 border-t text-muted-foreground">
                                                         <div className="flex items-center gap-1 truncate max-w-[120px]">
                                                             <UserCheck className="h-3 w-3 text-muted-foreground" />
                                                             <span className="truncate">{task.assignedEmployeeName || "Unassigned"}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-1 text-[10px] font-mono">
+                                                        <div className="flex items-center gap-1 text-xs font-mono">
                                                             <Clock className="h-3 w-3" />
                                                             <span>{task.actualHours}h{task.estimatedHours ? `/${task.estimatedHours}h` : ""}</span>
                                                         </div>
@@ -909,7 +910,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                                             value={task.status}
                                                             onValueChange={(newStatus) => handleTaskStatusChange(task.id, newStatus as ProjectTaskStatus)}
                                                         >
-                                                            <SelectTrigger className="h-6 text-[10px] px-1.5 w-28 bg-background">
+                                                            <SelectTrigger className="h-6 text-xs px-1.5 w-28 bg-background">
                                                                 <SelectValue />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -1048,7 +1049,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                             <TableCell>{getProjectStatusBadge(p.status)}</TableCell>
                                             <TableCell>
                                                 <div className="space-y-1">
-                                                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
                                                         <span>{p.completedTasksCount}/{p.tasksCount} tasks</span>
                                                         <span className="font-semibold">{p.completionPercentage}%</span>
                                                     </div>
@@ -1394,11 +1395,11 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                             </TableCell>
                                             <TableCell>
                                                 {te.isBillable ? (
-                                                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 text-[10px]">
+                                                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 text-xs">
                                                         Billable
                                                     </Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 text-[10px]">
+                                                    <Badge variant="outline" className="bg-zinc-100 text-zinc-600 border-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 text-xs">
                                                         Non-billable
                                                     </Badge>
                                                 )}
@@ -1439,7 +1440,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             <Label htmlFor="proj-name">Project Title *</Label>
                             <Input
                                 id="proj-name"
-                                placeholder="e.g. Supply Chain Optimization & Cloud Integration"
+                                placeholder="Enter project title"
                                 value={newProject.name}
                                 onChange={(e) => setNewProject(p => ({ ...p, name: e.target.value }))}
                                 required
@@ -1450,7 +1451,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             <Label htmlFor="proj-desc">Description & Objectives</Label>
                             <Textarea
                                 id="proj-desc"
-                                placeholder="e.g. Migration of 4 regional warehouse systems to automated ERP inventory..."
+                                placeholder="Enter description and objectives"
                                 value={newProject.description}
                                 onChange={(e) => setNewProject(p => ({ ...p, description: e.target.value }))}
                                 rows={2}
@@ -1538,7 +1539,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                 <Input
                                     id="proj-budget"
                                     type="number"
-                                    placeholder="e.g. 350000"
+                                    placeholder="Enter budget"
                                     value={newProject.budget}
                                     onChange={(e) => setNewProject(p => ({ ...p, budget: e.target.value }))}
                                 />
@@ -1616,7 +1617,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             <Label htmlFor="task-title">Task Title *</Label>
                             <Input
                                 id="task-title"
-                                placeholder="e.g. Configure database connection pool and failover"
+                                placeholder="Enter task title"
                                 value={newTask.title}
                                 onChange={(e) => setNewTask(t => ({ ...t, title: e.target.value }))}
                                 required
@@ -1627,7 +1628,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             <Label htmlFor="task-desc">Description</Label>
                             <Textarea
                                 id="task-desc"
-                                placeholder="e.g. Verify read replica lag and configure pgBouncer thresholds..."
+                                placeholder="Enter description"
                                 value={newTask.description}
                                 onChange={(e) => setNewTask(t => ({ ...t, description: e.target.value }))}
                                 rows={2}
@@ -1680,7 +1681,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                 <Input
                                     id="task-est"
                                     type="number"
-                                    placeholder="e.g. 16.0"
+                                    placeholder="Enter estimated hours"
                                     value={newTask.estimatedHours}
                                     onChange={(e) => setNewTask(t => ({ ...t, estimatedHours: e.target.value }))}
                                 />
@@ -1746,7 +1747,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             <Label htmlFor="ms-title">Milestone Title *</Label>
                             <Input
                                 id="ms-title"
-                                placeholder="e.g. Alpha System Architecture Sign-off"
+                                placeholder="Enter milestone title"
                                 value={newMilestone.title}
                                 onChange={(e) => setNewMilestone(m => ({ ...m, title: e.target.value }))}
                                 required
@@ -1757,7 +1758,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             <Label htmlFor="ms-deliverable">Key Deliverable</Label>
                             <Input
                                 id="ms-deliverable"
-                                placeholder="e.g. Signed UAT Test Results & Benchmark Report"
+                                placeholder="Enter key deliverable"
                                 value={newMilestone.deliverable}
                                 onChange={(e) => setNewMilestone(m => ({ ...m, deliverable: e.target.value }))}
                             />
@@ -1862,7 +1863,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                 <Label htmlFor="member-role">Project Role</Label>
                                 <Input
                                     id="member-role"
-                                    placeholder="e.g. Lead Full-Stack Dev"
+                                    placeholder="Enter project role"
                                     value={newMember.role}
                                     onChange={(e) => setNewMember(m => ({ ...m, role: e.target.value }))}
                                 />
@@ -1873,7 +1874,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                 <Input
                                     id="member-rate"
                                     type="number"
-                                    placeholder="e.g. 1200"
+                                    placeholder="Enter hourly rate"
                                     value={newMember.hourlyRate}
                                     onChange={(e) => setNewMember(m => ({ ...m, hourlyRate: e.target.value }))}
                                 />
@@ -1975,7 +1976,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                                     step="0.25"
                                     min="0.25"
                                     max="24"
-                                    placeholder="e.g. 4.0"
+                                    placeholder="Enter hours"
                                     value={newTimeLog.hours}
                                     onChange={(e) => setNewTimeLog(t => ({ ...t, hours: e.target.value }))}
                                     required
@@ -1998,7 +1999,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             <Label htmlFor="log-desc">Work Description *</Label>
                             <Textarea
                                 id="log-desc"
-                                placeholder="e.g. Built responsive Kanban drag cards and wired status updater actions..."
+                                placeholder="Enter work description"
                                 value={newTimeLog.description}
                                 onChange={(e) => setNewTimeLog(t => ({ ...t, description: e.target.value }))}
                                 rows={2}

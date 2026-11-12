@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { ArrowDown, ArrowUp, Pencil, Plus, Trash2 } from "lucide-react"
@@ -43,8 +44,8 @@ export function ItemsClient({ kind, items }: { kind: ItemKind; items: Item[] }) 
             router.refresh()
         })
 
-    const remove = (item: Item) => {
-        if (!confirm(`Delete "${item.title}"? This can't be undone.`)) return
+    const remove = async (item: Item) => {
+        if (!(await confirmAction(`Delete "${item.title}"? This can't be undone.`))) return
         run(async () => {
             unwrap(await deleteItem(item.id))
             toast.success("Deleted")

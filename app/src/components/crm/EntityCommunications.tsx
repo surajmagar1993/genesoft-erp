@@ -197,7 +197,7 @@ export default function EntityCommunications({ entityId, entityType, initialLogs
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <Badge variant="outline" className={`text-[10px] h-5 uppercase px-1.5 ${config.color}`}>
+                          <Badge variant="outline" className={`text-xs h-5 uppercase px-1.5 ${config.color}`}>
                             {config.label}
                           </Badge>
                           {log.subject && (

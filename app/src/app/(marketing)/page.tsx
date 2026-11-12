@@ -141,7 +141,7 @@ export default async function HomePage() {
                                 <div className="flex justify-between text-[#6B6762]"><span>SGST 9%</span><span>₹5,400.00</span></div>
                                 <div className="flex justify-between pt-2 text-base font-bold text-[#1F1E1D]"><span>Total</span><span>₹70,800.00</span></div>
                             </div>
-                            <p className="mt-4 text-[11px] text-[#6B6762]">Sample invoice. Outside India the same invoice shows one VAT or GST line.</p>
+                            <p className="mt-4 text-xs text-[#6B6762]">Sample invoice. Outside India the same invoice shows one VAT or GST line.</p>
                         </div>
                     </div>
                 </div>

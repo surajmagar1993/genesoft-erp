@@ -534,7 +534,7 @@ export default function GstReturnsClient({ initialData }: Props) {
                             {inv.idt}
                           </TableCell>
                           <TableCell className="text-xs">
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            <Badge variant="outline" className="text-xs px-1.5 py-0">
                               {inv.pos}-{inv.posName}
                             </Badge>
                           </TableCell>
@@ -644,7 +644,7 @@ export default function GstReturnsClient({ initialData }: Props) {
                       gstr1.b2cs.map((group, idx) => (
                         <TableRow key={idx}>
                           <TableCell className="text-xs">
-                            <Badge variant="secondary" className="text-[10px]">
+                            <Badge variant="secondary" className="text-xs">
                               {group.sply_ty}
                             </Badge>
                           </TableCell>
@@ -1243,13 +1243,13 @@ export default function GstReturnsClient({ initialData }: Props) {
 
             {/* Declaration & Signatory */}
             <div className="mt-8 border-t border-slate-300 pt-4 flex justify-between items-end text-xs">
-              <div className="max-w-md text-slate-500 text-[10px]">
+              <div className="max-w-md text-slate-500 text-xs">
                 I hereby solemnly affirm and declare that the information given herein above is true and correct to the best of my knowledge and belief and nothing has been concealed therefrom.
               </div>
               <div className="text-center">
                 <div className="w-40 border-b border-slate-400 mb-1"></div>
                 <span className="font-semibold block">Authorized Signatory</span>
-                <span className="text-[10px] text-slate-500 block">{gstr1.supplierLegalName}</span>
+                <span className="text-xs text-slate-500 block">{gstr1.supplierLegalName}</span>
               </div>
             </div>
 

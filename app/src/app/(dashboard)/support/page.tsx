@@ -163,10 +163,10 @@ export default function SupportPage() {
                         : "bg-indigo-600 text-white rounded-tr-none"
                     }`}>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">
+                        <span className="text-xs font-bold uppercase tracking-wider opacity-70">
                           {msg.isFromAdmin ? "Agent Support" : "You"}
                         </span>
-                        <span className="text-[10px] opacity-60">
+                        <span className="text-xs opacity-60">
                           {formatDistanceToNow(new Date(msg.createdAt))} ago
                         </span>
                       </div>

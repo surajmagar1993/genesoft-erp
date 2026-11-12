@@ -224,7 +224,7 @@ export default function ReportsClient({
           <div>
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-emerald-950">{jurisdiction.taxLabel} Summary</span>
-              <Badge variant="outline" className="bg-white/80 text-emerald-800 border-emerald-300 text-[10px]">
+              <Badge variant="outline" className="bg-white/80 text-emerald-800 border-emerald-300 text-xs">
                 {jurisdiction.flag} {jurisdiction.countryName}
               </Badge>
             </div>

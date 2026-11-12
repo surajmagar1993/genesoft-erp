@@ -988,7 +988,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                     }`}
                                 >
                                     <span>All Accounts</span>
-                                    <span className="text-[10px] text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground">
                                         {accounts.length} inboxes
                                     </span>
                                 </button>
@@ -1007,7 +1007,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                             <span className="truncate">{acc.email}</span>
                                         </div>
                                         {acc.isDefault && (
-                                            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">
+                                            <Badge variant="outline" className="text-xs px-1 py-0 h-4">
                                                 Def
                                             </Badge>
                                         )}
@@ -1022,7 +1022,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                             <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                             TLS Encrypted
                         </span>
-                        <span className="text-[10px]">IMAP/SMTP</span>
+                        <span className="text-xs">IMAP/SMTP</span>
                     </div>
                 </div>
 
@@ -1046,7 +1046,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                             {selectedAccountId && (
                                 <button
                                     onClick={() => setSelectedAccountId(null)}
-                                    className="text-primary hover:underline text-[11px]"
+                                    className="text-primary hover:underline text-xs"
                                 >
                                     Clear mailbox filter
                                 </button>
@@ -1087,7 +1087,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                                     {senderDisplay}
                                                 </span>
                                             </div>
-                                            <div className="flex items-center gap-1 text-[11px] text-muted-foreground shrink-0">
+                                            <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                                                 <span>
                                                     {isClient &&
                                                         new Date(threadMsg.createdAt).toLocaleDateString([], {
@@ -1120,33 +1120,33 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
 
                                         <div className="flex flex-wrap items-center gap-1.5 pt-1">
                                             {threadMsg.direction === EmailDirection.OUTBOUND ? (
-                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-1 text-purple-600 border-purple-200 dark:border-purple-800">
+                                                <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 gap-1 text-purple-600 border-purple-200 dark:border-purple-800">
                                                     <ArrowUpRight className="h-2.5 w-2.5" />
                                                     Sent
                                                 </Badge>
                                             ) : (
-                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-1 text-blue-600 border-blue-200 dark:border-blue-800">
+                                                <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 gap-1 text-blue-600 border-blue-200 dark:border-blue-800">
                                                     <ArrowDownLeft className="h-2.5 w-2.5" />
                                                     Inbound
                                                 </Badge>
                                             )}
 
                                             {threadMsg.status === EmailStatus.OPENED && (
-                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 gap-1 text-emerald-600 border-emerald-200 dark:border-emerald-800">
+                                                <Badge variant="outline" className="text-xs px-1.5 py-0 h-4 gap-1 text-emerald-600 border-emerald-200 dark:border-emerald-800">
                                                     <Eye className="h-2.5 w-2.5" />
                                                     Opened
                                                 </Badge>
                                             )}
 
                                             {threadMsg.contact && (
-                                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 gap-1">
+                                                <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4 gap-1">
                                                     <User className="h-2.5 w-2.5" />
                                                     {threadMsg.contact.displayName}
                                                 </Badge>
                                             )}
 
                                             {threadMsg.deal && (
-                                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 gap-1 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
+                                                <Badge variant="secondary" className="text-xs px-1.5 py-0 h-4 gap-1 bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300">
                                                     <Handshake className="h-2.5 w-2.5" />
                                                     {threadMsg.deal.title.substring(0, 18)}...
                                                 </Badge>
@@ -1228,7 +1228,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                 activeThreadLeadMessage?.lead ||
                                 activeThreadLeadMessage?.deal) && (
                                 <div className="bg-muted/30 p-3 border-b flex flex-wrap items-center gap-3 text-xs">
-                                    <span className="font-semibold text-muted-foreground uppercase text-[10px] tracking-wider flex items-center gap-1">
+                                    <span className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-1">
                                         <Sparkles className="h-3 w-3 text-primary" />
                                         CRM Context:
                                     </span>
@@ -1400,7 +1400,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                 />
 
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[11px] text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground">
                                         Dispatches email and records to CommunicationLog in real time.
                                     </span>
                                     <Button
@@ -1593,7 +1593,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                             <label className="text-right text-xs font-semibold">Subject:</label>
                             <div className="col-span-3">
                                 <Input
-                                    placeholder="e.g. Introduction & Discussion on Enterprise ERP"
+                                    placeholder="Enter subject"
                                     value={composeSubject}
                                     onChange={(e) => setComposeSubject(e.target.value)}
                                     className="text-sm h-9 font-medium"
@@ -1671,11 +1671,11 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <span className="font-semibold text-sm">{acc.name}</span>
-                                                    <Badge variant="outline" className="text-[10px]">
+                                                    <Badge variant="outline" className="text-xs">
                                                         {acc.provider}
                                                     </Badge>
                                                     {acc.isDefault && (
-                                                        <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20">
+                                                        <Badge className="text-xs bg-primary/10 text-primary border-primary/20">
                                                             Default
                                                         </Badge>
                                                     )}
@@ -1683,7 +1683,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                                                     <span>{acc.email}</span>
                                                     {acc.smtpHost && (
-                                                        <span className="font-mono text-[11px] text-muted-foreground/80">
+                                                        <span className="font-mono text-xs text-muted-foreground/80">
                                                             • SMTP: {acc.smtpHost}:{acc.smtpPort || 587}
                                                         </span>
                                                     )}
@@ -1750,7 +1750,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                 <div>
                                     <label className="text-xs font-medium">Display Name <span className="text-destructive">*</span></label>
                                     <Input
-                                        placeholder="e.g. Sales Outreach Desk"
+                                        placeholder="Enter mailbox name"
                                         value={newAccountName}
                                         onChange={(e) => setNewAccountName(e.target.value)}
                                         className="h-8 text-xs mt-1"
@@ -1777,14 +1777,14 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                             Outgoing Server (SMTP Credentials)
                                         </span>
                                     </div>
-                                    <Badge variant="outline" className="text-[10px] font-mono">
+                                    <Badge variant="outline" className="text-xs font-mono">
                                         Port {newAccountSmtpPort}
                                     </Badge>
                                 </div>
 
                                 <div className="grid grid-cols-3 gap-2.5">
                                     <div className="col-span-2">
-                                        <label className="text-[11px] font-medium text-muted-foreground">SMTP Host Server</label>
+                                        <label className="text-xs font-medium text-muted-foreground">SMTP Host Server</label>
                                         <Input
                                             placeholder="smtp.gmail.com"
                                             value={newAccountSmtpHost}
@@ -1793,7 +1793,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[11px] font-medium text-muted-foreground">Port</label>
+                                        <label className="text-xs font-medium text-muted-foreground">Port</label>
                                         <Input
                                             type="number"
                                             placeholder="587"
@@ -1806,7 +1806,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
 
                                 <div className="grid grid-cols-2 gap-2.5">
                                     <div>
-                                        <label className="text-[11px] font-medium text-muted-foreground">SMTP Username / Login</label>
+                                        <label className="text-xs font-medium text-muted-foreground">SMTP Username / Login</label>
                                         <Input
                                             placeholder={newAccountEmail || "username@domain.com"}
                                             value={newAccountSmtpUser}
@@ -1815,7 +1815,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                         />
                                     </div>
                                     <div>
-                                        <label className="text-[11px] font-medium text-muted-foreground">
+                                        <label className="text-xs font-medium text-muted-foreground">
                                             SMTP Password / App Password
                                         </label>
                                         <PasswordInput
@@ -1885,7 +1885,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
 
                                 {/* Provider Tips */}
                                 {newAccountProvider === EmailProvider.GMAIL && (
-                                    <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
+                                    <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-1.5">
                                         <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                                         <span>
                                             Google Workspace / Gmail requires a 16-character <strong>App Password</strong> generated in Google Account &gt; Security &gt; 2-Step Verification &gt; App Passwords.
@@ -1893,7 +1893,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                     </div>
                                 )}
                                 {newAccountProvider === EmailProvider.OUTLOOK && (
-                                    <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-800 dark:text-blue-300 flex items-start gap-1.5">
+                                    <div className="p-2 rounded bg-blue-500/10 border border-blue-500/20 text-xs text-blue-800 dark:text-blue-300 flex items-start gap-1.5">
                                         <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                                         <span>
                                             Microsoft 365 requires SMTP AUTH enabled on your mailbox or an App Password generated under Security settings.
@@ -1913,7 +1913,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                         <Inbox className="h-3.5 w-3.5 text-primary" />
                                         <span>Inbound Mailbox Synchronization (IMAP - Optional)</span>
                                     </div>
-                                    <span className="text-[10px] text-primary underline">
+                                    <span className="text-xs text-primary underline">
                                         {showImapSettings ? "Hide IMAP Settings" : "Configure IMAP"}
                                     </span>
                                 </button>
@@ -1922,7 +1922,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                     <div className="pt-2 space-y-2.5 border-t border-border/50">
                                         <div className="grid grid-cols-3 gap-2.5">
                                             <div className="col-span-2">
-                                                <label className="text-[11px] font-medium text-muted-foreground">IMAP Host Server</label>
+                                                <label className="text-xs font-medium text-muted-foreground">IMAP Host Server</label>
                                                 <Input
                                                     placeholder="imap.gmail.com"
                                                     value={newAccountHost}
@@ -1931,7 +1931,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-[11px] font-medium text-muted-foreground">IMAP Port</label>
+                                                <label className="text-xs font-medium text-muted-foreground">IMAP Port</label>
                                                 <Input
                                                     type="number"
                                                     placeholder="993"
@@ -1944,7 +1944,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
 
                                         <div className="grid grid-cols-2 gap-2.5">
                                             <div>
-                                                <label className="text-[11px] font-medium text-muted-foreground">IMAP Username</label>
+                                                <label className="text-xs font-medium text-muted-foreground">IMAP Username</label>
                                                 <Input
                                                     placeholder={newAccountEmail || "username@domain.com"}
                                                     value={newAccountUser}
@@ -1953,7 +1953,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="text-[11px] font-medium text-muted-foreground">IMAP Password</label>
+                                                <label className="text-xs font-medium text-muted-foreground">IMAP Password</label>
                                                 <PasswordInput
                                                     placeholder="••••••••••••••••"
                                                     value={newAccountImapPass}
@@ -2019,7 +2019,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-semibold text-sm">{tmpl.name}</span>
-                                                <Badge variant="outline" className="text-[10px]">
+                                                <Badge variant="outline" className="text-xs">
                                                     {tmpl.category}
                                                 </Badge>
                                             </div>
@@ -2052,7 +2052,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                                 <div>
                                     <label className="text-xs font-medium">Template Name</label>
                                     <Input
-                                        placeholder="e.g. Enterprise Follow-up"
+                                        placeholder="Enter template name"
                                         value={newTemplateName}
                                         onChange={(e) => setNewTemplateName(e.target.value)}
                                         className="h-8 text-sm mt-1"
@@ -2077,7 +2077,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                             <div>
                                 <label className="text-xs font-medium">Subject Line</label>
                                 <Input
-                                    placeholder="e.g. Following up on {{deal.name}} for {{contact.name}}"
+                                    placeholder="Enter subject (merge tags allowed)"
                                     value={newTemplateSubject}
                                     onChange={(e) => setNewTemplateSubject(e.target.value)}
                                     className="h-8 text-sm mt-1"
@@ -2087,7 +2087,7 @@ export function EmailsClient({ initialData }: EmailsClientProps) {
                             <div>
                                 <div className="flex items-center justify-between mb-1">
                                     <label className="text-xs font-medium">Template Content</label>
-                                    <span className="text-[10px] text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground">
                                         Merge Tags: {"{{contact.name}}"}, {"{{deal.name}}"}, {"{{company.name}}"}
                                     </span>
                                 </div>

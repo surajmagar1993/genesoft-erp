@@ -139,10 +139,10 @@ export default async function AdminDashboardPage() {
                                             <p className="text-xs text-muted-foreground font-medium">Registered {formatDistanceToNow(tenant.createdAt)} ago</p>
                                         </div>
                                         <div className="text-right flex flex-col items-end gap-1">
-                                            <Badge variant={tenant.isTrial ? "secondary" : "default"} className="font-bold text-[10px] h-5">
+                                            <Badge variant={tenant.isTrial ? "secondary" : "default"} className="font-bold text-xs h-5">
                                                 {tenant.plan}
                                             </Badge>
-                                            <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">
+                                            <span className="text-xs text-muted-foreground uppercase tracking-widest font-black">
                                                 {tenant.isTrial ? "Trial" : "Paid"}
                                             </span>
                                         </div>
@@ -205,10 +205,10 @@ export default async function AdminDashboardPage() {
                                                 log.level === 'WARN' ? 'bg-amber-500' : 'bg-emerald-500'
                                             }`} />
                                             <div className="space-y-1">
-                                                <p className="font-mono text-[11px] leading-tight text-foreground transition-all group-hover:underline">
+                                                <p className="font-mono text-xs leading-tight text-foreground transition-all group-hover:underline">
                                                     {log.message}
                                                 </p>
-                                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground font-bold uppercase tracking-wider">
                                                     <span>{log.tenant?.name || "System"}</span>
                                                     <span>•</span>
                                                     <span>{formatDistanceToNow(new Date(log.timestamp))} ago</span>

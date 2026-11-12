@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Search, Plus, Pencil, Trash2, Send, FileText, CheckCircle2, XCircle, Clock, FileBarChart2, ShoppingCart, Loader2 } from "lucide-react"
@@ -81,7 +82,7 @@ export default function QuotesClient({ initialQuotes, total }: Props) {
     }, [searchQuery])
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure?")) return
+        if (!(await confirmAction({ title: "Delete this quotation?", description: "This can't be undone.", confirmLabel: "Delete quotation" }))) return
         setPendingId(id)
         startTransition(async () => {
             const { error } = await deleteQuote(id)
@@ -95,7 +96,7 @@ export default function QuotesClient({ initialQuotes, total }: Props) {
     }
 
     const handleConvertToOrder = async (id: string) => {
-        if (!confirm("Convert to sales order?")) return
+        if (!(await confirmAction("Convert to sales order?"))) return
         setPendingId(id)
         startTransition(async () => {
             const { orderId, error } = await convertQuoteToOrder(id)

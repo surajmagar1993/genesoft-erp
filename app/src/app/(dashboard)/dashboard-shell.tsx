@@ -1,5 +1,6 @@
 "use client"
 
+import { ConfirmHost } from "@/components/confirm-dialog"
 import { useState, useEffect, useRef } from "react"
 import { LogoutMenuItem } from '@/components/auth/logout-button'
 import { RoleProvider } from "@/components/auth/role-context"
@@ -319,7 +320,7 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
                         <SidebarGroupLabel className="flex items-center justify-between">
                             <span>{group.label}</span>
                             {group.label === "Finance" && (
-                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-sidebar-accent text-sidebar-foreground/80">
+                                <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-sidebar-accent text-sidebar-foreground/80">
                                     {jurisdiction.flag} {jurisdiction.taxLabel}
                                 </span>
                             )}
@@ -438,7 +439,7 @@ function TopBar({ pages }: { pages: { group: string; name: string; href: string 
                 >
                     <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span className="flex-1 truncate">Go to a page…</span>
-                    <kbd className="hidden sm:inline rounded border bg-background px-1.5 text-[11px] font-medium">Ctrl K</kbd>
+                    <kbd className="hidden sm:inline rounded border bg-background px-1.5 text-xs font-medium">Ctrl K</kbd>
                 </button>
             </div>
             <CommandDialog open={finderOpen} onOpenChange={setFinderOpen} title="Go to a page" description="Type the name of a page and press Enter">
@@ -557,6 +558,7 @@ export function DashboardShell({
     return (
         <SidebarProvider>
             <SkipLink />
+            <ConfirmHost />
             <Script {...({ id: "razorpay-checkout", src: "https://checkout.razorpay.com/v1/checkout.js", strategy: "lazyOnload" })} />
             <AppSidebar
                 access={isAdminRole(role) ? null : access}

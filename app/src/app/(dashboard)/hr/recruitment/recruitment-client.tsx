@@ -738,11 +738,11 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                         </div>
 
                                                         {/* Target Role & Code */}
-                                                        <div className="mt-2 text-[11px] text-muted-foreground flex items-center justify-between border-t pt-1.5">
+                                                        <div className="mt-2 text-xs text-muted-foreground flex items-center justify-between border-t pt-1.5">
                                                             <span className="truncate max-w-[130px] font-medium text-foreground/80">
                                                                 {cand.jobOpeningTitle}
                                                             </span>
-                                                            <span className="font-mono text-[10px] bg-muted px-1 rounded">
+                                                            <span className="font-mono text-xs bg-muted px-1 rounded">
                                                                 {cand.applicantNumber}
                                                             </span>
                                                         </div>
@@ -750,17 +750,17 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                         {/* Metadata badges */}
                                                         <div className="mt-2 flex flex-wrap gap-1 items-center">
                                                             {cand.experienceYears !== null && (
-                                                                <Badge variant="outline" className="text-[10px] h-4.5 px-1 font-normal">
+                                                                <Badge variant="outline" className="text-xs h-4.5 px-1 font-normal">
                                                                     {cand.experienceYears}y exp
                                                                 </Badge>
                                                             )}
                                                             {cand.expectedSalary && (
-                                                                <Badge variant="outline" className="text-[10px] h-4.5 px-1 font-normal text-emerald-700 dark:text-emerald-400">
+                                                                <Badge variant="outline" className="text-xs h-4.5 px-1 font-normal text-emerald-700 dark:text-emerald-400">
                                                                     Exp: {formatCurrency(cand.expectedSalary)}
                                                                 </Badge>
                                                             )}
                                                             {cand.interviewsCount > 0 && (
-                                                                <Badge variant="secondary" className="text-[10px] h-4.5 px-1">
+                                                                <Badge variant="secondary" className="text-xs h-4.5 px-1">
                                                                     {cand.interviewsCount} round{cand.interviewsCount > 1 ? "s" : ""}
                                                                 </Badge>
                                                             )}
@@ -775,7 +775,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                                     setSelectedCandidate(cand)
                                                                     setIsCandidateDetailOpen(true)
                                                                 }}
-                                                                className="h-6 px-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                                                                className="h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground"
                                                             >
                                                                 <Eye className="h-3 w-3 mr-1" />
                                                                 Profile
@@ -785,7 +785,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                                 <Button
                                                                     size="sm"
                                                                     onClick={() => openHireModal(cand)}
-                                                                    className="h-6 px-2 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
+                                                                    className="h-6 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium"
                                                                 >
                                                                     <UserCheck className="h-3 w-3 mr-1" />
                                                                     Hire
@@ -795,13 +795,13 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                                     variant="outline"
                                                                     size="sm"
                                                                     onClick={() => openScheduleModal(cand)}
-                                                                    className="h-6 px-2 text-[11px]"
+                                                                    className="h-6 px-2 text-xs"
                                                                 >
                                                                     <Calendar className="h-3 w-3 mr-1" />
                                                                     Interview
                                                                 </Button>
                                                             ) : stage === "HIRED" && cand.convertedEmployeeNumber ? (
-                                                                <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-medium">
+                                                                <span className="text-xs font-mono text-emerald-600 dark:text-emerald-400 font-medium">
                                                                     {cand.convertedEmployeeNumber}
                                                                 </span>
                                                             ) : null}
@@ -852,14 +852,14 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="text-xs font-medium text-foreground">{cand.jobOpeningTitle}</div>
-                                                        <div className="text-[11px] font-mono text-muted-foreground">{cand.jobCode}</div>
+                                                        <div className="text-xs font-mono text-muted-foreground">{cand.jobCode}</div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="text-xs">
                                                             {cand.experienceYears !== null ? `${cand.experienceYears} yrs` : "N/A"}
                                                         </div>
                                                         {cand.expectedSalary && (
-                                                            <div className="text-[11px] text-muted-foreground">
+                                                            <div className="text-xs text-muted-foreground">
                                                                 Exp: {formatCurrency(cand.expectedSalary)}
                                                             </div>
                                                         )}
@@ -964,7 +964,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                     <div className="text-xs text-foreground font-medium">
                                                         {job.departmentName || "General Department"}
                                                     </div>
-                                                    <div className="text-[11px] text-muted-foreground">
+                                                    <div className="text-xs text-muted-foreground">
                                                         {job.designationTitle || "Unassigned Level"}
                                                     </div>
                                                 </TableCell>
@@ -973,7 +973,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                         <MapPin className="h-3 w-3 text-muted-foreground" />
                                                         <span>{job.location}</span>
                                                     </div>
-                                                    <div className="text-[11px] text-muted-foreground capitalize">
+                                                    <div className="text-xs text-muted-foreground capitalize">
                                                         {job.employmentType.toLowerCase().replace("_", " ")}
                                                     </div>
                                                 </TableCell>
@@ -1093,7 +1093,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                     <Badge variant="secondary" className="text-xs">
                                                         {inv.roundName}
                                                     </Badge>
-                                                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                                                    <div className="text-xs text-muted-foreground mt-0.5">
                                                         {inv.durationMinutes} minutes
                                                     </div>
                                                 </TableCell>
@@ -1106,7 +1106,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                     <div className="text-xs font-medium">
                                                         {format(new Date(inv.scheduledAt), "dd MMM yyyy")}
                                                     </div>
-                                                    <div className="text-[11px] text-muted-foreground">
+                                                    <div className="text-xs text-muted-foreground">
                                                         {format(new Date(inv.scheduledAt), "hh:mm a")}
                                                     </div>
                                                 </TableCell>
@@ -1138,7 +1138,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                                                 </span>
                                                             </div>
                                                             {inv.recommendation && (
-                                                                <div className="text-[11px] font-medium text-emerald-600 mt-0.5">
+                                                                <div className="text-xs font-medium text-emerald-600 mt-0.5">
                                                                     {inv.recommendation.replace("_", " ")}
                                                                 </div>
                                                             )}
@@ -1199,7 +1199,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                             <Label htmlFor="jobTitle" className="text-xs font-semibold">Job Title *</Label>
                             <Input
                                 id="jobTitle"
-                                placeholder="e.g. Senior Full-Stack Engineer"
+                                placeholder="Enter job title"
                                 value={newJobTitle}
                                 onChange={(e) => setNewJobTitle(e.target.value)}
                             />
@@ -1251,7 +1251,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Work Location</Label>
                             <Input
-                                placeholder="e.g. Remote / Bangalore / Hybrid"
+                                placeholder="Enter work location"
                                 value={newJobLocation}
                                 onChange={(e) => setNewJobLocation(e.target.value)}
                             />
@@ -1280,7 +1280,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                             <Label className="text-xs font-semibold">Salary Min (INR)</Label>
                             <Input
                                 type="number"
-                                placeholder="e.g. 600000"
+                                placeholder="Enter salary min"
                                 value={newJobSalaryMin}
                                 onChange={(e) => setNewJobSalaryMin(e.target.value)}
                             />
@@ -1290,7 +1290,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                             <Label className="text-xs font-semibold">Salary Max (INR)</Label>
                             <Input
                                 type="number"
-                                placeholder="e.g. 1200000"
+                                placeholder="Enter salary max"
                                 value={newJobSalaryMax}
                                 onChange={(e) => setNewJobSalaryMax(e.target.value)}
                             />
@@ -1362,7 +1362,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Candidate Full Name *</Label>
                             <Input
-                                placeholder="e.g. Vikram Malhotra"
+                                placeholder="Enter candidate full name"
                                 value={candFullName}
                                 onChange={(e) => setCandFullName(e.target.value)}
                             />
@@ -1372,7 +1372,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                             <Label className="text-xs font-semibold">Email Address *</Label>
                             <Input
                                 type="email"
-                                placeholder="vikram@example.com"
+                                placeholder="Enter email address"
                                 value={candEmail}
                                 onChange={(e) => setCandEmail(e.target.value)}
                             />
@@ -1381,7 +1381,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Phone Number</Label>
                             <Input
-                                placeholder="+91 98765 43210"
+                                placeholder="Enter phone number with country code"
                                 value={candPhone}
                                 onChange={(e) => setCandPhone(e.target.value)}
                             />
@@ -1392,7 +1392,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                             <Input
                                 type="number"
                                 step="0.5"
-                                placeholder="e.g. 5.5"
+                                placeholder="Enter years of experience"
                                 value={candExp}
                                 onChange={(e) => setCandExp(e.target.value)}
                             />
@@ -1401,7 +1401,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Current Designation / Role</Label>
                             <Input
-                                placeholder="e.g. Software Engineer"
+                                placeholder="Enter current role"
                                 value={candRole}
                                 onChange={(e) => setCandRole(e.target.value)}
                             />
@@ -1410,7 +1410,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Current Employer</Label>
                             <Input
-                                placeholder="e.g. Tech Corp"
+                                placeholder="Enter current employer"
                                 value={candCompany}
                                 onChange={(e) => setCandCompany(e.target.value)}
                             />
@@ -1420,7 +1420,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                             <Label className="text-xs font-semibold">Current Annual CTC (INR)</Label>
                             <Input
                                 type="number"
-                                placeholder="e.g. 800000"
+                                placeholder="Enter current annual CTC"
                                 value={candCurrentSal}
                                 onChange={(e) => setCandCurrentSal(e.target.value)}
                             />
@@ -1430,7 +1430,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                             <Label className="text-xs font-semibold">Expected Annual CTC (INR)</Label>
                             <Input
                                 type="number"
-                                placeholder="e.g. 1100000"
+                                placeholder="Enter expected annual CTC"
                                 value={candExpectedSal}
                                 onChange={(e) => setCandExpectedSal(e.target.value)}
                             />
@@ -1448,7 +1448,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Resume Link / URL</Label>
                             <Input
-                                placeholder="https://drive.google.com/..."
+                                placeholder="Paste a link to the document"
                                 value={candResumeUrl}
                                 onChange={(e) => setCandResumeUrl(e.target.value)}
                             />
@@ -1680,7 +1680,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                                 <Sparkles className="h-4 w-4 text-emerald-600" />
                                 Automated Employee Profile Generation
                             </div>
-                            <p className="text-emerald-700 dark:text-emerald-400 text-[11px]">
+                            <p className="text-emerald-700 dark:text-emerald-400 text-xs">
                                 This will generate an official Employee ID (EMP-YYYY-XXXX), activate attendance rosters, and link this candidate profile.
                             </p>
                         </div>

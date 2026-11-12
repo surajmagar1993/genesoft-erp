@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
@@ -342,8 +343,8 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
         })
     }
 
-    const handleVoidCreditNote = (cn: CreditNoteRecord) => {
-        if (!confirm(`Are you sure you want to VOID Credit Note #${cn.creditNoteNumber}? This will reverse the available credit balance.`)) {
+    const handleVoidCreditNote = async (cn: CreditNoteRecord) => {
+        if (!(await confirmAction(`Are you sure you want to VOID Credit Note #${cn.creditNoteNumber}? This will reverse the available credit balance.`))) {
             return
         }
 
@@ -556,7 +557,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                 <TableCell className="font-semibold">
                                                     <div className="flex flex-col">
                                                         <span>{cn.creditNoteNumber}</span>
-                                                        <span className="text-[11px] text-muted-foreground">
+                                                        <span className="text-xs text-muted-foreground">
                                                             {format(new Date(cn.issueDate), "dd MMM yyyy")}
                                                         </span>
                                                     </div>
@@ -924,7 +925,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                 <Label className="text-xs">HSN/SAC Code</Label>
                                                 <Input
                                                     className="h-8 text-xs"
-                                                    placeholder="e.g. 8517"
+                                                    placeholder="Enter HSN/SAC code"
                                                     value={item.hsnSacCode}
                                                     onChange={e => handleItemChange(idx, "hsnSacCode", e.target.value)}
                                                 />
@@ -1192,7 +1193,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                 <div className="space-y-1.5">
                                     <Label>UTR / Reference #</Label>
                                     <Input
-                                        placeholder="e.g. HDFC-UTR-128938"
+                                        placeholder="Enter UTR or reference number"
                                         value={refundForm.reference}
                                         onChange={e => setRefundForm(prev => ({ ...prev, reference: e.target.value }))}
                                     />

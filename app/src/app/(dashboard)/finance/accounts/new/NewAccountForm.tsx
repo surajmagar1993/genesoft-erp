@@ -91,7 +91,7 @@ export default function NewAccountForm({ parentAccounts }: Props) {
                 <Label htmlFor="code">Account Code *</Label>
                 <Input
                   id="code"
-                  placeholder="e.g. 1100"
+                  placeholder="Enter account code"
                   value={form.code}
                   onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
                   required
@@ -116,7 +116,7 @@ export default function NewAccountForm({ parentAccounts }: Props) {
               <Label htmlFor="name">Account Name *</Label>
               <Input
                 id="name"
-                placeholder="e.g. Cash in Hand"
+                placeholder="Enter account name"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 required

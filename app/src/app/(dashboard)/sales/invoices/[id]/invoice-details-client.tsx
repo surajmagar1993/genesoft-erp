@@ -1,4 +1,5 @@
 "use client"
+import { confirmAction } from "@/components/confirm-dialog"
 import { localeForCurrency, errorMessage } from "@/lib/utils"
 import { COMPLIANCE_MODULES_ENABLED, PARKED_MODULES_ENABLED } from "@/lib/features"
 
@@ -173,8 +174,8 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
         })
     }
 
-    const handleDeleteInvoice = () => {
-        if (!confirm("Are you sure you want to delete this invoice?")) return
+    const handleDeleteInvoice = async () => {
+        if (!(await confirmAction("Are you sure you want to delete this invoice?"))) return
         startTransition(async () => {
             const { error } = await deleteInvoice(invoice.id)
             if (!error) {
@@ -185,8 +186,8 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
         })
     }
 
-    const handleConvertToInvoice = () => {
-        if (!confirm(`Convert Proforma Invoice ${invoice.invoice_number} to an official GST Tax Invoice? This will generate the next official INV- sequence number.`)) {
+    const handleConvertToInvoice = async () => {
+        if (!(await confirmAction(`Convert Proforma Invoice ${invoice.invoice_number} to a tax invoice? This will generate the next official INV- sequence number.`))) {
             return
         }
         startTransition(async () => {
@@ -433,13 +434,13 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                             <div className="rounded border border-dashed border-primary/30 p-3 bg-card text-center space-y-1">
                                 <p className="text-xs font-semibold text-primary">For {invoice.tenants?.name || COMPANY.name}</p>
                                 <div className="py-1">
-                                    <Badge variant="secondary" className="text-[10px] tracking-wide">
+                                    <Badge variant="secondary" className="text-xs tracking-wide">
                                         Computer-generated document
                                     </Badge>
                                 </div>
                                 <p className="text-sm font-bold text-foreground">{invoice.signatory_name || "Authorized Representative"}</p>
                                 <p className="text-xs text-muted-foreground">{invoice.signatory_designation || "Authorized Signatory"}</p>
-                                <p className="text-[10px] text-muted-foreground pt-1">
+                                <p className="text-xs text-muted-foreground pt-1">
                                     Date: {formatDate(invoice.invoice_date)}
                                 </p>
                             </div>
@@ -527,8 +528,8 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                                             variant="ghost"
                                                             size="icon"
                                                             disabled={isPending}
-                                                            onClick={() => {
-                                                                if (confirm("Delete this payment? Invoice status will recalculate.")) {
+                                                            onClick={async () => {
+                                                                if (await confirmAction("Delete this payment? Invoice status will recalculate.")) {
                                                                     handleDeletePayment(p.id)
                                                                 }
                                                             }}
@@ -660,7 +661,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                 id="waPhone"
                                 value={whatsAppPhone}
                                 onChange={(e) => setWhatsAppPhone(e.target.value)}
-                                placeholder="+91 98765 43210"
+                                placeholder="Enter phone number with country code"
                                 className="font-mono text-xs"
                             />
                         </div>
@@ -682,7 +683,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                         </div>
 
                         <div className="p-3 bg-muted/40 rounded-lg border space-y-1">
-                            <span className="font-semibold text-muted-foreground text-[11px]">Message Preview:</span>
+                            <span className="font-semibold text-muted-foreground text-xs">Message Preview:</span>
                             <p className="text-xs text-foreground bg-[#d9fdd3] text-emerald-950 dark:bg-emerald-900/60 dark:text-emerald-100 p-2.5 rounded-lg whitespace-pre-wrap">
                                 {whatsAppTemplate === "INVOICE_DISPATCH"
                                     ? `Hello ${invoice.customer_name}, your invoice ${invoice.invoice_number} for ${invoice.currency_code || "INR"} ${totalInvoiceAmount.toFixed(2)} is ready. Due Date: ${formatDate(invoice.valid_until)}. View & pay online. Thank you!`

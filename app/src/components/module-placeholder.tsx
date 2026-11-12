@@ -50,7 +50,7 @@ export function ModulePlaceholder({
                                     <Icon className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest border-primary/20 bg-primary/5 text-primary mb-1">
+                                    <Badge variant="outline" className="text-xs uppercase font-bold tracking-widest border-primary/20 bg-primary/5 text-primary mb-1">
                                         Roadmap Phase {phase}
                                     </Badge>
                                     <CardTitle className="text-2xl font-bold tracking-tight">{title} Module</CardTitle>

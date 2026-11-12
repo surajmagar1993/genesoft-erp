@@ -213,7 +213,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                 <Building2 className="h-3.5 w-3.5" />
                                 <span>{employee.departmentName || "General Operations"}</span>
                             </p>
-                            <div className="flex items-center gap-4 mt-2 text-[11px] text-indigo-200/80">
+                            <div className="flex items-center gap-4 mt-2 text-xs text-indigo-200/80">
                                 <span className="flex items-center gap-1"><Mail className="h-3 w-3" /> {employee.email}</span>
                                 {employee.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {employee.phone}</span>}
                                 {employee.managerName && <span>Reporting to: <strong className="text-white">{employee.managerName}</strong></span>}
@@ -224,7 +224,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                     {/* Manager preview switcher */}
                     {data.allEmployees.length > 1 && (
                         <div className="bg-white/10 backdrop-blur-md rounded-lg p-2 border border-white/15 w-full md:w-auto min-w-[220px]">
-                            <Label className="text-[10px] uppercase font-semibold text-indigo-200 tracking-wider block mb-1">
+                            <Label className="text-xs uppercase font-semibold text-indigo-200 tracking-wider block mb-1">
                                 Manager View: Switch Employee
                             </Label>
                             <Select
@@ -259,7 +259,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                             {monthlyStats.totalHours} hrs
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0 text-[11px] text-muted-foreground">
+                    <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
                         {monthlyStats.presentDays} days present this month
                     </CardContent>
                 </Card>
@@ -273,7 +273,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                             {leaveBalances.casual.available + leaveBalances.sick.available + leaveBalances.earned.available} days
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0 text-[11px] text-muted-foreground">
+                    <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
                         Casual, Sick &amp; Earned pool
                     </CardContent>
                 </Card>
@@ -287,7 +287,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                             {tasks.filter(t => t.status !== "DONE").length}
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0 text-[11px] text-muted-foreground">
+                    <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
                         {tasks.filter(t => t.status === "IN_PROGRESS").length} currently in progress
                     </CardContent>
                 </Card>
@@ -301,7 +301,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                             {payslips[0] ? `${formatMoney(Number(payslips[0].netSalary))}` : "—"}
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 pt-0 text-[11px] text-muted-foreground">
+                    <CardContent className="p-4 pt-0 text-xs text-muted-foreground">
                         {payslips[0] ? `Period ${payslips[0].periodMonth}/${payslips[0].periodYear}` : "No payslips issued yet"}
                     </CardContent>
                 </Card>
@@ -336,7 +336,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                     <span className="flex items-center gap-2">
                                         <Clock className="h-4 w-4 text-primary" /> Real-Time Web Timeclock
                                     </span>
-                                    <Badge variant="outline" className="text-[10px] animate-pulse text-primary border-primary/30">
+                                    <Badge variant="outline" className="text-xs animate-pulse text-primary border-primary/30">
                                         LIVE
                                     </Badge>
                                 </CardTitle>
@@ -350,7 +350,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                     <span className="text-4xl font-bold tracking-tight text-foreground">
                                         {currentTime || "--:--:--"}
                                     </span>
-                                    <p className="text-[11px] text-muted-foreground mt-1">Indian Standard Time (IST)</p>
+                                    <p className="text-xs text-muted-foreground mt-1">Indian Standard Time (IST)</p>
                                 </div>
 
                                 {/* Today's Status */}
@@ -428,7 +428,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                 <CardContent className="p-0">
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-xs text-left">
-                                            <thead className="bg-muted/40 border-b text-muted-foreground uppercase text-[10px] tracking-wider">
+                                            <thead className="bg-muted/40 border-b text-muted-foreground uppercase text-xs tracking-wider">
                                                 <tr>
                                                     <th className="py-2.5 px-4">Date</th>
                                                     <th className="py-2.5 px-4">Clock In</th>
@@ -468,7 +468,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                                                             ? "secondary"
                                                                             : "outline"
                                                                     }
-                                                                    className="text-[10px]"
+                                                                    className="text-xs"
                                                                 >
                                                                     {rec.status}
                                                                 </Badge>
@@ -506,7 +506,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                     value={(leaveBalances.casual.used / leaveBalances.casual.total) * 100}
                                     className="h-2 bg-blue-200 dark:bg-blue-900"
                                 />
-                                <div className="flex justify-between text-[10px] text-muted-foreground">
+                                <div className="flex justify-between text-xs text-muted-foreground">
                                     <span>Used: {leaveBalances.casual.used}d</span>
                                     <span>Pending: {leaveBalances.casual.pending}d</span>
                                 </div>
@@ -528,7 +528,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                     value={(leaveBalances.sick.used / leaveBalances.sick.total) * 100}
                                     className="h-2 bg-rose-200 dark:bg-rose-900"
                                 />
-                                <div className="flex justify-between text-[10px] text-muted-foreground">
+                                <div className="flex justify-between text-xs text-muted-foreground">
                                     <span>Used: {leaveBalances.sick.used}d</span>
                                     <span>Pending: {leaveBalances.sick.pending}d</span>
                                 </div>
@@ -550,7 +550,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                     value={(leaveBalances.earned.used / leaveBalances.earned.total) * 100}
                                     className="h-2 bg-purple-200 dark:bg-purple-900"
                                 />
-                                <div className="flex justify-between text-[10px] text-muted-foreground">
+                                <div className="flex justify-between text-xs text-muted-foreground">
                                     <span>Used: {leaveBalances.earned.used}d</span>
                                     <span>Pending: {leaveBalances.earned.pending}d</span>
                                 </div>
@@ -578,7 +578,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                         <CardContent className="p-0">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-xs text-left">
-                                    <thead className="bg-muted/40 border-b text-muted-foreground uppercase text-[10px] tracking-wider">
+                                    <thead className="bg-muted/40 border-b text-muted-foreground uppercase text-xs tracking-wider">
                                         <tr>
                                             <th className="py-2.5 px-4">Leave Type</th>
                                             <th className="py-2.5 px-4">Dates</th>
@@ -611,7 +611,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                                     <td className="py-2.5 px-4 text-muted-foreground max-w-xs truncate">
                                                         {req.reason}
                                                     </td>
-                                                    <td className="py-2.5 px-4 text-muted-foreground text-[11px]">
+                                                    <td className="py-2.5 px-4 text-muted-foreground text-xs">
                                                         {format(new Date(req.createdAt), "dd MMM yyyy")}
                                                     </td>
                                                     <td className="py-2.5 px-4 text-right">
@@ -623,7 +623,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                                                     ? "destructive"
                                                                     : "secondary"
                                                             }
-                                                            className="text-[10px]"
+                                                            className="text-xs"
                                                         >
                                                             {req.status}
                                                         </Badge>
@@ -657,7 +657,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                         <CardContent className="p-0">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-xs text-left">
-                                    <thead className="bg-muted/40 border-b text-muted-foreground uppercase text-[10px] tracking-wider">
+                                    <thead className="bg-muted/40 border-b text-muted-foreground uppercase text-xs tracking-wider">
                                         <tr>
                                             <th className="py-2.5 px-4">Slip Number</th>
                                             <th className="py-2.5 px-4">Pay Period</th>
@@ -694,7 +694,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                                         {formatMoney(Number(slip.netSalary))}
                                                     </td>
                                                     <td className="py-2.5 px-4 text-center">
-                                                        <Badge variant={slip.status === "PAID" ? "default" : "outline"} className="text-[10px]">
+                                                        <Badge variant={slip.status === "PAID" ? "default" : "outline"} className="text-xs">
                                                             {slip.status}
                                                         </Badge>
                                                     </td>
@@ -737,7 +737,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                         <CardContent className="p-0">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-xs text-left">
-                                    <thead className="bg-muted/40 border-b text-muted-foreground uppercase text-[10px] tracking-wider">
+                                    <thead className="bg-muted/40 border-b text-muted-foreground uppercase text-xs tracking-wider">
                                         <tr>
                                             <th className="py-2.5 px-4">Task Code</th>
                                             <th className="py-2.5 px-4">Title</th>
@@ -764,7 +764,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                                         {task.title}
                                                     </td>
                                                     <td className="py-2.5 px-4 text-muted-foreground">
-                                                        <span className="font-mono text-[10px] bg-muted px-1.5 py-0.5 rounded mr-1.5">
+                                                        <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded mr-1.5">
                                                             {task.projectCode}
                                                         </span>
                                                         {task.projectName}
@@ -775,7 +775,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                                     <td className="py-2.5 px-4 text-center">
                                                         <Badge
                                                             variant="outline"
-                                                            className={`text-[10px] ${
+                                                            className={`text-xs ${
                                                                 task.priority === "HIGH" || task.priority === "URGENT"
                                                                     ? "border-rose-500 text-rose-600"
                                                                     : ""
@@ -790,7 +790,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                                             onValueChange={(val: ProjectTaskStatus) => handleTaskStatusChange(task.id, val)}
                                                             disabled={isPending}
                                                         >
-                                                            <SelectTrigger className="h-7 w-28 text-[11px] ml-auto">
+                                                            <SelectTrigger className="h-7 w-28 text-xs ml-auto">
                                                                 <SelectValue />
                                                             </SelectTrigger>
                                                             <SelectContent>
@@ -935,14 +935,14 @@ export function PortalClient({ initialData }: PortalClientProps) {
                             {/* Employee Info Header */}
                             <div className="grid grid-cols-2 p-3 bg-muted/40 rounded-lg gap-2 text-slate-700 dark:text-slate-300">
                                 <div>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-semibold">Employee Name</p>
+                                    <p className="text-xs text-muted-foreground uppercase font-semibold">Employee Name</p>
                                     <p className="font-bold text-foreground text-sm">{employee.displayName}</p>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">ID: {employee.employeeNumber}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">ID: {employee.employeeNumber}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] text-muted-foreground uppercase font-semibold">Department &amp; Title</p>
+                                    <p className="text-xs text-muted-foreground uppercase font-semibold">Department &amp; Title</p>
                                     <p className="font-medium text-foreground">{employee.designationTitle}</p>
-                                    <p className="text-[11px] text-muted-foreground mt-0.5">{employee.departmentName}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">{employee.departmentName}</p>
                                 </div>
                             </div>
 
@@ -950,7 +950,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                             <div className="grid grid-cols-2 gap-4">
                                 {/* Earnings */}
                                 <div className="p-3 border rounded-lg space-y-2">
-                                    <p className="font-bold text-emerald-700 dark:text-emerald-400 uppercase text-[10px] tracking-wider border-b pb-1">
+                                    <p className="font-bold text-emerald-700 dark:text-emerald-400 uppercase text-xs tracking-wider border-b pb-1">
                                         Earnings
                                     </p>
                                     <div className="space-y-1.5 text-xs">
@@ -975,7 +975,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
 
                                 {/* Deductions */}
                                 <div className="p-3 border rounded-lg space-y-2">
-                                    <p className="font-bold text-rose-700 dark:text-rose-400 uppercase text-[10px] tracking-wider border-b pb-1">
+                                    <p className="font-bold text-rose-700 dark:text-rose-400 uppercase text-xs tracking-wider border-b pb-1">
                                         Statutory Deductions
                                     </p>
                                     <div className="space-y-1.5 text-xs">
@@ -1011,7 +1011,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                                 </span>
                             </div>
 
-                            <p className="text-[10px] text-muted-foreground italic text-center">
+                            <p className="text-xs text-muted-foreground italic text-center">
                                 This is a computer-generated salary payslip authorized by the organization&apos;s payroll department.
                             </p>
                         </div>

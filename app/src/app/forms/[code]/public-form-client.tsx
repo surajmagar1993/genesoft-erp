@@ -239,7 +239,7 @@ export function PublicFormClient({ form }: PublicFormClientProps) {
                     </Button>
                 </div>
 
-                <div className="pt-2 flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
+                <div className="pt-2 flex items-center justify-center gap-1.5 text-xs text-slate-400">
                     <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                     <span>Secure end-to-end CRM verification</span>
                 </div>

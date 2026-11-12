@@ -517,7 +517,7 @@ export default function UaeVatClient({ initialData }: Props) {
                     <div key={idx} className="border rounded-xl p-4 bg-muted/20 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-sm text-foreground">{em.emirate}</span>
-                        <Badge variant="secondary" className="text-[10px] font-mono">Box {em.boxCode}</Badge>
+                        <Badge variant="secondary" className="text-xs font-mono">Box {em.boxCode}</Badge>
                       </div>
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs">
@@ -532,7 +532,7 @@ export default function UaeVatClient({ initialData }: Props) {
                       <div className="w-full bg-muted rounded-full h-1.5 mt-2">
                         <div className="bg-emerald-600 h-1.5 rounded-full" style={{ width: `${Math.max(pct, 3)}%` }} />
                       </div>
-                      <span className="text-[10px] text-muted-foreground block text-right">{pct}% of total sales</span>
+                      <span className="text-xs text-muted-foreground block text-right">{pct}% of total sales</span>
                     </div>
                   )
                 })}
@@ -596,7 +596,7 @@ export default function UaeVatClient({ initialData }: Props) {
                   <Input
                     value={testTrn}
                     onChange={e => setTestTrn(e.target.value)}
-                    placeholder="e.g. 100234567890003"
+                    placeholder="Enter a TRN to check"
                     className="font-mono text-sm"
                   />
                 </div>
@@ -763,11 +763,11 @@ export default function UaeVatClient({ initialData }: Props) {
             <div className="mt-4 p-3 border-2 border-slate-900 bg-slate-50 flex justify-between items-center text-xs">
               <div>
                 <span className="font-bold uppercase tracking-wider block">Box 13: Net VAT Due for Tax Period</span>
-                <span className="text-slate-500 text-[11px]">(Box 6 minus Box 12)</span>
+                <span className="text-slate-500 text-xs">(Box 6 minus Box 12)</span>
               </div>
               <div className="text-right">
                 <span className="text-xl font-black block">{fmtAed(Math.abs(report.box13NetVatPayable))}</span>
-                <span className="text-[10px] font-bold text-slate-700 uppercase">
+                <span className="text-xs font-bold text-slate-700 uppercase">
                   {report.box13NetVatPayable >= 0 ? "Payable to Federal Tax Authority" : "Reclaimable from Federal Tax Authority"}
                 </span>
               </div>
@@ -775,13 +775,13 @@ export default function UaeVatClient({ initialData }: Props) {
 
             {/* Legal Declaration */}
             <div className="mt-8 border-t border-slate-300 pt-4 flex justify-between items-end text-xs">
-              <div className="max-w-md text-slate-500 text-[10px]">
+              <div className="max-w-md text-slate-500 text-xs">
                 I declare that the information provided in this Value Added Tax Return (Form VAT 201) is true, complete and correct in accordance with the provisions of Federal Decree-Law No. (8) of 2017 on Value Added Tax.
               </div>
               <div className="text-center">
                 <div className="w-44 border-b border-slate-400 mb-1"></div>
                 <span className="font-semibold block">Authorized Tax Agent / Signatory</span>
-                <span className="text-[10px] text-slate-500 block">{report.taxpayerLegalName}</span>
+                <span className="text-xs text-slate-500 block">{report.taxpayerLegalName}</span>
               </div>
             </div>
 

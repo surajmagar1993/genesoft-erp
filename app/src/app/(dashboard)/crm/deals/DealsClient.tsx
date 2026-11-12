@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
@@ -95,8 +96,8 @@ export default function DealsClient({ initialDeals, total }: Props) {
         })
     }
 
-    const handleDelete = (id: string) => {
-        if (!confirm("Are you sure?")) return
+    const handleDelete = async (id: string) => {
+        if (!(await confirmAction({ title: "Delete this deal?", description: "This can't be undone.", confirmLabel: "Delete deal" }))) return
         setPendingId(id)
         startTransition(async () => {
             const { error } = await deleteDeal(id)
@@ -300,10 +301,10 @@ export default function DealsClient({ initialDeals, total }: Props) {
                                                         <DealActions deal={deal} />
                                                     </div>
                                                 </div>
-                                                <p className="text-[11px] text-muted-foreground mb-3">{deal.company}</p>
+                                                <p className="text-xs text-muted-foreground mb-3">{deal.company}</p>
                                                 <div className="flex items-center justify-between mt-auto pt-2 border-t border-border/30">
                                                     <span className="font-bold text-sm text-primary">{formatCurrency(deal.value)}</span>
-                                                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                                         <Calendar className="h-3 w-3" />
                                                         {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}
                                                     </div>
@@ -315,7 +316,7 @@ export default function DealsClient({ initialDeals, total }: Props) {
                                         </Card>
                                     ))}
                                     {colDeals.length === 0 && (
-                                        <div className="h-20 border border-dashed rounded-md flex items-center justify-center text-[10px] text-muted-foreground/50 uppercase tracking-widest">Empty Stage</div>
+                                        <div className="h-20 border border-dashed rounded-md flex items-center justify-center text-xs text-muted-foreground/50 uppercase tracking-widest">Empty Stage</div>
                                     )}
                                 </div>
                             </div>

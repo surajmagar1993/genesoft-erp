@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
@@ -54,8 +55,8 @@ export function PageEditor({ page }: { page: Page }) {
             router.refresh()
         })
 
-    const reset = () => {
-        if (!confirm("Go back to the built-in text? Your saved text for this page will be removed (it stays in History).")) return
+    const reset = async () => {
+        if (!(await confirmAction("Go back to the built-in text? Your saved text for this page will be removed (it stays in History)."))) return
         run(async () => {
             unwrap(await resetPage(page.key))
             toast.success("Back to the built-in text.")

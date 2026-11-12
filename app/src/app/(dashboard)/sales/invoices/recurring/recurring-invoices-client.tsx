@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -304,8 +305,8 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
     }
 
     // Delete Profile
-    const handleDeleteProfile = (profile: RecurringProfileRecord) => {
-        if (!confirm(`Are you sure you want to delete recurring profile "${profile.title}"?`)) return
+    const handleDeleteProfile = async (profile: RecurringProfileRecord) => {
+        if (!(await confirmAction(`Are you sure you want to delete recurring profile "${profile.title}"?`))) return
         startTransition(async () => {
             const res = await deleteRecurringProfile(profile.id)
             if (res.error) {
@@ -603,12 +604,12 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                         </code>
                                                         <Badge
                                                             variant="outline"
-                                                            className="text-[10px] uppercase font-semibold tracking-wider"
+                                                            className="text-xs uppercase font-semibold tracking-wider"
                                                         >
                                                             {profile.frequency}
                                                         </Badge>
                                                         <Badge
-                                                            className={`text-[10px] ${
+                                                            className={`text-xs ${
                                                                 profile.status === "ACTIVE"
                                                                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                                                                     : profile.status === "PAUSED"
@@ -634,7 +635,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                     <span className="text-lg font-bold text-foreground block">
                                                         {formatCurrency(profile.totalAmount, profile.currencyCode)}
                                                     </span>
-                                                    <span className="text-[10px] text-muted-foreground">
+                                                    <span className="text-xs text-muted-foreground">
                                                         per {profile.frequency.toLowerCase()}
                                                     </span>
                                                 </div>
@@ -645,7 +646,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                             {/* Schedule Info Box */}
                                             <div className="p-3 rounded-lg bg-muted/40 border border-border/50 grid grid-cols-2 gap-2 text-xs">
                                                 <div>
-                                                    <span className="text-[10px] text-muted-foreground block">
+                                                    <span className="text-xs text-muted-foreground block">
                                                         Next Scheduled Run
                                                     </span>
                                                     <div className="flex items-center gap-1 font-semibold text-foreground mt-0.5">
@@ -653,7 +654,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                         {formatDate(profile.nextRunDate)}
                                                     </div>
                                                     <span
-                                                        className={`text-[10px] block mt-0.5 ${
+                                                        className={`text-xs block mt-0.5 ${
                                                             isOverdue ? "text-amber-400 font-semibold" : "text-muted-foreground"
                                                         }`}
                                                     >
@@ -662,14 +663,14 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                 </div>
 
                                                 <div>
-                                                    <span className="text-[10px] text-muted-foreground block">
+                                                    <span className="text-xs text-muted-foreground block">
                                                         Cycles Completed
                                                     </span>
                                                     <span className="font-semibold text-foreground block mt-0.5">
                                                         {profile.cyclesCompleted}{" "}
                                                         {profile.maxCycles ? `/ ${profile.maxCycles}` : "cycles"}
                                                     </span>
-                                                    <span className="text-[10px] text-muted-foreground block mt-0.5">
+                                                    <span className="text-xs text-muted-foreground block mt-0.5">
                                                         Last: {formatDate(profile.lastRunDate)}
                                                     </span>
                                                 </div>
@@ -753,7 +754,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
 
                     <div className="border border-border/60 rounded-xl overflow-hidden bg-card shadow-sm">
                         <table className="w-full text-left text-xs">
-                            <thead className="bg-muted/50 border-b border-border/50 text-muted-foreground font-medium uppercase tracking-wider text-[11px]">
+                            <thead className="bg-muted/50 border-b border-border/50 text-muted-foreground font-medium uppercase tracking-wider text-xs">
                                 <tr>
                                     <th className="p-3.5 pl-4">Next Run Date</th>
                                     <th className="p-3.5">Schedule Title</th>
@@ -780,19 +781,19 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                 <tr key={p.id} className="hover:bg-muted/30 transition-colors">
                                                     <td className="p-3.5 pl-4 font-semibold text-foreground">
                                                         <div>{formatDate(p.nextRunDate)}</div>
-                                                        <span className="text-[10px] text-muted-foreground font-normal">
+                                                        <span className="text-xs text-muted-foreground font-normal">
                                                             {daysInfo}
                                                         </span>
                                                     </td>
                                                     <td className="p-3.5">
                                                         <div className="font-semibold text-foreground">{p.title}</div>
-                                                        <code className="text-[10px] text-muted-foreground">{p.profileNumber}</code>
+                                                        <code className="text-xs text-muted-foreground">{p.profileNumber}</code>
                                                     </td>
                                                     <td className="p-3.5 text-muted-foreground">
                                                         {p.contact.companyName || p.contact.displayName}
                                                     </td>
                                                     <td className="p-3.5">
-                                                        <Badge variant="outline" className="text-[10px]">
+                                                        <Badge variant="outline" className="text-xs">
                                                             {p.frequency}
                                                         </Badge>
                                                     </td>
@@ -801,7 +802,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                     </td>
                                                     <td className="p-3.5">
                                                         <Badge
-                                                            className={`text-[10px] ${
+                                                            className={`text-xs ${
                                                                 p.status === "ACTIVE"
                                                                     ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                                                                     : "bg-amber-500/20 text-amber-400 border-amber-500/30"
@@ -847,7 +848,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
 
                     <div className="border border-border/60 rounded-xl overflow-hidden bg-card shadow-sm">
                         <table className="w-full text-left text-xs">
-                            <thead className="bg-muted/50 border-b border-border/50 text-muted-foreground font-medium uppercase tracking-wider text-[11px]">
+                            <thead className="bg-muted/50 border-b border-border/50 text-muted-foreground font-medium uppercase tracking-wider text-xs">
                                 <tr>
                                     <th className="p-3.5 pl-4">Run Date</th>
                                     <th className="p-3.5">Generated Invoice #</th>
@@ -883,7 +884,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                             </td>
                                             <td className="p-3.5">
                                                 <Badge
-                                                    className={`text-[10px] ${
+                                                    className={`text-xs ${
                                                         exec.status === "SUCCESS"
                                                             ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
                                                             : "bg-destructive/20 text-destructive border-destructive/30"
@@ -981,7 +982,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                             <span className="font-semibold text-foreground block">
                                                 {p.contact.companyName || p.contact.displayName}
                                             </span>
-                                            <span className="text-[11px] text-muted-foreground truncate block max-w-[220px]">
+                                            <span className="text-xs text-muted-foreground truncate block max-w-[220px]">
                                                 {p.title}
                                             </span>
                                         </div>
@@ -989,7 +990,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                             <span className="font-bold text-foreground block">
                                                 {formatCurrency(p.totalAmount, p.currencyCode)}
                                             </span>
-                                            <Badge variant="outline" className="text-[9px]">
+                                            <Badge variant="outline" className="text-xs">
                                                 {p.frequency}
                                             </Badge>
                                         </div>
@@ -1022,7 +1023,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                 <label className="font-semibold text-foreground">Schedule Title *</label>
                                 <Input
                                     required
-                                    placeholder="e.g. Monthly Cloud Managed DevOps Retainer"
+                                    placeholder="Enter profile title"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                 />
@@ -1086,7 +1087,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                 <label className="font-semibold text-foreground">Max Cycles (Blank = Ongoing)</label>
                                 <Input
                                     type="number"
-                                    placeholder="e.g. 12"
+                                    placeholder="Enter number of cycles"
                                     value={formData.maxCycles}
                                     onChange={(e) => setFormData({ ...formData, maxCycles: e.target.value })}
                                 />
@@ -1160,7 +1161,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                         className="p-3 rounded-lg border border-border/60 bg-muted/20 grid grid-cols-12 gap-2 items-center"
                                     >
                                         <div className="col-span-4 space-y-1">
-                                            <span className="text-[10px] text-muted-foreground block">
+                                            <span className="text-xs text-muted-foreground block">
                                                 Product / Service
                                             </span>
                                             <select
@@ -1189,7 +1190,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                         </div>
 
                                         <div className="col-span-2 space-y-1">
-                                            <span className="text-[10px] text-muted-foreground block">HSN/SAC</span>
+                                            <span className="text-xs text-muted-foreground block">HSN/SAC</span>
                                             <Input
                                                 placeholder="998313"
                                                 value={item.hsnSacCode}
@@ -1201,7 +1202,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                         </div>
 
                                         <div className="col-span-2 space-y-1">
-                                            <span className="text-[10px] text-muted-foreground block">Unit Price</span>
+                                            <span className="text-xs text-muted-foreground block">Unit Price</span>
                                             <Input
                                                 type="number"
                                                 step="0.01"
@@ -1219,7 +1220,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                         </div>
 
                                         <div className="col-span-1 space-y-1">
-                                            <span className="text-[10px] text-muted-foreground block">Qty</span>
+                                            <span className="text-xs text-muted-foreground block">Qty</span>
                                             <Input
                                                 type="number"
                                                 step="1"
@@ -1238,7 +1239,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                         </div>
 
                                         <div className="col-span-2 space-y-1">
-                                            <span className="text-[10px] text-muted-foreground block">GST Rate</span>
+                                            <span className="text-xs text-muted-foreground block">GST Rate</span>
                                             <select
                                                 value={item.taxRate}
                                                 onChange={(e) =>
@@ -1354,7 +1355,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                 </div>
                             </div>
 
-                            <p className="text-muted-foreground text-[11px]">
+                            <p className="text-muted-foreground text-xs">
                                 Once triggered, a new <code className="text-foreground font-semibold">INV-YYYY-XXXX</code> record will be registered in Sales Invoices with linked ledger entries.
                             </p>
                         </div>
@@ -1395,23 +1396,23 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                         <div className="space-y-4 text-xs">
                             <div className="grid grid-cols-2 gap-2 p-3 rounded-lg bg-muted/40 text-xs">
                                 <div>
-                                    <span className="text-muted-foreground block text-[10px]">Client</span>
+                                    <span className="text-muted-foreground block text-xs">Client</span>
                                     <span className="font-semibold text-foreground">
                                         {inspectingProfile.contact.companyName || inspectingProfile.contact.displayName}
                                     </span>
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground block text-[10px]">Cadence</span>
+                                    <span className="text-muted-foreground block text-xs">Cadence</span>
                                     <span className="font-semibold text-foreground">
                                         {inspectingProfile.frequency}
                                     </span>
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground block text-[10px]">Start Date</span>
+                                    <span className="text-muted-foreground block text-xs">Start Date</span>
                                     <span className="text-foreground">{formatDate(inspectingProfile.startDate)}</span>
                                 </div>
                                 <div>
-                                    <span className="text-muted-foreground block text-[10px]">Next Scheduled Run</span>
+                                    <span className="text-muted-foreground block text-xs">Next Scheduled Run</span>
                                     <span className="font-semibold text-primary">{formatDate(inspectingProfile.nextRunDate)}</span>
                                 </div>
                             </div>
@@ -1427,7 +1428,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                         >
                                             <div>
                                                 <span className="font-medium text-foreground block">{i.description}</span>
-                                                <span className="text-[10px] text-muted-foreground">
+                                                <span className="text-xs text-muted-foreground">
                                                     Qty: {i.quantity} × {formatCurrency(i.unitPrice)} • GST: {i.cgstRate + i.sgstRate}%
                                                 </span>
                                             </div>

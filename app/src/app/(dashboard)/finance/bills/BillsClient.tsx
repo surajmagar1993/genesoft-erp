@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { localeForCurrency } from "@/lib/utils"
 import { useState } from "react"
 import { 
@@ -78,7 +79,7 @@ export default function BillsClient({ bills }: BillsClientProps) {
   }
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this bill?")) {
+    if (await confirmAction("Are you sure you want to delete this bill?")) {
       try {
         const { error } = await deleteBill(id)
         if (error) toast.error(error)

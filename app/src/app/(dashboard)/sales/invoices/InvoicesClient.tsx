@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import Link from "next/link"
 import { localeForCurrency } from "@/lib/utils"
 import { useState, useTransition, useEffect } from "react"
@@ -96,7 +97,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
     }, [searchQuery])
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure?")) return
+        if (!(await confirmAction({ title: "Delete this invoice?", description: "Its payments, ledger entries and stock movements are reversed. This can't be undone.", confirmLabel: "Delete invoice" }))) return
         setPendingId(id)
         startTransition(async () => {
             const { error } = await deleteInvoice(id)
@@ -274,7 +275,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                                         {inv.invoice_number}
                                                     </Link>
                                                     {inv.type === "PROFORMA" && (
-                                                        <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-500/10 font-bold uppercase px-2 py-0.5">
+                                                        <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-500/10 font-bold uppercase px-2 py-0.5">
                                                             PROFORMA
                                                         </Badge>
                                                     )}

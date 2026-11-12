@@ -126,7 +126,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           </span>
         </label>
 
-        <p className="text-[11px] text-muted-foreground leading-relaxed">
+        <p className="text-xs text-muted-foreground leading-relaxed">
           By creating an account you agree to our{' '}
           <Link href="/terms" target="_blank" className="underline hover:text-foreground">Terms of Service</Link>,{' '}
           <Link href="/privacy" target="_blank" className="underline hover:text-foreground">Privacy Policy</Link> and{' '}

@@ -460,7 +460,7 @@ export function ReportBuilderClient({
                                                     }`}
                                                 >
                                                     <Icon className="h-3.5 w-3.5 shrink-0" />
-                                                    <span className="truncate text-[11px]">{d.name.split(" ")[0]}</span>
+                                                    <span className="truncate text-xs">{d.name.split(" ")[0]}</span>
                                                 </button>
                                             )
                                         })}
@@ -474,7 +474,7 @@ export function ReportBuilderClient({
                                         <button
                                             type="button"
                                             onClick={() => setConfig({ ...config, selectedFields: activeDatasetDef.fields.map(f => f.key) })}
-                                            className="text-[10px] text-indigo-600 hover:underline"
+                                            className="text-xs text-indigo-600 hover:underline"
                                         >
                                             Select All
                                         </button>
@@ -487,7 +487,7 @@ export function ReportBuilderClient({
                                                     key={f.key}
                                                     type="button"
                                                     onClick={() => handleToggleField(f.key)}
-                                                    className={`text-[10px] px-2 py-0.5 rounded-full border transition-all flex items-center gap-1 ${
+                                                    className={`text-xs px-2 py-0.5 rounded-full border transition-all flex items-center gap-1 ${
                                                         isChecked
                                                             ? "bg-indigo-600 text-white border-indigo-600 font-medium"
                                                             : "bg-background text-muted-foreground border-border hover:bg-muted"
@@ -509,7 +509,7 @@ export function ReportBuilderClient({
                                             type="button"
                                             variant="outline"
                                             size="sm"
-                                            className="h-6 px-1.5 text-[10px]"
+                                            className="h-6 px-1.5 text-xs"
                                             onClick={handleAddFilter}
                                         >
                                             <Plus className="mr-1 h-3 w-3" />
@@ -518,7 +518,7 @@ export function ReportBuilderClient({
                                     </div>
 
                                     {config.filters.length === 0 ? (
-                                        <p className="text-[11px] text-muted-foreground italic bg-muted/20 p-2 rounded border border-dashed">
+                                        <p className="text-xs text-muted-foreground italic bg-muted/20 p-2 rounded border border-dashed">
                                             No filters applied. Showing all records.
                                         </p>
                                     ) : (
@@ -529,7 +529,7 @@ export function ReportBuilderClient({
                                                         value={flt.field}
                                                         onValueChange={(val) => handleFilterChange(idx, { field: val })}
                                                     >
-                                                        <SelectTrigger className="h-7 text-[10px] w-28">
+                                                        <SelectTrigger className="h-7 text-xs w-28">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -545,7 +545,7 @@ export function ReportBuilderClient({
                                                         value={flt.operator}
                                                         onValueChange={(val) => handleFilterChange(idx, { operator: val as ReportFilterCondition["operator"] })}
                                                     >
-                                                        <SelectTrigger className="h-7 text-[10px] w-24">
+                                                        <SelectTrigger className="h-7 text-xs w-24">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -560,7 +560,7 @@ export function ReportBuilderClient({
                                                         placeholder="Value..."
                                                         value={flt.value}
                                                         onChange={(e) => handleFilterChange(idx, { value: e.target.value })}
-                                                        className="h-7 text-[10px] flex-1 min-w-0"
+                                                        className="h-7 text-xs flex-1 min-w-0"
                                                     />
 
                                                     <button
@@ -581,12 +581,12 @@ export function ReportBuilderClient({
                                     <Label className="text-xs font-semibold">4. Grouping & Summaries</Label>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="space-y-1">
-                                            <span className="text-[10px] text-muted-foreground">Group By</span>
+                                            <span className="text-xs text-muted-foreground">Group By</span>
                                             <Select
                                                 value={config.groupBy || "none"}
                                                 onValueChange={(val) => setConfig({ ...config, groupBy: val === "none" ? null : val })}
                                             >
-                                                <SelectTrigger className="h-7 text-[10px]">
+                                                <SelectTrigger className="h-7 text-xs">
                                                     <SelectValue placeholder="None" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -603,12 +603,12 @@ export function ReportBuilderClient({
                                         </div>
 
                                         <div className="space-y-1">
-                                            <span className="text-[10px] text-muted-foreground">Function</span>
+                                            <span className="text-xs text-muted-foreground">Function</span>
                                             <Select
                                                 value={config.aggregateFn || "none"}
                                                 onValueChange={(val) => setConfig({ ...config, aggregateFn: val === "none" ? null : (val as ReportConfig["aggregateFn"]) })}
                                             >
-                                                <SelectTrigger className="h-7 text-[10px]">
+                                                <SelectTrigger className="h-7 text-xs">
                                                     <SelectValue placeholder="None" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -625,12 +625,12 @@ export function ReportBuilderClient({
 
                                     {config.aggregateFn && config.aggregateFn !== "COUNT" && (
                                         <div className="space-y-1 pt-1">
-                                            <span className="text-[10px] text-muted-foreground">Target Numeric Field</span>
+                                            <span className="text-xs text-muted-foreground">Target Numeric Field</span>
                                             <Select
                                                 value={config.aggregateField || ""}
                                                 onValueChange={(val) => setConfig({ ...config, aggregateField: val })}
                                             >
-                                                <SelectTrigger className="h-7 text-[10px]">
+                                                <SelectTrigger className="h-7 text-xs">
                                                     <SelectValue placeholder="Select field" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -672,7 +672,7 @@ export function ReportBuilderClient({
                                                     }`}
                                                 >
                                                     <Icon className="h-3.5 w-3.5" />
-                                                    <span className="text-[9px] mt-0.5">{c.label}</span>
+                                                    <span className="text-xs mt-0.5">{c.label}</span>
                                                 </button>
                                             )
                                         })}
@@ -698,27 +698,27 @@ export function ReportBuilderClient({
                     {/* Summary KPI Ribbon */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         <Card className="border-border/60 shadow-xs p-3">
-                            <div className="text-[11px] font-medium text-muted-foreground">Total Records</div>
+                            <div className="text-xs font-medium text-muted-foreground">Total Records</div>
                             <div className="text-xl font-bold mt-0.5">{reportResult.totalCount}</div>
-                            <div className="text-[10px] text-muted-foreground mt-0.5">Matching criteria</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">Matching criteria</div>
                         </Card>
 
                         {reportResult.summary.aggregateResult !== null && (
                             <Card className="border-border/60 shadow-xs p-3">
-                                <div className="text-[11px] font-medium text-muted-foreground truncate">
+                                <div className="text-xs font-medium text-muted-foreground truncate">
                                     {reportResult.summary.aggregateLabel || "Aggregate"}
                                 </div>
                                 <div className="text-xl font-bold text-indigo-600 mt-0.5">
                                     {reportResult.summary.aggregateResult.toLocaleString()}
                                 </div>
-                                <div className="text-[10px] text-muted-foreground mt-0.5">Computed total</div>
+                                <div className="text-xs text-muted-foreground mt-0.5">Computed total</div>
                             </Card>
                         )}
 
                         <Card className="border-border/60 shadow-xs p-3">
-                            <div className="text-[11px] font-medium text-muted-foreground">Active Filters</div>
+                            <div className="text-xs font-medium text-muted-foreground">Active Filters</div>
                             <div className="text-xl font-bold mt-0.5">{config.filters.length}</div>
-                            <div className="text-[10px] text-muted-foreground mt-0.5">
+                            <div className="text-xs text-muted-foreground mt-0.5">
                                 {config.groupBy ? `Grouped by ${config.groupBy}` : "Flat View"}
                             </div>
                         </Card>
@@ -732,7 +732,7 @@ export function ReportBuilderClient({
                                     <span>
                                         Analytics Distribution: {config.groupBy ? `By ${config.groupBy}` : "Group Analysis"}
                                     </span>
-                                    <Badge variant="outline" className="text-[10px] font-mono">
+                                    <Badge variant="outline" className="text-xs font-mono">
                                         Top {reportResult.chartData.length} Groups
                                     </Badge>
                                 </CardTitle>
@@ -835,7 +835,7 @@ export function ReportBuilderClient({
                                                                         {typeof val === "number" ? val.toLocaleString() : val || "0"}
                                                                     </span>
                                                                 ) : col.key === "status" ? (
-                                                                    <Badge variant="outline" className="text-[10px]">
+                                                                    <Badge variant="outline" className="text-xs">
                                                                         {String(val || "N/A")}
                                                                     </Badge>
                                                                 ) : (
@@ -930,12 +930,12 @@ export function ReportBuilderClient({
                                                     {saved.name}
                                                 </span>
                                                 {saved.isPrebuilt && (
-                                                    <Badge variant="secondary" className="text-[9px] bg-primary/10 text-primary">
+                                                    <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
                                                         System Preset
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                                            <p className="text-xs text-muted-foreground mt-0.5">
                                                 {saved.description || `Dataset: ${saved.dataset}`}
                                             </p>
                                         </div>
@@ -980,7 +980,7 @@ export function ReportBuilderClient({
                         <div className="space-y-1.5">
                             <Label className="text-xs font-semibold">Report Name</Label>
                             <Input
-                                placeholder="e.g. Q1 High Value Client Invoices"
+                                placeholder="Enter report name"
                                 value={saveForm.name}
                                 onChange={(e) => setSaveForm({ ...saveForm, name: e.target.value })}
                                 className="text-xs h-9"

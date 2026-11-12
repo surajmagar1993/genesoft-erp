@@ -15,7 +15,7 @@ export default async function RegionsPage() {
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-bold tracking-tight">Global SaaS Regions & Edge Telemetry</h1>
-                        <Badge variant="outline" className="text-[10px] font-bold border-primary/20 bg-primary/5">
+                        <Badge variant="outline" className="text-xs font-bold border-primary/20 bg-primary/5">
                             Multi-Region Mesh
                         </Badge>
                     </div>
@@ -97,7 +97,7 @@ export default async function RegionsPage() {
                                         <CardDescription className="text-xs font-mono">Code: {region.code} • Currency: {region.currency}</CardDescription>
                                     </div>
                                 </div>
-                                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
+                                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs font-bold">
                                     {region.status}
                                 </Badge>
                             </div>
@@ -143,7 +143,7 @@ export default async function RegionsPage() {
                                         <Wifi className="h-3.5 w-3.5 text-blue-500" />
                                         Active Tenants
                                     </span>
-                                    <Badge variant="outline" className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-bold">
+                                    <Badge variant="outline" className="text-xs text-emerald-600 dark:text-emerald-400 font-mono font-bold">
                                         {region.activeTenants} of {region.tenantCount}
                                     </Badge>
                                 </div>

@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useRouter } from "next/navigation"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useEffect, useState, useTransition, useMemo } from "react"
@@ -376,8 +377,8 @@ export default function ExpensesClient({
     }
 
     // Handlers: Void Expense
-    const handleVoidExpense = (expenseId: string) => {
-        if (!confirm("Are you sure you want to void this expense voucher and reverse its General Ledger entry?")) {
+    const handleVoidExpense = async (expenseId: string) => {
+        if (!(await confirmAction("Are you sure you want to void this expense voucher and reverse its General Ledger entry?"))) {
             return
         }
 
@@ -628,7 +629,7 @@ export default function ExpensesClient({
                                                 <td className="py-3.5 px-4 font-mono font-semibold text-xs text-indigo-600 dark:text-indigo-400">
                                                     {exp.expenseNumber}
                                                     {exp.journalEntryNumber && (
-                                                        <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                                                        <div className="text-xs text-muted-foreground font-mono mt-0.5">
                                                             GL: {exp.journalEntryNumber}
                                                         </div>
                                                     )}
@@ -643,11 +644,11 @@ export default function ExpensesClient({
                                                 <td className="py-3.5 px-4">
                                                     <div className="font-medium text-foreground">{exp.title}</div>
                                                     <div className="flex items-center gap-1.5 mt-1">
-                                                        <Badge variant="outline" className="text-[11px] font-normal">
+                                                        <Badge variant="outline" className="text-xs font-normal">
                                                             {exp.category}
                                                         </Badge>
                                                         {exp.isReimbursable && (
-                                                            <Badge variant="secondary" className="text-[10px] bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200">
+                                                            <Badge variant="secondary" className="text-xs bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200">
                                                                 Reimbursable
                                                             </Badge>
                                                         )}
@@ -664,12 +665,12 @@ export default function ExpensesClient({
                                                 </td>
                                                 <td className="py-3.5 px-4 text-xs">
                                                     <div className="text-muted-foreground">
-                                                        <span className="font-mono text-[11px] text-foreground font-medium">
+                                                        <span className="font-mono text-xs text-foreground font-medium">
                                                             {exp.accountCode}
                                                         </span>{" "}
                                                         {exp.accountName}
                                                     </div>
-                                                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                                                    <div className="text-xs text-muted-foreground mt-0.5">
                                                         Via {exp.paymentMethod?.replace("_", " ") || "Bank"}{" "}
                                                         {exp.paymentReference ? `(${exp.paymentReference})` : ""}
                                                     </div>
@@ -679,7 +680,7 @@ export default function ExpensesClient({
                                                         {formatINR(exp.totalAmount)}
                                                     </div>
                                                     {exp.taxAmount > 0 && (
-                                                        <div className="text-[11px] text-muted-foreground">
+                                                        <div className="text-xs text-muted-foreground">
                                                             Net {formatINR(exp.amount)} + GST {formatINR(exp.taxAmount)}
                                                         </div>
                                                     )}
@@ -828,11 +829,11 @@ export default function ExpensesClient({
                                                     })}
                                                 </td>
                                                 <td className="py-3.5 px-4">
-                                                    <Badge variant="outline" className="text-[10px]">
+                                                    <Badge variant="outline" className="text-xs">
                                                         {je.sourceType}
                                                     </Badge>
                                                     {je.reference && (
-                                                        <div className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                                                        <div className="text-xs text-muted-foreground font-mono mt-0.5">
                                                             {je.reference}
                                                         </div>
                                                     )}
@@ -1064,7 +1065,7 @@ export default function ExpensesClient({
                                                     </div>
                                                     <Badge
                                                         variant="outline"
-                                                        className={`text-[10px] mt-1 ${
+                                                        className={`text-xs mt-1 ${
                                                             claim.isClaimSettled
                                                                 ? "text-emerald-600 border-emerald-300"
                                                                 : "text-amber-600 border-amber-300"
@@ -1115,7 +1116,7 @@ export default function ExpensesClient({
                                 </label>
                                 <Input
                                     required
-                                    placeholder="Enter expense title (e.g. AWS Cloud Hosting, Mumbai Office Rent)"
+                                    placeholder="Enter expense title"
                                     value={expForm.title}
                                     onChange={(e) => setExpForm({ ...expForm, title: e.target.value })}
                                 />
@@ -1326,7 +1327,7 @@ export default function ExpensesClient({
                                     <div className="text-xs font-semibold text-foreground">
                                         Auto-Post to General Ledger
                                     </div>
-                                    <div className="text-[11px] text-muted-foreground">
+                                    <div className="text-xs text-muted-foreground">
                                         Automatically creates a balanced Journal Voucher debiting the expense account and crediting payment account.
                                     </div>
                                 </div>
@@ -1398,7 +1399,7 @@ export default function ExpensesClient({
                                     Source Reference / Document #
                                 </label>
                                 <Input
-                                    placeholder="Enter reference (e.g. INV-001, MEMO-99)"
+                                    placeholder="Enter reference"
                                     value={jeForm.reference}
                                     onChange={(e) => setJeForm({ ...jeForm, reference: e.target.value })}
                                 />

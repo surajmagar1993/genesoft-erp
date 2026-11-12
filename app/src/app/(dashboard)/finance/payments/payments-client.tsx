@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Search, Trash2, CreditCard, Banknote, Calendar, Receipt } from "lucide-react"
@@ -167,7 +168,7 @@ export default function PaymentsClient({ initialPayments }: Props) {
                                             <TableRow key={p.id}>
                                                 <TableCell className="font-medium whitespace-nowrap">{formatDate(p.payment_date)}</TableCell>
                                                 <TableCell>
-                                                    <Badge variant={isOutbound ? "outline" : "secondary"} className={`text-[10px] tracking-widest uppercase font-bold px-1.5 ${isOutbound ? 'border-orange-500 text-orange-600' : 'bg-emerald-500/10 text-emerald-700'}`}>
+                                                    <Badge variant={isOutbound ? "outline" : "secondary"} className={`text-xs tracking-widest uppercase font-bold px-1.5 ${isOutbound ? 'border-orange-500 text-orange-600' : 'bg-emerald-500/10 text-emerald-700'}`}>
                                                         {isOutbound ? "Outbound" : "Inbound"}
                                                     </Badge>
                                                 </TableCell>
@@ -192,7 +193,7 @@ export default function PaymentsClient({ initialPayments }: Props) {
                                                     <span className="font-medium">{p.contacts?.display_name || p.contacts?.company_name || "—"}</span>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Badge variant="ghost" className="flex w-fit items-center gap-1.5 uppercase tracking-wider text-[10px] font-semibold text-muted-foreground p-0">
+                                                    <Badge variant="ghost" className="flex w-fit items-center gap-1.5 uppercase tracking-wider text-xs font-semibold text-muted-foreground p-0">
                                                         {p.payment_method === "BANK_TRANSFER" ? <Banknote className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
                                                         {p.payment_method.replace('_', ' ')}
                                                     </Badge>
@@ -205,8 +206,8 @@ export default function PaymentsClient({ initialPayments }: Props) {
                                                         variant="ghost"
                                                         size="icon"
                                                         disabled={isPending}
-                                                        onClick={() => {
-                                                            if (confirm("Are you sure you want to delete this payment? Balance will be recalculated.")) {
+                                                        onClick={async () => {
+                                                            if (await confirmAction("Are you sure you want to delete this payment? Balance will be recalculated.")) {
                                                                 handleDelete(p.id)
                                                             }
                                                         }}

@@ -28,7 +28,7 @@ export function WorkspaceSlugInput() {
         className="h-10 font-medium"
       />
       <input type="hidden" name="slug" value={cleaned} />
-      <p className="text-[11px] text-muted-foreground flex items-center gap-1.5 px-1">
+      <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
         <Globe className="h-3 w-3" />
         Your workspace ID: <span className="font-semibold text-foreground">{cleaned || '...'}</span>
       </p>

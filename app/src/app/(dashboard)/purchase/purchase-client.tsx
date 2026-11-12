@@ -1869,7 +1869,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                 <Label htmlFor="vendor-phone">Phone Number</Label>
                                 <Input
                                     id="vendor-phone"
-                                    placeholder="+91 98765 43210"
+                                    placeholder="Enter phone number with country code"
                                     value={vendorPhone}
                                     onChange={(e) => setVendorPhone(e.target.value)}
                                 />

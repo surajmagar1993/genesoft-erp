@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -245,7 +246,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
 
     // Delete Budget
     const handleDeleteBudget = async (id: string, name: string) => {
-        if (!confirm(`Are you sure you want to delete budget "${name}"?`)) return
+        if (!(await confirmAction(`Are you sure you want to delete budget "${name}"?`))) return
         startTransition(async () => {
             try {
                 unwrap(await deleteBudget(id))
@@ -430,7 +431,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                     <TabsTrigger value="portfolio" className="gap-2 text-xs sm:text-sm">
                         <Target className="h-4 w-4" />
                         Budget Portfolio
-                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
                             {initialData.budgets.length}
                         </Badge>
                     </TabsTrigger>
@@ -446,7 +447,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                         <ShieldAlert className="h-4 w-4 text-amber-500" />
                         Burn Watchdog
                         {(initialData.telemetry.criticalBudgetsCount > 0 || initialData.telemetry.warningBudgetsCount > 0) && (
-                            <Badge variant="destructive" className="ml-1 text-[10px] px-1 py-0">
+                            <Badge variant="destructive" className="ml-1 text-xs px-1 py-0">
                                 {initialData.telemetry.criticalBudgetsCount + initialData.telemetry.warningBudgetsCount}
                             </Badge>
                         )}
@@ -556,7 +557,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                                         <div className="font-semibold text-xs sm:text-sm text-foreground">
                                                             {b.name}
                                                         </div>
-                                                        <span className="text-[11px] text-muted-foreground font-mono">
+                                                        <span className="text-xs text-muted-foreground font-mono">
                                                             FY {b.fiscalYear} &bull; {b.itemCount} account lines
                                                         </span>
                                                     </TableCell>
@@ -566,7 +567,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                                             <Building2 className="h-3 w-3 text-muted-foreground" />
                                                             <span>{b.departmentName || "Company-wide"}</span>
                                                         </div>
-                                                        <span className="text-[11px] text-muted-foreground block">
+                                                        <span className="text-xs text-muted-foreground block">
                                                             {format(new Date(b.startDate), "MMM yyyy")} &ndash; {format(new Date(b.endDate), "MMM yyyy")} ({b.periodType})
                                                         </span>
                                                     </TableCell>
@@ -581,7 +582,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
 
                                                     <TableCell>
                                                         <div className="space-y-1">
-                                                            <div className="flex items-center justify-between text-[11px]">
+                                                            <div className="flex items-center justify-between text-xs">
                                                                 <span className="font-medium">{b.utilizationPercent}%</span>
                                                                 <span className={b.varianceAmount >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400 font-semibold"}>
                                                                     {b.varianceAmount >= 0 ? "+" : ""}{formatCurrency(b.varianceAmount)}
@@ -603,7 +604,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                                     <TableCell>
                                                         <Badge
                                                             variant="outline"
-                                                            className={`text-[10px] px-2 py-0.5 border ${
+                                                            className={`text-xs px-2 py-0.5 border ${
                                                                 b.status === "ACTIVE"
                                                                     ? "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
                                                                     : b.status === "APPROVED"
@@ -762,14 +763,14 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                                                 {item.accountCode} - {item.accountName}
                                                             </div>
                                                             {item.notes && (
-                                                                <span className="text-[10px] text-muted-foreground block font-sans italic">
+                                                                <span className="text-xs text-muted-foreground block font-sans italic">
                                                                     {item.notes}
                                                                 </span>
                                                             )}
                                                         </TableCell>
 
                                                         <TableCell>
-                                                            <Badge variant="secondary" className="text-[10px] font-normal">
+                                                            <Badge variant="secondary" className="text-xs font-normal">
                                                                 {item.category || "General Expense"}
                                                             </Badge>
                                                         </TableCell>
@@ -788,7 +789,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
 
                                                         <TableCell>
                                                             <div className="space-y-1">
-                                                                <div className="flex justify-between text-[10px]">
+                                                                <div className="flex justify-between text-xs">
                                                                     <span>{item.utilizationPercent}%</span>
                                                                 </div>
                                                                 <Progress
@@ -806,17 +807,17 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
 
                                                         <TableCell>
                                                             {item.status === "HEALTHY" && (
-                                                                <Badge variant="outline" className="text-[10px] border-emerald-500 text-emerald-700 dark:text-emerald-300">
+                                                                <Badge variant="outline" className="text-xs border-emerald-500 text-emerald-700 dark:text-emerald-300">
                                                                     Healthy
                                                                 </Badge>
                                                             )}
                                                             {item.status === "WARNING" && (
-                                                                <Badge variant="outline" className="text-[10px] border-amber-500 text-amber-700 dark:text-amber-300">
+                                                                <Badge variant="outline" className="text-xs border-amber-500 text-amber-700 dark:text-amber-300">
                                                                     Warning (&gt;80%)
                                                                 </Badge>
                                                             )}
                                                             {item.status === "CRITICAL" && (
-                                                                <Badge variant="destructive" className="text-[10px]">
+                                                                <Badge variant="destructive" className="text-xs">
                                                                     Over-Budget
                                                                 </Badge>
                                                             )}
@@ -853,7 +854,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                                         <div className="font-semibold text-foreground">
                                                             {exp.title}
                                                         </div>
-                                                        <div className="text-muted-foreground text-[11px] font-mono">
+                                                        <div className="text-muted-foreground text-xs font-mono">
                                                             {exp.expenseNumber} &bull; {exp.accountCode} ({exp.accountName}) &bull; {format(new Date(exp.expenseDate), "yyyy-MM-dd")}
                                                         </div>
                                                     </div>
@@ -862,7 +863,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                                             {formatCurrency(exp.totalAmount)}
                                                         </div>
                                                         {exp.vendorName && (
-                                                            <span className="text-[10px] text-muted-foreground block">
+                                                            <span className="text-xs text-muted-foreground block">
                                                                 Vendor: {exp.vendorName}
                                                             </span>
                                                         )}
@@ -903,7 +904,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                         >
                                             <div className="flex items-center justify-between">
                                                 <h4 className="font-bold text-sm text-foreground">{dept.name}</h4>
-                                                <Badge variant="secondary" className="text-[10px]">
+                                                <Badge variant="secondary" className="text-xs">
                                                     {dept.count} plans
                                                 </Badge>
                                             </div>
@@ -926,7 +927,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                             </div>
 
                                             <div className="space-y-1 pt-1 border-t">
-                                                <div className="flex justify-between text-[11px] text-muted-foreground">
+                                                <div className="flex justify-between text-xs text-muted-foreground">
                                                     <span>Utilization:</span>
                                                     <span className="font-medium text-foreground">{Math.round(util * 10) / 10}%</span>
                                                 </div>
@@ -983,15 +984,15 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                             <div key={b.id} className="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 rounded-lg text-xs space-y-1.5">
                                                 <div className="flex justify-between items-center">
                                                     <span className="font-bold text-rose-900 dark:text-rose-200">{b.name}</span>
-                                                    <Badge variant="destructive" className="text-[10px]">
+                                                    <Badge variant="destructive" className="text-xs">
                                                         {b.utilizationPercent}%
                                                     </Badge>
                                                 </div>
-                                                <div className="text-rose-700 dark:text-rose-300 text-[11px] flex justify-between">
+                                                <div className="text-rose-700 dark:text-rose-300 text-xs flex justify-between">
                                                     <span>Cap: {formatCurrency(b.totalBudgetedAmount)}</span>
                                                     <span className="font-bold">Spent: {formatCurrency(b.totalActualAmount)}</span>
                                                 </div>
-                                                <p className="text-[10px] text-muted-foreground italic">
+                                                <p className="text-xs text-muted-foreground italic">
                                                     Recommended: Issue revision amendment or freeze non-essential purchase approvals.
                                                 </p>
                                             </div>
@@ -1031,7 +1032,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                                     <span className="font-bold text-amber-900 dark:text-amber-200">{b.name}</span>
                                                     <span className="font-bold text-amber-600 dark:text-amber-400">{b.utilizationPercent}%</span>
                                                 </div>
-                                                <div className="text-amber-800 dark:text-amber-300 text-[11px] flex justify-between">
+                                                <div className="text-amber-800 dark:text-amber-300 text-xs flex justify-between">
                                                     <span>Cap: {formatCurrency(b.totalBudgetedAmount)}</span>
                                                     <span>Runway Left: {formatCurrency(b.varianceAmount)}</span>
                                                 </div>
@@ -1064,7 +1065,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                             <div className="sm:col-span-2 space-y-1">
                                 <Label className="text-xs font-semibold">Plan Name *</Label>
                                 <Input
-                                    placeholder="e.g. FY 2026-2027 Corporate Operational Budget"
+                                    placeholder="Enter plan name"
                                     value={newPlan.name}
                                     onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
                                     className="text-xs"
@@ -1075,7 +1076,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                             <div className="space-y-1">
                                 <Label className="text-xs font-semibold">Fiscal Year *</Label>
                                 <Input
-                                    placeholder="e.g. 2026-2027"
+                                    placeholder="Enter fiscal year"
                                     value={newPlan.fiscalYear}
                                     onChange={(e) => setNewPlan({ ...newPlan, fiscalYear: e.target.value })}
                                     className="text-xs font-mono"
@@ -1164,7 +1165,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <Label className="text-xs font-semibold">Account Allocations ({newPlan.items.length})</Label>
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground">
                                         Assign budget limits to specific Chart of Accounts expense categories.
                                     </p>
                                 </div>
@@ -1320,7 +1321,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
                                 </Select>
                             </div>
 
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                                 Active budgets will actively enforce spending alert thresholds against outgoing expense claims and purchase bills.
                             </p>
 

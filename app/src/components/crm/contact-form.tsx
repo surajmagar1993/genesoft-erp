@@ -527,7 +527,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                                 className="bg-background"
                                                 value={form.taxExemptionCertificate}
                                                 onChange={(e) => update("taxExemptionCertificate", e.target.value)}
-                                                placeholder="e.g., LUT-2026-001, SEZ/CERT/9823"
+                                                placeholder="Enter certificate, LUT or registration reference"
                                             />
                                         </div>
                                         <p className="col-span-2 text-xs text-emerald-800">
@@ -546,7 +546,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                     id="billingStreet"
                                     value={form.billingStreet}
                                     onChange={(e) => update("billingStreet", e.target.value)}
-                                    placeholder="e.g. 123 Business Boulevard, Suite 400"
+                                    placeholder="Enter street address"
                                 />
                             </div>
 
@@ -610,7 +610,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                                 }
                                             }
                                         }}
-                                        placeholder="Start typing city (e.g. Mumbai, New York, Dubai)..."
+                                        placeholder="Start typing a city"
                                     />
                                 </div>
 
@@ -620,7 +620,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                         id="billingZip"
                                         value={form.billingZip}
                                         onChange={(e) => update("billingZip", e.target.value)}
-                                        placeholder="e.g. 400001, 10001"
+                                        placeholder="Enter ZIP or postal code"
                                     />
                                 </div>
                             </div>

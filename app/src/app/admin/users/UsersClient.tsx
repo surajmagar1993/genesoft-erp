@@ -159,7 +159,7 @@ export function UsersClient({
                                 <CardTitle className="text-base flex items-center gap-2">
                                     <Building2 className="h-4 w-4 text-primary shrink-0" />
                                     <Link href={`/admin/tenants/${tenant.id}`} className="truncate hover:underline">{tenant.name}</Link>
-                                    {!tenant.isActive && <Badge variant="destructive" className="text-[10px]">Suspended</Badge>}
+                                    {!tenant.isActive && <Badge variant="destructive" className="text-xs">Suspended</Badge>}
                                 </CardTitle>
                                 <CardDescription className="text-xs uppercase font-semibold mt-1">
                                     {tenant.plan} · {tenant.countryCode} · {members.length} {members.length === 1 ? "user" : "users"}
@@ -205,7 +205,7 @@ export function UsersClient({
                                                 </div>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className={`text-[10px] font-bold uppercase whitespace-nowrap ${badge.className}`}>{badge.label}</Badge>
+                                                <Badge variant="outline" className={`text-xs font-bold uppercase whitespace-nowrap ${badge.className}`}>{badge.label}</Badge>
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground">{u.accessSummary}</TableCell>
                                             <TableCell>
@@ -263,11 +263,11 @@ export function UsersClient({
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className="text-[10px] font-bold uppercase whitespace-nowrap">{i.role === "ADMIN" ? "Admin" : "Member"}</Badge>
+                                            <Badge variant="outline" className="text-xs font-bold uppercase whitespace-nowrap">{i.role === "ADMIN" ? "Admin" : "Member"}</Badge>
                                         </TableCell>
                                         <TableCell className="text-xs text-muted-foreground">{i.accessSummary}</TableCell>
                                         <TableCell>
-                                            <Badge variant={i.expired ? "destructive" : "secondary"} className="text-[10px]">{i.expired ? "Invite expired" : "Invited"}</Badge>
+                                            <Badge variant={i.expired ? "destructive" : "secondary"} className="text-xs">{i.expired ? "Invite expired" : "Invited"}</Badge>
                                         </TableCell>
                                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">by {i.invitedByName}</TableCell>
                                         <TableCell />

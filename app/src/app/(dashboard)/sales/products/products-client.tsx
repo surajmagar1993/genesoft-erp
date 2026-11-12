@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useTransition, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Papa from "papaparse"
@@ -48,7 +49,7 @@ export function ProductsClient({ initialProducts }: ProductsClientProps) {
     })
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this item?")) return
+        if (!(await confirmAction("Are you sure you want to delete this item?"))) return
         
         setIsDeleting(id)
         const { error } = await deleteProduct(id)
@@ -285,7 +286,7 @@ export function ProductsClient({ initialProducts }: ProductsClientProps) {
                                                 </span>
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant={item.is_active ? "outline" : "destructive"} className="text-[10px] uppercase">
+                                                <Badge variant={item.is_active ? "outline" : "destructive"} className="text-xs uppercase">
                                                     {item.is_active ? "Active" : "Inactive"}
                                                 </Badge>
                                             </TableCell>

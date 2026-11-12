@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { Copy, Loader2, Trash2, Upload } from "lucide-react"
@@ -86,7 +87,7 @@ export function MediaClient({ media }: { media: Media[] }) {
                                             className="h-7 w-7 text-destructive"
                                             aria-label="Delete image"
                                             disabled={busy}
-                                            onClick={() => confirm("Delete this image?") && run(async () => { unwrap(await deleteMedia(m.id)); toast.success("Deleted"); router.refresh() })}
+                                            onClick={async () => await confirmAction("Delete this image?") && run(async () => { unwrap(await deleteMedia(m.id)); toast.success("Deleted"); router.refresh() })}
                                         >
                                             <Trash2 className="h-3.5 w-3.5" />
                                         </Button>

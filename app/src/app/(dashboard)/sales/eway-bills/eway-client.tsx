@@ -545,26 +545,26 @@ export function EwayClient({ initialData }: EwayClientProps) {
                               <Copy className="h-3 w-3 text-muted-foreground" />
                             </Button>
                           </div>
-                          <span className="text-[10px] text-muted-foreground font-normal">
+                          <span className="text-xs text-muted-foreground font-normal">
                             Gen: {formatDate(b.generatedAt)}
                           </span>
                         </TableCell>
                         <TableCell>
                           <span className="font-semibold text-foreground">{b.docNo}</span>
-                          <p className="text-[10px] text-muted-foreground">{b.docType} • {formatDate(b.docDate)}</p>
+                          <p className="text-xs text-muted-foreground">{b.docType} • {formatDate(b.docDate)}</p>
                         </TableCell>
                         <TableCell>
                           <span className="font-medium">{b.toTrdName}</span>
-                          <p className="text-[10px] text-muted-foreground">{b.toPlace} ({b.toPincode})</p>
+                          <p className="text-xs text-muted-foreground">{b.toPlace} ({b.toPincode})</p>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1.5">
-                            <Badge variant="outline" className="font-mono text-[10px] uppercase font-bold bg-muted/60">
+                            <Badge variant="outline" className="font-mono text-xs uppercase font-bold bg-muted/60">
                               {b.vehicleNo || "NO VEHICLE"}
                             </Badge>
-                            <span className="text-[10px] text-muted-foreground">({b.approxDistanceKm} km)</span>
+                            <span className="text-xs text-muted-foreground">({b.approxDistanceKm} km)</span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground">{b.transporterName || "Self"}</p>
+                          <p className="text-xs text-muted-foreground">{b.transporterName || "Self"}</p>
                         </TableCell>
                         <TableCell className="text-right font-semibold font-mono">
                           {formatCurrency(b.totInvValue)}
@@ -572,19 +572,19 @@ export function EwayClient({ initialData }: EwayClientProps) {
                         <TableCell>
                           {b.status === "ACTIVE" ? (
                             <div className="space-y-0.5">
-                              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 text-[10px]">
+                              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 text-xs">
                                 {b.hoursRemaining > 24
                                   ? `${Math.round(b.hoursRemaining / 24)} days left`
                                   : `${b.hoursRemaining}h left`}
                               </Badge>
-                              <p className="text-[10px] text-muted-foreground">{formatDateTime(b.validUntil)}</p>
+                              <p className="text-xs text-muted-foreground">{formatDateTime(b.validUntil)}</p>
                             </div>
                           ) : b.status === "EXPIRED" ? (
-                            <Badge variant="outline" className="border-amber-500 text-amber-600 text-[10px]">
+                            <Badge variant="outline" className="border-amber-500 text-amber-600 text-xs">
                               Expired
                             </Badge>
                           ) : (
-                            <Badge variant="destructive" className="text-[10px]">
+                            <Badge variant="destructive" className="text-xs">
                               Cancelled
                             </Badge>
                           )}
@@ -594,7 +594,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                             variant={
                               b.status === "ACTIVE" ? "default" : b.status === "CANCELLED" ? "destructive" : "secondary"
                             }
-                            className="text-[10px] uppercase"
+                            className="text-xs uppercase"
                           >
                             {b.status}
                           </Badge>
@@ -678,8 +678,8 @@ export function EwayClient({ initialData }: EwayClientProps) {
                           <span>{cand.invoiceNumber}</span>
                           <span className="text-indigo-600">{formatCurrency(cand.total)}</span>
                         </div>
-                        <p className="text-muted-foreground text-[11px] truncate">{cand.customerName}</p>
-                        <div className="flex justify-between text-[10px] text-muted-foreground pt-1 border-t">
+                        <p className="text-muted-foreground text-xs truncate">{cand.customerName}</p>
+                        <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t">
                           <span>{cand.supplyType}</span>
                           <span className="text-indigo-600 font-semibold flex items-center gap-0.5">
                             Auto-Fill <ArrowRight className="h-3 w-3" />
@@ -762,7 +762,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                           From (Consignor / Dispatch)
                         </h4>
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">Trade / Legal Name</Label>
+                          <Label className="text-xs text-muted-foreground">Trade / Legal Name</Label>
                           <Input
                             className="h-7 text-xs"
                             value={genForm.fromTrdName}
@@ -771,7 +771,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">Supplier GSTIN</Label>
+                          <Label className="text-xs text-muted-foreground">Supplier GSTIN</Label>
                           <Input
                             className="h-7 text-xs font-mono uppercase"
                             value={genForm.fromGstin}
@@ -781,10 +781,10 @@ export function EwayClient({ initialData }: EwayClientProps) {
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] text-muted-foreground">Dispatch City</Label>
+                            <Label className="text-xs text-muted-foreground">Dispatch City</Label>
                             <AutoSuggestInput
                               className="h-7 text-xs"
-                              placeholder="e.g. Pune"
+                              placeholder="Enter dispatch city"
                               value={genForm.fromPlace}
                               onChange={(e) => setGenForm({ ...genForm, fromPlace: e.target.value })}
                               options={searchCities(genForm.fromPlace).map((c) => ({
@@ -801,7 +801,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] text-muted-foreground">PIN Code *</Label>
+                            <Label className="text-xs text-muted-foreground">PIN Code *</Label>
                             <Input
                               type="number"
                               className="h-7 text-xs font-mono"
@@ -820,7 +820,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                           To (Consignee / Delivery)
                         </h4>
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">Recipient Name</Label>
+                          <Label className="text-xs text-muted-foreground">Recipient Name</Label>
                           <Input
                             className="h-7 text-xs"
                             value={genForm.toTrdName}
@@ -829,7 +829,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">Recipient GSTIN / URP</Label>
+                          <Label className="text-xs text-muted-foreground">Recipient GSTIN / URP</Label>
                           <Input
                             className="h-7 text-xs font-mono uppercase"
                             value={genForm.toGstin}
@@ -839,10 +839,10 @@ export function EwayClient({ initialData }: EwayClientProps) {
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] text-muted-foreground">Destination City</Label>
+                            <Label className="text-xs text-muted-foreground">Destination City</Label>
                             <AutoSuggestInput
                               className="h-7 text-xs"
-                              placeholder="e.g. Mumbai"
+                              placeholder="Enter destination city"
                               value={genForm.toPlace}
                               onChange={(e) => setGenForm({ ...genForm, toPlace: e.target.value })}
                               options={searchCities(genForm.toPlace).map((c) => ({
@@ -859,7 +859,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                             />
                           </div>
                           <div className="space-y-1.5">
-                            <Label className="text-[11px] text-muted-foreground">PIN Code *</Label>
+                            <Label className="text-xs text-muted-foreground">PIN Code *</Label>
                             <Input
                               type="number"
                               className="h-7 text-xs font-mono"
@@ -877,7 +877,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                       <h4 className="font-bold text-xs text-foreground">Consignment Value &amp; Taxes</h4>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">Main HSN Code *</Label>
+                          <Label className="text-xs text-muted-foreground">Main HSN Code *</Label>
                           <Input
                             className="h-7 text-xs font-mono"
                             value={genForm.mainHsn}
@@ -886,7 +886,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">Taxable Value (₹) *</Label>
+                          <Label className="text-xs text-muted-foreground">Taxable Value (₹) *</Label>
                           <Input
                             type="number"
                             className="h-7 text-xs font-mono"
@@ -896,7 +896,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">CGST (₹)</Label>
+                          <Label className="text-xs text-muted-foreground">CGST (₹)</Label>
                           <Input
                             type="number"
                             className="h-7 text-xs font-mono"
@@ -905,7 +905,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-[11px] text-muted-foreground">SGST / IGST (₹)</Label>
+                          <Label className="text-xs text-muted-foreground">SGST / IGST (₹)</Label>
                           <Input
                             type="number"
                             className="h-7 text-xs font-mono"
@@ -958,7 +958,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <Label className="text-xs">Vehicle Number *</Label>
-                        <span className="text-[10px] text-muted-foreground">e.g. MH12AB1234</span>
+                        <span className="text-xs text-muted-foreground">e.g. MH12AB1234</span>
                       </div>
                       <Input
                         className="h-8 text-xs font-mono uppercase font-bold"
@@ -968,7 +968,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                         required
                       />
                       {genForm.vehicleNo && !validateVehicleNumber(genForm.vehicleNo).isValid && (
-                        <p className="text-[10px] text-destructive">
+                        <p className="text-xs text-destructive">
                           Invalid vehicle format (State + RTO + Series + 4 Digits)
                         </p>
                       )}
@@ -996,7 +996,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <Label className="text-xs">Approx Distance (KM) *</Label>
-                        <span className="text-[10px] text-emerald-600 font-semibold">
+                        <span className="text-xs text-emerald-600 font-semibold">
                           {liveValidity.validityDays} Day(s) Validity
                         </span>
                       </div>
@@ -1008,7 +1008,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                         onChange={(e) => setGenForm({ ...genForm, transDistance: Number(e.target.value) })}
                         required
                       />
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         Valid until: {formatDateTime(liveValidity.validUntil.toISOString())}
                       </p>
                     </div>
@@ -1048,7 +1048,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                           )}
                         </span>
                       </div>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="text-xs text-muted-foreground">
                         Mandatory compliance per Rule 138 (Value &gt; ₹50,000).
                       </p>
                     </div>
@@ -1089,14 +1089,14 @@ export function EwayClient({ initialData }: EwayClientProps) {
                       >
                         <div className="flex items-center justify-between font-bold">
                           <span>{b.ewayBillNo}</span>
-                          <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">ACTIVE</Badge>
+                          <Badge className="bg-emerald-100 text-emerald-700 text-xs">ACTIVE</Badge>
                         </div>
                         <p className="text-muted-foreground">{b.docNo} • {b.toTrdName}</p>
-                        <div className="flex justify-between items-center bg-muted/30 p-2 rounded text-[11px] font-mono">
+                        <div className="flex justify-between items-center bg-muted/30 p-2 rounded text-xs font-mono">
                           <span>Current Vehicle:</span>
                           <span className="font-bold">{b.vehicleNo || "None"}</span>
                         </div>
-                        <div className="flex justify-between items-center text-[11px] text-muted-foreground">
+                        <div className="flex justify-between items-center text-xs text-muted-foreground">
                           <span>Validity:</span>
                           <span>{b.hoursRemaining}h remaining</span>
                         </div>
@@ -1139,7 +1139,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
               <CardContent className="space-y-4 text-xs">
                 <div className="p-3 bg-muted/40 rounded-lg space-y-1">
                   <p className="font-semibold text-foreground">Active E-Way Bills for Export: {initialData.bills.length}</p>
-                  <p className="text-muted-foreground text-[11px]">
+                  <p className="text-muted-foreground text-xs">
                     Includes consignor GSTIN, consignee GSTIN, HSN codes, invoice amounts, transport modes, and vehicle numbers.
                   </p>
                 </div>
@@ -1171,9 +1171,9 @@ export function EwayClient({ initialData }: EwayClientProps) {
                   <div key={t.id} className="p-3 border rounded-lg flex items-center justify-between bg-card">
                     <div>
                       <p className="font-bold text-foreground">{t.name}</p>
-                      <p className="text-muted-foreground font-mono text-[11px]">GSTIN: {t.gstin}</p>
+                      <p className="text-muted-foreground font-mono text-xs">GSTIN: {t.gstin}</p>
                     </div>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-xs">
                       {t.phone || "Active"}
                     </Badge>
                   </div>
@@ -1205,7 +1205,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                 <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
                   Not generated on the NIC portal · Not valid for movement of goods
                 </h3>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   [Prepared in the Form GST EWB-01 layout, Rule 138 of the CGST Rules, 2017]
                 </p>
               </div>
@@ -1235,7 +1235,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                 {qrDataUrl && (
                   <div className="text-center">
                     <img src={qrDataUrl} alt="E-Way Bill QR Code" className="w-28 h-28 mx-auto border bg-white p-1" />
-                    <span className="text-[9px] text-muted-foreground font-mono">Draft reference</span>
+                    <span className="text-xs text-muted-foreground font-mono">Draft reference</span>
                   </div>
                 )}
               </div>
@@ -1249,7 +1249,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                   <div className="grid grid-cols-2 p-2">
                     <div>
                       <span className="font-bold">1. GSTIN of Supplier:</span> {selectedBillForSlip.fromGstin}
-                      <p className="text-[11px] text-muted-foreground">{selectedBillForSlip.fromTrdName}</p>
+                      <p className="text-xs text-muted-foreground">{selectedBillForSlip.fromTrdName}</p>
                     </div>
                     <div>
                       <span className="font-bold">2. Place of Dispatch:</span> {selectedBillForSlip.fromPlace} -{" "}
@@ -1259,7 +1259,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                   <div className="grid grid-cols-2 p-2">
                     <div>
                       <span className="font-bold">3. GSTIN of Recipient:</span> {selectedBillForSlip.toGstin}
-                      <p className="text-[11px] text-muted-foreground">{selectedBillForSlip.toTrdName}</p>
+                      <p className="text-xs text-muted-foreground">{selectedBillForSlip.toTrdName}</p>
                     </div>
                     <div>
                       <span className="font-bold">4. Place of Delivery:</span> {selectedBillForSlip.toPlace} -{" "}
@@ -1338,7 +1338,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                 </Table>
               </div>
 
-              <div className="pt-3 border-t text-[10px] text-muted-foreground flex justify-between items-center">
+              <div className="pt-3 border-t text-xs text-muted-foreground flex justify-between items-center">
                 <span>Draft for preparation only. Generate the E-Way Bill on ewaybillgst.gov.in before goods move.</span>
                 <span className="font-mono">Genesoft ERP • Draft</span>
               </div>
@@ -1371,7 +1371,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
               <Label className="text-xs">Current Place / City *</Label>
               <AutoSuggestInput
                 className="text-xs h-8"
-                placeholder="e.g. Nashik"
+                placeholder="Enter current city"
                 value={updateFromPlace}
                 onChange={(e) => setUpdateFromPlace(e.target.value)}
                 options={searchCities(updateFromPlace).map((c) => ({
@@ -1471,7 +1471,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
               <Label className="text-xs">Transporter Name *</Label>
               <Input
                 className="text-xs"
-                placeholder="e.g. Safexpress Pvt Ltd"
+                placeholder="Enter transporter name"
                 value={newTransporter.name}
                 onChange={(e) => setNewTransporter({ ...newTransporter, name: e.target.value })}
                 required
@@ -1491,7 +1491,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
               <Label className="text-xs">Contact Phone</Label>
               <Input
                 className="text-xs"
-                placeholder="+91 98200 12345"
+                placeholder="Enter phone number with country code"
                 value={newTransporter.phone}
                 onChange={(e) => setNewTransporter({ ...newTransporter, phone: e.target.value })}
               />

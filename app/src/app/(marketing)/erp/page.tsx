@@ -133,7 +133,7 @@ export default function LandingPage() {
                                 <div className="flex justify-between text-s-muted"><span>SGST 9%</span><span>₹5,400.00</span></div>
                                 <div className="flex justify-between pt-2 text-base font-semibold text-s-ink"><span>Total</span><span>₹70,800.00</span></div>
                             </div>
-                            <p className="mt-4 text-[11px] text-s-muted">Sample invoice. Outside India the same invoice shows one VAT or GST line.</p>
+                            <p className="mt-4 text-xs text-s-muted">Sample invoice. Outside India the same invoice shows one VAT or GST line.</p>
                         </div>
                     </div>
                 </div>

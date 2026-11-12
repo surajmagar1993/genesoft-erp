@@ -30,7 +30,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
                     </Link>
                     <div>
                         <div className="flex items-center gap-2">
-                             <Badge variant="outline" className="text-[10px] font-bold">
+                             <Badge variant="outline" className="text-xs font-bold">
                                 {ticket.status}
                              </Badge>
                              <h1 className="text-xl font-bold tracking-tight">{ticket.subject}</h1>

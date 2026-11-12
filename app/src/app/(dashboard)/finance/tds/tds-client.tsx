@@ -318,7 +318,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold tracking-tight">TDS & Tax Withholding</h1>
-                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px] font-semibold">
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs font-semibold">
                   Form 26Q & Challan 281
                 </Badge>
               </div>
@@ -475,7 +475,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
             >
               <FileText className="h-3.5 w-3.5 shrink-0" />
               <span>Deductions Ledger</span>
-              <span className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full bg-muted-foreground/10 text-muted-foreground data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-600">
+              <span className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-muted-foreground/10 text-muted-foreground data-[state=active]:bg-indigo-500/15 data-[state=active]:text-indigo-600">
                 {initialData.deductions.length}
               </span>
             </TabsTrigger>
@@ -485,7 +485,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
             >
               <Landmark className="h-3.5 w-3.5 shrink-0" />
               <span>Challan 281 Desk</span>
-              <span className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full bg-muted-foreground/10 text-muted-foreground data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600">
+              <span className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-muted-foreground/10 text-muted-foreground data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-600">
                 {initialData.challans.length}
               </span>
             </TabsTrigger>
@@ -590,7 +590,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                     <TableRow key={d.id}>
                       <TableCell>
                         <div className="font-semibold text-sm">{d.vendorName}</div>
-                        <div className="text-[11px] text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           {new Date(d.deductionDate).toLocaleDateString("en-IN", {
                             day: "2-digit",
                             month: "short",
@@ -600,7 +600,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       </TableCell>
                       <TableCell>
                         <div className="font-mono text-xs font-semibold">{d.vendorPan || "PANNOTAVBL"}</div>
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           {d.vendorPan ? (
                             <span className="text-emerald-600">Valid PAN ({d.vendorType})</span>
                           ) : (
@@ -612,7 +612,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                         <div className="font-mono text-xs">{d.billNumber || "Direct Payment"}</div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-[11px] font-semibold">
+                        <Badge variant="outline" className="text-xs font-semibold">
                           Sec {d.sectionCode}
                         </Badge>
                       </TableCell>
@@ -622,7 +622,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       <TableCell className="text-right font-mono text-xs font-semibold">
                         {d.tdsRate}%
                         {d.is206AAPenaltyApplied && (
-                          <span className="block text-[9px] text-rose-500 font-normal">206AA</span>
+                          <span className="block text-xs text-rose-500 font-normal">206AA</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
@@ -633,11 +633,11 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       </TableCell>
                       <TableCell className="text-center">
                         {d.status === "DEPOSITED" ? (
-                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
+                          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">
                             Deposited
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px]">
+                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs">
                             Pending
                           </Badge>
                         )}
@@ -713,7 +713,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       <TableCell>
                         <div className="font-mono text-xs font-bold">Challan #{c.challanNo}</div>
                         {c.chequeRefNo && (
-                          <div className="text-[10px] text-muted-foreground">Ref: {c.chequeRefNo}</div>
+                          <div className="text-xs text-muted-foreground">Ref: {c.chequeRefNo}</div>
                         )}
                       </TableCell>
                       <TableCell>
@@ -729,7 +729,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       </TableCell>
                       <TableCell>
                         <div className="text-xs font-semibold">Sec {c.sectionCode}</div>
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-xs text-muted-foreground">
                           Major {c.majorHead} • Minor {c.minorHead}
                         </div>
                       </TableCell>
@@ -743,7 +743,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                         {formatCurrency(c.totalAmount)}
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
+                        <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">
                           Paid & Verified
                         </Badge>
                       </TableCell>
@@ -815,19 +815,19 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       >
                         <div className="space-y-0.5">
                           <div className="font-semibold flex items-center gap-2">
-                            <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-[11px]">
+                            <span className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">
                               {sec.sectionCode}
                             </span>
                             <span>{sec.sectionName}</span>
                           </div>
-                          <div className="text-[11px] text-muted-foreground">
+                          <div className="text-xs text-muted-foreground">
                             {sec.deducteeCount} deductee payments recorded
                           </div>
                         </div>
 
                         <div className="text-right">
                           <div className="font-bold text-sm">{formatCurrency(sec.totalTds)}</div>
-                          <div className="text-[10px] text-muted-foreground">
+                          <div className="text-xs text-muted-foreground">
                             Paid: {formatCurrency(sec.depositedAmount)} • Pending: {formatCurrency(sec.pendingAmount)}
                           </div>
                         </div>
@@ -964,7 +964,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                   </div>
 
                   {calcResult.is206AAPenaltyApplied && (
-                    <div className="mt-2 p-2 bg-rose-500/10 border border-rose-500/20 rounded text-[11px] text-rose-600 flex items-start gap-1.5 font-medium">
+                    <div className="mt-2 p-2 bg-rose-500/10 border border-rose-500/20 rounded text-xs text-rose-600 flex items-start gap-1.5 font-medium">
                       <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                       <div>
                         <strong>Section 206AA Penalty Applied:</strong> Valid PAN not provided. Tax deducted at higher statutory rate of 20%.
@@ -1148,7 +1148,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                   <div className="space-y-2">
                     <Label className="text-xs font-medium">City / Town</Label>
                     <AutoSuggestInput
-                      placeholder="Mumbai"
+                      placeholder="Enter city"
                       value={profileCity}
                       onChange={(e) => setProfileCity(e.target.value)}
                       options={searchCities(profileCity, profileState, "India").map((c) => ({
@@ -1407,7 +1407,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
               </div>
 
               {activeCertDeduction.challanBSR && (
-                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-emerald-700 dark:text-emerald-300 text-[11px] space-y-1">
+                <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md text-emerald-700 dark:text-emerald-300 text-xs space-y-1">
                   <div className="font-semibold">Deposit Reference:</div>
                   <div>Challan Serial No: {activeCertDeduction.challanNo} • BSR: {activeCertDeduction.challanBSR}</div>
                   <div>Date: {activeCertDeduction.challanDate ? new Date(activeCertDeduction.challanDate).toLocaleDateString("en-IN") : "—"}</div>

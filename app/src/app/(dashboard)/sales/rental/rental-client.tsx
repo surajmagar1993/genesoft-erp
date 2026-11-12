@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
@@ -369,8 +370,8 @@ export function RentalClient({ initialData }: RentalClientProps) {
         })
     }
 
-    const handleCancelAgreement = (id: string) => {
-        if (!confirm("Are you sure you want to cancel this agreement? Any checked-out assets will be released.")) {
+    const handleCancelAgreement = async (id: string) => {
+        if (!(await confirmAction("Are you sure you want to cancel this agreement? Any checked-out assets will be released."))) {
             return
         }
 
@@ -385,8 +386,8 @@ export function RentalClient({ initialData }: RentalClientProps) {
         })
     }
 
-    const handleDeleteAsset = (id: string) => {
-        if (!confirm("Are you sure you want to delete this asset?")) return
+    const handleDeleteAsset = async (id: string) => {
+        if (!(await confirmAction("Are you sure you want to delete this asset?"))) return
 
         startTransition(async () => {
             try {
@@ -566,7 +567,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                         <p className="text-xs text-muted-foreground mt-1">
                             Contract Value: <span className="font-semibold text-foreground">{formatMoney(Number(data.stats.totalContractValue))}</span>
                         </p>
-                        <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-2">
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-2">
                             <TrendingUp className="h-3 w-3 text-emerald-500" />
                             Live pipeline in active lease terms
                         </div>
@@ -583,7 +584,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                         <p className="text-xs text-muted-foreground mt-1">
                             Held in escrow against damage & overdue risk
                         </p>
-                        <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-2">
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-2">
                             <RotateCcw className="h-3 w-3 text-purple-500" />
                             Reconciled automatically upon return
                         </div>
@@ -600,7 +601,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                         <p className="text-xs text-muted-foreground mt-1">
                             Collected fees across {data.returns.length} return inspection(s)
                         </p>
-                        <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-2">
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-2">
                             <Wrench className="h-3 w-3 text-amber-500" />
                             {data.stats.maintenanceAssets} asset(s) under scheduled service
                         </div>
@@ -685,7 +686,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                 <TableCell className="font-semibold">
                                                     <div className="flex flex-col">
                                                         <span>{ag.agreementNumber}</span>
-                                                        <span className="text-[11px] text-muted-foreground">
+                                                        <span className="text-xs text-muted-foreground">
                                                             {format(new Date(ag.createdAt), "dd MMM yyyy")}
                                                         </span>
                                                     </div>
@@ -700,7 +701,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                     <div className="flex flex-col gap-1 max-w-[220px]">
                                                         {ag.items.map(item => (
                                                             <div key={item.id} className="text-xs truncate flex items-center gap-1.5">
-                                                                <Badge variant="outline" className="text-[10px] py-0 px-1">
+                                                                <Badge variant="outline" className="text-xs py-0 px-1">
                                                                     {item.assetCode}
                                                                 </Badge>
                                                                 <span className="truncate">{item.assetName}</span>
@@ -722,7 +723,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                 <TableCell>
                                                     <div className="flex flex-col text-xs">
                                                         <span>{formatMoney(Number(ag.securityDeposit))}</span>
-                                                        <Badge variant="outline" className="text-[10px] w-fit">
+                                                        <Badge variant="outline" className="text-xs w-fit">
                                                             {ag.depositStatus.replace("_", " ")}
                                                         </Badge>
                                                     </div>
@@ -756,7 +757,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                                 Invoice
                                                             </Button>
                                                         ) : (
-                                                            <Badge variant="secondary" className="text-[11px] gap-1">
+                                                            <Badge variant="secondary" className="text-xs gap-1">
                                                                 <Receipt className="h-3 w-3 text-blue-500" />
                                                                 {ag.invoiceNumber}
                                                             </Badge>
@@ -855,7 +856,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                     <div className="flex flex-col">
                                                         <span className="font-semibold text-sm">{asset.name}</span>
                                                         {asset.serialNumber && (
-                                                            <span className="text-[11px] text-muted-foreground font-mono">
+                                                            <span className="text-xs text-muted-foreground font-mono">
                                                                 S/N: {asset.serialNumber}
                                                             </span>
                                                         )}
@@ -968,7 +969,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                             {/* Progress bar */}
                                             {ag.status !== RentalStatus.RETURNED && ag.status !== RentalStatus.CANCELLED && (
                                                 <div className="space-y-1">
-                                                    <div className="flex justify-between text-[11px] text-muted-foreground">
+                                                    <div className="flex justify-between text-xs text-muted-foreground">
                                                         <span>Lease progress: {percent}%</span>
                                                         <span className={isOverdue ? "text-destructive font-semibold" : ""}>
                                                             {isOverdue ? "Return Overdue!" : `${Math.ceil((end - now) / (1000 * 60 * 60 * 24))} days remaining`}
@@ -1204,7 +1205,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                         <div className="space-y-1.5">
                             <Label>Internal Delivery Notes (Optional)</Label>
                             <Input
-                                placeholder="e.g., Gate pass #, contact on site, delivery truck details"
+                                placeholder="Enter internal delivery notes"
                                 value={newAgreement.notes}
                                 onChange={e => setNewAgreement(prev => ({ ...prev, notes: e.target.value }))}
                             />
@@ -1241,7 +1242,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                             <div className="space-y-1.5">
                                 <Label>Asset Name *</Label>
                                 <Input
-                                    placeholder="e.g. Caterpillar 320D Excavator"
+                                    placeholder="Enter asset name"
                                     value={newAsset.name}
                                     onChange={e => setNewAsset(prev => ({ ...prev, name: e.target.value }))}
                                 />
@@ -1249,7 +1250,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                             <div className="space-y-1.5">
                                 <Label>Category *</Label>
                                 <Input
-                                    placeholder="e.g. Heavy Machinery, Audio/Visual"
+                                    placeholder="Enter category"
                                     value={newAsset.category}
                                     onChange={e => setNewAsset(prev => ({ ...prev, category: e.target.value }))}
                                 />
@@ -1260,7 +1261,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                             <div className="space-y-1.5">
                                 <Label>Asset Code (Optional)</Label>
                                 <Input
-                                    placeholder="e.g. AST-007 (leave blank for auto)"
+                                    placeholder="Enter asset code, or leave blank for the next number"
                                     value={newAsset.assetCode}
                                     onChange={e => setNewAsset(prev => ({ ...prev, assetCode: e.target.value }))}
                                 />
@@ -1268,7 +1269,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                             <div className="space-y-1.5">
                                 <Label>Serial Number / VIN</Label>
                                 <Input
-                                    placeholder="e.g. CAT-320-X889"
+                                    placeholder="Enter serial number or VIN"
                                     value={newAsset.serialNumber}
                                     onChange={e => setNewAsset(prev => ({ ...prev, serialNumber: e.target.value }))}
                                 />
@@ -1485,7 +1486,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                             <div className="space-y-1.5">
                                 <Label>Inspecting Technician / Officer</Label>
                                 <Input
-                                    placeholder="e.g. Rajesh Sharma"
+                                    placeholder="Enter inspector's name"
                                     value={returnForm.inspectedBy}
                                     onChange={e => setReturnForm(prev => ({ ...prev, inspectedBy: e.target.value }))}
                                 />

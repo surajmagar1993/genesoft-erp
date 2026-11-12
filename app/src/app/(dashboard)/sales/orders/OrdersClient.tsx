@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Search, Plus, Pencil, Trash2, Box, Package, CheckCircle2, XCircle, Clock, FileBarChart2, Loader2 } from "lucide-react"
@@ -80,7 +81,7 @@ export default function OrdersClient({ initialOrders, total }: Props) {
     }, [searchQuery])
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure?")) return
+        if (!(await confirmAction({ title: "Delete this order?", description: "This can't be undone.", confirmLabel: "Delete order" }))) return
         setPendingId(id)
         startTransition(async () => {
             const { error } = await deleteOrder(id)

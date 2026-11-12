@@ -110,7 +110,7 @@ export function PlanSettingsEditor({ config }: { config: PlanConfig }) {
                             ))}
                         </div>
 
-                        <div className="bg-muted/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Limits</div>
+                        <div className="bg-muted/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Limits</div>
                         {LIMIT_KINDS.map((l) => (
                             <div key={l.key} className={`${GRID} px-4 py-2`}>
                                 <div className="text-sm">{l.label}</div>
@@ -131,7 +131,7 @@ export function PlanSettingsEditor({ config }: { config: PlanConfig }) {
                             </div>
                         ))}
 
-                        <div className="bg-muted/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Modules</div>
+                        <div className="bg-muted/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Modules</div>
                         {PLAN_MODULES.map((m) => (
                             <div key={m.key} className={`${GRID} px-4 py-1.5`}>
                                 <div className="text-sm">{m.label}</div>
@@ -147,7 +147,7 @@ export function PlanSettingsEditor({ config }: { config: PlanConfig }) {
                             </div>
                         ))}
 
-                        <div className="bg-muted/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        <div className="bg-muted/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             Features on the pricing page <span className="font-normal normal-case">(one per line)</span>
                         </div>
                         <div className={`${GRID} items-start px-4 py-3`}>

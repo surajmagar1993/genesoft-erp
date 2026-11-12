@@ -158,7 +158,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                 id="companyName"
                                 value={form.name}
                                 onChange={(e) => update("name", e.target.value)}
-                                placeholder="e.g. Acme Innovations Corp"
+                                placeholder="Enter company name"
                             />
                         </div>
                         <div className="space-y-2">
@@ -167,7 +167,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                 id="industry"
                                 value={form.industry}
                                 onChange={(e) => update("industry", e.target.value)}
-                                placeholder="e.g. Information Technology, Logistics, Retail"
+                                placeholder="Enter industry"
                             />
                         </div>
                     </div>
@@ -179,7 +179,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                 id="website"
                                 value={form.website}
                                 onChange={(e) => update("website", e.target.value)}
-                                placeholder="https://example.com"
+                                placeholder="Enter website address"
                             />
                         </div>
                         <div className="space-y-2">
@@ -188,7 +188,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                 id="phone"
                                 value={form.phone}
                                 onChange={(e) => update("phone", e.target.value)}
-                                placeholder="+1 555-0199 or +91 9876543210"
+                                placeholder="Enter phone number with country code"
                             />
                         </div>
                     </div>
@@ -201,7 +201,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                 type="email"
                                 value={form.email}
                                 onChange={(e) => update("email", e.target.value)}
-                                placeholder="contact@example.com"
+                                placeholder="Enter email address"
                             />
                         </div>
                         <div className="space-y-2">
@@ -210,7 +210,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                 id="gstin"
                                 value={form.gstin}
                                 onChange={(e) => update("gstin", e.target.value.toUpperCase())}
-                                placeholder="e.g. 27AABCT3518Q1ZV"
+                                placeholder="Enter tax ID (GSTIN / VAT / EIN)"
                                 className="uppercase font-mono"
                             />
                         </div>
@@ -228,7 +228,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                     id="address"
                                     value={form.address}
                                     onChange={(e) => update("address", e.target.value)}
-                                    placeholder="e.g. 100 Innovation Way, Suite 500"
+                                    placeholder="Enter street address"
                                 />
                             </div>
 
@@ -309,7 +309,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                     type="number"
                                     value={form.employeeCount}
                                     onChange={(e) => update("employeeCount", e.target.value)}
-                                    placeholder="e.g. 50"
+                                    placeholder="Enter number of employees"
                                 />
                             </div>
                             <div className="space-y-2">
@@ -319,7 +319,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                     type="number"
                                     value={form.annualRevenue}
                                     onChange={(e) => update("annualRevenue", e.target.value)}
-                                    placeholder="e.g. 5000000"
+                                    placeholder="Enter annual revenue"
                                 />
                             </div>
                         </div>

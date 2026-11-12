@@ -128,14 +128,14 @@ export default async function SettingsPage({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <Card className="border-dashed bg-muted/5 p-4 flex flex-col justify-between">
                                  <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Business country</p>
+                                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Business country</p>
                                     <p className="font-semibold mt-1">{regime.countryName} ({regime.countryCode})</p>
                                  </div>
                                  <p className="text-xs text-muted-foreground mt-4 italic">Dates look like {sampleDate}</p>
                               </Card>
                               <Card className="border-dashed bg-muted/5 p-4 flex flex-col justify-between">
                                  <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Number format</p>
+                                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Number format</p>
                                     <p className="font-semibold mt-1">{regime.locale}</p>
                                  </div>
                                  <p className="text-xs text-muted-foreground mt-4 italic">Example: {sampleNumber}</p>

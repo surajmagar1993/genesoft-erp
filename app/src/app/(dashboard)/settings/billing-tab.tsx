@@ -317,7 +317,7 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                         <div className="flex items-center gap-3">
                             {trialActive && (
                                 <div className="text-right bg-card/60 p-2.5 rounded-lg border border-primary/20">
-                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">
+                                    <p className="text-xs uppercase font-bold text-muted-foreground tracking-widest">
                                         Trial Days Left
                                     </p>
                                     <p className="text-2xl font-black text-primary leading-none mt-0.5">
@@ -376,7 +376,7 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                         }`}
                     >
                         <span>Annual Billing</span>
-                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] py-0">
+                        <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs py-0">
                             Save 20%
                         </Badge>
                     </button>
@@ -414,7 +414,7 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                         >
                             {isPopular && (
                                 <div className="absolute top-0 right-0">
-                                    <div className="bg-primary text-primary-foreground text-[10px] font-black uppercase px-6 py-1 rotate-45 translate-x-4 translate-y-2 shadow-sm">
+                                    <div className="bg-primary text-primary-foreground text-xs font-black uppercase px-6 py-1 rotate-45 translate-x-4 translate-y-2 shadow-sm">
                                         Popular
                                     </div>
                                 </div>
@@ -429,7 +429,7 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                                         {tier === "ENTERPRISE" && <Crown className="h-5 w-5" />}
                                     </div>
                                     {plan.badge && (
-                                        <Badge variant="outline" className="text-[10px] font-semibold">
+                                        <Badge variant="outline" className="text-xs font-semibold">
                                             {plan.badge}
                                         </Badge>
                                     )}
@@ -519,7 +519,7 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                                             {inv.invoiceNumber}
                                         </TableCell>
                                         <TableCell className="text-xs">
-                                            <Badge variant="outline" className="text-[10px] font-bold">
+                                            <Badge variant="outline" className="text-xs font-bold">
                                                 {inv.tier} &bull; {inv.billingCycle}
                                             </Badge>
                                         </TableCell>
@@ -534,7 +534,7 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                                         <TableCell>
                                             <Badge
                                                 variant="outline"
-                                                className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px] font-bold"
+                                                className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs font-bold"
                                             >
                                                 {inv.status}
                                             </Badge>
@@ -590,12 +590,12 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                             {/* Plan Transition Pill */}
                             <div className="p-3.5 rounded-xl border bg-muted/40 flex items-center justify-between">
                                 <div>
-                                    <span className="text-[10px] font-bold uppercase text-muted-foreground">From</span>
+                                    <span className="text-xs font-bold uppercase text-muted-foreground">From</span>
                                     <div className="font-bold text-sm">{PLAN_TIERS[currentPlan].name}</div>
                                 </div>
                                 <ArrowRight className="h-5 w-5 text-muted-foreground" />
                                 <div className="text-right">
-                                    <span className="text-[10px] font-bold uppercase text-muted-foreground">To</span>
+                                    <span className="text-xs font-bold uppercase text-muted-foreground">To</span>
                                     <div className="font-bold text-sm text-primary">
                                         {PLAN_TIERS[targetPlan].name} ({billingCycle})
                                     </div>
@@ -756,12 +756,12 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <span className="font-bold uppercase text-[10px] text-muted-foreground">Billed To</span>
+                                        <span className="font-bold uppercase text-xs text-muted-foreground">Billed To</span>
                                         <div className="font-semibold text-sm">{selectedInvoice.tenantName}</div>
-                                        <div className="text-muted-foreground font-mono text-[11px]">{selectedInvoice.tenantId}</div>
+                                        <div className="text-muted-foreground font-mono text-xs">{selectedInvoice.tenantId}</div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="font-bold uppercase text-[10px] text-muted-foreground">Coverage</span>
+                                        <span className="font-bold uppercase text-xs text-muted-foreground">Coverage</span>
                                         <div className="font-semibold text-sm">
                                             {PLAN_TIERS[selectedInvoice.tier].name} ({selectedInvoice.billingCycle})
                                         </div>

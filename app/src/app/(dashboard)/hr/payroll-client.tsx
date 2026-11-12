@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
 import { useRouter } from "next/navigation"
@@ -198,8 +199,8 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
     }
 
     // Delete Draft Pay Run
-    const handleDeleteRun = (runId: string) => {
-        if (!confirm("Are you sure you want to discard this draft payroll run? All draft payslips will be deleted.")) return
+    const handleDeleteRun = async (runId: string) => {
+        if (!(await confirmAction("Are you sure you want to discard this draft payroll run? All draft payslips will be deleted."))) return
         startTransition(async () => {
             try {
                 const res = unwrap(await deletePayRun(runId))
@@ -436,7 +437,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                         {format(new Date(run.payDate), "dd MMM yyyy")}
                                                     </TableCell>
                                                     <TableCell className="text-center">
-                                                        <Badge variant="secondary" className="font-mono text-[11px]">
+                                                        <Badge variant="secondary" className="font-mono text-xs">
                                                             {run.employeeCount}
                                                         </Badge>
                                                     </TableCell>
@@ -451,17 +452,17 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                     </TableCell>
                                                     <TableCell className="text-center">
                                                         {run.status === "DRAFT" && (
-                                                            <Badge variant="outline" className="border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20 text-[10px]">
+                                                            <Badge variant="outline" className="border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20 text-xs">
                                                                 DRAFT
                                                             </Badge>
                                                         )}
                                                         {run.status === "APPROVED" && (
-                                                            <Badge variant="outline" className="border-blue-400 text-blue-600 bg-blue-50 dark:bg-blue-950/20 text-[10px]">
+                                                            <Badge variant="outline" className="border-blue-400 text-blue-600 bg-blue-50 dark:bg-blue-950/20 text-xs">
                                                                 APPROVED
                                                             </Badge>
                                                         )}
                                                         {run.status === "PAID" && (
-                                                            <Badge variant="outline" className="border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 text-[10px]">
+                                                            <Badge variant="outline" className="border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 text-xs">
                                                                 DISBURSED (PAID)
                                                             </Badge>
                                                         )}
@@ -475,7 +476,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                                         variant="outline"
                                                                         onClick={() => handleApprove(run.id)}
                                                                         disabled={isPending}
-                                                                        className="h-7 px-2 text-[11px] text-blue-600 hover:text-blue-700"
+                                                                        className="h-7 px-2 text-xs text-blue-600 hover:text-blue-700"
                                                                     >
                                                                         <Check className="h-3 w-3 mr-1" />
                                                                         Approve
@@ -500,7 +501,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                                         setIsDisburseModalOpen(true)
                                                                     }}
                                                                     disabled={isPending}
-                                                                    className="h-7 px-2 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                                    className="h-7 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
                                                                 >
                                                                     <CreditCard className="h-3 w-3 mr-1" />
                                                                     Disburse
@@ -514,7 +515,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                                     setSlipPeriodFilter(`${run.periodYear}-${run.periodMonth}`)
                                                                     setActiveTab("slips")
                                                                 }}
-                                                                className="h-7 px-2 text-[11px]"
+                                                                className="h-7 px-2 text-xs"
                                                             >
                                                                 View Slips
                                                             </Button>
@@ -612,7 +613,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                     </TableCell>
                                                     <TableCell>
                                                         <div className="font-medium text-foreground">{slip.employeeName}</div>
-                                                        <div className="text-[11px] text-muted-foreground">
+                                                        <div className="text-xs text-muted-foreground">
                                                             {slip.employeeNumber} {slip.designationTitle ? `• ${slip.designationTitle}` : ""}
                                                         </div>
                                                     </TableCell>
@@ -622,7 +623,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                     <TableCell className="text-center font-mono">
                                                         {slip.presentDays} / {slip.workingDays}
                                                         {slip.unpaidLeaveDays > 0 && (
-                                                            <span className="text-red-500 text-[10px] block">
+                                                            <span className="text-red-500 text-xs block">
                                                                 ({slip.unpaidLeaveDays} unpaid)
                                                             </span>
                                                         )}
@@ -639,7 +640,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                     <TableCell className="text-center">
                                                         <Badge
                                                             variant="outline"
-                                                            className={`text-[10px] ${
+                                                            className={`text-xs ${
                                                                 slip.status === "PAID"
                                                                     ? "border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20"
                                                                     : "border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20"
@@ -654,7 +655,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                             variant="outline"
                                                             onClick={() => handleViewSlip(slip.id)}
                                                             disabled={isPending}
-                                                            className="h-7 px-2.5 text-[11px]"
+                                                            className="h-7 px-2.5 text-xs"
                                                         >
                                                             <Eye className="h-3 w-3 mr-1" />
                                                             View Slip
@@ -728,7 +729,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                 <TableRow key={struct.id} className="text-xs hover:bg-muted/40">
                                                     <TableCell>
                                                         <div className="font-semibold text-foreground">{struct.name}</div>
-                                                        <div className="text-[11px] font-mono text-muted-foreground">{struct.code}</div>
+                                                        <div className="text-xs font-mono text-muted-foreground">{struct.code}</div>
                                                     </TableCell>
                                                     <TableCell className="text-center font-mono font-medium">
                                                         {struct.basicPercentage}%
@@ -752,12 +753,12 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                                         {formatMoney(Number(struct.professionalTax))}
                                                     </TableCell>
                                                     <TableCell className="text-center">
-                                                        <Badge variant="secondary" className="font-mono text-[11px]">
+                                                        <Badge variant="secondary" className="font-mono text-xs">
                                                             {struct.employeeCount || 0}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="text-center">
-                                                        <Badge variant="outline" className="border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 text-[10px]">
+                                                        <Badge variant="outline" className="border-emerald-400 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 text-xs">
                                                             ACTIVE
                                                         </Badge>
                                                     </TableCell>
@@ -829,7 +830,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                         <div className="space-y-1.5">
                             <Label className="text-xs font-medium">Cycle Notes / Remarks (Optional)</Label>
                             <Textarea
-                                placeholder="e.g. Standard September payroll cycle including festival bonus adjustments"
+                                placeholder="Enter notes"
                                 value={runNotes}
                                 onChange={(e) => setRunNotes(e.target.value)}
                                 className="text-xs h-18 resize-none"
@@ -841,7 +842,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                 <span>Active Employees Included:</span>
                                 <span className="font-mono text-emerald-600 font-bold">{initialData.activeEmployees.length} staff</span>
                             </div>
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                                 All active staff without a custom salary structure will automatically receive standard statutory compensation.
                             </p>
                         </div>
@@ -889,11 +890,11 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
 
                     <form onSubmit={handleDisburseSubmit} className="space-y-4 py-2 text-xs">
                         <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-lg space-y-1">
-                            <div className="text-[11px] text-muted-foreground uppercase font-semibold">Total Net Payout</div>
+                            <div className="text-xs text-muted-foreground uppercase font-semibold">Total Net Payout</div>
                             <div className="text-2xl font-bold font-mono text-emerald-600">
                                 {formatCurrency(selectedRunForDisburse?.totalNetPay || 0)}
                             </div>
-                            <div className="text-[11px] text-muted-foreground">
+                            <div className="text-xs text-muted-foreground">
                                 Disbursing across {selectedRunForDisburse?.employeeCount} employee bank accounts
                             </div>
                         </div>
@@ -916,7 +917,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                         <div className="space-y-1.5">
                             <Label className="text-xs font-medium">Bank Reference / UTR Number (Optional)</Label>
                             <Input
-                                placeholder="e.g. UTR-HDFC982347102"
+                                placeholder="Enter bank reference or UTR number"
                                 value={disburseRef}
                                 onChange={(e) => setDisburseRef(e.target.value)}
                                 className="text-xs font-mono"
@@ -962,7 +963,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-medium">Structure Name *</Label>
                                 <Input
-                                    placeholder="e.g. Executive Management"
+                                    placeholder="Enter structure name"
                                     value={structName}
                                     onChange={(e) => setStructName(e.target.value)}
                                     required
@@ -1112,36 +1113,36 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                 {/* Employee Metadata Grid */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-muted/20 p-3 rounded-lg border">
                                     <div>
-                                        <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Employee Name</span>
+                                        <span className="text-xs text-muted-foreground block uppercase font-semibold">Employee Name</span>
                                         <span className="font-bold">{selectedPayslip.slip.employee.displayName}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Staff Code</span>
+                                        <span className="text-xs text-muted-foreground block uppercase font-semibold">Staff Code</span>
                                         <span className="font-mono">{selectedPayslip.slip.employee.employeeNumber}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Designation</span>
+                                        <span className="text-xs text-muted-foreground block uppercase font-semibold">Designation</span>
                                         <span>{selectedPayslip.slip.employee.designation?.title || "—"}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Department</span>
+                                        <span className="text-xs text-muted-foreground block uppercase font-semibold">Department</span>
                                         <span>{selectedPayslip.slip.employee.department?.name || "—"}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Bank Name</span>
+                                        <span className="text-xs text-muted-foreground block uppercase font-semibold">Bank Name</span>
                                         <span>{selectedPayslip.slip.bankName || "—"}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Account #</span>
+                                        <span className="text-xs text-muted-foreground block uppercase font-semibold">Account #</span>
                                         <span className="font-mono">{selectedPayslip.slip.bankAccountNumber ? `••••${selectedPayslip.slip.bankAccountNumber.slice(-4)}` : "—"}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Days Worked</span>
+                                        <span className="text-xs text-muted-foreground block uppercase font-semibold">Days Worked</span>
                                         <span className="font-bold">{selectedPayslip.slip.presentDays} / {selectedPayslip.slip.workingDays}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[10px] text-muted-foreground block uppercase font-semibold">Paid Status</span>
-                                        <Badge variant="outline" className="text-[10px] font-bold text-emerald-600 border-emerald-400">
+                                        <span className="text-xs text-muted-foreground block uppercase font-semibold">Paid Status</span>
+                                        <Badge variant="outline" className="text-xs font-bold text-emerald-600 border-emerald-400">
                                             {selectedPayslip.slip.status}
                                         </Badge>
                                     </div>
@@ -1221,7 +1222,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                 {/* Net Payable Banner */}
                                 <div className="p-4 bg-emerald-600 text-white rounded-lg flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm">
                                     <div>
-                                        <span className="text-[11px] uppercase tracking-wider font-semibold opacity-90 block">Net Payable Amount</span>
+                                        <span className="text-xs uppercase tracking-wider font-semibold opacity-90 block">Net Payable Amount</span>
                                         <span className="text-2xl font-black font-mono">
                                             {formatCurrency(selectedPayslip.slip.netSalary)}
                                         </span>
@@ -1232,7 +1233,7 @@ export function PayrollClient({ initialData }: { initialData: PayrollOverviewDat
                                 </div>
 
                                 {/* Signatures */}
-                                <div className="grid grid-cols-2 gap-8 pt-6 border-t text-[11px] text-muted-foreground">
+                                <div className="grid grid-cols-2 gap-8 pt-6 border-t text-xs text-muted-foreground">
                                     <div className="text-center pt-8 border-t border-dashed">
                                         Employee Signature
                                     </div>

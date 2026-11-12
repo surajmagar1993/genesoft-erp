@@ -82,7 +82,7 @@ export function AutoSuggestInput({
                 <span className="font-medium">{opt.label}</span>
               </div>
               {opt.subLabel && (
-                <span className="text-[10px] text-muted-foreground ml-2 shrink-0">
+                <span className="text-xs text-muted-foreground ml-2 shrink-0">
                   {opt.subLabel}
                 </span>
               )}

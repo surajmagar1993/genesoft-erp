@@ -514,7 +514,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                         <div className="text-2xl font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
                             <span>{data.telemetry.expiredBatches}</span>
                             {data.telemetry.recalledBatches > 0 && (
-                                <Badge variant="destructive" className="text-[10px] font-normal px-1.5 py-0">
+                                <Badge variant="destructive" className="text-xs font-normal px-1.5 py-0">
                                     {data.telemetry.recalledBatches} Recalled
                                 </Badge>
                             )}
@@ -550,14 +550,14 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                         <TabsTrigger value="batches" className="gap-2 text-xs sm:text-sm">
                             <Layers className="h-3.5 w-3.5" />
                             Lots &amp; Batches
-                            <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
+                            <Badge variant="secondary" className="ml-1 text-xs px-1 py-0">
                                 {data.batches.length}
                             </Badge>
                         </TabsTrigger>
                         <TabsTrigger value="serials" className="gap-2 text-xs sm:text-sm">
                             <Hash className="h-3.5 w-3.5" />
                             Serial Register
-                            <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
+                            <Badge variant="secondary" className="ml-1 text-xs px-1 py-0">
                                 {data.serials.length}
                             </Badge>
                         </TabsTrigger>
@@ -565,7 +565,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                             Watchdog
                             {(expiredBatchesList.length > 0 || criticalExpiringList.length > 0 || recalledBatchesList.length > 0) && (
-                                <Badge variant="destructive" className="ml-1 text-[10px] px-1 py-0">
+                                <Badge variant="destructive" className="ml-1 text-xs px-1 py-0">
                                     {expiredBatchesList.length + criticalExpiringList.length + recalledBatchesList.length}
                                 </Badge>
                             )}
@@ -719,7 +719,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                             </button>
                                                         </div>
                                                         {b.supplierBatchNo && (
-                                                            <span className="text-[10px] text-muted-foreground block">
+                                                            <span className="text-xs text-muted-foreground block">
                                                                 Vendor: {b.supplierBatchNo}
                                                             </span>
                                                         )}
@@ -730,7 +730,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                             {b.productName}
                                                         </div>
                                                         {b.productSku && (
-                                                            <span className="text-[11px] text-muted-foreground font-mono">
+                                                            <span className="text-xs text-muted-foreground font-mono">
                                                                 SKU: {b.productSku}
                                                             </span>
                                                         )}
@@ -741,7 +741,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                             <WarehouseIcon className="h-3 w-3" />
                                                             <span>{b.warehouseCode}</span>
                                                         </div>
-                                                        <span className="text-[11px] text-muted-foreground/80 block">
+                                                        <span className="text-xs text-muted-foreground/80 block">
                                                             {b.warehouseName}
                                                         </span>
                                                     </TableCell>
@@ -751,7 +751,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                             {b.currentQty} / <span className="text-muted-foreground font-normal">{b.initialQty}</span>
                                                         </div>
                                                         {b.costPrice != null && (
-                                                            <span className="text-[10px] text-muted-foreground block font-mono">
+                                                            <span className="text-xs text-muted-foreground block font-mono">
                                                                 @{b.costPrice.toFixed(2)}/unit
                                                             </span>
                                                         )}
@@ -765,7 +765,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                                 </span>
                                                                 {b.daysToExpiry !== null && (
                                                                     <span
-                                                                        className={`text-[10px] font-medium ${
+                                                                        className={`text-xs font-medium ${
                                                                             isExpired
                                                                                 ? "text-rose-600 dark:text-rose-400"
                                                                                 : isExpiringSoon
@@ -780,7 +780,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                                 )}
                                                             </div>
                                                         ) : (
-                                                            <span className="text-muted-foreground italic text-[11px]">No expiration</span>
+                                                            <span className="text-muted-foreground italic text-xs">No expiration</span>
                                                         )}
                                                     </TableCell>
 
@@ -788,7 +788,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                         {b.status === "ACTIVE" && (
                                                             <Badge
                                                                 variant="outline"
-                                                                className={`text-[10px] px-2 py-0.5 border ${
+                                                                className={`text-xs px-2 py-0.5 border ${
                                                                     isExpiringSoon
                                                                         ? "border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
                                                                         : "border-emerald-500 bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
@@ -798,17 +798,17 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                             </Badge>
                                                         )}
                                                         {b.status === "EXPIRED" && (
-                                                            <Badge variant="destructive" className="text-[10px] px-2 py-0.5">
+                                                            <Badge variant="destructive" className="text-xs px-2 py-0.5">
                                                                 Expired
                                                             </Badge>
                                                         )}
                                                         {b.status === "RECALLED" && (
-                                                            <Badge variant="destructive" className="text-[10px] px-2 py-0.5 bg-rose-700 animate-pulse">
+                                                            <Badge variant="destructive" className="text-xs px-2 py-0.5 bg-rose-700 animate-pulse">
                                                                 Recalled
                                                             </Badge>
                                                         )}
                                                         {b.status === "DEPLETED" && (
-                                                            <Badge variant="secondary" className="text-[10px] px-2 py-0.5 text-muted-foreground">
+                                                            <Badge variant="secondary" className="text-xs px-2 py-0.5 text-muted-foreground">
                                                                 Depleted
                                                             </Badge>
                                                         )}
@@ -827,7 +827,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                                 {b.serialCount} units
                                                             </Badge>
                                                         ) : (
-                                                            <span className="text-muted-foreground/50 text-[11px]">&mdash;</span>
+                                                            <span className="text-muted-foreground/50 text-xs">&mdash;</span>
                                                         )}
                                                     </TableCell>
 
@@ -993,7 +993,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                         </div>
                                                         <button
                                                             onClick={() => setLabelPreviewSerial(s)}
-                                                            className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 mt-0.5"
+                                                            className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 mt-0.5"
                                                         >
                                                             <BarcodeIcon className="h-3 w-3" />
                                                             View Label
@@ -1005,7 +1005,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                             {s.productName}
                                                         </div>
                                                         {s.productSku && (
-                                                            <span className="text-[11px] text-muted-foreground font-mono">
+                                                            <span className="text-xs text-muted-foreground font-mono">
                                                                 SKU: {s.productSku}
                                                             </span>
                                                         )}
@@ -1017,7 +1017,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                                 {s.batchNumber}
                                                             </span>
                                                         ) : (
-                                                            <span className="text-muted-foreground italic text-[11px]">Unlinked</span>
+                                                            <span className="text-muted-foreground italic text-xs">Unlinked</span>
                                                         )}
                                                     </TableCell>
 
@@ -1025,10 +1025,10 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                         {s.warehouseName ? (
                                                             <div>
                                                                 <span className="font-medium text-foreground">{s.warehouseCode}</span>
-                                                                <span className="text-[11px] text-muted-foreground block">{s.warehouseName}</span>
+                                                                <span className="text-xs text-muted-foreground block">{s.warehouseName}</span>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-muted-foreground italic text-[11px]">In Transit / External</span>
+                                                            <span className="text-muted-foreground italic text-xs">In Transit / External</span>
                                                         )}
                                                     </TableCell>
 
@@ -1065,17 +1065,17 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
 
                                                     <TableCell className="text-xs">
                                                         {s.warrantyExpiry ? (
-                                                            <div className="text-[11px]">
+                                                            <div className="text-xs">
                                                                 <span className="text-muted-foreground">Expires: </span>
                                                                 <span className="font-medium text-foreground">
                                                                     {format(new Date(s.warrantyExpiry), "yyyy-MM-dd")}
                                                                 </span>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-muted-foreground text-[11px]">Standard warranty</span>
+                                                            <span className="text-muted-foreground text-xs">Standard warranty</span>
                                                         )}
                                                         {s.poNumber && (
-                                                            <span className="text-[10px] text-muted-foreground block font-mono">
+                                                            <span className="text-xs text-muted-foreground block font-mono">
                                                                 PO: {s.poNumber}
                                                             </span>
                                                         )}
@@ -1131,11 +1131,11 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                 {rb.batchNumber}
                                             </div>
                                             <div className="font-medium text-foreground truncate">{rb.productName}</div>
-                                            <div className="text-muted-foreground mt-1 text-[11px]">
+                                            <div className="text-muted-foreground mt-1 text-xs">
                                                 {rb.currentQty} units remaining at {rb.warehouseName}
                                             </div>
                                             {rb.notes && (
-                                                <div className="text-[10px] text-rose-700 dark:text-rose-300 mt-1 italic">
+                                                <div className="text-xs text-rose-700 dark:text-rose-300 mt-1 italic">
                                                     {rb.notes}
                                                 </div>
                                             )}
@@ -1175,12 +1175,12 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                         <div key={b.id} className="p-3 bg-muted/40 rounded-lg border text-xs space-y-1.5">
                                             <div className="flex items-center justify-between">
                                                 <span className="font-mono font-bold text-foreground">{b.batchNumber}</span>
-                                                <span className="text-[11px] text-rose-600 font-medium">
+                                                <span className="text-xs text-rose-600 font-medium">
                                                     {b.daysToExpiry ? `${Math.abs(b.daysToExpiry)}d ago` : "Expired"}
                                                 </span>
                                             </div>
                                             <div className="font-medium text-foreground truncate">{b.productName}</div>
-                                            <div className="text-muted-foreground text-[11px] flex items-center justify-between">
+                                            <div className="text-muted-foreground text-xs flex items-center justify-between">
                                                 <span>{b.warehouseName}</span>
                                                 <span className="font-semibold text-foreground">{b.currentQty} units</span>
                                             </div>
@@ -1230,12 +1230,12 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                         <div key={b.id} className="p-3 bg-muted/40 rounded-lg border text-xs space-y-1.5">
                                             <div className="flex items-center justify-between">
                                                 <span className="font-mono font-bold text-foreground">{b.batchNumber}</span>
-                                                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-bold">
+                                                <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">
                                                     {b.daysToExpiry}d left
                                                 </span>
                                             </div>
                                             <div className="font-medium text-foreground truncate">{b.productName}</div>
-                                            <div className="text-muted-foreground text-[11px] flex items-center justify-between">
+                                            <div className="text-muted-foreground text-xs flex items-center justify-between">
                                                 <span>{b.warehouseName}</span>
                                                 <span className="font-semibold text-foreground">{b.currentQty} units</span>
                                             </div>
@@ -1296,12 +1296,12 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                         <div key={b.id} className="p-3 bg-muted/40 rounded-lg border text-xs space-y-1.5">
                                             <div className="flex items-center justify-between">
                                                 <span className="font-mono font-bold text-foreground">{b.batchNumber}</span>
-                                                <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+                                                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
                                                     {b.daysToExpiry}d left
                                                 </span>
                                             </div>
                                             <div className="font-medium text-foreground truncate">{b.productName}</div>
-                                            <div className="text-muted-foreground text-[11px] flex items-center justify-between">
+                                            <div className="text-muted-foreground text-xs flex items-center justify-between">
                                                 <span>{b.warehouseName}</span>
                                                 <span className="font-semibold text-foreground">{b.currentQty} units</span>
                                             </div>
@@ -1335,7 +1335,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                 <div className="relative flex-1 w-full">
                                     <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                     <Input
-                                        placeholder="Enter Lot # or Serial # (e.g. LOT-2026-001 or SN-00042)..."
+                                        placeholder="Enter Lot # or Serial #"
                                         value={traceQuery}
                                         onChange={(e) => setTraceQuery(e.target.value)}
                                         className="pl-9 font-mono uppercase text-sm"
@@ -1368,7 +1368,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                             <div className="flex items-center gap-2">
                                                 <Badge
                                                     variant="secondary"
-                                                    className="bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 uppercase text-[11px] font-mono"
+                                                    className="bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 uppercase text-xs font-mono"
                                                 >
                                                     {traceResult.type === "SERIAL" ? "Serialized Unit" : "Production Lot"}
                                                 </Badge>
@@ -1412,7 +1412,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                 <span className="font-semibold text-foreground block text-sm">
                                                     {traceResult.serial.warehouseName || "In Transit"}
                                                 </span>
-                                                <span className="text-[11px] text-muted-foreground font-mono">
+                                                <span className="text-xs text-muted-foreground font-mono">
                                                     Code: {traceResult.serial.warehouseCode || "N/A"}
                                                 </span>
                                             </div>
@@ -1423,7 +1423,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                     {traceResult.serial.batchNumber || "None Linked"}
                                                 </span>
                                                 {traceResult.serial.batchDetails?.expiryDate && (
-                                                    <span className="text-[11px] text-muted-foreground">
+                                                    <span className="text-xs text-muted-foreground">
                                                         Lot Exp: {format(new Date(traceResult.serial.batchDetails.expiryDate), "yyyy-MM-dd")}
                                                     </span>
                                                 )}
@@ -1434,7 +1434,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                 <span className="font-semibold text-foreground block text-sm font-mono">
                                                     {traceResult.serial.poNumber || "Direct Intake"}
                                                 </span>
-                                                <span className="text-[11px] text-muted-foreground">
+                                                <span className="text-xs text-muted-foreground">
                                                     Registered: {format(new Date(traceResult.serial.createdAt), "yyyy-MM-dd")}
                                                 </span>
                                             </div>
@@ -1445,7 +1445,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                     {traceResult.serial.warrantyMonths ? `${traceResult.serial.warrantyMonths} Months` : "Standard"}
                                                 </span>
                                                 {traceResult.serial.warrantyExpiry && (
-                                                    <span className="text-[11px] text-muted-foreground">
+                                                    <span className="text-xs text-muted-foreground">
                                                         Until: {format(new Date(traceResult.serial.warrantyExpiry), "yyyy-MM-dd")}
                                                     </span>
                                                 )}
@@ -1460,7 +1460,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                 <span className="font-semibold text-foreground block text-sm">
                                                     {traceResult.batch.warehouseName}
                                                 </span>
-                                                <span className="text-[11px] text-muted-foreground font-mono">
+                                                <span className="text-xs text-muted-foreground font-mono">
                                                     {traceResult.batch.warehouseCode}
                                                 </span>
                                             </div>
@@ -1470,7 +1470,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                 <span className="font-semibold text-foreground block text-sm">
                                                     {traceResult.batch.currentQty} / {traceResult.batch.initialQty} units
                                                 </span>
-                                                <span className="text-[11px] text-muted-foreground">
+                                                <span className="text-xs text-muted-foreground">
                                                     {traceResult.batch.serialCount} serialized units
                                                 </span>
                                             </div>
@@ -1481,7 +1481,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                     {traceResult.batch.expiryDate ? format(new Date(traceResult.batch.expiryDate), "yyyy-MM-dd") : "No expiry"}
                                                 </span>
                                                 {traceResult.batch.manufacturingDate && (
-                                                    <span className="text-[11px] text-muted-foreground">
+                                                    <span className="text-xs text-muted-foreground">
                                                         Mfg: {format(new Date(traceResult.batch.manufacturingDate), "yyyy-MM-dd")}
                                                     </span>
                                                 )}
@@ -1493,7 +1493,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                     {traceResult.batch.supplierBatchNo || "Internal Lot"}
                                                 </span>
                                                 {traceResult.batch.costPrice != null && (
-                                                    <span className="text-[11px] text-muted-foreground">
+                                                    <span className="text-xs text-muted-foreground">
                                                         Unit Cost: {formatMoney(Number(traceResult.batch.costPrice))}
                                                     </span>
                                                 )}
@@ -1569,7 +1569,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                                             <span className="font-semibold text-foreground">
                                                                 {m.type} Movement: {m.quantity} Units
                                                             </span>
-                                                            <span className="text-[11px] text-muted-foreground">
+                                                            <span className="text-xs text-muted-foreground">
                                                                 {format(new Date(m.createdAt), "yyyy-MM-dd HH:mm")}
                                                             </span>
                                                         </div>
@@ -1653,7 +1653,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-semibold">Lot / Batch Number *</Label>
                                 <Input
-                                    placeholder="e.g. LOT-2026-001"
+                                    placeholder="Enter lot or batch number"
                                     value={newBatch.batchNumber}
                                     onChange={(e) => setNewBatch({ ...newBatch, batchNumber: e.target.value })}
                                     className="font-mono uppercase text-xs"
@@ -1714,7 +1714,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                     type="number"
                                     min="0"
                                     step="0.01"
-                                    placeholder="e.g. 250.00"
+                                    placeholder="Enter unit cost price"
                                     value={newBatch.costPrice}
                                     onChange={(e) => setNewBatch({ ...newBatch, costPrice: e.target.value })}
                                     className="text-xs"
@@ -1873,7 +1873,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                 <div className="p-3 bg-muted/40 rounded-lg space-y-3">
                                     <div className="grid grid-cols-3 gap-2">
                                         <div className="space-y-1">
-                                            <Label className="text-[11px]">Prefix</Label>
+                                            <Label className="text-xs">Prefix</Label>
                                             <Input
                                                 value={newSerials.prefix}
                                                 onChange={(e) => setNewSerials({ ...newSerials, prefix: e.target.value })}
@@ -1881,7 +1881,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-[11px]">Start #</Label>
+                                            <Label className="text-xs">Start #</Label>
                                             <Input
                                                 type="number"
                                                 min="1"
@@ -1891,7 +1891,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                             />
                                         </div>
                                         <div className="space-y-1">
-                                            <Label className="text-[11px]">Count</Label>
+                                            <Label className="text-xs">Count</Label>
                                             <Input
                                                 type="number"
                                                 min="1"
@@ -1902,7 +1902,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                             />
                                         </div>
                                     </div>
-                                    <div className="text-[11px] text-muted-foreground">
+                                    <div className="text-xs text-muted-foreground">
                                         Preview Range:{" "}
                                         <span className="font-mono font-semibold text-foreground">
                                             {newSerials.prefix}
@@ -1918,7 +1918,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                             ) : (
                                 <div className="space-y-1">
                                     <Textarea
-                                        placeholder="Paste serial numbers separated by newlines or commas (e.g. SN-A01, SN-A02)..."
+                                        placeholder="Paste serial numbers separated by newlines or commas"
                                         value={newSerials.manualInput}
                                         onChange={(e) => setNewSerials({ ...newSerials, manualInput: e.target.value })}
                                         className="font-mono text-xs"
@@ -2017,7 +2017,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-semibold">Reason for Audit Log *</Label>
                                 <Input
-                                    placeholder="e.g. Cycle count discrepancy, damaged write-off..."
+                                    placeholder="Enter the reason"
                                     value={adjustReason}
                                     onChange={(e) => setAdjustReason(e.target.value)}
                                     className="text-xs"
@@ -2119,7 +2119,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                     {labelPreviewSerial && (
                         <div className="space-y-4 py-2">
                             <div className="p-4 bg-white dark:bg-zinc-900 rounded-xl border flex flex-col items-center justify-center text-center space-y-2">
-                                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     {labelPreviewSerial.productName}
                                 </span>
                                 <BarcodeDisplay
@@ -2130,7 +2130,7 @@ export function BatchSerialTab({ data, onRefresh }: BatchSerialTabProps) {
                                     showText={true}
                                 />
                                 {labelPreviewSerial.batchNumber && (
-                                    <span className="text-[10px] text-muted-foreground font-mono">
+                                    <span className="text-xs text-muted-foreground font-mono">
                                         LOT: {labelPreviewSerial.batchNumber}
                                     </span>
                                 )}

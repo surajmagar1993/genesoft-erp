@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useTransition } from "react"
 import {
     Zap,
@@ -220,8 +221,8 @@ export function WorkflowsClient({
     }
 
     // Handler: Delete Rule
-    const handleDeleteRule = (ruleId: string) => {
-        if (!confirm("Are you sure you want to delete this workflow rule? This will also remove its execution logs.")) return
+    const handleDeleteRule = async (ruleId: string) => {
+        if (!(await confirmAction("Are you sure you want to delete this workflow rule? This will also remove its execution logs."))) return
 
         const previousRules = [...rules]
         setRules(prev => prev.filter(r => r.id !== ruleId))
@@ -520,9 +521,9 @@ export function WorkflowsClient({
                 <Card className="border border-border/60 shadow-sm bg-gradient-to-br from-card to-card/80">
                     <CardContent className="p-4 flex items-center justify-between">
                         <div>
-                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Total Workflows</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Workflows</p>
                             <h3 className="text-2xl font-bold mt-1 text-foreground">{stats.totalRules}</h3>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                                 {stats.activeRules} active · {stats.totalRules - stats.activeRules} paused
                             </p>
                         </div>
@@ -535,7 +536,7 @@ export function WorkflowsClient({
                 <Card className="border border-border/60 shadow-sm bg-gradient-to-br from-card to-card/80">
                     <CardContent className="p-4 flex items-center justify-between">
                         <div>
-                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Active Automations</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Active Automations</p>
                             <h3 className="text-2xl font-bold mt-1 text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
                                 {stats.activeRules}
                                 <span className="relative flex h-2 w-2">
@@ -543,7 +544,7 @@ export function WorkflowsClient({
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                 </span>
                             </h3>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                                 Live trigger listeners active
                             </p>
                         </div>
@@ -556,9 +557,9 @@ export function WorkflowsClient({
                 <Card className="border border-border/60 shadow-sm bg-gradient-to-br from-card to-card/80">
                     <CardContent className="p-4 flex items-center justify-between">
                         <div>
-                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Dispatched Runs</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Dispatched Runs</p>
                             <h3 className="text-2xl font-bold mt-1 text-foreground">{stats.totalExecutions}</h3>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                                 Last 30 days execution log
                             </p>
                         </div>
@@ -571,7 +572,7 @@ export function WorkflowsClient({
                 <Card className="border border-border/60 shadow-sm bg-gradient-to-br from-card to-card/80">
                     <CardContent className="p-4 flex items-center justify-between">
                         <div>
-                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Health & Success Rate</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Health & Success Rate</p>
                             <h3 className="text-2xl font-bold mt-1 text-foreground">{stats.successRate}%</h3>
                             <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden mt-1.5">
                                 <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stats.successRate}%` }}></div>
@@ -622,7 +623,7 @@ export function WorkflowsClient({
                                     variant={selectedCategory === cat ? "default" : "outline"}
                                     size="sm"
                                     onClick={() => setSelectedCategory(cat)}
-                                    className="h-8 px-2.5 text-[11px] font-semibold"
+                                    className="h-8 px-2.5 text-xs font-semibold"
                                 >
                                     {cat}
                                 </Button>
@@ -661,11 +662,11 @@ export function WorkflowsClient({
                                         <CardHeader className="p-4 pb-3">
                                             <div className="flex items-center justify-between gap-2">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-mono text-[11px] font-bold text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
+                                                    <span className="font-mono text-xs font-bold text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
                                                         {rule.code}
                                                     </span>
                                                     {meta && (
-                                                        <Badge variant="outline" className={`text-[10px] font-medium border ${catColor.badge}`}>
+                                                        <Badge variant="outline" className={`text-xs font-medium border ${catColor.badge}`}>
                                                             {meta.category} · {meta.label}
                                                         </Badge>
                                                     )}
@@ -721,15 +722,15 @@ export function WorkflowsClient({
                                         <CardContent className="p-4 pt-1 space-y-2.5 text-xs">
                                             {/* Conditions preview */}
                                             <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50 space-y-1">
-                                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                                     Criteria ({rule.conditions.length})
                                                 </p>
                                                 <div className="flex flex-wrap gap-1">
                                                     {rule.conditions.length === 0 ? (
-                                                        <span className="text-muted-foreground italic text-[11px]">Always triggers</span>
+                                                        <span className="text-muted-foreground italic text-xs">Always triggers</span>
                                                     ) : (
                                                         rule.conditions.map((cond, i) => (
-                                                            <Badge key={i} variant="secondary" className="font-mono text-[10px] py-0 px-1.5 font-normal">
+                                                            <Badge key={i} variant="secondary" className="font-mono text-xs py-0 px-1.5 font-normal">
                                                                 {cond.field} {cond.operator === "greater_than" ? ">" : cond.operator === "less_than" ? "<" : cond.operator === "equals" ? "==" : cond.operator} {String(cond.value)}
                                                             </Badge>
                                                         ))
@@ -739,14 +740,14 @@ export function WorkflowsClient({
 
                                             {/* Actions preview */}
                                             <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50 space-y-1">
-                                                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                                     Actions Pipeline ({rule.actions.length})
                                                 </p>
                                                 <div className="flex flex-wrap gap-1.5">
                                                     {rule.actions.map((act, i) => (
                                                         <div
                                                             key={i}
-                                                            className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-background border border-border/60"
+                                                            className="flex items-center gap-1 text-xs px-2 py-0.5 rounded bg-background border border-border/60"
                                                         >
                                                             {act.actionType === "SEND_NOTIFICATION" && <Bell className="h-3 w-3 text-primary" />}
                                                             {act.actionType === "SEND_EMAIL" && <Mail className="h-3 w-3 text-emerald-500" />}
@@ -766,7 +767,7 @@ export function WorkflowsClient({
                                             </div>
                                         </CardContent>
 
-                                        <CardFooter className="p-4 pt-0 border-t border-border/40 flex items-center justify-between text-[11px] text-muted-foreground">
+                                        <CardFooter className="p-4 pt-0 border-t border-border/40 flex items-center justify-between text-xs text-muted-foreground">
                                             <span>
                                                 Runs: <strong className="text-foreground">{rule.executionCount}</strong>
                                             </span>
@@ -794,7 +795,7 @@ export function WorkflowsClient({
                                     variant={executionStatusFilter === st ? "default" : "outline"}
                                     size="sm"
                                     onClick={() => setExecutionStatusFilter(st)}
-                                    className="h-7 px-2.5 text-[11px] font-semibold"
+                                    className="h-7 px-2.5 text-xs font-semibold"
                                 >
                                     {st}
                                 </Button>
@@ -818,7 +819,7 @@ export function WorkflowsClient({
                         <div className="border border-border/60 rounded-xl overflow-hidden bg-card shadow-sm">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-xs text-left">
-                                    <thead className="bg-muted/50 text-muted-foreground border-b border-border/60 uppercase font-semibold text-[10px]">
+                                    <thead className="bg-muted/50 text-muted-foreground border-b border-border/60 uppercase font-semibold text-xs">
                                         <tr>
                                             <th className="px-4 py-3">Timestamp</th>
                                             <th className="px-4 py-3">Workflow Rule</th>
@@ -832,14 +833,14 @@ export function WorkflowsClient({
                                     <tbody className="divide-y divide-border/40">
                                         {filteredExecutions.map(exec => (
                                             <tr key={exec.id} className="hover:bg-muted/20 transition-colors">
-                                                <td className="px-4 py-3 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
+                                                <td className="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
                                                     {format(new Date(exec.createdAt), "yyyy-MM-dd HH:mm:ss")}
                                                 </td>
                                                 <td className="px-4 py-3 font-semibold text-foreground">
                                                     {exec.workflowName || "Automated Rule"}
                                                 </td>
                                                 <td className="px-4 py-3">
-                                                    <Badge variant="outline" className="font-mono text-[10px]">
+                                                    <Badge variant="outline" className="font-mono text-xs">
                                                         {exec.triggerEvent}
                                                     </Badge>
                                                 </td>
@@ -851,17 +852,17 @@ export function WorkflowsClient({
                                                 </td>
                                                 <td className="px-4 py-3">
                                                     {exec.status === "SUCCESS" && (
-                                                        <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-[10px]">
+                                                        <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 text-xs">
                                                             SUCCESS
                                                         </Badge>
                                                     )}
                                                     {exec.status === "SKIPPED" && (
-                                                        <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-[10px]">
+                                                        <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 text-xs">
                                                             SKIPPED
                                                         </Badge>
                                                     )}
                                                     {exec.status === "FAILED" && (
-                                                        <Badge className="bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 text-[10px]">
+                                                        <Badge className="bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30 text-xs">
                                                             FAILED
                                                         </Badge>
                                                     )}
@@ -931,7 +932,7 @@ export function WorkflowsClient({
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => handleSelectSimWorkflow(simSelectedWorkflowId)}
-                                                className="h-6 text-[11px] gap-1 text-muted-foreground"
+                                                className="h-6 text-xs gap-1 text-muted-foreground"
                                             >
                                                 <RotateCcw className="h-3 w-3" /> Reset Mock
                                             </Button>
@@ -997,7 +998,7 @@ export function WorkflowsClient({
                                                         <h5 className="font-bold text-xs uppercase tracking-wide">
                                                             {simResult.status}: {simResult.conditionMet ? "All Conditions Satisfied" : "Conditions Not Met"}
                                                         </h5>
-                                                        <p className="text-[11px] opacity-80">
+                                                        <p className="text-xs opacity-80">
                                                             {simResult.reason || "Dispatched simulated action handlers successfully."}
                                                         </p>
                                                     </div>
@@ -1011,7 +1012,7 @@ export function WorkflowsClient({
                                             <div className="space-y-2">
                                                 <Label className="text-xs font-semibold">Simulated Action Pipeline:</Label>
                                                 {simResult.executedActions.length === 0 ? (
-                                                    <p className="text-[11px] text-muted-foreground italic p-3 rounded-lg bg-muted/30 border border-border/40">
+                                                    <p className="text-xs text-muted-foreground italic p-3 rounded-lg bg-muted/30 border border-border/40">
                                                         No actions were executed because the criteria failed.
                                                     </p>
                                                 ) : (
@@ -1025,10 +1026,10 @@ export function WorkflowsClient({
                                                                     <CheckCircle2 className="h-3.5 w-3.5" />
                                                                 </div>
                                                                 <div className="space-y-0.5">
-                                                                    <span className="font-mono font-bold text-[11px] text-foreground">
+                                                                    <span className="font-mono font-bold text-xs text-foreground">
                                                                         {act.actionType}
                                                                     </span>
-                                                                    <p className="text-[11px] text-muted-foreground">{act.summary}</p>
+                                                                    <p className="text-xs text-muted-foreground">{act.summary}</p>
                                                                 </div>
                                                             </div>
                                                         ))}
@@ -1065,7 +1066,7 @@ export function WorkflowsClient({
                                 <Input
                                     value={formName}
                                     onChange={e => setFormName(e.target.value)}
-                                    placeholder="e.g. Overdue Invoice Escalation"
+                                    placeholder="Enter workflow name"
                                     className="h-8 text-xs"
                                 />
                             </div>
@@ -1074,7 +1075,7 @@ export function WorkflowsClient({
                                 <Input
                                     value={formDescription}
                                     onChange={e => setFormDescription(e.target.value)}
-                                    placeholder="e.g. Alerts managers when invoices pass 7 days overdue"
+                                    placeholder="Enter description"
                                     className="h-8 text-xs"
                                 />
                             </div>
@@ -1102,7 +1103,7 @@ export function WorkflowsClient({
                                 <SelectContent className="text-xs max-h-60">
                                     {(["SALES", "CRM", "INVENTORY", "FINANCE", "HR", "SUPPORT"] as TriggerCategory[]).map(cat => (
                                         <div key={cat}>
-                                            <div className="px-2 py-1 text-[10px] font-bold text-muted-foreground uppercase bg-muted/40 tracking-wider">
+                                            <div className="px-2 py-1 text-xs font-bold text-muted-foreground uppercase bg-muted/40 tracking-wider">
                                                 {cat} Events
                                             </div>
                                             {TRIGGER_CATALOG.filter(t => t.category === cat).map(t => (
@@ -1114,7 +1115,7 @@ export function WorkflowsClient({
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <p className="text-[11px] text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                                 {selectedTriggerMeta.description}
                             </p>
                         </div>
@@ -1130,14 +1131,14 @@ export function WorkflowsClient({
                                     variant="outline"
                                     size="sm"
                                     onClick={addCondition}
-                                    className="h-6 text-[11px] gap-1"
+                                    className="h-6 text-xs gap-1"
                                 >
                                     <Plus className="h-3 w-3" /> Add Condition
                                 </Button>
                             </div>
 
                             {formConditions.length === 0 ? (
-                                <p className="text-[11px] text-muted-foreground italic">
+                                <p className="text-xs text-muted-foreground italic">
                                     No criteria defined. Rule will trigger for every event.
                                 </p>
                             ) : (
@@ -1209,7 +1210,7 @@ export function WorkflowsClient({
                                     variant="outline"
                                     size="sm"
                                     onClick={addAction}
-                                    className="h-6 text-[11px] gap-1"
+                                    className="h-6 text-xs gap-1"
                                 >
                                     <Plus className="h-3 w-3" /> Add Action
                                 </Button>
@@ -1220,7 +1221,7 @@ export function WorkflowsClient({
                                     <div key={i} className="bg-background p-3 rounded-lg border border-border/60 space-y-2.5">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
-                                                <span className="h-5 w-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">
+                                                <span className="h-5 w-5 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center">
                                                     {i + 1}
                                                 </span>
                                                 <Select
@@ -1257,7 +1258,7 @@ export function WorkflowsClient({
                                         {act.actionType === "SEND_NOTIFICATION" && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
                                                 <div>
-                                                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Recipient Role</Label>
+                                                    <Label className="text-xs text-muted-foreground uppercase font-bold">Recipient Role</Label>
                                                     <Select
                                                         value={act.params.recipientRole || "ADMIN"}
                                                         onValueChange={val => updateActionParam(i, "recipientRole", val)}
@@ -1276,7 +1277,7 @@ export function WorkflowsClient({
                                                     </Select>
                                                 </div>
                                                 <div>
-                                                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Message Content</Label>
+                                                    <Label className="text-xs text-muted-foreground uppercase font-bold">Message Content</Label>
                                                     <Input
                                                         value={act.params.message || ""}
                                                         onChange={e => updateActionParam(i, "message", e.target.value)}
@@ -1290,16 +1291,16 @@ export function WorkflowsClient({
                                         {act.actionType === "SEND_EMAIL" && (
                                             <div className="space-y-1.5 pt-1">
                                                 <div>
-                                                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Subject Line</Label>
+                                                    <Label className="text-xs text-muted-foreground uppercase font-bold">Subject Line</Label>
                                                     <Input
                                                         value={act.params.emailSubject || ""}
                                                         onChange={e => updateActionParam(i, "emailSubject", e.target.value)}
-                                                        placeholder="e.g. Urgent Notice: Payment Due"
+                                                        placeholder="Enter subject line"
                                                         className="h-7 text-xs"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Email Message</Label>
+                                                    <Label className="text-xs text-muted-foreground uppercase font-bold">Email Message</Label>
                                                     <Textarea
                                                         value={act.params.emailBody || ""}
                                                         onChange={e => updateActionParam(i, "emailBody", e.target.value)}
@@ -1314,7 +1315,7 @@ export function WorkflowsClient({
                                         {act.actionType === "CREATE_TASK" && (
                                             <div className="grid grid-cols-3 gap-2 pt-1">
                                                 <div className="col-span-2">
-                                                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Task Title</Label>
+                                                    <Label className="text-xs text-muted-foreground uppercase font-bold">Task Title</Label>
                                                     <Input
                                                         value={act.params.taskTitle || ""}
                                                         onChange={e => updateActionParam(i, "taskTitle", e.target.value)}
@@ -1323,7 +1324,7 @@ export function WorkflowsClient({
                                                     />
                                                 </div>
                                                 <div>
-                                                    <Label className="text-[10px] text-muted-foreground uppercase font-bold">Priority</Label>
+                                                    <Label className="text-xs text-muted-foreground uppercase font-bold">Priority</Label>
                                                     <Select
                                                         value={act.params.taskPriority || "MEDIUM"}
                                                         onValueChange={val => updateActionParam(i, "taskPriority", val)}
@@ -1344,7 +1345,7 @@ export function WorkflowsClient({
 
                                         {act.actionType === "CALL_WEBHOOK" && (
                                             <div className="pt-1">
-                                                <Label className="text-[10px] text-muted-foreground uppercase font-bold">Endpoint Webhook URL</Label>
+                                                <Label className="text-xs text-muted-foreground uppercase font-bold">Endpoint Webhook URL</Label>
                                                 <Input
                                                     value={act.params.webhookUrl || ""}
                                                     onChange={e => updateActionParam(i, "webhookUrl", e.target.value)}
@@ -1356,11 +1357,11 @@ export function WorkflowsClient({
 
                                         {act.actionType === "UPDATE_STATUS" && (
                                             <div className="pt-1">
-                                                <Label className="text-[10px] text-muted-foreground uppercase font-bold">New Status Code</Label>
+                                                <Label className="text-xs text-muted-foreground uppercase font-bold">New Status Code</Label>
                                                 <Input
                                                     value={act.params.newStatus || ""}
                                                     onChange={e => updateActionParam(i, "newStatus", e.target.value)}
-                                                    placeholder="e.g. IN_PROGRESS, ESCALATED, RESOLVED"
+                                                    placeholder="Enter new status code"
                                                     className="h-7 text-xs font-mono"
                                                 />
                                             </div>
@@ -1374,7 +1375,7 @@ export function WorkflowsClient({
                         <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border/60">
                             <div>
                                 <Label className="text-xs font-semibold">Activate Immediately</Label>
-                                <p className="text-[11px] text-muted-foreground">
+                                <p className="text-xs text-muted-foreground">
                                     When enabled, this rule will actively evaluate on matching events.
                                 </p>
                             </div>
@@ -1421,15 +1422,15 @@ export function WorkflowsClient({
                             <Card key={i} className="border border-border/60 shadow-sm flex flex-col justify-between">
                                 <CardHeader className="p-3.5 pb-2">
                                     <div className="flex items-center justify-between">
-                                        <Badge variant="outline" className="text-[10px] font-mono">
+                                        <Badge variant="outline" className="text-xs font-mono">
                                             {rec.triggerEvent}
                                         </Badge>
-                                        <Badge variant="secondary" className="text-[10px]">
+                                        <Badge variant="secondary" className="text-xs">
                                             {rec.actions.length} Actions
                                         </Badge>
                                     </div>
                                     <CardTitle className="text-xs font-bold mt-1.5">{rec.name}</CardTitle>
-                                    <CardDescription className="text-[11px] line-clamp-2">
+                                    <CardDescription className="text-xs line-clamp-2">
                                         {rec.description}
                                     </CardDescription>
                                 </CardHeader>
@@ -1467,39 +1468,39 @@ export function WorkflowsClient({
                         <div className="space-y-3 py-2 text-xs">
                             <div className="grid grid-cols-2 gap-2 p-3 rounded-lg bg-muted/40 border border-border/50">
                                 <div>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Rule Name</p>
+                                    <p className="text-xs text-muted-foreground uppercase font-bold">Rule Name</p>
                                     <p className="font-semibold">{inspectExecution.workflowName}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Status</p>
+                                    <p className="text-xs text-muted-foreground uppercase font-bold">Status</p>
                                     <p className="font-semibold">{inspectExecution.status}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Trigger Event</p>
+                                    <p className="text-xs text-muted-foreground uppercase font-bold">Trigger Event</p>
                                     <p className="font-mono">{inspectExecution.triggerEvent}</p>
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-muted-foreground uppercase font-bold">Duration</p>
+                                    <p className="text-xs text-muted-foreground uppercase font-bold">Duration</p>
                                     <p className="font-mono">{inspectExecution.executionDurationMs || 0}ms</p>
                                 </div>
                             </div>
 
                             {inspectExecution.errorDetails && (
                                 <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-300">
-                                    <p className="font-bold text-[11px]">Audit Diagnostic Note:</p>
-                                    <p className="text-[11px] mt-0.5">{inspectExecution.errorDetails}</p>
+                                    <p className="font-bold text-xs">Audit Diagnostic Note:</p>
+                                    <p className="text-xs mt-0.5">{inspectExecution.errorDetails}</p>
                                 </div>
                             )}
 
                             <div className="space-y-1.5">
                                 <Label className="text-xs font-semibold">Executed Pipeline Steps:</Label>
                                 {inspectExecution.executedActions.length === 0 ? (
-                                    <p className="text-[11px] text-muted-foreground italic">No actions were fired.</p>
+                                    <p className="text-xs text-muted-foreground italic">No actions were fired.</p>
                                 ) : (
                                     inspectExecution.executedActions.map((act, i) => (
                                         <div key={i} className="p-2.5 rounded-lg border border-border/60 bg-muted/20 text-xs">
-                                            <span className="font-mono font-bold text-[11px] text-primary">{act.actionType}</span>
-                                            <p className="text-[11px] text-muted-foreground mt-0.5">{act.summary}</p>
+                                            <span className="font-mono font-bold text-xs text-primary">{act.actionType}</span>
+                                            <p className="text-xs text-muted-foreground mt-0.5">{act.summary}</p>
                                         </div>
                                     ))
                                 )}

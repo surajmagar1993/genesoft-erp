@@ -244,11 +244,11 @@ export function KsaVatClient({ initialData }: Props) {
           </div>
 
           <div className="border-l border-emerald-700/60 pl-3">
-            <div className="text-[11px] text-emerald-300 font-medium">ZATCA Return Due:</div>
+            <div className="text-xs text-emerald-300 font-medium">ZATCA Return Due:</div>
             <div className="text-xs font-bold text-white flex items-center gap-1.5">
               <span>{report.period.dueDate}</span>
               <span
-                className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                className={`text-xs px-1.5 py-0.5 rounded font-bold ${
                   telemetry.status === "OVERDUE"
                     ? "bg-red-500/80 text-white"
                     : telemetry.status === "DUE_SOON"
@@ -470,7 +470,7 @@ export function KsaVatClient({ initialData }: Props) {
                             VAT: {inv.customerVatNumber}
                           </div>
                         ) : (
-                          <div className="text-[11px] text-muted-foreground">Consumer (No VAT)</div>
+                          <div className="text-xs text-muted-foreground">Consumer (No VAT)</div>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -618,7 +618,7 @@ export function KsaVatClient({ initialData }: Props) {
                     <Copy className="h-3 w-3" /> Copy
                   </button>
                 </div>
-                <div className="rounded-lg bg-muted p-2.5 font-mono text-[11px] break-all border border-border max-h-24 overflow-y-auto">
+                <div className="rounded-lg bg-muted p-2.5 font-mono text-xs break-all border border-border max-h-24 overflow-y-auto">
                   {generatedTlv}
                 </div>
               </div>
@@ -648,7 +648,7 @@ export function KsaVatClient({ initialData }: Props) {
                   rows={3}
                   value={decodeInput}
                   onChange={(e) => setDecodeInput(e.target.value)}
-                  placeholder="Paste Base64 payload here (e.g. AQ9HZW5lc29mdCBLU0EgTExDAx8zMTAxMjM0NTY3ODkwMDM...)"
+                  placeholder="Paste Base64 payload here"
                   className="mt-1 w-full rounded-lg border border-border bg-background p-2 font-mono text-xs focus:border-blue-500 focus:outline-none"
                 />
               </div>
@@ -1015,7 +1015,7 @@ export function KsaVatClient({ initialData }: Props) {
                   </div>
 
                   {zakatResult.minimumZakatApplied && (
-                    <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px]">
+                    <div className="p-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300 text-xs">
                       Notice: Zakat base is less than adjusted net profit. Minimum Zakat assessed on Adjusted Profit per Article 5.
                     </div>
                   )}
@@ -1029,7 +1029,7 @@ export function KsaVatClient({ initialData }: Props) {
                 <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
                   SAR {zakatResult.calculatedZakat.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </div>
-                <p className="text-[11px] text-muted-foreground mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   Payable to ZATCA upon annual tax return filing
                 </p>
               </div>
@@ -1140,10 +1140,10 @@ export function KsaVatClient({ initialData }: Props) {
                 <div className="p-3 rounded border border-slate-200 flex items-center justify-between">
                   <div>
                     <span className="font-bold text-slate-700 uppercase">ZATCA E-Invoicing:</span>
-                    <div className="text-[11px] text-emerald-800 font-semibold mt-0.5">
+                    <div className="text-xs text-emerald-800 font-semibold mt-0.5">
                       ✓ Phase 1 & 2 Compliant
                     </div>
-                    <div className="text-[10px] text-slate-500 font-mono">
+                    <div className="text-xs text-slate-500 font-mono">
                       TLV Base64 Encoded
                     </div>
                   </div>
@@ -1187,7 +1187,7 @@ export function KsaVatClient({ initialData }: Props) {
               </table>
 
               {/* Declaration Statement */}
-              <div className="text-[10px] text-slate-500 text-center border-t pt-3">
+              <div className="text-xs text-slate-500 text-center border-t pt-3">
                 This electronic invoice is generated in compliance with the Zakat, Tax and Customs Authority (ZATCA) regulations in the Kingdom of Saudi Arabia.
               </div>
             </div>

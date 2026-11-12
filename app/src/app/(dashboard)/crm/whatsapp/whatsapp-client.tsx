@@ -425,7 +425,7 @@ export default function WhatsAppClient({
                                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                                     Customer Contacts
                                 </span>
-                                <Badge variant="secondary" className="text-[10px]">
+                                <Badge variant="secondary" className="text-xs">
                                     {filteredContacts.length}
                                 </Badge>
                             </div>
@@ -462,11 +462,11 @@ export default function WhatsAppClient({
                                                     <span className="text-xs font-semibold truncate text-foreground">
                                                         {c.name}
                                                     </span>
-                                                    <span className="text-[10px] text-muted-foreground uppercase">
+                                                    <span className="text-xs text-muted-foreground uppercase">
                                                         {c.type}
                                                     </span>
                                                 </div>
-                                                <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5 font-mono">
+                                                <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 font-mono">
                                                     <Phone className="h-2.5 w-2.5" />
                                                     {c.phone || "No phone"}
                                                 </div>
@@ -499,7 +499,7 @@ export default function WhatsAppClient({
                                             <div className="text-xs text-muted-foreground font-mono flex items-center gap-2">
                                                 <span>+{normalizeE164Phone(selectedContact.phone || "", config.defaultCountryCode || "91")}</span>
                                                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                                <span className="text-[11px] text-emerald-600">WhatsApp Verified</span>
+                                                <span className="text-xs text-emerald-600">WhatsApp Verified</span>
                                             </div>
                                         </div>
                                     </div>
@@ -537,12 +537,12 @@ export default function WhatsAppClient({
                                                         }`}
                                                     >
                                                         {msg.templateKey && (
-                                                            <div className="text-[10px] font-bold uppercase tracking-wider opacity-75 border-b pb-1 mb-1 border-current/20">
+                                                            <div className="text-xs font-bold uppercase tracking-wider opacity-75 border-b pb-1 mb-1 border-current/20">
                                                                 Template: {msg.templateKey.replace(/_/g, " ")}
                                                             </div>
                                                         )}
                                                         <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                                                        <div className="flex items-center justify-end gap-1.5 text-[10px] opacity-60 pt-0.5">
+                                                        <div className="flex items-center justify-end gap-1.5 text-xs opacity-60 pt-0.5">
                                                             <span>
                                                                 {new Date(msg.timestamp).toLocaleTimeString([], {
                                                                     hour: "2-digit",
@@ -582,7 +582,7 @@ export default function WhatsAppClient({
                                 <div className="p-3 bg-card border-t space-y-3">
                                     {/* Template Selection Pill Bar */}
                                     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
-                                        <span className="text-[11px] font-semibold text-muted-foreground shrink-0">
+                                        <span className="text-xs font-semibold text-muted-foreground shrink-0">
                                             Templates:
                                         </span>
                                         <button
@@ -621,7 +621,7 @@ export default function WhatsAppClient({
                                         <div className="p-2.5 bg-muted/40 rounded-lg border border-border/60 grid grid-cols-2 sm:grid-cols-3 gap-2">
                                             {WHATSAPP_TEMPLATES[selectedTemplateKey].variables.map((v) => (
                                                 <div key={v} className="space-y-0.5">
-                                                    <Label className="text-[10px] text-muted-foreground font-mono">
+                                                    <Label className="text-xs text-muted-foreground font-mono">
                                                         {`{{${v}}}`}
                                                     </Label>
                                                     <Input
@@ -736,7 +736,7 @@ export default function WhatsAppClient({
                                                 <TableCell>
                                                     <Badge
                                                         variant="outline"
-                                                        className={`text-[10px] font-bold uppercase ${
+                                                        className={`text-xs font-bold uppercase ${
                                                             inv.status === "PAID"
                                                                 ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"
                                                                 : isOverdue
@@ -797,10 +797,10 @@ export default function WhatsAppClient({
                             <Card key={key} className="border-primary/10 shadow-sm flex flex-col justify-between">
                                 <CardHeader className="pb-3 bg-muted/20 border-b">
                                     <div className="flex items-center justify-between">
-                                        <Badge variant="outline" className="text-[10px] font-bold uppercase">
+                                        <Badge variant="outline" className="text-xs font-bold uppercase">
                                             {tmpl.category}
                                         </Badge>
-                                        <span className="font-mono text-[10px] text-muted-foreground">
+                                        <span className="font-mono text-xs text-muted-foreground">
                                             {tmpl.key}
                                         </span>
                                     </div>
@@ -811,7 +811,7 @@ export default function WhatsAppClient({
                                     {/* Preview WhatsApp Bubble */}
                                     <div className="p-3 rounded-xl bg-[#d9fdd3] text-emerald-950 dark:bg-emerald-900/40 dark:text-emerald-100 text-xs border border-emerald-300/40 space-y-1 shadow-xs">
                                         <p className="whitespace-pre-wrap">{sampleRendered}</p>
-                                        <div className="flex items-center justify-end gap-1 text-[10px] opacity-60">
+                                        <div className="flex items-center justify-end gap-1 text-xs opacity-60">
                                             <span>10:42 AM</span>
                                             <CheckCheck className="h-3 w-3 text-blue-500" />
                                         </div>
@@ -819,12 +819,12 @@ export default function WhatsAppClient({
 
                                     {/* Variables Pill List */}
                                     <div className="space-y-1 pt-2 border-t text-xs">
-                                        <span className="text-[11px] font-semibold text-muted-foreground">
+                                        <span className="text-xs font-semibold text-muted-foreground">
                                             Interpolated Variables:
                                         </span>
                                         <div className="flex flex-wrap gap-1">
                                             {tmpl.variables.map((v) => (
-                                                <Badge key={v} variant="secondary" className="text-[10px] font-mono">
+                                                <Badge key={v} variant="secondary" className="text-xs font-mono">
                                                     {`{{${v}}}`}
                                                 </Badge>
                                             ))}
@@ -874,7 +874,7 @@ export default function WhatsAppClient({
                                         <Input
                                             value={config.phoneNumberId || ""}
                                             onChange={(e) => setConfig({ ...config, phoneNumberId: e.target.value })}
-                                            placeholder="e.g. 109283746501928"
+                                            placeholder="Enter Meta phone number ID"
                                             className="text-xs bg-background"
                                         />
                                     </div>
@@ -883,7 +883,7 @@ export default function WhatsAppClient({
                                         <Input
                                             value={config.wabaId || ""}
                                             onChange={(e) => setConfig({ ...config, wabaId: e.target.value })}
-                                            placeholder="e.g. 293847561029384"
+                                            placeholder="Enter WhatsApp Business account ID"
                                             className="text-xs bg-background"
                                         />
                                     </div>
@@ -895,7 +895,7 @@ export default function WhatsAppClient({
                                         <Input
                                             value={config.appId || ""}
                                             onChange={(e) => setConfig({ ...config, appId: e.target.value })}
-                                            placeholder="e.g. 849302194857201"
+                                            placeholder="Enter Meta app ID"
                                             className="text-xs bg-background font-mono"
                                         />
                                     </div>
@@ -913,7 +913,7 @@ export default function WhatsAppClient({
                                 <div className="space-y-1.5">
                                     <Label className="text-xs font-semibold flex items-center justify-between">
                                         <span>Permanent System User Access Token</span>
-                                        <span className="text-[10px] text-muted-foreground font-normal">Supports Eye toggle</span>
+                                        <span className="text-xs text-muted-foreground font-normal">Supports Eye toggle</span>
                                     </Label>
                                     <PasswordInput
                                         value={config.accessToken || ""}
@@ -939,7 +939,7 @@ export default function WhatsAppClient({
                                         <Input
                                             value={config.defaultCountryCode || "91"}
                                             onChange={(e) => setConfig({ ...config, defaultCountryCode: e.target.value })}
-                                            placeholder="e.g. 91, 1, 44, 971"
+                                            placeholder="Enter default country code"
                                             className="text-xs bg-background"
                                         />
                                     </div>
@@ -948,14 +948,14 @@ export default function WhatsAppClient({
                                         <Input
                                             value={config.senderDisplayName || ""}
                                             onChange={(e) => setConfig({ ...config, senderDisplayName: e.target.value })}
-                                            placeholder="e.g. Acme ERP Sales"
+                                            placeholder="Enter sender display name"
                                             className="text-xs bg-background"
                                         />
                                     </div>
                                 </div>
 
                                 {config.mode === "CLOUD_API" && (
-                                    <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-start gap-2">
+                                    <div className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2">
                                         <Info className="h-4 w-4 shrink-0 mt-0.5 text-emerald-600" />
                                         <span>
                                             In <strong>Meta Cloud API</strong> mode, messages are dispatched directly via Meta Graph API v20.0. Ensure your Meta System User has permissions: <code className="font-mono font-bold">whatsapp_business_messaging</code> and <code className="font-mono font-bold">whatsapp_business_management</code>.
@@ -1035,7 +1035,7 @@ export default function WhatsAppClient({
                                     </div>
                                 </div>
 
-                                <div className="p-3 bg-muted/40 rounded-lg text-muted-foreground text-[11px] space-y-1">
+                                <div className="p-3 bg-muted/40 rounded-lg text-muted-foreground text-xs space-y-1">
                                     <p className="font-semibold text-foreground">Webhook Subscriptions Needed:</p>
                                     <p>• <span className="font-mono text-emerald-600">messages</span> — Ingests inbound customer replies</p>
                                     <p>• <span className="font-mono text-emerald-600">message_deliveries</span> — Delivery receipts (sent, delivered, read)</p>
@@ -1083,7 +1083,7 @@ export default function WhatsAppClient({
                                             )}
                                             {testResult.success ? "Connection Verified" : "Connection Failed"}
                                         </div>
-                                        <p className="mt-1 text-[11px] leading-relaxed">{testResult.message}</p>
+                                        <p className="mt-1 text-xs leading-relaxed">{testResult.message}</p>
                                     </div>
                                 )}
                             </CardContent>
@@ -1119,7 +1119,7 @@ export default function WhatsAppClient({
                                 <Input
                                     value={dispatchPhone}
                                     onChange={(e) => setDispatchPhone(e.target.value)}
-                                    placeholder="+91 98765 43210"
+                                    placeholder="Enter phone number with country code"
                                     className="text-xs font-mono"
                                 />
                             </div>
@@ -1138,7 +1138,7 @@ export default function WhatsAppClient({
 
                             {/* Live WhatsApp Bubble Preview */}
                             <div className="p-3 bg-muted/30 rounded-lg space-y-1.5 border">
-                                <span className="font-semibold text-muted-foreground text-[11px]">
+                                <span className="font-semibold text-muted-foreground text-xs">
                                     Message Preview:
                                 </span>
                                 <div className="p-3 rounded-xl bg-[#d9fdd3] text-emerald-950 dark:bg-emerald-900/60 dark:text-emerald-100 text-xs shadow-xs">

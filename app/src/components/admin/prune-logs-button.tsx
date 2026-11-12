@@ -1,4 +1,5 @@
 "use client"
+import { confirmAction } from "@/components/confirm-dialog"
 import { unwrap } from "@/lib/action-result"
 
 import React, { useState } from "react"
@@ -13,7 +14,7 @@ export function PruneLogsButton() {
     const router = useRouter()
 
     const handlePrune = async () => {
-        if (!confirm("Are you sure you want to delete all system logs? This action cannot be undone.")) {
+        if (!(await confirmAction("Are you sure you want to delete all system logs? This action cannot be undone."))) {
             return
         }
 

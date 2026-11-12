@@ -222,7 +222,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                     id="sku"
                                     value={form.sku}
                                     onChange={(e) => update("sku", e.target.value)}
-                                    placeholder="e.g. SKU-PROD-001"
+                                    placeholder="Enter SKU or item code"
                                 />
                             </div>
                         </div>
@@ -255,7 +255,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                             type="button"
                                             variant={previewBarcodeType === "CODE128" ? "default" : "ghost"}
                                             size="sm"
-                                            className="h-6 text-[11px] px-2"
+                                            className="h-6 text-xs px-2"
                                             onClick={() => setPreviewBarcodeType("CODE128")}
                                         >
                                             1D
@@ -264,7 +264,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                             type="button"
                                             variant={previewBarcodeType === "QR" ? "default" : "ghost"}
                                             size="sm"
-                                            className="h-6 text-[11px] px-2"
+                                            className="h-6 text-xs px-2"
                                             onClick={() => setPreviewBarcodeType("QR")}
                                         >
                                             QR

@@ -430,7 +430,7 @@ export function BillForm({ initialData, vendors }: BillFormProps) {
                       <Percent className="h-3.5 w-3.5 text-amber-600" />
                       Apply Indian TDS Withholding
                     </Label>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Deduct tax at source per CBDT rates
                     </p>
                   </div>
@@ -467,7 +467,7 @@ export function BillForm({ initialData, vendors }: BillFormProps) {
                           </span>
                         </div>
                         {tdsCalc?.is206AAPenaltyApplied && (
-                          <div className="flex items-start gap-1.5 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-1.5 rounded text-[11px]">
+                          <div className="flex items-start gap-1.5 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-1.5 rounded text-xs">
                             <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                             <span>
                               Sec 206AA: Missing/invalid PAN triggers 20% penalty TDS rate.

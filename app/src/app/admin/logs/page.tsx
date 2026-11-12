@@ -51,7 +51,7 @@ export default async function SystemLogsPage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold">Errors (24h)</span>
-                                <Badge variant="destructive" className="h-5 text-[10px] font-black">
+                                <Badge variant="destructive" className="h-5 text-xs font-black">
                                     {logs.filter((l) => l.level === 'ERROR' || l.level === 'FATAL').length} Critical
                                 </Badge>
                             </div>
@@ -69,7 +69,7 @@ export default async function SystemLogsPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold leading-none">Database</p>
-                                    <p className="text-[10px] text-muted-foreground">Connected & Healthy</p>
+                                    <p className="text-xs text-muted-foreground">Connected & Healthy</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
@@ -78,7 +78,7 @@ export default async function SystemLogsPage() {
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold leading-none">Email Gateway</p>
-                                    <p className="text-[10px] text-muted-foreground">Latency elevated (2.4s)</p>
+                                    <p className="text-xs text-muted-foreground">Latency elevated (2.4s)</p>
                                 </div>
                             </div>
                         </div>
@@ -115,7 +115,7 @@ export default async function SystemLogsPage() {
                                                 <Badge 
                                                     variant={getLevelVariant(log.level)} 
                                                     className={cn(
-                                                        "text-[10px] font-black h-5 uppercase tracking-tighter",
+                                                        "text-xs font-black h-5 uppercase tracking-tighter",
                                                         log.level === 'WARN' && "border-amber-500 text-amber-600 bg-amber-50",
                                                         log.level === 'INFO' && "bg-emerald-50 text-emerald-600 border-emerald-200"
                                                     )}
@@ -130,24 +130,24 @@ export default async function SystemLogsPage() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="max-w-[400px]">
-                                                <p className="text-[11px] leading-relaxed text-foreground/90 whitespace-pre-wrap break-words">
+                                                <p className="text-xs leading-relaxed text-foreground/90 whitespace-pre-wrap break-words">
                                                     {log.message}
                                                 </p>
                                                 {log.path && (
-                                                    <span className="text-[9px] text-muted-foreground opacity-60">
+                                                    <span className="text-xs text-muted-foreground opacity-60">
                                                         at: {log.path}
                                                     </span>
                                                 )}
                                                 {log.stack && (
                                                     <details className="mt-1">
-                                                        <summary className="cursor-pointer text-[10px] text-muted-foreground">Stack trace</summary>
-                                                        <pre className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded bg-muted p-2 text-[10px]">{log.stack}</pre>
+                                                        <summary className="cursor-pointer text-xs text-muted-foreground">Stack trace</summary>
+                                                        <pre className="mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-words rounded bg-muted p-2 text-xs">{log.stack}</pre>
                                                     </details>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right pr-6 text-xs text-muted-foreground tabular-nums">
                                                 {format(new Date(log.timestamp), "HH:mm:ss")}
-                                                <span className="block text-[10px] opacity-60">
+                                                <span className="block text-xs opacity-60">
                                                     {format(new Date(log.timestamp), "MMM dd")}
                                                 </span>
                                             </TableCell>

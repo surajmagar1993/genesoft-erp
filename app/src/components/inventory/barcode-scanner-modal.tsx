@@ -363,7 +363,7 @@ export function BarcodeScannerModal({
                   <div className="w-64 h-36 border-2 border-dashed border-white/80 rounded-lg relative overflow-hidden">
                     <div className="w-full h-0.5 bg-red-500 shadow-[0_0_10px_#ef4444] animate-pulse top-1/2 absolute" />
                   </div>
-                  <span className="text-[11px] font-semibold text-white/90 bg-black/60 px-3 py-1 rounded-full mt-3 backdrop-blur-sm">
+                  <span className="text-xs font-semibold text-white/90 bg-black/60 px-3 py-1 rounded-full mt-3 backdrop-blur-sm">
                     Center barcode in box to scan
                   </span>
                 </div>
@@ -403,7 +403,7 @@ export function BarcodeScannerModal({
                   <span className="text-xl font-black text-slate-900 dark:text-slate-50">
                     {formatCurrency(scannedProduct.unitPrice, scannedProduct.currency)}
                   </span>
-                  <p className="text-[11px] text-slate-500">Unit Price</p>
+                  <p className="text-xs text-slate-500">Unit Price</p>
                 </div>
               </div>
 
@@ -440,7 +440,7 @@ export function BarcodeScannerModal({
                       <Zap className="h-3.5 w-3.5 text-amber-500" />
                       Instant Stock Adjustment
                     </Label>
-                    <span className="text-[11px] text-slate-500">Target Warehouse: {warehouses.find(w => w.id === selectedWarehouseId)?.name || "Default"}</span>
+                    <span className="text-xs text-slate-500">Target Warehouse: {warehouses.find(w => w.id === selectedWarehouseId)?.name || "Default"}</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -457,7 +457,7 @@ export function BarcodeScannerModal({
                     </div>
                     <div className="sm:col-span-2">
                       <Input
-                        placeholder="Reason / Reference (e.g. Supplier intake, Scrap)"
+                        placeholder="Reason / Reference"
                         className="bg-white dark:bg-slate-800 text-xs"
                         value={actionReason}
                         onChange={(e) => setActionReason(e.target.value)}

@@ -516,7 +516,7 @@ export function GanttChartView({
             {/* Milestones Delivery Ribbon (if milestones exist) */}
             {milestones.length > 0 && (
                 <div className="flex items-center gap-3 overflow-x-auto p-2 bg-muted/20 rounded-lg border text-xs">
-                    <span className="font-semibold text-muted-foreground uppercase text-[10px] tracking-wider whitespace-nowrap flex items-center gap-1">
+                    <span className="font-semibold text-muted-foreground uppercase text-xs tracking-wider whitespace-nowrap flex items-center gap-1">
                         <MilestoneIcon className="h-3.5 w-3.5 text-indigo-500" />
                         Key Deliverables:
                     </span>
@@ -533,7 +533,7 @@ export function GanttChartView({
                                 }`} />
                                 <span className="font-semibold text-foreground">{m.title}</span>
                                 {m.dueDate && (
-                                    <span className="text-[10px] text-muted-foreground">
+                                    <span className="text-xs text-muted-foreground">
                                         ({format(new Date(m.dueDate), "MMM d")})
                                     </span>
                                 )}
@@ -585,7 +585,7 @@ export function GanttChartView({
                                                         : "bg-slate-400"
                                                 }`} />
                                                 <div className="truncate">
-                                                    <span className="font-mono text-[10px] text-muted-foreground mr-1">
+                                                    <span className="font-mono text-xs text-muted-foreground mr-1">
                                                         {t.taskCode}
                                                     </span>
                                                     <span className="font-medium text-foreground text-xs">
@@ -596,11 +596,11 @@ export function GanttChartView({
 
                                             <div className="flex-shrink-0 text-right">
                                                 {t.assignedEmployeeName ? (
-                                                    <Badge variant="outline" className="text-[10px] py-0 px-1 font-normal">
+                                                    <Badge variant="outline" className="text-xs py-0 px-1 font-normal">
                                                         {t.assignedEmployeeName.split(" ")[0]}
                                                     </Badge>
                                                 ) : (
-                                                    <span className="text-[10px] text-muted-foreground/60 italic">
+                                                    <span className="text-xs text-muted-foreground/60 italic">
                                                         Unassigned
                                                     </span>
                                                 )}
@@ -624,7 +624,7 @@ export function GanttChartView({
                                     <div
                                         key={idx}
                                         style={{ width: `${interval.width}px` }}
-                                        className={`flex-shrink-0 border-r px-1 flex flex-col items-center justify-center text-[10px] transition-colors ${
+                                        className={`flex-shrink-0 border-r px-1 flex flex-col items-center justify-center text-xs transition-colors ${
                                             interval.isToday
                                                 ? "bg-indigo-500/10 font-bold text-indigo-600 dark:text-indigo-400"
                                                 : interval.isWeekend
@@ -633,7 +633,7 @@ export function GanttChartView({
                                         }`}
                                     >
                                         <span className="font-semibold leading-tight">{interval.label}</span>
-                                        <span className="text-[9px] opacity-70 leading-tight">{interval.subLabel}</span>
+                                        <span className="text-xs opacity-70 leading-tight">{interval.subLabel}</span>
                                     </div>
                                 ))}
                             </div>
@@ -644,7 +644,7 @@ export function GanttChartView({
                                     style={{ left: `${todayOffset}px` }}
                                     className="absolute top-0 bottom-0 w-[2px] bg-indigo-500 z-10 pointer-events-none shadow-[0_0_8px_rgba(99,102,241,0.6)]"
                                 >
-                                    <div className="sticky top-12 -ml-3 px-1.5 py-0.5 rounded bg-indigo-600 text-white text-[9px] font-bold shadow-xs whitespace-nowrap">
+                                    <div className="sticky top-12 -ml-3 px-1.5 py-0.5 rounded bg-indigo-600 text-white text-xs font-bold shadow-xs whitespace-nowrap">
                                         Today
                                     </div>
                                 </div>
@@ -720,13 +720,13 @@ export function GanttChartView({
                                                 ) : null}
 
                                                 {/* Bar content */}
-                                                <div className="relative z-1 flex items-center justify-between w-full overflow-hidden gap-1 text-[11px]">
-                                                    <span className="font-semibold truncate font-mono text-[10px]">
+                                                <div className="relative z-1 flex items-center justify-between w-full overflow-hidden gap-1 text-xs">
+                                                    <span className="font-semibold truncate font-mono text-xs">
                                                         {t.taskCode} {width > 80 ? t.title : ""}
                                                     </span>
 
                                                     {width > 110 && (
-                                                        <span className="text-[9px] opacity-80 whitespace-nowrap ml-1">
+                                                        <span className="text-xs opacity-80 whitespace-nowrap ml-1">
                                                             {duration}d
                                                         </span>
                                                     )}
@@ -775,7 +775,7 @@ export function GanttChartView({
                         )}
                     </div>
 
-                    <div className="text-muted-foreground text-[11px]">
+                    <div className="text-muted-foreground text-xs">
                         Showing <span className="font-semibold text-foreground">{sortedTasks.length}</span> scheduled tasks across <span className="font-semibold text-foreground">{totalDays}</span> days horizon
                     </div>
                 </div>
@@ -822,7 +822,7 @@ export function GanttChartView({
 
                             {/* Quick 1-Click Postpone Buttons */}
                             <div className="space-y-1.5">
-                                <Label className="text-[11px] text-muted-foreground">Quick Date Adjustments</Label>
+                                <Label className="text-xs text-muted-foreground">Quick Date Adjustments</Label>
                                 <div className="flex items-center gap-2">
                                     <Button
                                         type="button"

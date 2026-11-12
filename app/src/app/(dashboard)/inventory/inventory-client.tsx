@@ -728,14 +728,14 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                     <TabsTrigger value="stocks" className="gap-2">
                         <Package className="h-4 w-4" />
                         Stock Levels
-                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
                             {initialData.products.length}
                         </Badge>
                     </TabsTrigger>
                     <TabsTrigger value="batch-serial" className="gap-2">
                         <QrIcon className="h-4 w-4 text-purple-500" />
                         Batch &amp; Serial
-                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0 bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
                             {batchSerialData.telemetry.totalBatches}
                         </Badge>
                     </TabsTrigger>
@@ -746,14 +746,14 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                     <TabsTrigger value="warehouses" className="gap-2">
                         <WarehouseIcon className="h-4 w-4" />
                         Warehouses
-                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
                             {initialData.warehouses.length}
                         </Badge>
                     </TabsTrigger>
                     <TabsTrigger value="movements" className="gap-2">
                         <History className="h-4 w-4" />
                         Movements
-                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0">
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0">
                             {initialData.recentMovements.length}
                         </Badge>
                     </TabsTrigger>
@@ -761,7 +761,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                         <AlertTriangle className="h-4 w-4" />
                         Alerts
                         {lowStockProducts.length > 0 && (
-                            <Badge variant="destructive" className="ml-1 text-[10px] px-1.5 py-0">
+                            <Badge variant="destructive" className="ml-1 text-xs px-1.5 py-0">
                                 {lowStockProducts.length}
                             </Badge>
                         )}
@@ -769,7 +769,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                     <TabsTrigger value="reports" className="gap-2">
                         <BarChart3 className="h-4 w-4 text-emerald-500" />
                         Reports Studio
-                        <Badge variant="secondary" className="ml-1 text-[10px] px-1.5 py-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                             P2
                         </Badge>
                     </TabsTrigger>
@@ -908,7 +908,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="font-bold text-sm">{product.stockQty.toLocaleString()}</div>
-                                                <div className="text-[10px] text-muted-foreground">Reorder at: {product.reorderPoint}</div>
+                                                <div className="text-xs text-muted-foreground">Reorder at: {product.reorderPoint}</div>
                                             </TableCell>
                                             <TableCell className="text-right font-mono text-xs">
                                                 {formatCurrency(product.unitPrice)}
@@ -918,17 +918,17 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 {product.status === "IN_STOCK" && (
-                                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[11px]">
+                                                    <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">
                                                         In Stock
                                                     </Badge>
                                                 )}
                                                 {product.status === "LOW_STOCK" && (
-                                                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[11px]">
+                                                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs">
                                                         Low Stock
                                                     </Badge>
                                                 )}
                                                 {product.status === "OUT_OF_STOCK" && (
-                                                    <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-[11px]">
+                                                    <Badge variant="outline" className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-xs">
                                                         Out of Stock
                                                     </Badge>
                                                 )}
@@ -989,7 +989,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                             <div className="flex items-center gap-2">
                                                 <CardTitle className="text-base font-bold">{warehouse.name}</CardTitle>
                                                 {warehouse.isDefault && (
-                                                    <Badge variant="secondary" className="text-[10px] bg-indigo-500/10 text-indigo-600 border-indigo-500/20">
+                                                    <Badge variant="secondary" className="text-xs bg-indigo-500/10 text-indigo-600 border-indigo-500/20">
                                                         Primary Hub
                                                     </Badge>
                                                 )}
@@ -1088,37 +1088,37 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                             <TableCell>
                                                 <div className="font-semibold text-xs">{m.productName}</div>
                                                 {m.productSku && (
-                                                    <div className="font-mono text-[10px] text-muted-foreground">{m.productSku}</div>
+                                                    <div className="font-mono text-xs text-muted-foreground">{m.productSku}</div>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 {m.type === "IN" && (
-                                                    <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
+                                                    <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">
                                                         STOCK IN
                                                     </Badge>
                                                 )}
                                                 {m.type === "OUT" && (
-                                                    <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-[10px]">
+                                                    <Badge className="bg-rose-500/10 text-rose-600 border-rose-500/20 text-xs">
                                                         STOCK OUT
                                                     </Badge>
                                                 )}
                                                 {m.type === "ADJUSTMENT" && (
-                                                    <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-[10px]">
+                                                    <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20 text-xs">
                                                         CORRECTION
                                                     </Badge>
                                                 )}
                                                 {m.type === "TRANSFER" && (
-                                                    <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-[10px]">
+                                                    <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-xs">
                                                         TRANSFER
                                                     </Badge>
                                                 )}
                                                 {m.type === "DAMAGE" && (
-                                                    <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-[10px]">
+                                                    <Badge className="bg-amber-500/10 text-amber-600 border-amber-500/20 text-xs">
                                                         WRITE-OFF
                                                     </Badge>
                                                 )}
                                                 {m.type === "RETURN" && (
-                                                    <Badge className="bg-teal-500/10 text-teal-600 border-teal-500/20 text-[10px]">
+                                                    <Badge className="bg-teal-500/10 text-teal-600 border-teal-500/20 text-xs">
                                                         RETURN
                                                     </Badge>
                                                 )}
@@ -1154,7 +1154,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                             <TableCell className="text-xs max-w-[180px] truncate">
                                                 {m.reason || "—"}
                                                 {m.referenceNo && (
-                                                    <span className="block text-[10px] text-muted-foreground font-mono">Ref: {m.referenceNo}</span>
+                                                    <span className="block text-xs text-muted-foreground font-mono">Ref: {m.referenceNo}</span>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-xs text-muted-foreground">
@@ -1256,7 +1256,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                         <ScanLine className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                                         Barcode Scanner Desk
                                     </CardTitle>
-                                    <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 border-indigo-500/20 text-[10px]">
+                                    <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 border-indigo-500/20 text-xs">
                                         Live
                                     </Badge>
                                 </div>
@@ -1282,7 +1282,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                         <Printer className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                                         Printable Label Studio
                                     </CardTitle>
-                                    <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-[10px]">
+                                    <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20 text-xs">
                                         A4 & Thermal
                                     </Badge>
                                 </div>
@@ -1312,7 +1312,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                         <BarcodeIcon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                         Catalog Coverage
                                     </CardTitle>
-                                    <Badge variant="secondary" className="text-[10px]">
+                                    <Badge variant="secondary" className="text-xs">
                                         {Math.round((initialData.products.filter(p => !!p.barcode || !!p.sku).length / (initialData.products.length || 1)) * 100)}%
                                     </Badge>
                                 </div>
@@ -1489,7 +1489,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                     <BarChart3 className="h-5 w-5 text-emerald-600" />
                                     Inventory Valuation & Analytics Studio
                                 </h2>
-                                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
+                                <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-xs">
                                     Live Financial Audit
                                 </Badge>
                             </div>
@@ -1630,11 +1630,11 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                         {reportsData.kpis.totalTrackedSKUs} SKUs
                                     </span>
                                     {reportsData.kpis.deficitSKUCount > 0 ? (
-                                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">
+                                        <Badge variant="destructive" className="text-xs px-1.5 py-0">
                                             {reportsData.kpis.deficitSKUCount} Deficit
                                         </Badge>
                                     ) : (
-                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-emerald-600 border-emerald-200">
+                                        <Badge variant="outline" className="text-xs px-1.5 py-0 text-emerald-600 border-emerald-200">
                                             100% Healthy
                                         </Badge>
                                     )}
@@ -1660,7 +1660,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                             >
                                 <CircleDollarSign className="h-3.5 w-3.5 text-blue-500" />
                                 Stock Valuation Matrix
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                <Badge variant="secondary" className="text-xs px-1.5 py-0">
                                     {reportsData.valuationReport.length}
                                 </Badge>
                             </button>
@@ -1676,7 +1676,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                             >
                                 <Flame className="h-3.5 w-3.5 text-orange-500" />
                                 Turnover & Velocity Analysis
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                <Badge variant="secondary" className="text-xs px-1.5 py-0">
                                     {reportsData.velocityReport.length}
                                 </Badge>
                             </button>
@@ -1692,7 +1692,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                             >
                                 <WarehouseIcon className="h-3.5 w-3.5 text-indigo-500" />
                                 Multi-Depot Distribution
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                                <Badge variant="secondary" className="text-xs px-1.5 py-0">
                                     {reportsData.matrixReport.warehouses.length} Hubs
                                 </Badge>
                             </button>
@@ -1787,7 +1787,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                                 </TableCell>
                                                 <TableCell className="font-mono text-xs">
                                                     <div>{item.sku || "—"}</div>
-                                                    {item.barcode && <div className="text-[10px] text-muted-foreground">{item.barcode}</div>}
+                                                    {item.barcode && <div className="text-xs text-muted-foreground">{item.barcode}</div>}
                                                 </TableCell>
                                                 <TableCell className="text-right font-medium">
                                                     {item.stockQty.toLocaleString()} {item.unit}
@@ -1808,14 +1808,14 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                                     <div className="font-semibold text-indigo-600 dark:text-indigo-400">
                                                         {formatCurrency(item.potentialMarginAmount)}
                                                     </div>
-                                                    <div className="text-[10px] text-muted-foreground">
+                                                    <div className="text-xs text-muted-foreground">
                                                         {item.potentialMarginPercent}%
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <Badge
                                                         variant={item.status === "IN_STOCK" ? "outline" : item.status === "LOW_STOCK" ? "secondary" : "destructive"}
-                                                        className={`text-[10px] ${
+                                                        className={`text-xs ${
                                                             item.status === "IN_STOCK"
                                                                 ? "border-emerald-200 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
                                                                 : item.status === "LOW_STOCK"
@@ -1897,24 +1897,24 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     {item.turnoverVelocity === "FAST_MOVING" && (
-                                                        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1 text-[10px]">
+                                                        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 gap-1 text-xs">
                                                             <Flame className="h-3 w-3 text-emerald-600 fill-emerald-600" />
                                                             Fast Moving
                                                         </Badge>
                                                     )}
                                                     {item.turnoverVelocity === "MODERATE" && (
-                                                        <Badge variant="secondary" className="bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30 gap-1 text-[10px]">
+                                                        <Badge variant="secondary" className="bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30 gap-1 text-xs">
                                                             <TrendingUp className="h-3 w-3 text-blue-600" />
                                                             Moderate
                                                         </Badge>
                                                     )}
                                                     {item.turnoverVelocity === "SLOW_MOVING" && (
-                                                        <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[10px]">
+                                                        <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 text-xs">
                                                             Slow Moving
                                                         </Badge>
                                                     )}
                                                     {item.turnoverVelocity === "DEAD_STOCK" && (
-                                                        <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30 text-[10px]">
+                                                        <Badge variant="outline" className="text-muted-foreground border-muted-foreground/30 text-xs">
                                                             Dead Stock (0 Moves)
                                                         </Badge>
                                                     )}
@@ -1953,7 +1953,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                             {reportsData.matrixReport.warehouses.map(w => (
                                                 <TableHead key={w.id} className="text-right min-w-[120px]">
                                                     <div className="font-semibold">{w.name}</div>
-                                                    <div className="text-[10px] text-muted-foreground font-mono">{w.code}</div>
+                                                    <div className="text-xs text-muted-foreground font-mono">{w.code}</div>
                                                 </TableHead>
                                             ))}
                                         </TableRow>
@@ -2079,7 +2079,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                     type="number" 
                                     step="any"
                                     min="0"
-                                    placeholder="e.g. 50" 
+                                    placeholder="Enter quantity" 
                                     value={adjustQty}
                                     onChange={(e) => setAdjustQty(e.target.value)}
                                     required
@@ -2215,7 +2215,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                     type="number" 
                                     step="any"
                                     min="1"
-                                    placeholder="e.g. 20" 
+                                    placeholder="Enter units to transfer" 
                                     value={transferQty}
                                     onChange={(e) => setTransferQty(e.target.value)}
                                     required
@@ -2236,7 +2236,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                         <div className="space-y-2">
                             <Label className="text-xs font-medium">Dispatch Note</Label>
                             <Input 
-                                placeholder="e.g. Internal store replenishment"
+                                placeholder="Enter dispatch note"
                                 value={transferReason}
                                 onChange={(e) => setTransferReason(e.target.value)}
                                 className="text-xs"
@@ -2283,7 +2283,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                             <div className="col-span-1 sm:col-span-2 space-y-2">
                                 <Label className="text-xs font-medium">Warehouse Name *</Label>
                                 <Input 
-                                    placeholder="e.g. West Coast Distribution"
+                                    placeholder="Enter warehouse name"
                                     value={whName}
                                     onChange={(e) => setWhName(e.target.value)}
                                     required
@@ -2386,7 +2386,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                             <div className="space-y-2">
                                 <Label className="text-xs font-medium">Manager Phone</Label>
                                 <Input 
-                                    placeholder="+91 98000 00000"
+                                    placeholder="Enter phone number with country code"
                                     value={whContactPhone}
                                     onChange={(e) => setWhContactPhone(e.target.value)}
                                     className="text-xs"

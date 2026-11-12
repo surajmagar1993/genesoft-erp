@@ -86,7 +86,7 @@ export default async function SystemHealthPage() {
                            <Building2 className="w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] uppercase font-bold text-muted-foreground">Total Tenants</p>
+                           <p className="text-xs uppercase font-bold text-muted-foreground">Total Tenants</p>
                            <p className="text-xl font-black">{health.metrics?.tenants || 0}</p>
                         </div>
                     </CardContent>
@@ -97,7 +97,7 @@ export default async function SystemHealthPage() {
                            <Activity className="w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] uppercase font-bold text-muted-foreground">DB Latency</p>
+                           <p className="text-xs uppercase font-bold text-muted-foreground">DB Latency</p>
                            <p className="text-xl font-black">{health.latency}</p>
                         </div>
                     </CardContent>
@@ -108,7 +108,7 @@ export default async function SystemHealthPage() {
                            <HardDrive className="w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] uppercase font-bold text-muted-foreground">DB Storage</p>
+                           <p className="text-xs uppercase font-bold text-muted-foreground">DB Storage</p>
                            <p className="text-xl font-black">{health.databaseSize}</p>
                         </div>
                     </CardContent>
@@ -119,7 +119,7 @@ export default async function SystemHealthPage() {
                            <Users className="w-5 h-5" />
                         </div>
                         <div>
-                           <p className="text-[10px] uppercase font-bold text-muted-foreground">Total Users</p>
+                           <p className="text-xs uppercase font-bold text-muted-foreground">Total Users</p>
                            <p className="text-xl font-black">{health.metrics?.users || 0}</p>
                         </div>
                     </CardContent>
@@ -136,7 +136,7 @@ export default async function SystemHealthPage() {
                                     <service.icon className="h-4 w-4" />
                                 </div>
                                 <Badge variant="secondary" className={cn(
-                                    "border-none text-[10px] h-5",
+                                    "border-none text-xs h-5",
                                     service.status === "Operational" ? "bg-emerald-500/10 text-emerald-600"
                                         : service.status === "Down" ? "bg-red-500/10 text-red-600"
                                         : "bg-muted text-muted-foreground"
@@ -150,7 +150,7 @@ export default async function SystemHealthPage() {
                             <div className="flex items-end justify-between gap-4">
                                 <p className="text-xs text-muted-foreground">{service.detail}</p>
                                 <div className="space-y-1 text-right shrink-0">
-                                    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Response</p>
+                                    <p className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Response</p>
                                     <p className="text-sm font-black text-primary">{service.latency}</p>
                                 </div>
                             </div>

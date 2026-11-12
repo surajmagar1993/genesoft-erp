@@ -47,7 +47,7 @@ export function AdminChatView({ ticketId, initialMessages }: AdminChatViewProps)
             message.isFromAdmin ? "ml-auto items-end" : "mr-auto items-start"
           )}>
             <div className={cn(
-              "flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2",
+              "flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground px-2",
               message.isFromAdmin ? "flex-row-reverse" : "flex-row"
             )}>
               {message.isFromAdmin ? "Genesoft Support" : "Tenant Contact"}

@@ -66,14 +66,14 @@ export default async function SupportInboxPage() {
                                                 <span className="font-bold text-sm tracking-tight group-hover:text-primary transition-colors">
                                                     {ticket.subject}
                                                 </span>
-                                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+                                                <div className="flex items-center gap-2 text-xs text-muted-foreground font-bold uppercase tracking-widest">
                                                     <Building2 className="h-3 w-3" />
                                                     {ticket.tenant.name}
                                                 </div>
                                             </div>
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant={getStatusVariant(ticket.status)} className="text-[10px] font-black h-5">
+                                            <Badge variant={getStatusVariant(ticket.status)} className="text-xs font-black h-5">
                                                 {ticket.status}
                                             </Badge>
                                         </TableCell>

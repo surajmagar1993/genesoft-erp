@@ -1,5 +1,6 @@
 "use client"
 
+import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
@@ -89,8 +90,8 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
     })
   }
 
-  const handleDelete = () => {
-    if (!confirm(`Are you sure you want to delete "${deal.title}"? This cannot be undone.`)) return
+  const handleDelete = async () => {
+    if (!(await confirmAction(`Are you sure you want to delete "${deal.title}"? This cannot be undone.`))) return
     setIsDeleting(true)
     startTransition(async () => {
       const { error } = await deleteDeal(deal.id)
@@ -198,7 +199,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
                     )}
                     <span>{stage.label}</span>
                   </div>
-                  <span className={`text-[10px] mt-0.5 ${isCurrent ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                  <span className={`text-xs mt-0.5 ${isCurrent ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
                     {stageProbability[stage.key]}%
                   </span>
                 </button>
@@ -223,7 +224,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
                 )}
                 <span>Closed Lost</span>
               </div>
-              <span className={`text-[10px] mt-0.5 ${deal.stage === "CLOSED_LOST" ? "text-destructive-foreground/80" : "text-muted-foreground"}`}>
+              <span className={`text-xs mt-0.5 ${deal.stage === "CLOSED_LOST" ? "text-destructive-foreground/80" : "text-muted-foreground"}`}>
                 0%
               </span>
             </button>
@@ -410,7 +411,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
                     <div>
                       <p className="font-semibold">{deal.contact_name}</p>
                       {contact?.customer_group && (
-                        <Badge variant="secondary" className="text-[10px] capitalize">
+                        <Badge variant="secondary" className="text-xs capitalize">
                           {contact.customer_group.toLowerCase()}
                         </Badge>
                       )}

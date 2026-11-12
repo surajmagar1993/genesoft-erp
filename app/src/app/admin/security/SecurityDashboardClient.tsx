@@ -129,7 +129,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                 <div>
                     <div className="flex items-center gap-2">
                         <h1 className="text-2xl font-bold tracking-tight">Platform Security & Governance</h1>
-                        <Badge variant="outline" className="text-[10px] font-bold border-emerald-500/20 bg-emerald-500/10 text-emerald-600 gap-1">
+                        <Badge variant="outline" className="text-xs font-bold border-emerald-500/20 bg-emerald-500/10 text-emerald-600 gap-1">
                             <ShieldCheck className="h-3 w-3" />
                             Shield Active
                         </Badge>
@@ -157,7 +157,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             <div className="text-xl font-bold mt-1 text-foreground flex items-center gap-2">
                                 {data.settings.enforce2FA ? "Enforced" : "Optional"}
                             </div>
-                            <span className="text-[10px] text-muted-foreground">Admin Accounts</span>
+                            <span className="text-xs text-muted-foreground">Admin Accounts</span>
                         </div>
                         <div className={`h-10 w-10 rounded-lg flex items-center justify-center ${data.settings.enforce2FA ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"}`}>
                             <KeyRound className="h-5 w-5" />
@@ -172,7 +172,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             <div className="text-xl font-bold mt-1 text-foreground">
                                 {data.settings.rateLimitPerMin}
                             </div>
-                            <span className="text-[10px] text-muted-foreground">Requests / minute</span>
+                            <span className="text-xs text-muted-foreground">Requests / minute</span>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
                             <Server className="h-5 w-5" />
@@ -187,7 +187,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             <div className="text-xl font-bold mt-1 text-foreground">
                                 {data.settings.blockedIps.length}
                             </div>
-                            <span className="text-[10px] text-muted-foreground">Blocked IPs</span>
+                            <span className="text-xs text-muted-foreground">Blocked IPs</span>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-rose-500/10 text-rose-600 flex items-center justify-center">
                             <Ban className="h-5 w-5" />
@@ -202,7 +202,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             <div className="text-xl font-bold mt-1 text-foreground">
                                 {data.settings.sessionTimeoutMinutes}m
                             </div>
-                            <span className="text-[10px] text-muted-foreground">Auto-lockout window</span>
+                            <span className="text-xs text-muted-foreground">Auto-lockout window</span>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-purple-500/10 text-purple-600 flex items-center justify-center">
                             <Clock className="h-5 w-5" />
@@ -307,7 +307,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                                         <option value={60}>1 Hour</option>
                                         <option value={120}>2 Hours</option>
                                     </select>
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground">
                                         Forces re-authentication when a session is idle.
                                     </p>
                                 </div>
@@ -325,7 +325,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                                         onChange={e => setPolicyForm(prev => ({ ...prev, authLockoutAttempts: parseInt(e.target.value) || 5 }))}
                                         className="bg-background"
                                     />
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground">
                                         Temporarily lock access after consecutive failed login attempts.
                                     </p>
                                 </div>
@@ -492,7 +492,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                                         onChange={e => setPolicyForm(prev => ({ ...prev, rateLimitPerMin: parseInt(e.target.value) || 120 }))}
                                         className="bg-background"
                                     />
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground">
                                         Standard default is 120 requests/min. Enterprise tenants receive 500+ via tier assignment.
                                     </p>
                                 </div>
@@ -506,7 +506,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                                         value="300 Seconds (5 Minutes)"
                                         className="bg-muted/50 text-muted-foreground font-mono text-xs"
                                     />
-                                    <p className="text-[11px] text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground">
                                         Enforced via Razorpay signature validation.
                                     </p>
                                 </div>
@@ -554,7 +554,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                                                 {format(new Date(evt.createdAt), "MMM d, yyyy (HH:mm)")}
                                             </TableCell>
                                             <TableCell>
-                                                <Badge variant="outline" className="font-mono text-[10px] font-bold">
+                                                <Badge variant="outline" className="font-mono text-xs font-bold">
                                                     {evt.action}
                                                 </Badge>
                                             </TableCell>
