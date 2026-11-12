@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { prisma } from "@/lib/prisma"
 import { createInvoice, deleteInvoice, getInvoiceById, updateInvoice, type CreateInvoicePayload } from "@/app/actions/sales/invoices"
-import { createPOSSale } from "@/app/actions/sales/pos"
 import { getProductsForDocuments } from "@/app/actions/sales/products"
 import { syncInvoiceStock } from "@/lib/stock"
 import { actAs, createCustomer, createTestTenant } from "./helpers"
@@ -61,14 +60,6 @@ describe("invoices move stock", () => {
         await createInvoice(payload(customer.id, [{ product_id: goods.id, product_name: "Router", qty: 4 }], { type: "PROFORMA" }))
         await createInvoice(payload(customer.id, [{ product_id: goods.id, product_name: "Router", qty: 4 }], { status: "DRAFT" }))
         expect(await stock()).toEqual({ product: 20, warehouse: 20 })
-    })
-
-    it("POS sales aren't counted twice when the invoice is synced again", async () => {
-        const { goods, stock } = await setup()
-        const res = await createPOSSale({ contactId: null, customerName: "Walk-in", customerPhone: null, paymentMethod: "CASH", items: [{ productId: goods.id, name: "Router", sku: null, hsnSacCode: null, unitPrice: 100, qty: 2, unit: "Nos", lineTotal: 200, taxRate: 18 }], subtotal: 200, taxAmount: 36, total: 236, amountReceived: 236, changeGiven: 0, sessionId: null, notes: null })
-        expect(await stock()).toEqual({ product: 18, warehouse: 18 })
-        await syncInvoiceStock((await prisma.invoice.findUniqueOrThrow({ where: { id: res.invoiceId! } })).tenantId, { invoiceId: res.invoiceId! })
-        expect(await stock()).toEqual({ product: 18, warehouse: 18 })
     })
 
     it("refuses another business's product and lists this business's catalog with tax rates", async () => {

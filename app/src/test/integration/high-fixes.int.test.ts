@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { prisma } from "@/lib/prisma"
 import { convertPOToBill } from "@/app/actions/purchase"
 import { createCreditNote } from "@/app/actions/sales/credit-notes"
-import { createPOSSale } from "@/app/actions/sales/pos"
 import { generatePayRun } from "@/app/actions/payroll"
 import { updateWorkOrderStatus } from "@/app/actions/manufacturing"
 import { runCustomReportQuery } from "@/app/actions/reports/builder"
@@ -50,24 +49,6 @@ describe("H2 credit note with restock", () => {
         expect(mv).toMatchObject({ type: "RETURN", referenceNo: expect.stringMatching(/^CN-/) })
         expect(Number(mv.previousQty)).toBe(5)
         expect(Number(mv.newQty)).toBe(7)
-    })
-})
-
-describe("H3 POS sale reduces stock", () => {
-    it("takes goods (not services) out of product and default-warehouse stock", async () => {
-        const { tenant, user } = await createTestTenant()
-        actAs(user)
-        const wh = await warehouse(tenant.id)
-        const goods = await product(tenant.id, 10)
-        const service = await product(tenant.id, 0, "SERVICE")
-        await prisma.warehouseStock.create({ data: { tenantId: tenant.id, warehouseId: wh.id, productId: goods.id, quantity: 10 } })
-        const item = (id: string) => ({ productId: id, name: "x", sku: null, hsnSacCode: null, unitPrice: 100, qty: 3, unit: "Nos", lineTotal: 300, taxRate: 18 })
-        const res = await createPOSSale({ contactId: null, customerName: "Walk-in", customerPhone: null, paymentMethod: "CASH", items: [item(goods.id), item(service.id)], subtotal: 600, taxAmount: 108, total: 708, amountReceived: 708, changeGiven: 0, sessionId: null, notes: null })
-        expect(res.success).toBe(true)
-        expect(Number((await prisma.product.findUniqueOrThrow({ where: { id: goods.id } })).stockQty)).toBe(7)
-        expect(Number((await prisma.warehouseStock.findFirstOrThrow({ where: { warehouseId: wh.id, productId: goods.id } })).quantity)).toBe(7)
-        expect(Number((await prisma.product.findUniqueOrThrow({ where: { id: service.id } })).stockQty)).toBe(0)
-        expect(await prisma.stockMovement.count({ where: { tenantId: tenant.id, type: "OUT" } })).toBe(1)
     })
 })
 

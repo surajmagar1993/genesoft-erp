@@ -23,14 +23,13 @@ export const PLAN_MODULES: { key: string; label: string }[] = [
         m.key === "sales"
             ? [
                   { key: m.key, label: m.label },
-                  { key: "pos", label: "Point of Sale" },
                   { key: "rentals", label: "Rentals" },
               ]
             : [{ key: m.key, label: m.label }]
     ),
 ]
 
-export type PlanModuleKey = (typeof MODULES)[number]["key"] | "pos" | "rentals"
+export type PlanModuleKey = (typeof MODULES)[number]["key"] | "rentals"
 
 export interface PlanSettings {
     /** null = unlimited */
@@ -42,7 +41,7 @@ export interface PlanSettings {
 
 export type PlanConfig = Record<PlanTier, PlanSettings>
 
-const ENTERPRISE_ONLY = new Set(["pos", "rentals", "manufacturing"])
+const ENTERPRISE_ONLY = new Set(["rentals", "manufacturing"])
 
 export function defaultPlanConfig(): PlanConfig {
     return Object.fromEntries(

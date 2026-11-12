@@ -102,7 +102,6 @@ model Tenant {
   webForms              WebForm[]
   formSubmissions       FormSubmission[]
   portalTickets         PortalTicket[]
-  posSessions           POSSession[]
   salaryStructures      SalaryStructure[]
   payrollRuns           PayrollRun[]
   payslips              Payslip[]
@@ -2727,30 +2726,6 @@ model PortalTicketMessage {
 
   @@index([ticketId])
   @@map("portal_ticket_messages")
-}
-
-// ============================================
-// POS — POINT OF SALE
-// ============================================
-
-model POSSession {
-  id          String    @id @default(cuid())
-  tenantId    String    @map("tenant_id") @db.Uuid
-  openedBy    String    @map("opened_by")
-  openedAt    DateTime  @default(now()) @map("opened_at")
-  closedAt    DateTime? @map("closed_at")
-  openingCash Decimal   @default(0) @map("opening_cash") @db.Decimal(15, 2)
-  closingCash Decimal?  @map("closing_cash") @db.Decimal(15, 2)
-  totalSales  Decimal   @default(0) @map("total_sales") @db.Decimal(15, 2)
-  totalTx     Int       @default(0) @map("total_tx")
-  notes       String?
-  status      String    @default("OPEN")
-  createdAt   DateTime  @default(now()) @map("created_at")
-
-  tenant Tenant @relation(fields: [tenantId], references: [id])
-
-  @@index([tenantId])
-  @@map("pos_sessions")
 }
 
 // ============================================

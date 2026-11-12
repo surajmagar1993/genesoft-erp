@@ -39,7 +39,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **CRM: Email Integration** (`/crm/emails`) — Connect corporate IMAP/SMTP mailboxes, email thread synchronization, CRM entity linking, and merge-tag templates ✅ **(2026-09-12)**
 - [x] **CRM: Web Forms & Lead Capture** (`/crm/forms`) — Embeddable lead intake forms, public CORS intake API route (`/api/forms/[id]/submit`), honeypot spam protection, standalone public view (`/forms/[code]`), and Form Studio visual builder ✅ **(2026-09-12)**
 - [x] **Retail: Customer Portal** (`/portal/[token]`) — Token-authenticated self-service account center with 5-tab UI (Overview, Invoices, Payments, Statement, Support), PortalTicket system, invoice PDF download API, and admin portal management ✅ **(2026-09-12)**
-- [x] **Retail: Walk-in / POS Sales** (`/sales/pos`) — Full-screen POS terminal with product grid, cart, session management, quick walk-in customer creation, multi-payment (Cash/Card/UPI), auto-invoice generation ✅ **(2026-09-12)**
+- [x] ~~**Retail: Walk-in / POS Sales** (`/sales/pos`)~~ **Removed 2026-11-12.** — Full-screen POS terminal with product grid, cart, session management, quick walk-in customer creation, multi-payment (Cash/Card/UPI), auto-invoice generation ✅ **(2026-09-12)**
 - [x] **Invoice Features: Terms & Conditions, Authorized Signature, Statutory Declaration & Proforma Invoices** (`/sales/invoices`) — Configurable legal clauses with presets, digital signatory stamp & designation, statutory Indian GST declaration, proforma numbering (`PI-YYYY-YY-XXXX`), 1-click Convert to Tax Invoice, and dual-mode PDF rendering ✅ **(2026-09-12)**
 
 - [x] **Inventory: Barcode / QR Code Support** (`/inventory`) — Vector SVG Code-128 & QR engine, printable A4/thermal sticker sheet studio with `@media print`, interactive camera & wedge scanner desk with sound and instant stock adjustment ✅ **(2026-09-12)**
@@ -63,7 +63,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 
 ### Retail (ALL P2 MODULES COMPLETE ✅)
 - [x] Retail: Customer Portal (`/portal/[token]`) ✅ **(2026-09-12)**
-- [x] Retail: Walk-in / POS Sales (`/sales/pos`) ✅ **(2026-09-12)**
+- [x] Retail: Walk-in / POS Sales (`/sales/pos`) — built 2026-09-12, **removed 2026-11-12**
 
 ### Sales
 - [x] Sales: Credit Notes / Refunds (`/sales/credit-notes`) ✅ **(2026-09-12)**

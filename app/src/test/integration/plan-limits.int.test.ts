@@ -130,8 +130,8 @@ describe("editable plan settings (Admin → Pricing & Plans → Limits & modules
         expect(config).toEqual(defaultPlanConfig())
         config.BASIC.limits.contacts = 2
         config.BASIC.modules.hr = false
-        config.BASIC.modules.pos = true
-        config.BASIC.features = ["Up to 2 contacts", "Point of Sale"]
+        config.BASIC.modules.rentals = true
+        config.BASIC.features = ["Up to 2 contacts", "Rentals"]
         expect((await savePlanSettings(config)).success).toBe(true)
         expect(await prisma.adminAuditLog.count({ where: { action: PLAN_CONFIG_ACTION } })).toBe(1)
 
@@ -142,7 +142,7 @@ describe("editable plan settings (Admin → Pricing & Plans → Limits & modules
         // HR is closed even to the workspace admin, with an upgrade message naming the cheapest plan that has it
         const mine = await getMyAccess()
         expect(mine.access.hr).toBe("NONE")
-        expect(mine.planModules).toMatchObject({ hr: false, pos: true, rentals: false })
+        expect(mine.planModules).toMatchObject({ hr: false, rentals: true })
         await expect(getTenantId("hr")).rejects.toThrow(/HR.* is on the Free plan\. Upgrade/)
         await expect(createEmployee({} as never).then(unwrap)).rejects.toThrow(/Upgrade/)
 

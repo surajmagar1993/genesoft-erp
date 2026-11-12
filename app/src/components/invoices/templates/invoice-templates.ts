@@ -44,12 +44,12 @@ export const INVOICE_TEMPLATES: Record<InvoiceTemplateId, InvoiceTemplateMeta> =
     },
     COMPACT: {
         id: "COMPACT",
-        name: "Compact / POS Thermal",
+        name: "Compact / Thermal",
         category: "Retail & Quick Sales",
         description: "High-density receipt slip format, condensed typography, minimal padding, and inline tax summary for counter sales and delivery dockets.",
         accentColor: "#0d9488", // Teal-600
         badgeText: "Retail & Counter",
-        recommendedFor: "POS Counters, Hardware Stores, Fast Spares, Delivery Slips",
+        recommendedFor: "Sales Counters, Hardware Stores, Fast Spares, Delivery Slips",
         previewThumbnailClasses: "bg-teal-50 dark:bg-teal-950/40 border-teal-200 dark:border-teal-800"
     },
     CREATIVE: {

@@ -45,7 +45,6 @@ import {
     Repeat,
     Mail,
     Globe,
-    Monitor,
     Percent,
     FileSpreadsheet,
     ShieldCheck,
@@ -133,7 +132,6 @@ const navigation = [
             { name: "Recurring Invoices", href: "/sales/invoices/recurring", icon: Repeat },
             { name: "Credit Notes", href: "/sales/credit-notes", icon: FileMinus },
             { name: "Rental", href: "/sales/rental", icon: Home },
-            { name: "POS Terminal", href: "/sales/pos", icon: Monitor },
         ],
     },
     {
@@ -189,7 +187,7 @@ interface AppSidebarProps {
     /** Module access of a member (null for admins: everything) */
     access: ModuleAccess | null
     accessLoaded: boolean
-    /** Modules the workspace's plan includes (POS and Rentals too); hidden when false */
+    /** Modules the workspace's plan includes (Rentals too); hidden when false */
     planModules: Record<string, boolean>
     countryCode: string
     multiJurisdiction: boolean
@@ -199,7 +197,7 @@ interface AppSidebarProps {
 }
 
 /** Parts of Sales a plan can leave out */
-const PLAN_ROUTES: Record<string, string> = { "/sales/pos": "pos", "/sales/rental": "rentals" }
+const PLAN_ROUTES: Record<string, string> = { "/sales/rental": "rentals" }
 
 function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJurisdiction, tenantName, isSuperAdmin = false }: AppSidebarProps) {
     const pathname = usePathname()

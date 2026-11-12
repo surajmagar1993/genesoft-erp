@@ -23,7 +23,7 @@ import { appUrl } from "@/lib/app-url"
 import { softwareLd } from "@/lib/structured-data"
 
 const DESCRIPTION =
-    "Genesoft ERP by Genesoft Infotech brings CRM, invoicing, inventory, accounting, HR and POS together, with GST, VAT or sales tax worked out for your country."
+    "Genesoft ERP by Genesoft Infotech brings CRM, invoicing, inventory, accounting and HR together, with GST, VAT or sales tax worked out for your country."
 
 export const metadata = pageMeta({
     title: "Genesoft ERP: CRM, invoicing, inventory and accounting in one place",
@@ -88,7 +88,7 @@ export default function LandingPage() {
                             Run sales, stock and accounts in one place.
                         </h1>
                         <p className="max-w-xl text-lg leading-relaxed text-s-text xl:text-xl">
-                            Genesoft ERP brings your CRM, invoicing, inventory, accounting, HR and point of sale together, with GST, VAT or sales tax worked out for your country.
+                            Genesoft ERP brings your CRM, invoicing, inventory, accounting and HR together, with GST, VAT or sales tax worked out for your country.
                         </p>
                         <div className="flex flex-col gap-3 sm:flex-row">
                             <Button asChild size="lg" className="bg-s-orange text-s-on-orange hover:brightness-95">

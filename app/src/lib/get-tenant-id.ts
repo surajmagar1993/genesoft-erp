@@ -34,7 +34,7 @@ type TenantContext = {
   tenantId: string
   role: string
   access: ModuleAccess
-  /** Modules (incl. "pos", "rentals") the workspace's plan includes */
+  /** Modules (incl. "rentals") the workspace's plan includes */
   planModules: Record<string, boolean>
   /** Modules the plan leaves out: access to them is NONE for everyone */
   planBlocked: ModuleKey[]
@@ -144,14 +144,14 @@ export async function getTenantRole(): Promise<string> {
 
 /**
  * The caller's role and module access, for showing or hiding menus and
- * buttons, plus which modules the workspace's plan includes (e.g. "pos").
+ * buttons, plus which modules the workspace's plan includes (e.g. "rentals").
  */
 export async function getMyAccess(): Promise<{ role: string; access: ModuleAccess; planModules: Record<string, boolean> }> {
   const { role, access, planModules } = await getTenantContext()
   return { role, access, planModules }
 }
 
-/** True when the workspace's plan includes the module (POS and Rentals included). */
+/** True when the workspace's plan includes the module (Rentals included). */
 export async function isInPlan(module: string): Promise<boolean> {
   return (await getTenantContext()).planModules[module] !== false
 }

@@ -68,7 +68,6 @@ export interface BarcodeScannerModalProps {
   onProductScanned?: (product: ScannedProduct) => void
   onStockUpdated?: () => void
   warehouses?: { id: string; name: string }[]
-  mode?: "inventory" | "pos"
 }
 
 export function BarcodeScannerModal({
@@ -77,7 +76,6 @@ export function BarcodeScannerModal({
   onProductScanned,
   onStockUpdated,
   warehouses = [],
-  mode = "inventory",
 }: BarcodeScannerModalProps) {
   const [manualCode, setManualCode] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -435,7 +433,7 @@ export function BarcodeScannerModal({
               )}
 
               {/* Fast Warehouse Actions */}
-              {mode === "inventory" && (
+              {(
                 <div className="border-t border-slate-200 dark:border-slate-700/60 pt-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">

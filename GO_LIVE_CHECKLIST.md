@@ -42,5 +42,5 @@ Server actions can't be called from a mobile app. Plan:
    JWT (`Authorization: Bearer`), then call the same server logic in `src/lib` (tenant-tax, plan-change,
    workflow-engine, …) so web and mobile share rules.
 2. Build the app with React Native / Expo + `@supabase/supabase-js` for sign-in.
-3. Start with read + simple create flows (contacts, invoices, POS, attendance), then expand.
+3. Start with read + simple create flows (contacts, invoices, attendance), then expand.
 Keep new business logic in `src/lib` (not inside page components or actions) so it stays reusable.

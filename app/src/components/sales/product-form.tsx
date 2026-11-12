@@ -236,7 +236,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                         Barcode / EAN / UPC
                                     </Label>
                                     <p className="text-xs text-muted-foreground mt-0.5">
-                                        Used for POS scanner checkout and inventory label printing. Falls back to SKU if blank.
+                                        Used for barcode scanning and inventory label printing. Falls back to SKU if blank.
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2">

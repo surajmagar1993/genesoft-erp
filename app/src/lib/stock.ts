@@ -68,7 +68,7 @@ const LIVE_INVOICE = ["SENT", "VIEWED", "PARTIALLY_PAID", "PAID", "OVERDUE"]
  * ledger sync): an issued tax invoice takes its goods out of stock; editing
  * it moves only the difference; cancelling, deleting or turning it back to
  * draft puts the goods back. Movements are matched by the invoice number
- * (referenceNo) and a "Sale" reason, so POS sales (which record the same way)
+ * (referenceNo) and a "Sale" reason, so sales made on the former POS terminal (recorded the same way)
  * are never counted twice. Pass the number explicitly for a deleted invoice.
  */
 export async function syncInvoiceStock(tenantId: string, ref: { invoiceId?: string; invoiceNumber?: string }): Promise<void> {

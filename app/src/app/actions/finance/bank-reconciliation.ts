@@ -1400,7 +1400,7 @@ async function autoSeedBankingIfEmpty(tenantId: string): Promise<void> {
                 balance: 1425600.0,
                 payee: "Amazon Web Services",
                 description: "DEBIT: AWS Cloud Hosting Compute & Database Instances Invoice",
-                reference: "POS-AWS-99120",
+                reference: "CARD-AWS-99120",
                 status: BankReconcileStatus.UNMATCHED,
             },
             {

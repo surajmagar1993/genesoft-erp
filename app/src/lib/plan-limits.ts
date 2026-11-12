@@ -14,7 +14,7 @@ import { PLAN_MODULES, getPlanConfig, lowestPlanWith, planName, type LimitKind, 
  * downgrade) keeps everything it has but can't add more.
  */
 export type { LimitKind }
-/** Modules that can be left out of a plan (incl. POS and Rentals inside Sales) */
+/** Modules that can be left out of a plan (incl. Rentals inside Sales) */
 export type PlanFeature = PlanModuleKey
 
 const TRIAL_TIER: PlanTier = "PRO"
