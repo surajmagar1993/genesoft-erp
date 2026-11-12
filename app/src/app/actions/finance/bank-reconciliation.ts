@@ -3,6 +3,7 @@
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -598,7 +599,8 @@ export async function createBankAccount(data: CreateBankAccountInput): Promise<{
                 branchName: data.branchName?.trim() || null,
                 ifscRoutingCode: data.ifscRoutingCode?.trim() || null,
                 swiftCode: data.swiftCode?.trim() || null,
-                currencyCode: data.currencyCode?.trim() || "INR",
+                // Left blank on the form → the business's own currency
+                currencyCode: data.currencyCode?.trim() || (await getTenantDefaults(tenantId)).currencyCode,
                 accountType: data.accountType || BankAccountType.CURRENT,
                 chartOfAccountId: data.chartOfAccountId || null,
                 openingBalance: opening,

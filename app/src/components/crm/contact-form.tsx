@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Save, X, AlertCircle } from "lucide-react"
 import { COUNTRIES } from "@/lib/constants/countries"
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { createContact, updateContact } from "@/app/actions/crm/contacts"
 import { TAX_EXEMPTION_REASONS } from "@/lib/gst-engine"
 import { Switch } from "@/components/ui/switch"
@@ -64,13 +65,13 @@ export const emptyContactForm: ContactFormData = {
     companyName: "",
     displayName: "",
     email: "",
-    phoneDialCode: "+91",
+    phoneDialCode: "",
     phone: "",
-    mobileDialCode: "+91",
+    mobileDialCode: "",
     mobile: "",
     website: "",
     customerGroup: "retail",
-    countryCode: "IN",
+    countryCode: "",
     gstin: "",
     pan: "",
     cin: "",
@@ -81,13 +82,13 @@ export const emptyContactForm: ContactFormData = {
     vatNumberKsa: "",
     crNumber: "",
     ein: "",
-    currencyCode: "INR",
+    currencyCode: "",
     creditLimit: "",
     billingStreet: "",
     billingCity: "",
     billingState: "",
     billingZip: "",
-    billingCountry: "India",
+    billingCountry: "",
     isTaxExempt: false,
     taxExemptionReason: "SEZ_DEVELOPER",
     taxExemptionCertificate: "",
@@ -102,6 +103,23 @@ interface ContactFormProps {
 export function ContactForm({ initialData, mode }: ContactFormProps) {
     const router = useRouter()
     const [form, setForm] = useState<ContactFormData>(initialData || emptyContactForm)
+
+    // A new contact starts in the business's own country and currency (once they have loaded);
+    // anything already chosen on the form is kept
+    const { regime } = useTaxRegime()
+    const [defaultsApplied, setDefaultsApplied] = useState(mode !== "create")
+    if (!defaultsApplied && regime) {
+        setDefaultsApplied(true)
+        const home = COUNTRIES.find((c) => c.code === regime.countryCode)
+        setForm((prev) => ({
+            ...prev,
+            countryCode: prev.countryCode || home?.code || "",
+            currencyCode: prev.currencyCode || regime.currency || "",
+            phoneDialCode: prev.phoneDialCode || home?.dialCode || "",
+            mobileDialCode: prev.mobileDialCode || home?.dialCode || "",
+            billingCountry: prev.billingCountry || home?.name || "",
+        }))
+    }
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -148,8 +166,9 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
             mobile: form.mobile ? `${form.mobileDialCode} ${form.mobile}`.trim() : null,
             website: form.website || null,
             customer_group: form.customerGroup || "retail",
-            country_code: form.countryCode || "IN",
-            currency_code: form.currencyCode || "INR",
+            // Blank → the server uses the business's own country and currency
+            country_code: form.countryCode,
+            currency_code: form.currencyCode,
             gstin: form.gstin ? form.gstin.trim() : null,
             pan: form.pan ? form.pan.trim() : null,
             cin: form.cin || null,
@@ -548,7 +567,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                             update("billingCountry", opt.value)
                                             if (opt.subLabel) update("countryCode", opt.subLabel)
                                         }}
-                                        placeholder="Start typing country (e.g. India, United States)..."
+                                        placeholder="Start typing a country"
                                     />
                                 </div>
 
@@ -564,7 +583,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                             subLabel: s.code,
                                         }))}
                                         onSelectOption={(opt) => update("billingState", opt.value)}
-                                        placeholder="Start typing state (e.g. Maharashtra, California)..."
+                                        placeholder="Start typing a state or province"
                                     />
                                 </div>
 
@@ -622,6 +641,11 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                             <SelectItem value="EUR">€ (EUR) Euro</SelectItem>
                                             <SelectItem value="AED">د.إ (AED) UAE Dirham</SelectItem>
                                             <SelectItem value="GBP">£ (GBP) British Pound</SelectItem>
+                                            <SelectItem value="SAR">﷼ (SAR) Saudi Riyal</SelectItem>
+                                            <SelectItem value="AUD">$ (AUD) Australian Dollar</SelectItem>
+                                            {form.currencyCode && !["INR", "USD", "EUR", "AED", "GBP", "SAR", "AUD"].includes(form.currencyCode) && (
+                                                <SelectItem value={form.currencyCode}>{form.currencyCode}</SelectItem>
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 </div>

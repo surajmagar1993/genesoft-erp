@@ -207,7 +207,9 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [ ] Live database has drifted from `prisma/schema.prisma`: rebuild the schema from the live DB (`prisma db pull` on a copy) and move to real migrations.
 - [x] Lint errors: 0 (was ~1,000; done 2026-11-12). 25 warnings left (hook dependencies, `<img>`).
 - [ ] Browser tests.
-- [ ] Assumed defaults still in forms (found 2026-11-12): new contact falls back to country IN / currency INR / group "retail" (`contact-form.tsx`); new bank account form starts on INR; product import fills "Unknown Product", unit "Nos" and INR. Should come from the business's own country and currency.
+- [x] Assumed India defaults removed (2026-11-12): new contacts, bank accounts and imported contacts/products take the business's own country and currency (`src/lib/tenant-defaults.ts`; forms prefill from `useTaxRegime`); a product row without a name is rejected; the fixed "+12%" on the Super Admin dashboard is gone.
+- [ ] Still assumed: imported contacts with no name or email are saved as "Imported Contact"; demo bank seeds use INR (only with `ENABLE_DEMO_SEED`).
+- [ ] Hydration error #418 on `/settings` (seen 2026-11-12). Fixo test business: billing shows a renewal date in the past (old free-upgrade data) and it has no bills, so the bills list fix is verified by tests only.
 - [ ] `npm audit` run from `app/` reads the stale root lockfile and reports false results; audit a copy of `app/package.json` + `app/package-lock.json` instead (production deps: 0 known vulnerabilities on 2026-11-12, Next.js 16.4.6).
 - [ ] The root `package-lock.json` is out of date (Vercel builds from `app/` with `app/package-lock.json`); regenerate or remove it in a coordinated change.
 

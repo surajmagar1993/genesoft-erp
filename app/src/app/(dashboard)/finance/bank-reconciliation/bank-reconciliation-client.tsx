@@ -1,6 +1,7 @@
 "use client"
 
 import { localeForCurrency } from "@/lib/utils"
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -73,6 +74,9 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
     const [selectedAccountId, setSelectedAccountId] = useState<string>(
         initialData.selectedAccount?.id || ""
     )
+    // New accounts start in the business's own currency (blank until it has loaded; the server fills it in)
+    const { regime } = useTaxRegime()
+    const baseCurrency = regime?.currency || ""
     const [activeTab, setActiveTab] = useState("match-desk")
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<"ALL" | "UNMATCHED" | "MATCHED" | "RECONCILED">("ALL")
@@ -89,7 +93,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
         branchName: "",
         ifscRoutingCode: "",
         swiftCode: "",
-        currencyCode: "INR",
+        currencyCode: "",
         accountType: "CURRENT" as NonNullable<CreateBankAccountInput["accountType"]>,
         chartOfAccountId: "",
         openingBalance: 0,
@@ -126,10 +130,13 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
     const activeAccount = data.bankAccounts.find((a) => a.id === selectedAccountId) || data.selectedAccount
 
     // Helper: format currency
-    const formatCurrency = (val: number, currency: string = "INR") => {
-        return new Intl.NumberFormat(localeForCurrency(currency || "INR"), {
+    // The account's currency, else the business's; a plain number until one is known (never a guessed ₹)
+    const formatCurrency = (val: number, currency?: string) => {
+        const code = currency || baseCurrency
+        if (!code) return new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val || 0)
+        return new Intl.NumberFormat(localeForCurrency(code), {
             style: "currency",
-            currency: currency || "INR",
+            currency: code,
             maximumFractionDigits: 2,
         }).format(val || 0)
     }
@@ -497,7 +504,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                 branchName: "",
                                 ifscRoutingCode: "",
                                 swiftCode: "",
-                                currencyCode: "INR",
+                                currencyCode: baseCurrency,
                                 accountType: "CURRENT",
                                 chartOfAccountId: data.chartOfAccounts[0]?.id || "",
                                 openingBalance: 0,
@@ -1007,7 +1014,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                                     branchName: "",
                                     ifscRoutingCode: "",
                                     swiftCode: "",
-                                    currencyCode: "INR",
+                                    currencyCode: baseCurrency,
                                     accountType: "CURRENT",
                                     chartOfAccountId: data.chartOfAccounts[0]?.id || "",
                                     openingBalance: 0,
@@ -1500,7 +1507,7 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
                             <div className="space-y-1.5">
                                 <label className="font-semibold text-foreground">Branch Name</label>
                                 <Input
-                                    placeholder="e.g. Indiranagar, Bengaluru"
+                                    placeholder="Branch name"
                                     value={accountForm.branchName}
                                     onChange={(e) => setAccountForm({ ...accountForm, branchName: e.target.value })}
                                 />

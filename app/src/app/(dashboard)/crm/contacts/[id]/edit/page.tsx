@@ -15,12 +15,14 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
 
     // Split phone into dial code and raw number
     const parsePhone = (phoneStr: string | null) => {
-        if (!phoneStr) return { dialCode: "+91", number: "" }
+        if (!phoneStr) return { dialCode: "", number: "" }
         const parts = phoneStr.split(" ")
-        if (parts.length > 1) {
+        // Only a real country code ("+971") is split off; "98765 43210" stays whole
+        if (parts.length > 1 && /^\+\d{1,4}$/.test(parts[0])) {
             return { dialCode: parts[0], number: parts.slice(1).join(" ") }
         }
-        return { dialCode: "+91", number: phoneStr }
+        // Saved without a country code: show the number as it is
+        return { dialCode: "", number: phoneStr }
     }
 
     const phoneData = parsePhone(data.phone)
@@ -43,8 +45,8 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
         mobile: mobileData.number,
         website: data.website ?? "",
         customerGroup: data.customer_group ?? "retail",
-        countryCode: data.country_code ?? "IN",
-        currencyCode: data.currency_code ?? "INR",
+        countryCode: data.country_code ?? "",
+        currencyCode: data.currency_code ?? "",
         gstin: data.gstin ?? "",
         pan: data.pan ?? "",
         cin: data.cin ?? "",
@@ -60,7 +62,7 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
         billingCity: billingAdd.city ?? "",
         billingState: billingAdd.state ?? "",
         billingZip: billingAdd.zip ?? "",
-        billingCountry: billingAdd.country ?? "India",
+        billingCountry: billingAdd.country ?? "",
         isTaxExempt: Boolean(data.is_tax_exempt),
         taxExemptionReason: data.tax_exemption_reason ?? "SEZ_DEVELOPER",
         taxExemptionCertificate: data.tax_exemption_certificate ?? "",

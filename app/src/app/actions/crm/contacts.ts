@@ -5,6 +5,7 @@ import { recordContactTransaction } from "@/lib/contact-ledger"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { planLimitError } from "@/lib/plan-limits"
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { errorMessage } from "@/lib/utils";
 import type { Prisma } from "@prisma/client"
 import type { AddressJson } from "@/lib/json-types"
@@ -202,6 +203,7 @@ export async function createContact(
     const limit = await planLimitError(tenantId, "contacts")
     if (limit) return { error: limit }
 
+    const defaults = await getTenantDefaults(tenantId)
     const created = await prisma.contact.create({
       data: {
         tenantId,
@@ -215,8 +217,9 @@ export async function createContact(
         mobile: formData.mobile || null,
         website: formData.website || null,
         customerGroup: formData.customer_group || "retail",
-        countryCode: formData.country_code || "IN",
-        currencyCode: formData.currency_code || "INR",
+        // Left blank on the form → the business's own country and currency
+        countryCode: formData.country_code || defaults.countryCode,
+        currencyCode: formData.currency_code || defaults.currencyCode,
         gstin: formData.gstin || null,
         pan: formData.pan || null,
         cin: formData.cin || null,
@@ -279,8 +282,9 @@ export async function updateContact(
         mobile: formData.mobile,
         website: formData.website,
         customerGroup: formData.customer_group,
-        countryCode: formData.country_code,
-        currencyCode: formData.currency_code,
+        // A blank country or currency on the form leaves the saved one as it is
+        countryCode: formData.country_code || undefined,
+        currencyCode: formData.currency_code || undefined,
         gstin: formData.gstin,
         pan: formData.pan,
         cin: formData.cin,
@@ -354,7 +358,7 @@ export async function importContacts(
     const tenantId = await getTenantWriterId(MODULE)
     if (!Array.isArray(contacts) || contacts.length === 0) return { error: "The file has no contacts", count: 0 }
     if (contacts.length > 5000) return { error: "Import up to 5,000 contacts at a time", count: 0 }
-    const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
+    const tenant = await getTenantDefaults(tenantId)
 
     // Skip people already in the CRM (same email) and repeats within the file
     const existing = new Set(
@@ -380,7 +384,8 @@ export async function importContacts(
           email,
           phone: c.phone ? String(c.phone) : null,
           customerGroup: c.customer_group || "retail",
-          currencyCode: String(c.currency_code || tenant?.currencyCode || "INR").toUpperCase(),
+          countryCode: String(c.country_code || tenant.countryCode).toUpperCase(),
+          currencyCode: String(c.currency_code || tenant.currencyCode).toUpperCase(),
           isActive: c.is_active === undefined || c.is_active === "" ? true : c.is_active === true || c.is_active === "true",
         },
       })

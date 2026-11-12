@@ -6,6 +6,7 @@ import { fromRow, toRow } from "@/lib/pg-row"
 import { isUuid } from "@/lib/utils"
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { getTenantTaxContext, productTaxRate } from "@/lib/tenant-tax"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
@@ -191,21 +192,23 @@ export async function importProducts(
 ): Promise<{ error: string | null; count: number }> {
   const tenantId = await getTenantWriterId(MODULE)
 
-  const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
+  const tenant = await getTenantDefaults(tenantId)
   let insertData: Record<string, unknown>[]
   try {
     if (!Array.isArray(products) || products.length === 0) throw new Error("The file has no products")
     if (products.length > 5000) throw new Error("Import up to 5,000 products at a time")
     insertData = products.map((p, i) => {
       try {
+        // A row without a name is reported, not saved under a made-up name
+        if (!String(p.name ?? "").trim()) throw new Error("the product name is missing")
         // Only real product columns are imported; anything else in the file is ignored
         return {
           ...toDbRow({
             ...p,
-            name: p.name || "Unknown Product",
+            name: p.name,
             type: String(p.type || "PRODUCT").toUpperCase(),
             unit_price: p.unit_price ?? p.unitPrice ?? 0,
-            currency: p.currency || tenant?.currencyCode || "INR",
+            currency: p.currency || tenant.currencyCode,
             unit: p.unit || "Nos",
             stock_qty: p.stock_qty !== undefined && p.stock_qty !== "" ? parseFloat(String(p.stock_qty)) || 0 : 0,
             is_active: p.is_active === undefined || p.is_active === "" ? true : p.is_active === true || p.is_active === "true",
