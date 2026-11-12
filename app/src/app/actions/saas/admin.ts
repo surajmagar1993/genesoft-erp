@@ -228,6 +228,8 @@ async function _updateTenantPlan(tenantId: string, plan: string) {
         targetPlan: plan,
         billingCycle: cycle,
         paymentMethod: "Set by platform admin",
+        // Nothing was paid: the receipt says 0, so revenue figures aren't inflated
+        amountPaid: 0,
         actor: { id: admin.id, email: admin.email || "" },
         actorIsSuperAdmin: true,
     })
