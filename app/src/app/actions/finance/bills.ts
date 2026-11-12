@@ -1,5 +1,6 @@
 "use server"
 
+import { reportCaught } from "@/lib/error-reporting"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { getCurrentUser } from "@/lib/current-user"
 import { postToLedger } from "@/lib/ledger"
@@ -111,7 +112,8 @@ export async function getBills(page: number = 1, limit: number = 10): Promise<{ 
       total,
     }
   } catch (err) {
-    console.error("Error fetching bills:", err)
+    // Shown to the user as an empty list: make sure the fault reaches System Logs
+    await reportCaught(err, "load bills")
     return { data: [], total: 0 }
   }
 }

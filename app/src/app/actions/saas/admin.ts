@@ -1,5 +1,6 @@
 "use server"
 
+import { reportCaught } from "@/lib/error-reporting"
 import { prisma } from "../../../lib/prisma"
 import { readTeam } from "@/lib/team-settings"
 import type { Prisma } from "@prisma/client"
@@ -372,7 +373,8 @@ export async function getTenantById(tenantId: string) {
             auditLogs
         }
     } catch (error) {
-        console.error("getTenantById error:", error)
+        // Shown to the user as an empty list: make sure the fault reaches System Logs
+        await reportCaught(error, "getTenantById")
         return null
     }
 }
@@ -722,7 +724,8 @@ export async function getSupportTickets(page: number = 1, limit: number = 15) {
         })
         return tickets
     } catch (error) {
-        console.error("getSupportTickets error:", error)
+        // Shown to the user as an empty list: make sure the fault reaches System Logs
+        await reportCaught(error, "getSupportTickets")
         return []
     }
 }
@@ -819,7 +822,8 @@ export async function getRecentSystemLogs(page: number = 1, limit: number = 20) 
         })
         return logs
     } catch (error) {
-        console.error("getRecentSystemLogs error:", error)
+        // Shown to the user as an empty list: make sure the fault reaches System Logs
+        await reportCaught(error, "getRecentSystemLogs")
         return []
     }
 }

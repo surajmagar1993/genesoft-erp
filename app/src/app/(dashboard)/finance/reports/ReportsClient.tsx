@@ -64,7 +64,8 @@ export default function ReportsClient({
   const currentYear = new Date().getFullYear()
   const years = [currentYear, currentYear - 1, currentYear - 2]
 
-  const [countryCode, setCountryCode] = useState<string>("IN")
+  // Until the business's country has loaded the labels are generic ("Tax"), never another country's
+  const [countryCode, setCountryCode] = useState<string>("")
   const [multiJurisdiction, setMultiJurisdiction] = useState<boolean>(false)
 
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function ReportsClient({
         if (settings?.country_code) setCountryCode(settings.country_code)
         if (settings?.settings?.enable_multijurisdiction) setMultiJurisdiction(true)
       })
-      .catch(() => {})
+      .catch((err) => console.error("Reports: couldn't load the business's settings", err))
   }, [])
 
   const jurisdiction = useMemo(() => getTaxJurisdiction(countryCode), [countryCode])

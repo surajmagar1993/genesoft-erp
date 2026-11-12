@@ -1,3 +1,4 @@
+import { indexingAllowed } from "@/lib/indexing"
 import type { Metadata } from "next"
 import { PLATFORM } from "@/lib/constants/platform"
 
@@ -23,6 +24,7 @@ export function pageMeta(p: { title: string; description: string; path: string; 
             images,
         },
         twitter: { card: "summary_large_image", title: p.title, description: p.description, images },
-        ...(p.noIndex ? { robots: { index: false } } : {}),
+        // Pages that aren't content (sign-in, password reset…), and every page of a test copy
+        ...(p.noIndex || !indexingAllowed() ? { robots: { index: false, follow: indexingAllowed() } } : {}),
     }
 }

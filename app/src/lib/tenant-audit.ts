@@ -1,3 +1,4 @@
+import { reportCaught } from "@/lib/error-reporting"
 import { prisma } from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/current-user"
 
@@ -39,7 +40,8 @@ export async function logTenantAudit(
             },
         })
     } catch (err) {
-        console.error(`logTenantAudit(${action}) failed:`, err)
+        // A lost audit entry matters (deletes, payroll, credentials): report it
+        await reportCaught(err, `logTenantAudit(${action})`, { tenantId })
     }
 }
 

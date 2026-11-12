@@ -1,5 +1,6 @@
 "use server"
 
+import { reportCaught } from "@/lib/error-reporting"
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@prisma/client"
 import { fromRow, toRow, toRows } from "@/lib/pg-row"
@@ -45,7 +46,8 @@ export async function getAccounts(page: number = 1, limit: number = 100): Promis
     ])
     return { data: toRows<Account>("Account", rows), total }
   } catch (err) {
-    console.error("Error fetching accounts:", err)
+    // Shown to the user as an empty list: make sure the fault reaches System Logs
+    await reportCaught(err, "load accounts")
     return { data: [], total: 0 }
   }
 }

@@ -1,3 +1,4 @@
+import { reportCaught } from "@/lib/error-reporting"
 import { Resend } from "resend"
 import { prisma } from "@/lib/prisma"
 import { compileSystemEmail, type SystemTemplateKey } from "@/lib/email-template-engine"
@@ -51,12 +52,13 @@ export async function sendSystemEmail(
             text: compiled.text.replace(LEFTOVER_TAG, ""),
         })
         if (error) {
-            console.error(`sendSystemEmail(${templateKey}) failed:`, error.message)
+            // The email service refused it: a real failure someone should see in System Logs
+            await reportCaught(new Error(error.message), `sendSystemEmail(${templateKey})`)
             return { sent: false, reason: error.message }
         }
         return { sent: true }
     } catch (err) {
-        console.error(`sendSystemEmail(${templateKey}) failed:`, err)
+        await reportCaught(err, `sendSystemEmail(${templateKey})`)
         return { sent: false, reason: err instanceof Error ? err.message : "Send failed" }
     }
 }

@@ -1,4 +1,5 @@
 import { appUrl } from "@/lib/app-url"
+import { indexingAllowed } from "@/lib/indexing"
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -7,7 +8,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
 
-export const dynamic = "force-dynamic";
+// No blanket "force-dynamic" here: the public website is built once and refreshed on publish
+// (and hourly); the app and Super Admin layouts set it for themselves.
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,6 +31,8 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.png",
   },
+  // Test and preview copies ask search engines not to index them (see indexingAllowed)
+  ...(indexingAllowed() ? {} : { robots: { index: false, follow: false } }),
 };
 
 export default function RootLayout({

@@ -3,11 +3,12 @@ import { createHmac, timingSafeEqual } from "crypto"
 /**
  * Signed team-invite links: "<tenantId>.<inviteId>.<expiresAtMs>.<hmac>".
  * The invite itself lives in tenants.settings.team.invites, so cancelling it
- * there kills the link even before it expires. Key: ENCRYPTION_KEY (or
- * CRON_SECRET), domain-separated so the token reveals nothing about it.
+ * there kills the link even before it expires. Key: ENCRYPTION_KEY only
+ * (the cron secret is a different key for a different job), domain-separated
+ * so the token reveals nothing about it.
  */
 function signingKey(): string | null {
-    const secret = process.env.ENCRYPTION_KEY || process.env.CRON_SECRET
+    const secret = process.env.ENCRYPTION_KEY
     return secret ? `genesoft-team-invite-v1:${secret}` : null
 }
 

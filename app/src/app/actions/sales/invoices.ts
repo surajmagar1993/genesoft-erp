@@ -164,7 +164,8 @@ export async function getInvoices(
       total,
     }
   } catch (error) {
-    console.error("getInvoices error:", errorMessage(error))
+    // Shown to the user as an empty list: make sure the fault reaches System Logs
+    await reportCaught(error, "getInvoices")
     return { data: [], total: 0 }
   }
 }
@@ -186,7 +187,8 @@ export async function getInvoiceById(id: string): Promise<(InvoiceDB & { tenants
     if (!invoice) return null
     return mapPrismaInvoiceToDB(invoice)
   } catch (error) {
-    console.error("getInvoiceById error:", errorMessage(error))
+    // Shown to the user as an empty list: make sure the fault reaches System Logs
+    await reportCaught(error, "getInvoiceById")
     return null
   }
 }

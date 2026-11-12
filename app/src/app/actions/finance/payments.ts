@@ -74,7 +74,8 @@ export async function getPayments(
     }))
     return { data, total }
   } catch (err) {
-    console.error("getPayments error:", err)
+    // Shown to the user as an empty list: make sure the fault reaches System Logs
+    await reportCaught(err, "getPayments")
     return { data: [], total: 0 }
   }
 }

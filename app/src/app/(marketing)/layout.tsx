@@ -4,6 +4,10 @@ import { PublicFooter } from "@/components/marketing/footer"
 import { WhatsAppButton, PhoneActionBar } from "@/components/marketing/contact-actions"
 import { SITE_THEME_SCRIPT } from "@/components/marketing/site-theme"
 
+// Built once and kept: publishing in Super Admin → Website refreshes it at once
+// (revalidatePath in actions/website.ts); otherwise it is rebuilt at most hourly.
+export const revalidate = 3600
+
 const sora = Sora({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-sora", display: "swap" })
 const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-manrope", display: "swap" })
 

@@ -1,5 +1,6 @@
 "use server"
 
+import { reportCaught } from "@/lib/error-reporting"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { fromRow, toRow, toRows } from "@/lib/pg-row"
@@ -81,7 +82,8 @@ export async function getOrders(
     ])
     return { data: rows.map(orderRow), total }
   } catch (err) {
-    console.error("getOrders error:", err)
+    // Shown to the user as an empty list: make sure the fault reaches System Logs
+    await reportCaught(err, "getOrders")
     return { data: [], total: 0 }
   }
 }

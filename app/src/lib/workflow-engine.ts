@@ -1,3 +1,4 @@
+import { reportCaught } from "@/lib/error-reporting"
 import { openSecret } from "@/lib/secret-box"
 import { createHmac } from "node:crypto"
 import { after } from "next/server"
@@ -213,7 +214,7 @@ export async function runWorkflowEvent(
             }
         }
     } catch (err) {
-        console.error(`Workflow event ${event} failed for tenant ${tenantId}:`, err)
+        await reportCaught(err, `workflow event ${event}`, { tenantId, entityId })
     }
 }
 

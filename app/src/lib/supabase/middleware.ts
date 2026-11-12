@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { PlatformGate } from '@/lib/platform-security'
+import { APP_AREAS } from '@/lib/app-areas'
 import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute, PARKED_MODULES_ENABLED, isParkedRoute } from '@/lib/features'
 
 export async function updateSession(request: NextRequest, gate?: PlatformGate) {
@@ -79,7 +80,14 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
 
     const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
 
-    if (!user && !isAuthPage && !isPublicPage) {
+    // Only the app's own areas send signed-out visitors to the sign-in page. Any other
+    // address that doesn't exist gets the real "page not found" (a 404 for search engines)
+    // instead of a login form.
+    const isAppArea = APP_AREAS.some(
+        (p) => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(`${p}/`)
+    )
+
+    if (!user && !isAuthPage && !isPublicPage && isAppArea) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)

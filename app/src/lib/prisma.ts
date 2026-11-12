@@ -33,8 +33,14 @@ const prismaClientSingleton = (): PrismaClient => {
     throw new Error("Misconfigured database connection. Please check your .env files.")
   }
   
-  // PG_POOL_MAX is for the integration tests (one-connection test database); unset in production
-  const pool = new Pool({ connectionString, ...(process.env.PG_POOL_MAX ? { max: Number(process.env.PG_POOL_MAX) } : {}) })
+  // Each serverless instance keeps a few connections, not pg's default 10, so many instances at
+  // once don't use up the Supabase pooler. PG_POOL_MAX overrides it (the tests use 1).
+  const pool = new Pool({
+    connectionString,
+    max: Number(process.env.PG_POOL_MAX || 5),
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
+  })
   const adapter = new PrismaPg(pool)
   
   return new PrismaClient({ adapter })
