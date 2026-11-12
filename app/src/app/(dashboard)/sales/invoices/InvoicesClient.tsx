@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { localeForCurrency } from "@/lib/utils"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
@@ -136,47 +137,47 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
 
             {/* Stats */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-indigo-950 border-none shadow-sm">
+                <Card className="shadow-sm">
                     <CardContent className="pt-4 pb-3">
-                        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                        <div className="flex items-center gap-2 text-primary">
                             <FileText className="h-4 w-4" />
                             <p className="text-xs font-bold uppercase tracking-wider">Total Invoices</p>
                         </div>
-                        <p className="text-3xl font-black mt-2 text-indigo-900 dark:text-indigo-100">{total}</p>
+                        <p className="text-2xl font-bold mt-2 text-foreground">{total}</p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Search & Filters */}
-            <Card className="border-none shadow-md overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800">
-                <div className="bg-white dark:bg-slate-950 p-4 sm:p-6 space-y-6">
+            <Card className="border-none shadow-sm overflow-hidden ring-1 ring-border">
+                <div className="bg-card p-4 sm:p-6 space-y-6">
                     <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
                         <div className="relative max-w-md w-full">
-                            {isPending ? <Loader2 className="absolute left-3 top-3 h-4 w-4 animate-spin text-indigo-500" /> : <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />}
+                            {isPending ? <Loader2 className="absolute left-3 top-3 h-4 w-4 animate-spin text-primary" /> : <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />}
                             <Input
                                 placeholder="Search by invoice number or customer name..."
-                                className="pl-10 h-10 border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 focus:bg-white dark:focus:bg-slate-900 transition-all text-xs sm:text-sm"
+                                className="pl-10 h-10 bg-background transition-all text-xs sm:text-sm"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
                         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                             {/* Document Type Filter */}
-                            <div className="flex overflow-x-auto max-w-full rounded-lg border p-1 bg-slate-100 dark:bg-slate-900">
+                            <div className="flex overflow-x-auto max-w-full rounded-lg border p-1 bg-muted">
                                 <button
-                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "all" ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "all" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                                     onClick={() => { setFilterType("all"); updateUrl({ type: "all" }) }}
                                 >
                                     All Invoices
                                 </button>
                                 <button
-                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "TAX_INVOICE" ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "TAX_INVOICE" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                                     onClick={() => { setFilterType("TAX_INVOICE"); updateUrl({ type: "TAX_INVOICE" }) }}
                                 >
                                     Tax Invoices
                                 </button>
                                 <button
-                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "PROFORMA" ? "bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${filterType === "PROFORMA" ? "bg-background text-amber-700 dark:text-amber-400 shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                                     onClick={() => { setFilterType("PROFORMA"); updateUrl({ type: "PROFORMA" }) }}
                                 >
                                     Proforma Invoices
@@ -184,9 +185,9 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                             </div>
 
                             {/* Status Filter */}
-                            <div className="flex flex-wrap gap-1.5 p-1 bg-slate-100 dark:bg-slate-900 rounded-lg">
+                            <div className="flex flex-wrap gap-1.5 p-1 bg-muted rounded-lg">
                                 <button
-                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "all" ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === "all" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                                     onClick={() => { setFilterStatus("all"); updateUrl({ status: "all" }) }}
                                 >
                                     All Statuses
@@ -196,7 +197,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                     return (
                                         <button
                                             key={s}
-                                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === s ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${filterStatus === s ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                                             onClick={() => { setFilterStatus(s); updateUrl({ status: s }) }}
                                         >
                                             {cfg.label}
@@ -208,30 +209,57 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 text-xs gap-1.5 border-indigo-500/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30"
+                                className="h-8 text-xs gap-1.5 "
                                 onClick={() => router.push("/sales/invoices/templates")}
                             >
-                                <Palette className="h-3.5 w-3.5 text-indigo-600" />
+                                <Palette className="h-3.5 w-3.5 text-primary" />
                                 Templates
                             </Button>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-slate-50/30 dark:bg-slate-900/10">
+                    {/* Phones: one card per invoice with what matters (number, customer, total, status) */}
+                    <ul className="md:hidden divide-y rounded-xl border">
+                        {initialInvoices.length === 0 ? (
+                            <li className="p-6 text-center text-sm text-muted-foreground">No invoices found.</li>
+                        ) : initialInvoices.map((inv) => {
+                            const cfg = statusConfig[inv.status as InvoiceStatus]
+                            return (
+                                <li key={inv.id}>
+                                    <Link href={`/sales/invoices/${inv.id}`} className="flex items-start justify-between gap-3 p-4 hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
+                                        <div className="min-w-0">
+                                            <p className="font-semibold text-primary truncate">
+                                                {inv.invoice_number}
+                                                {inv.type === "PROFORMA" && <span className="ml-2 text-xs font-medium text-amber-700 dark:text-amber-400">Proforma</span>}
+                                            </p>
+                                            <p className="text-sm truncate">{inv.customer_name}</p>
+                                            <p className="text-xs text-muted-foreground">{formatDate(inv.invoice_date)}</p>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-1.5 shrink-0">
+                                            <span className="font-semibold tabular-nums">{formatCurrency(Number(inv.total || 0), inv.currency_code)}</span>
+                                            <Badge variant={cfg.variant} className="capitalize">{cfg.label}</Badge>
+                                        </div>
+                                    </Link>
+                                </li>
+                            )
+                        })}
+                    </ul>
+
+                    <div className="hidden md:block rounded-xl border overflow-hidden">
                         <Table>
-                            <TableHeader className="bg-slate-100/50 dark:bg-slate-800/50">
+                            <TableHeader className="bg-muted/50">
                                 <TableRow>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Invoice #</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Customer</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Date</TableHead>
-                                    <TableHead className="text-right font-bold text-slate-900 dark:text-slate-100">Total</TableHead>
-                                    <TableHead className="font-bold text-slate-900 dark:text-slate-100">Status</TableHead>
-                                    <TableHead className="text-right font-bold text-slate-900 dark:text-slate-100">Actions</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Invoice #</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Customer</TableHead>
+                                    <TableHead className="hidden md:table-cell font-semibold text-foreground">Date</TableHead>
+                                    <TableHead className="text-right font-semibold text-foreground">Total</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Status</TableHead>
+                                    <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {initialInvoices.length === 0 ? (
-                                    <TableRow><TableCell colSpan={6} className="h-32 text-center text-slate-500 italic">No invoices found.</TableCell></TableRow>
+                                    <TableRow><TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic">No invoices found.</TableCell></TableRow>
                                 ) : initialInvoices.map((inv) => {
                                     const cfg = statusConfig[inv.status as InvoiceStatus]
                                     const StatusIcon = cfg.icon
@@ -239,10 +267,12 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                     const totalAmount = Number(inv.total || 0)
 
                                     return (
-                                        <TableRow key={inv.id} className="hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-colors cursor-pointer" onClick={() => router.push(`/sales/invoices/${inv.id}`)}>
-                                            <TableCell className="font-bold text-indigo-600 dark:text-indigo-400">
+                                        <TableRow key={inv.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => router.push(`/sales/invoices/${inv.id}`)}>
+                                            <TableCell className="font-bold text-primary">
                                                 <div className="flex items-center gap-2">
-                                                    <span>{inv.invoice_number}</span>
+                                                    <Link href={`/sales/invoices/${inv.id}`} className="hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm" onClick={(e) => e.stopPropagation()}>
+                                                        {inv.invoice_number}
+                                                    </Link>
                                                     {inv.type === "PROFORMA" && (
                                                         <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-400 bg-amber-500/10 font-bold uppercase px-2 py-0.5">
                                                             PROFORMA
@@ -252,12 +282,12 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="font-semibold text-slate-900 dark:text-slate-100">{inv.customer_name}</span>
-                                                    <span className="text-xs text-slate-500">{inv.customer_email}</span>
+                                                    <span className="font-semibold text-foreground">{inv.customer_name}</span>
+                                                    <span className="hidden sm:block text-xs text-muted-foreground">{inv.customer_email}</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="text-sm font-medium text-slate-600 dark:text-slate-400">{formatDate(inv.invoice_date)}</TableCell>
-                                            <TableCell className="text-right font-black text-slate-900 dark:text-slate-50">{formatCurrency(totalAmount, inv.currency_code || "INR")}</TableCell>
+                                            <TableCell className="hidden md:table-cell text-sm font-medium text-muted-foreground whitespace-nowrap">{formatDate(inv.invoice_date)}</TableCell>
+                                            <TableCell className="text-right font-semibold tabular-nums whitespace-nowrap">{formatCurrency(totalAmount, inv.currency_code)}</TableCell>
                                             <TableCell>
                                                 <Badge variant={cfg.variant} className="flex w-fit items-center gap-1.5 px-2.5 py-0.5 rounded-full ring-1 ring-inset shadow-sm">
                                                     <StatusIcon className="h-3 w-3" />
@@ -267,17 +297,17 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                             <TableCell className="text-right">
                                                 <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                                                     <a href={`/api/invoices/${inv.id}/pdf`} target="_blank" rel="noreferrer">
-                                                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200 dark:hover:bg-slate-800" title="Download PDF">
-                                                            <Download className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8" title="Download PDF" aria-label="Download PDF">
+                                                            <Download className="h-4 w-4 text-muted-foreground" />
                                                         </Button>
                                                     </a>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200 dark:hover:bg-slate-800" onClick={() => router.push(`/sales/invoices/${inv.id}/edit`)} aria-label="Edit">
-                                                        <Pencil className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.push(`/sales/invoices/${inv.id}/edit`)} aria-label="Edit">
+                                                        <Pencil className="h-4 w-4 text-muted-foreground" />
                                                     </Button>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-slate-200 dark:hover:bg-slate-800" disabled={pendingId === inv.id}>
-                                                                {pendingId === inv.id ? <Loader2 className="h-4 w-4 animate-spin text-indigo-500" /> : <MoreHorizontal className="h-4 w-4 text-slate-400" />}
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={pendingId === inv.id} aria-label={`More actions for ${inv.invoice_number}`}>
+                                                                {pendingId === inv.id ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : <MoreHorizontal className="h-4 w-4 text-muted-foreground" />}
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className="w-48">
@@ -293,7 +323,7 @@ export default function InvoicesClient({ initialInvoices, total }: Props) {
                                                                 <Send className="mr-2 h-4 w-4" /> Send Email
                                                             </DropdownMenuItem>
                                                             <DropdownMenuSeparator />
-                                                            <RequireRole min="MANAGER"><DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950" onClick={() => handleDelete(inv.id)}>
+                                                            <RequireRole min="MANAGER"><DropdownMenuItem variant="destructive" onClick={() => handleDelete(inv.id)}>
                                                                 <Trash2 className="mr-2 h-4 w-4" /> Delete Invoice
                                                             </DropdownMenuItem></RequireRole>
                                                         </DropdownMenuContent>

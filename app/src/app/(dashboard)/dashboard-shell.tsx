@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef } from "react"
 import { LogoutMenuItem } from '@/components/auth/logout-button'
 import { RoleProvider } from "@/components/auth/role-context"
+import { SkipLink } from "@/components/skip-link"
 import { getMyAccess } from "@/lib/get-tenant-id"
 import { MODULES, isAdminRole, moduleForPath, type ModuleAccess } from "@/lib/access"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import Image from "next/image"
 import {
     Users,
@@ -74,7 +76,6 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -222,11 +223,9 @@ const DISMISSED_ANNOUNCEMENT_KEY = "genesoft:dismissed-announcement"
 /** Parts of Sales a plan can leave out */
 const PLAN_ROUTES: Record<string, string> = { "/sales/rental": "rentals" }
 
-function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJurisdiction, tenantName, isSuperAdmin = false, userName, userEmail }: AppSidebarProps) {
-    const pathname = usePathname()
-    const jurisdiction = getTaxJurisdiction(countryCode)
-
-    const filteredNavigation = navigation.map((group) => {
+/** The menu as this person sees it: modules switched off, not in the plan, or without access are left out */
+function visibleNavigation({ access, accessLoaded, planModules, countryCode, multiJurisdiction }: Pick<AppSidebarProps, "access" | "accessLoaded" | "planModules" | "countryCode" | "multiJurisdiction">) {
+    return navigation.map((group) => {
         // Government-filing modules stay hidden until connected to the official APIs
         if (!COMPLIANCE_MODULES_ENABLED) {
             group = { ...group, items: group.items.filter((item) => !isComplianceRoute(item.href)) }
@@ -268,6 +267,13 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
             }),
         }))
         .filter((group) => group.items.length > 0)
+}
+
+function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJurisdiction, tenantName, isSuperAdmin = false, userName, userEmail }: AppSidebarProps) {
+    const pathname = usePathname()
+    const jurisdiction = getTaxJurisdiction(countryCode)
+
+    const filteredNavigation = visibleNavigation({ access, accessLoaded, planModules, countryCode, multiJurisdiction })
 
     // Only the closest match is the current page ("Invoices" isn't lit on Recurring Invoices)
     const activeHref = filteredNavigation
@@ -402,25 +408,61 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
     )
 }
 
-function TopBar() {
+function TopBar({ pages }: { pages: { group: string; name: string; href: string }[] }) {
     const { theme, setTheme } = useTheme()
+    const router = useRouter()
+    const [finderOpen, setFinderOpen] = useState(false)
+    // Ctrl+K / ⌘K opens the page finder anywhere in the app
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault()
+                setFinderOpen((open) => !open)
+            }
+        }
+        window.addEventListener("keydown", onKey)
+        return () => window.removeEventListener("keydown", onKey)
+    }, [])
 
     return (
         <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
 
-            {/* Search */}
+            {/* Find a page */}
             <div className="flex-1 max-w-xs sm:max-w-md">
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Search ERP..."
-                        className="pl-8 h-9 bg-muted/50 text-xs sm:text-sm"
-                    />
-                </div>
+                <button
+                    type="button"
+                    onClick={() => setFinderOpen(true)}
+                    className="flex h-9 w-full items-center gap-2 rounded-md border bg-muted/50 px-2.5 text-left text-sm text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                    <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span className="flex-1 truncate">Go to a page…</span>
+                    <kbd className="hidden sm:inline rounded border bg-background px-1.5 text-[11px] font-medium">Ctrl K</kbd>
+                </button>
             </div>
+            <CommandDialog open={finderOpen} onOpenChange={setFinderOpen} title="Go to a page" description="Type the name of a page and press Enter">
+                <CommandInput placeholder="Type a page name" />
+                <CommandList>
+                    <CommandEmpty>No page with that name.</CommandEmpty>
+                    {[...new Set(pages.map((p) => p.group))].map((group) => (
+                        <CommandGroup key={group} heading={group}>
+                            {pages.filter((p) => p.group === group).map((p) => (
+                                <CommandItem
+                                    key={p.href}
+                                    value={`${p.name} ${group}`}
+                                    onSelect={() => {
+                                        setFinderOpen(false)
+                                        router.push(p.href)
+                                    }}
+                                >
+                                    {p.name}
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    ))}
+                </CommandList>
+            </CommandDialog>
 
             <div className="ml-auto flex items-center gap-2">
                 {/* Theme Toggle */}
@@ -514,6 +556,7 @@ export function DashboardShell({
 
     return (
         <SidebarProvider>
+            <SkipLink />
             <Script {...({ id: "razorpay-checkout", src: "https://checkout.razorpay.com/v1/checkout.js", strategy: "lazyOnload" })} />
             <AppSidebar
                 access={isAdminRole(role) ? null : access}
@@ -526,8 +569,16 @@ export function DashboardShell({
                 userName={initial.userName}
                 userEmail={initial.userEmail}
             />
-            <SidebarInset>
-                <TopBar />
+            <SidebarInset id="main-content" tabIndex={-1} className="focus:outline-none">
+                <TopBar
+                    pages={visibleNavigation({
+                        access: isAdminRole(role) ? null : access,
+                        accessLoaded: true,
+                        planModules,
+                        countryCode: tenantCountry,
+                        multiJurisdiction,
+                    }).flatMap((g) => g.items.map((i) => ({ group: g.label, name: i.name, href: i.href })))}
+                />
                 <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-6 w-full">
                     {bannerMessage && (
                         <div role="status" className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-300 text-sm font-medium flex items-start justify-between gap-3 shadow-sm animate-in fade-in">

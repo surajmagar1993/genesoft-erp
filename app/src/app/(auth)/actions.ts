@@ -49,7 +49,7 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/crm/contacts')
+  redirect('/reports')
 }
 
 export async function register(formData: FormData) {

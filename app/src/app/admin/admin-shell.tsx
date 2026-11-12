@@ -1,5 +1,6 @@
 "use client"
 
+import { SkipLink } from "@/components/skip-link"
 import { LogoutMenuItem } from '@/components/auth/logout-button'
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -273,8 +274,9 @@ export function AdminShell({
 }) {
     return (
         <SidebarProvider>
+            <SkipLink />
             <AdminSidebar />
-            <SidebarInset className="bg-muted/10">
+            <SidebarInset id="main-content" tabIndex={-1} className="bg-muted/10 focus:outline-none">
                 <AdminTopBar />
                 <div className="flex-1 overflow-y-auto p-4 md:p-8">
                     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">

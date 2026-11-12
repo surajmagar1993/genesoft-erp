@@ -1,199 +1,198 @@
-import { getCurrencySymbol } from "@/lib/utils"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-    Users,
-    DollarSign,
-    Receipt,
-    TrendingUp,
-    ArrowUpRight,
-    ArrowDownRight,
-    Target,
-    LayoutDashboard,
-    Package,
+    AlertTriangle,
+    Banknote,
+    FilePlus2,
     FileSpreadsheet,
+    HandCoins,
+    LayoutDashboard,
+    Receipt,
+    Target,
+    UserPlus,
+    Users,
+    Package,
+    type LucideIcon,
 } from "lucide-react"
 import { getDashboardStats, getRecentActivities, getDashboardTrends } from "@/app/actions/reports/stats"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
+import { hasModuleAccess } from "@/lib/get-tenant-id"
 import { PageHeader } from "@/components/ui/page-header"
 import { RevenueChart, LeadsChart } from "@/components/dashboard/charts"
+import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
+import { LocalDateTime } from "@/components/local-date-time"
+
+interface Stat {
+    title: string
+    value: string
+    detail: string
+    icon: LucideIcon
+    href: string
+    tone?: "warning"
+}
 
 export default async function DashboardPage() {
-    const [stats, activities, settings, trends] = await Promise.all([
+    const [stats, activities, settings, trends, canInventory] = await Promise.all([
         getDashboardStats(),
         getRecentActivities(),
         getTenantSettings(),
-        getDashboardTrends()
+        getDashboardTrends(),
+        hasModuleAccess("inventory", "VIEW"),
     ])
+    const money = (n: number) => (stats.currencyCode ? formatCurrency(n, stats.currencyCode) : n.toLocaleString("en-GB"))
+    const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`
 
-    const currencySymbol = getCurrencySymbol(settings?.currency_code || "INR")
+    const cards: Stat[] = [
+        ...(stats.showMoney
+            ? [
+                  { title: "Sales this month", value: money(stats.salesThisMonth), detail: plural(stats.invoicesThisMonth, "invoice") + " issued", icon: Receipt, href: "/sales/invoices" },
+                  { title: "To collect", value: money(stats.toCollect), detail: plural(stats.openInvoices, "unpaid invoice"), icon: HandCoins, href: "/finance/receivable" },
+                  {
+                      title: "Overdue",
+                      value: money(stats.overdueAmount),
+                      detail: stats.overdueInvoices ? `${plural(stats.overdueInvoices, "invoice")} past due` : "Nothing past its due date",
+                      icon: AlertTriangle,
+                      href: "/finance/receivable",
+                      tone: stats.overdueInvoices ? ("warning" as const) : undefined,
+                  },
+                  { title: "Received this month", value: money(stats.receivedThisMonth), detail: "Payments from customers", icon: Banknote, href: "/finance/payments" },
+              ]
+            : []),
+        ...(stats.showCrm
+            ? [
+                  { title: "New leads this month", value: String(stats.newLeadsThisMonth), detail: "Added to the CRM", icon: UserPlus, href: "/crm/leads" },
+                  { title: "Open deals", value: String(stats.openDeals), detail: `${money(stats.pipelineValue)} in the pipeline`, icon: Target, href: "/crm/deals" },
+              ]
+            : []),
+    ]
 
-    const statsConfig = [
-        {
-            title: "Total Contacts",
-            value: stats.totalContacts.toString(),
-            change: `+${stats.recentQuotesCount} this month`,
-            trend: "up",
-            icon: Users,
-            description: "Active customers & leads",
-        },
-        {
-            title: "Revenue (Accepted)",
-            value: `${currencySymbol}${stats.acceptedQuoteTotal.toLocaleString()}`,
-            change: "From accepted quotes",
-            trend: "up",
-            icon: DollarSign,
-            description: "Accepted conversions",
-        },
-        {
-            title: "New Leads",
-            value: stats.totalLeads.toString(),
-            change: "Active prospects",
-            trend: "neutral",
-            icon: Receipt,
-            description: "Qualified opportunities",
-        },
-        {
-            title: "Active Deals",
-            value: stats.activeDeals.toString(),
-            change: `${currencySymbol}${stats.pipelineValue.toLocaleString()} pipeline`,
-            trend: "up",
-            icon: Target,
-            description: "Near-term opportunities",
-        },
+    const hasSales = trends.some((m) => m.sales > 0)
+    const hasLeads = trends.some((m) => m.leads > 0)
+
+    const quickLinks = [
+        ...(stats.showMoney ? [{ label: "New invoice", icon: FilePlus2, href: "/sales/invoices/new" }] : []),
+        ...(stats.showCrm ? [{ label: "New contact", icon: Users, href: "/crm/contacts/new" }, { label: "Leads", icon: UserPlus, href: "/crm/leads" }] : []),
+        ...(stats.showMoney ? [{ label: "Customers who owe", icon: HandCoins, href: "/finance/receivable" }] : []),
+        ...(canInventory ? [{ label: "Stock levels", icon: Package, href: "/inventory" }] : []),
+        { label: "Report builder", icon: FileSpreadsheet, href: "/reports/builder" },
     ]
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
-            <PageHeader 
-                title="Dashboard" 
-                description={`Insights and performance for ${settings?.name || "Your Workspace"}`}
-                icon={LayoutDashboard}
-            >
-                <div className="flex items-center gap-3">
-                    <Link
-                        href="/reports/builder"
-                        className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground text-xs font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
-                    >
-                        <FileSpreadsheet className="h-4 w-4" />
-                        Custom Report Builder
-                    </Link>
-                    <div className="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold">
-                        <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                        </span>
-                        Live Data
-                    </div>
+        <div className="space-y-8">
+            <PageHeader title="Dashboard" description={settings?.name ? `How ${settings.name} is doing` : "How your business is doing"} icon={LayoutDashboard} />
+
+            {cards.length > 0 ? (
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    {cards.map((stat) => (
+                        <Link key={stat.title} href={stat.href} className="group rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                            <Card className={`h-full shadow-sm transition-colors group-hover:border-primary/50 ${stat.tone === "warning" ? "border-amber-500/50" : ""}`}>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                                    <stat.icon className={`h-4 w-4 ${stat.tone === "warning" ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`} aria-hidden="true" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold tabular-nums">{stat.value}</div>
+                                    <p className="text-xs text-muted-foreground mt-1">{stat.detail}</p>
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    ))}
                 </div>
-            </PageHeader>
+            ) : (
+                <Card>
+                    <CardContent className="py-8 text-sm text-muted-foreground">
+                        Your access doesn&apos;t include sales, finance or CRM figures. Use the menu to open the parts of the workspace you work in.
+                    </CardContent>
+                </Card>
+            )}
 
-            {/* Stats Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {statsConfig.map((stat) => (
-                    <Card key={stat.title} className="relative overflow-hidden group hover:border-primary/50 transition-colors shadow-sm">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-                                {stat.title}
-                            </CardTitle>
-                            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <stat.icon className="h-4 w-4 text-primary" />
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stat.value}</div>
-                            <div className="flex items-center gap-1 mt-1">
-                                {stat.trend === "up" && (
-                                    <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                                )}
-                                {stat.trend === "down" && (
-                                    <ArrowDownRight className="h-3 w-3 text-red-500" />
-                                )}
-                                <span className="text-xs text-muted-foreground">
-                                    {stat.change}
-                                </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-                        </CardContent>
-                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/20 to-primary/5 opacity-50 group-hover:opacity-100 transition-opacity" />
-                    </Card>
-                ))}
-            </div>
+            {(stats.showMoney || stats.showCrm) && (
+                <div className="grid gap-6 lg:grid-cols-2">
+                    {stats.showMoney &&
+                        (hasSales ? (
+                            <RevenueChart data={trends} currencySymbol={stats.currencyCode ? getCurrencySymbol(stats.currencyCode) : ""} />
+                        ) : (
+                            <EmptyChart title="Sales" text="Issued invoices will show here month by month." href="/sales/invoices/new" action="Create an invoice" />
+                        ))}
+                    {stats.showCrm &&
+                        (hasLeads ? (
+                            <LeadsChart data={trends} />
+                        ) : (
+                            <EmptyChart title="New leads" text="Leads you add will show here month by month." href="/crm/leads" action="Add a lead" />
+                        ))}
+                </div>
+            )}
 
-            {/* Charts Section */}
-            <div className="grid gap-6 md:grid-cols-2">
-                <RevenueChart data={trends} currencySymbol={currencySymbol} />
-                <LeadsChart data={trends} />
-            </div>
-
-            {/* Content Grid */}
-            <div className="grid gap-6 md:grid-cols-2">
-                {/* Recent Activity */}
-                <Card className="shadow-sm border-none ring-1 ring-slate-200 dark:ring-slate-800">
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Card className="shadow-sm">
                     <CardHeader>
-                        <CardTitle className="text-lg">Recent Activity</CardTitle>
-                        <CardDescription>Real-time stream from Sales & CRM</CardDescription>
+                        <CardTitle className="text-lg">Recent activity</CardTitle>
+                        <CardDescription>Latest invoices, payments and leads</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-6">
-                            {activities.length > 0 ? (
-                                activities.map((activity, i) => (
-                                    <div key={i} className="flex items-start gap-3 group">
-                                        <div className={`mt-1 h-2 w-2 rounded-full shrink-0 ${
-                                            activity.type === "lead" ? "bg-amber-500" : "bg-primary"
-                                        }`} />
-                                        <div className="flex-1 min-w-0 border-l border-border/50 pl-3 group-last:border-transparent">
-                                            <p className="text-sm font-medium leading-none">{activity.message}</p>
-                                            <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
-                                                <TrendingUp className="h-2.5 w-2.5" />
-                                                {activity.time}
+                        {activities.length > 0 ? (
+                            <ul className="space-y-4">
+                                {activities.map((activity, i) => (
+                                    <li key={`${activity.href}-${i}`} className="flex items-start gap-3">
+                                        <span
+                                            aria-hidden="true"
+                                            className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${activity.type === "lead" ? "bg-amber-500" : activity.type === "payment" ? "bg-emerald-500" : "bg-primary"}`}
+                                        />
+                                        <div className="min-w-0">
+                                            <Link href={activity.href} className="text-sm font-medium hover:underline break-words">
+                                                {activity.message}
+                                            </Link>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                <LocalDateTime value={activity.at} />
                                             </p>
                                         </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="py-8 text-center text-muted-foreground space-y-2">
-                                    <div className="h-10 w-10 bg-accent rounded-full flex items-center justify-center mx-auto mb-3">
-                                        <TrendingUp className="h-5 w-5 opacity-20" />
-                                    </div>
-                                    <p className="text-sm">No recent activities found.</p>
-                                    <p className="text-xs">Incoming sales actions will appear here.</p>
-                                </div>
-                            )}
-                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="py-6 text-sm text-muted-foreground">Nothing yet. New invoices, payments and leads will show here.</p>
+                        )}
                     </CardContent>
                 </Card>
 
-                {/* Quick Actions */}
-                <Card className="shadow-sm overflow-hidden border-none ring-1 ring-primary/20 bg-primary/5">
-                    <CardHeader className="bg-primary/5 border-b border-primary/10">
-                        <CardTitle className="text-lg">Quick Access</CardTitle>
-                        <CardDescription>Shortcut to major modules</CardDescription>
+                <Card className="shadow-sm">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Quick links</CardTitle>
+                        <CardDescription>Things people open most</CardDescription>
                     </CardHeader>
-                    <CardContent className="pt-6">
+                    <CardContent>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {[
-                                { label: "New Lead", icon: Users, href: "/crm/leads" },
-                                { label: "New Invoice", icon: Receipt, href: "/sales/invoices/new" },
-                                { label: "Inventory", icon: LayoutDashboard, href: "/inventory" },
-                                { label: "Inventory Reports", icon: Package, href: "/inventory?tab=reports" },
-                                { label: "Active Deals", icon: Target, href: "/crm/deals" },
-                            ].map((action) => (
-                                <a
+                            {quickLinks.map((action) => (
+                                <Link
                                     key={action.label}
                                     href={action.href}
-                                    className="flex items-center gap-3 p-4 rounded-xl border border-border/50 hover:bg-white dark:hover:bg-slate-900 hover:border-primary/20 transition-all group shadow-sm bg-card/50"
+                                    className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent hover:border-primary/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                 >
-                                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                                        <action.icon className="h-5 w-5 text-primary" />
-                                    </div>
-                                    <span className="text-sm font-semibold">{action.label}</span>
-                                </a>
+                                    <action.icon className="h-5 w-5 text-primary shrink-0" aria-hidden="true" />
+                                    <span className="text-sm font-medium">{action.label}</span>
+                                </Link>
                             ))}
                         </div>
                     </CardContent>
                 </Card>
             </div>
         </div>
+    )
+}
+
+function EmptyChart({ title, text, href, action }: { title: string; text: string; href: string; action: string }) {
+    return (
+        <Card className="shadow-sm">
+            <CardHeader>
+                <CardTitle className="text-lg">{title}</CardTitle>
+                <CardDescription>Last 6 months</CardDescription>
+            </CardHeader>
+            <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-center">
+                <p className="text-sm text-muted-foreground">{text}</p>
+                <Link href={href} className="text-sm font-medium text-primary hover:underline">
+                    {action}
+                </Link>
+            </CardContent>
+        </Card>
     )
 }

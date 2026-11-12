@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const tokenHash = searchParams.get("token_hash")
     const type = searchParams.get("type") as EmailOtpType | null
     const code = searchParams.get("code")
-    const next = safeNext(searchParams.get("next"), type === "recovery" ? "/reset-password" : "/crm/contacts")
+    const next = safeNext(searchParams.get("next"), type === "recovery" ? "/reset-password" : "/reports")
 
     const supabase = await createClient()
     let error: { message: string } | null = null

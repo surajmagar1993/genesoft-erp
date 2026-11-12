@@ -1,7 +1,7 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-11-12 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
+> **Last Updated:** 2026-11-13 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
 >
 > The ✅ entries below were written in September 2026 when each module was first built. Several overstate what shipped: the government-filing modules (GST returns, e-way bills, TDS, UAE VAT 201, KSA ZATCA phase 2, UK MTD, Australia BAS) only prepare figures and files, aren't connected to any government system, and are hidden behind `NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`; "official/NIC-compliant/statutory" means "follows the published format", not certified. Stripe/PayPal invoice checkout and portal online payment aren't live. See "Known Gaps" and "Open items".
 
@@ -173,7 +173,20 @@ These are marked done above but are simulated or not enforced. The UI now says s
 
 ---
 
-## 📋 Open items (review 2026-11-12)
+## 📋 Open items (review 2026-11-13)
+Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is the only payment gateway** (Stripe and PayPal removed, with the simulated invoice pay links, portal payment and Settings → Payment Gateways); **team invites are links the admin shares** (no invite email); broadcast message fixed (Super Admin only settings, 500 characters, dismissal remembered, refreshed every 5 minutes); and the fixes from the full project review: discount before tax, server checks on invoice input, payments/credit notes can't exceed what is due (row locks), credit notes in the right currency and capped at the invoice, plan credit only from real payments, unpaid plans end after a 3-day grace, payroll status guards, goods receipt checks, email header escaping, workflow webhook secrets sealed, contact balance owned by the ledger, failures reported to System Logs, noindex on test copies and real 404s, cached public website and Mumbai functions, a dashboard built on invoices and payments, a working page finder (Ctrl K), skip link and stronger focus/field contrast, and a phone layout for the invoice list.
+
+**From the 2026-11-13 review, not done yet:**
+- [ ] ~117 placeholders still use "e.g." examples (project rule says instructions only) — needs per-field wording.
+- [ ] ~40 browser `confirm()` pop-ups → one shared confirm dialog; payment delete on an invoice has no confirmation.
+- [ ] Large create/edit forms are pop-ups in HR, Purchase, Projects, Inventory, RFQ, Recurring invoices (rule: full pages); ~900 uses of 9–11px text; other phone tables.
+- [ ] Database: add the indexes from the review (invoice lines, journals by source, payments, stock movements by reference, system logs by time); move document numbers to an atomic counter table; post invoice + ledger + stock + customer balance in one transaction; store the exchange rate on each document.
+- [ ] Content-Security-Policy header; rate limits on sign-in, /join and /portal; portal links never expire.
+- [ ] CI on GitHub (type check, lint, tests, build); a separate production database with backups; migration history.
+- [ ] Thin modules to mark beta or switch off before launch: Manufacturing, Batch & serial, Performance & training, Recruitment, RFQ, Budgets, Report builder.
+- [ ] Public repo: `VERIFICATION_PLAN.md` (personal emails, a tenant id) and `INV-262.pdf` are tracked — remove (owner to confirm).
+- [ ] Published legal pages (if any were published in Super Admin → Website) may still name Stripe/PayPal: the built-in text was updated, a published copy must be edited there.
+
 Done on 2026-11-12 (pushed, live on genesoftdev): lint at 0 errors; Next.js 16.4.6 and other security updates (production dependencies 0 known vulnerabilities); workspace settings no longer sent whole to the browser; fixed the Settings → Billing trial banner, bills list supplier name and PAN, Super Admin → Subscriptions receipts, report builder invoice fields; removed invented values (sample e-way transporters, payslip bank and designation, budget approver, "ITC 18%", address country "India").
 
 **Modules taken out on 2026-11-12 (owner's decision, pushed and live):**
@@ -193,14 +206,14 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [ ] Renew genesoftinfotech.com (expires 2026-12-05, auto-renew off).
 
 **Needs a key or account from the owner:**
-- [ ] Live payments (deferred until go-live by the owner): Razorpay live keys; Stripe keys + webhook (Stripe not configured at all, so non-INR regions can't pay).
-- [ ] `SUPABASE_SERVICE_ROLE_KEY`: needed for inviting team members and for super admin "create tenant" to make a login.
+- [ ] Live payments (deferred until go-live by the owner): Razorpay live keys, with international cards switched on in the Razorpay account (every region now pays through Razorpay).
+- [ ] `SUPABASE_SERVICE_ROLE_KEY`: needed for super admin "create tenant" to make a login.
 - [ ] `PLATFORM_GSTIN` for Genesoft's own subscription receipts.
 - [ ] Legal review of Privacy, Terms and Refund pages.
 
 **Product gaps:**
 - [ ] Enforce platform 2FA (Supabase TOTP is on, no app screen), session timeout, login lockout, API rate limits (stored only today).
-- [ ] Customer portal online payment of invoices; live Stripe/PayPal invoice checkout.
+- [ ] Customer portal online payment of invoices (would be through Razorpay).
 - [ ] Workflow "update status" actions; CRM email open tracking; web form CAPTCHA.
 - [ ] REST API (`/api/v1`) for the planned mobile app; then integrations (Tally/QuickBooks, Shopify/WooCommerce, Zapier, Google Workspace, Microsoft 365, Twilio SMS), white-labelling, withholding tax.
 - [ ] Government filing APIs (GSP/NIC/FTA/ZATCA/HMRC/ATO) before turning the filing modules on.

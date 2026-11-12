@@ -6,7 +6,6 @@ Application source code including components, hooks, actions, and utilities.
 ## 🏗 Structure
 - `actions/`: Server actions for CRUD (Prisma only; Supabase is used for Auth).
   - `crm/whatsapp.ts`: WhatsApp Cloud API, direct links, message/invoice dispatch.
-  - `sales/pos.ts`: Retail POS terminal checkout, walk-in creation, session summary.
   - `crm/portal-actions.ts`: Customer self-service portal actions and ticket responses.
   - `inventory.ts`: Multi-warehouse stock tracking, adjustments, transfers, reorder alerts, and barcode lookup.
   - `saas/subscription.ts`: Plan upgrade/downgrade proration and platform B2B invoicing.

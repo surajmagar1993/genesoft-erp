@@ -23,8 +23,8 @@ export function RevenueChart({ data, currencySymbol = "" }: ChartProps) {
     return (
         <Card className="shadow-sm border-none ring-1 ring-slate-200 dark:ring-slate-800">
             <CardHeader>
-                <CardTitle className="text-lg">Revenue Growth</CardTitle>
-                <CardDescription>Monthly turnover from accepted quotes</CardDescription>
+                <CardTitle className="text-lg">Sales</CardTitle>
+                <CardDescription>Invoices issued each month, last 6 months</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="h-[300px] w-full mt-4">
@@ -59,7 +59,7 @@ export function RevenueChart({ data, currencySymbol = "" }: ChartProps) {
                             />
                             <Area 
                                 type="monotone" 
-                                dataKey="turnover" 
+                                dataKey="sales" 
                                 stroke="var(--color-primary, #ea580c)" 
                                 strokeWidth={3}
                                 fillOpacity={1} 
@@ -78,8 +78,8 @@ export function LeadsChart({ data }: ChartProps) {
     return (
         <Card className="shadow-sm border-none ring-1 ring-slate-200 dark:ring-slate-800">
             <CardHeader>
-                <CardTitle className="text-lg">Lead Generation</CardTitle>
-                <CardDescription>New prospects acquired per month</CardDescription>
+                <CardTitle className="text-lg">New leads</CardTitle>
+                <CardDescription>Leads added each month, last 6 months</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="h-[300px] w-full mt-4">

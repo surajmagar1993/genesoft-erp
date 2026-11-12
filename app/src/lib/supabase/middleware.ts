@@ -105,7 +105,7 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
         if (userData?.role === 'SUPER_ADMIN') {
             url.pathname = '/admin/dashboard'
         } else {
-            url.pathname = '/crm/contacts'
+            url.pathname = '/reports'
         }
         return NextResponse.redirect(url)
     }
@@ -153,7 +153,7 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
 
         if (!userData || userData.role !== 'SUPER_ADMIN') {
             const url = request.nextUrl.clone()
-            url.pathname = '/crm/contacts' // Standard dashboard if not platform admin
+            url.pathname = '/reports' // the business's dashboard
             return NextResponse.redirect(url)
         }
     }
