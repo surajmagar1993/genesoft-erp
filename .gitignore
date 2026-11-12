@@ -44,3 +44,7 @@ app/test-us-east.js
 # Local testing assets & scratch files
 screenshot_*.png
 *.sql
+
+# Private business documents and notes with personal details (kept locally, not published)
+INV-*.pdf
+VERIFICATION_PLAN.md
