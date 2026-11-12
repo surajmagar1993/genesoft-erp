@@ -5,7 +5,6 @@ import { Resend } from "resend"
 import { prisma } from "@/lib/prisma"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantAdminId } from "@/lib/get-tenant-id"
-import { stripe } from "@/lib/stripe"
 import { PLATFORM } from "@/lib/constants/platform"
 import { CLOSURE_GRACE_DAYS, type WorkspaceClosure } from "@/lib/workspace-closure"
 import type { ActionResult } from "@/lib/action-result"
@@ -33,8 +32,7 @@ async function notifyPlatform(tenantName: string, tenantId: string, closure: Wor
 }
 
 /**
- * The owner closes the workspace: everyone loses access now, any Stripe
- * subscription is cancelled, and the data is kept for CLOSURE_GRACE_DAYS
+ * The owner closes the workspace: everyone loses access now, and the data is kept for CLOSURE_GRACE_DAYS
  * (reopen by contacting support) before the platform deletes it.
  * Ends by signing the caller out.
  */
@@ -46,7 +44,7 @@ export async function closeWorkspace(input: { confirmName: string; reason?: stri
 
     const tenant = await prisma.tenant.findUnique({
         where: { id: tenantId },
-        select: { name: true, settings: true, stripeSubscriptionId: true },
+        select: { name: true, settings: true },
     })
     if (!tenant) return { success: false, error: "Workspace not found." }
     if ((input.confirmName || "").trim().toLowerCase() !== tenant.name.trim().toLowerCase()) {
@@ -54,15 +52,6 @@ export async function closeWorkspace(input: { confirmName: string; reason?: stri
     }
     if (await prisma.user.count({ where: { tenantId, role: "SUPER_ADMIN" } })) {
         return { success: false, error: "This workspace includes a platform administrator. Contact support to close it." }
-    }
-
-    if (tenant.stripeSubscriptionId && stripe) {
-        try {
-            await stripe.subscriptions.cancel(tenant.stripeSubscriptionId)
-        } catch (err) {
-            console.error("closeWorkspace: Stripe cancel failed", err)
-            return { success: false, error: "We couldn't cancel your card subscription. Please try again or contact support." }
-        }
     }
 
     const now = new Date()

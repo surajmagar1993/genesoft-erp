@@ -88,7 +88,8 @@ export async function getPaymentsByInvoice(invoiceId: string): Promise<PaymentDB
 }
 
 /* ── Create Payment ── */
-const PAYMENT_METHODS: PaymentMethod[] = ["CASH", "BANK_TRANSFER", "CREDIT_CARD", "DEBIT_CARD", "UPI", "CHEQUE", "STRIPE", "PAYPAL", "OTHER"]
+// STRIPE and PAYPAL stay in the type only so old payments still display; new payments can't use them
+const PAYMENT_METHODS: PaymentMethod[] = ["CASH", "BANK_TRANSFER", "CREDIT_CARD", "DEBIT_CARD", "UPI", "CHEQUE", "OTHER"]
 
 export async function createPayment(payload: CreatePaymentPayload): Promise<{ id: string | null; error: string | null }> {
   const tenantId = await getTenantWriterId(MODULE)

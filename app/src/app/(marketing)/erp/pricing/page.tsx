@@ -83,7 +83,7 @@ export default async function PricingPage({ searchParams }: { searchParams: Prom
                     {[
                         { q: "What happens after the trial?", a: "Choose a paid plan to keep your full features, or carry on with the free plan. Your data stays put either way." },
                         { q: "Can I change plans later?", a: "Yes. Upgrade anytime and pay only the difference for the rest of your billing period. Downgrades take effect at your next renewal." },
-                        { q: "How do I pay?", a: "By card, UPI or net banking through Razorpay in India, and by card through Stripe in other countries." },
+                        { q: "How do I pay?", a: "Through Razorpay: by card, UPI or net banking in India, and by card in other countries." },
                     ].map((item) => (
                         <div key={item.q}>
                             <h3 className="font-semibold text-s-ink">{item.q}</h3>

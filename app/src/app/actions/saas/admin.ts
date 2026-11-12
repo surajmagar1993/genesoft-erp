@@ -5,9 +5,7 @@ import { readTeam } from "@/lib/team-settings"
 import type { Prisma } from "@prisma/client"
 import { isAdminRole, resolveAccess, summarizeAccess } from "@/lib/access"
 import { clearPlatformGateCache } from "@/lib/platform-security"
-import { stripe } from "@/lib/stripe"
-import { ensureStripePrice, type PaidPlan } from "@/lib/stripe-plans"
-import { annualFromMonthly } from "@/lib/plan-pricing"
+type PaidPlan = "BASIC" | "PRO" | "ENTERPRISE"
 import { PRICING_REGIONS } from "@/lib/pricing-regions"
 import { PLAN_CONFIG_ACTION, PLAN_ORDER, getPlanConfig, normalizePlanConfig, planName, type PlanConfig } from "@/lib/plan-config"
 import { getRegionalPricing, type SaaSPlatformInvoice } from "@/lib/saas-subscription-engine"
@@ -643,54 +641,33 @@ async function _savePricingRegion(regionCode: string, plans: { tier: PaidPlan; a
     }
 
     const before = await prisma.pricingPlan.findMany({ where: { regionCode }, select: { tier: true, amount: true, isActive: true, gateway: true } })
-    const gateway = before.find((r) => r.gateway)?.gateway ?? region.gateway
     const changed = plans.filter((p) => {
         const old = before.find((r) => r.tier === p.tier)
         return !old || Number(old.amount) !== Number(p.amount) || old.isActive !== p.isActive
     })
-    if (changed.length === 0) return { changed: 0, stripeSync: { synced: false } as { synced: boolean; error?: string } }
+    if (changed.length === 0) return { changed: 0 }
 
     await prisma.$transaction(
         changed.map((p) =>
             prisma.pricingPlan.upsert({
                 where: { regionCode_tier: { regionCode, tier: p.tier } },
-                update: { amount: p.amount, isActive: p.isActive },
-                create: { regionCode, tier: p.tier, amount: p.amount, isActive: p.isActive, currency: region.currency, gateway },
+                // Every region is sold through Razorpay; its orders are priced from this table
+                update: { amount: p.amount, isActive: p.isActive, gateway: region.gateway },
+                create: { regionCode, tier: p.tier, amount: p.amount, isActive: p.isActive, currency: region.currency, gateway: region.gateway },
             })
         )
     )
-
-    // Keep Stripe in step: Stripe prices can't be edited, so a changed amount
-    // becomes a new monthly + annual price under the plan's lookup keys.
-    // Razorpay needs nothing here: its orders are priced from this table.
-    let stripeSync: { synced: boolean; error?: string } = { synced: false }
-    const toSync = changed.filter((p) => p.isActive)
-    if (gateway === "STRIPE" && toSync.length && stripe) {
-        try {
-            for (const p of toSync) {
-                const monthly = Number(p.amount)
-                for (const [cycle, amount] of [["MONTHLY", monthly], ["ANNUAL", annualFromMonthly(monthly)]] as const) {
-                    await ensureStripePrice(stripe, { plan: p.tier, cycle, currency: region.currency, amount })
-                }
-            }
-            stripeSync = { synced: true }
-        } catch (err) {
-            console.error("savePricingRegion: Stripe price sync failed", err)
-            stripeSync = { synced: false, error: err instanceof Error ? err.message : "Stripe sync failed" }
-        }
-    }
 
     await logAdminAction("PRICING_PLAN_UPDATE", regionCode, "PRICING_PLAN", {
         regionCode,
         currency: region.currency,
         plans: changed.map((p) => ({ tier: p.tier, amount: Number(p.amount), isActive: p.isActive })),
-        stripeSync,
     })
 
     revalidatePath('/admin/pricing')
     revalidatePath('/settings')
     revalidatePath('/erp/pricing')
-    return { changed: changed.length, stripeSync }
+    return { changed: changed.length }
 }
 
 /** What each plan includes (limits, modules, pricing-page bullets), as the platform saved it. */
@@ -947,10 +924,6 @@ export async function getServiceHealth(): Promise<ServiceHealth[]> {
             const res = await fetch("https://api.razorpay.com/v1/orders?count=1", { headers: { Authorization: `Basic ${auth}` }, signal: timeout(), cache: "no-store" })
             if (!res.ok) throw new Error(`HTTP ${res.status}`)
             return process.env.RAZORPAY_KEY_ID!.startsWith("rzp_test_") ? "Test mode" : "Live mode"
-        }),
-        timedCheck("Payments (Stripe)", !!stripe, async () => {
-            await stripe!.balance.retrieve()
-            return process.env.STRIPE_SECRET_KEY!.startsWith("sk_test_") ? "Test mode" : "Live mode"
         }),
         timedCheck("Webhooks & Cron secrets", true, async () => {
             const missing = ["RAZORPAY_WEBHOOK_SECRET", "CRON_SECRET", "ENCRYPTION_KEY"].filter((k) => !process.env[k])
@@ -1231,6 +1204,9 @@ async function _removeBlockedIp(ip: string) {
  * Global Platform Settings & Announcement Engine
  */
 export async function getGlobalSettings() {
+    // Platform switches are for the Super Admin only; signed-in users read the
+    // broadcast message through getAnnouncement()
+    await ensureSuperAdmin()
     try {
         let settings = await prisma.globalSettings.findUnique({
             where: { id: "system_config" }
@@ -1260,12 +1236,17 @@ export async function getGlobalSettings() {
     }
 }
 
+const MAX_BROADCAST_LENGTH = 500
+
 async function _updateGlobalSettings(data: {
     maintenanceMode?: boolean
     allowSignups?: boolean
     bannerMessage?: string | null
 }) {
     await ensureSuperAdmin()
+    if ((data.bannerMessage?.trim().length ?? 0) > MAX_BROADCAST_LENGTH) {
+        throw new Error(`Keep the broadcast message under ${MAX_BROADCAST_LENGTH} characters.`)
+    }
 
     const updated = await prisma.globalSettings.upsert({
         where: { id: "system_config" },

@@ -41,7 +41,7 @@ describe("getEffectivePricing", () => {
         vi.spyOn(console, "error").mockImplementation(() => {})
         const pricing = await getEffectivePricing("USD")
         expect(pricing.monthly.PRO).toBe(49)
-        expect(pricing.gateway).toBe("STRIPE")
+        expect(pricing.gateway).toBe("RAZORPAY")
     })
 
     it("ignores zero or negative prices", async () => {

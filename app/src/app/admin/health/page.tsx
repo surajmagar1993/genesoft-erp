@@ -11,7 +11,6 @@ export default async function SystemHealthPage() {
         "Auth (Supabase)": ShieldCheck,
         "Email (Resend)": Mail,
         "Payments (Razorpay)": CreditCard,
-        "Payments (Stripe)": CreditCard,
         "Webhooks & Cron secrets": KeyRound,
     }
     const services = [

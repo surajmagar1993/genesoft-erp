@@ -1,9 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
-import { postToLedger } from "@/lib/ledger"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
-import { PORTAL_ONLINE_PAYMENTS_ENABLED } from "./portal-types"
 import type {
   PortalProfile,
   PortalInvoiceRecord,
@@ -13,7 +11,6 @@ import type {
   PortalTicketDetail,
   PortalDashboardData,
 } from "./portal-types"
-import { errorMessage } from "@/lib/utils";
 
 // ────────────────────────────────────────────
 // Helpers
@@ -42,11 +39,13 @@ async function resolveContact(token: string) {
     return null
   }
 
-  // Update last access timestamp
-  await prisma.contact.update({
-    where: { id: contact.id },
-    data: { portalLastAccess: new Date() },
-  })
+  // Note the visit, at most once every five minutes (a page makes several calls)
+  if (!contact.portalLastAccess || Date.now() - contact.portalLastAccess.getTime() > 5 * 60_000) {
+    await prisma.contact.update({
+      where: { id: contact.id },
+      data: { portalLastAccess: new Date() },
+    })
+  }
 
   return contact
 }
@@ -334,23 +333,39 @@ export async function getPortalTicketDetail(
   }
 }
 
+/** Limits on what a portal link can write, so one link can't flood a business's inbox */
+const PORTAL_SUBJECT_MAX = 200
+const PORTAL_MESSAGE_MAX = 5000
+const PORTAL_TICKETS_PER_HOUR = 10
+const PORTAL_MESSAGES_PER_HOUR = 30
+
 export async function createPortalTicket(
   token: string,
   data: { subject: string; category: string; message: string }
-): Promise<{ success: boolean; ticketId?: string }> {
+): Promise<{ success: boolean; ticketId?: string; error?: string }> {
   const contact = await resolveContact(token)
-  if (!contact) return { success: false }
+  if (!contact) return { success: false, error: "This portal link is no longer valid." }
+
+  const subject = String(data.subject || "").trim()
+  const message = String(data.message || "").trim()
+  if (!subject || !message) return { success: false, error: "Enter a subject and a message." }
+  if (subject.length > PORTAL_SUBJECT_MAX) return { success: false, error: `Keep the subject under ${PORTAL_SUBJECT_MAX} characters.` }
+  if (message.length > PORTAL_MESSAGE_MAX) return { success: false, error: `Keep the message under ${PORTAL_MESSAGE_MAX} characters.` }
+
+  const hourAgo = new Date(Date.now() - 3600_000)
+  const recent = await prisma.portalTicket.count({ where: { tenantId: contact.tenantId, contactId: contact.id, createdAt: { gte: hourAgo } } })
+  if (recent >= PORTAL_TICKETS_PER_HOUR) return { success: false, error: "You've opened several tickets in the last hour. Please reply on an existing one, or try again later." }
 
   const ticket = await prisma.portalTicket.create({
     data: {
       tenantId: contact.tenantId,
       contactId: contact.id,
-      subject: data.subject,
-      category: data.category,
+      subject,
+      category: String(data.category || "general").slice(0, 50),
       messages: {
         create: {
           senderName: contact.displayName,
-          content: data.message,
+          content: message,
           isFromCustomer: true,
         },
       },
@@ -371,21 +386,29 @@ export async function addPortalTicketMessage(
   token: string,
   ticketId: string,
   message: string
-): Promise<{ success: boolean }> {
+): Promise<{ success: boolean; error?: string }> {
   const contact = await resolveContact(token)
-  if (!contact) return { success: false }
+  if (!contact) return { success: false, error: "This portal link is no longer valid." }
+
+  const content = String(message || "").trim()
+  if (!content) return { success: false, error: "Enter a message." }
+  if (content.length > PORTAL_MESSAGE_MAX) return { success: false, error: `Keep the message under ${PORTAL_MESSAGE_MAX} characters.` }
+  const recent = await prisma.portalTicketMessage.count({
+    where: { isFromCustomer: true, createdAt: { gte: new Date(Date.now() - 3600_000) }, ticket: { contactId: contact.id, tenantId: contact.tenantId } },
+  })
+  if (recent >= PORTAL_MESSAGES_PER_HOUR) return { success: false, error: "You've sent many messages in the last hour. Please try again later." }
 
   // Verify ticket belongs to this contact
   const ticket = await prisma.portalTicket.findFirst({
-    where: { id: ticketId, contactId: contact.id },
+    where: { id: ticketId, contactId: contact.id, tenantId: contact.tenantId },
   })
-  if (!ticket) return { success: false }
+  if (!ticket) return { success: false, error: "Ticket not found." }
 
   await prisma.portalTicketMessage.create({
     data: {
       ticketId,
       senderName: contact.displayName,
-      content: message,
+      content,
       isFromCustomer: true,
     },
   })
@@ -505,100 +528,5 @@ export async function getPortalDashboard(
     recentInvoices,
     recentPayments,
     openTickets: openTicketCount,
-  }
-}
-
-/**
- * Executes an online checkout payment for an invoice in the customer portal.
- */
-export async function payPortalInvoice(
-  token: string,
-  invoiceId: string,
-  gateway: "STRIPE" | "PAYPAL"
-): Promise<{
-  success: boolean
-  transactionId?: string
-  message: string
-  error?: string
-}> {
-  if (!PORTAL_ONLINE_PAYMENTS_ENABLED) {
-    return {
-      success: false,
-      message: "Online payment is not available yet. Please pay using the details on your invoice or contact the seller.",
-    }
-  }
-
-  try {
-    const contact = await resolveContact(token)
-    if (!contact) {
-      return { success: false, message: "Unauthorized or invalid portal token" }
-    }
-
-    const invoice = await prisma.invoice.findFirst({
-      where: {
-        id: invoiceId,
-        contactId: contact.id,
-        tenantId: contact.tenantId,
-      },
-      include: {
-        payments: { select: { amount: true } },
-      },
-    })
-
-    if (!invoice) {
-      return { success: false, message: "Invoice not found or unauthorized" }
-    }
-
-    const totalPaid = invoice.payments.reduce((s: number, p: { amount: unknown }) => s + dec(p.amount), 0)
-    const balanceDue = Math.max(0, dec(invoice.total) - totalPaid)
-
-    if (balanceDue <= 0) {
-      return { success: false, message: "Invoice is already fully settled" }
-    }
-
-    const simTxId =
-      gateway === "STRIPE"
-        ? `ch_sim_portal_${Date.now()}_${Math.floor(Math.random() * 10000)}`
-        : `PAYPAL_SIM_PORTAL_${Date.now()}_${Math.floor(Math.random() * 10000)}`
-
-    // 1. Create Payment record
-    const payment = await prisma.payment.create({
-      data: {
-        tenantId: contact.tenantId,
-        invoiceId: invoice.id,
-        contactId: contact.id,
-        amount: balanceDue,
-        paymentDate: new Date(),
-        paymentMethod: gateway === "STRIPE" ? "STRIPE" : "PAYPAL",
-        type: "INBOUND",
-        reference: `${gateway}:${simTxId}`,
-        notes: `Online portal checkout settled via ${gateway}`,
-        currencyCode: invoice.currencyCode,
-      },
-    })
-
-    // 2. Settle invoice
-    await prisma.invoice.update({
-      where: { id: invoice.id },
-      data: { status: "PAID" },
-    })
-    await postToLedger(contact.tenantId, { kind: "payment", id: payment.id })
-
-    // 3. Credit contact balance
-    await prisma.contact.update({
-      where: { id: contact.id },
-      data: {
-        balance: { decrement: balanceDue },
-      },
-    })
-
-    return {
-      success: true,
-      transactionId: simTxId,
-      message: `Payment of ${invoice.currencyCode} ${balanceDue.toFixed(2)} settled successfully via ${gateway}!`,
-    }
-  } catch (error) {
-    console.error("Error processing portal invoice payment:", error)
-    return { success: false, message: "Payment processing failed", error: errorMessage(error) }
   }
 }

@@ -1,14 +1,11 @@
 import Link from "next/link"
-import { appUrl } from "@/lib/app-url"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Building2, Globe, ShieldCheck, CreditCard, WalletCards, Zap, Users, Database, History } from "lucide-react"
+import { Building2, Globe, ShieldCheck, CreditCard, Zap, Users, Database, History } from "lucide-react"
 import { getTenantSettings } from "@/app/actions/settings/tenant"
-import { getTenantPaymentGateways } from "@/app/actions/finance/gateways"
 import CompanyProfileTab from "./company-profile-tab"
 import TaxConfigClient from "./tax-config-client"
 import BillingTab from "./billing-tab"
-import PaymentGatewaysTab from "./payment-gateways-tab"
 import TeamTab from "./team-tab"
 import DataAccountTab from "./data-account-tab"
 import { getMyAccess, getTenantRole } from "@/lib/get-tenant-id"
@@ -21,19 +18,16 @@ import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
 import { getMyActivityLog } from "@/app/actions/activity"
 import { ActivityLogTable } from "@/components/activity-log-table"
 
-const SETTINGS_TABS = ["organization", "taxation", "account", "gateways", "billing", "team", "data", "activity"]
+const SETTINGS_TABS = ["organization", "taxation", "account", "billing", "team", "data", "activity"]
 
 export default async function SettingsPage({
     searchParams,
 }: {
-    searchParams: Promise<{ tab?: string; success?: string; canceled?: string }>
+    searchParams: Promise<{ tab?: string }>
 }) {
     const params = await searchParams
-    // Stripe Checkout returns here with ?tab=billing&success=true (or canceled=true)
     const initialTab = SETTINGS_TABS.includes(params.tab || "") ? params.tab! : "organization"
-    const checkoutResult = params.success === "true" ? "success" : params.canceled === "true" ? "canceled" : undefined
     const settings = await getTenantSettings()
-    const gatewayConfig = await getTenantPaymentGateways()
     const billingPricing = await getBillingPricing().catch(() => undefined)
     const planConfig = await getPlanConfig()
     const { planModules } = await getMyAccess()
@@ -43,7 +37,6 @@ export default async function SettingsPage({
     const teamMembers = isAdmin ? await getTeamMembers() : []
     const teamInvites = isAdmin ? await getPendingInvites() : []
     const activity = isAdmin ? await getMyActivityLog() : { rows: [], timeZone: "UTC" }
-    const siteUrl = appUrl()
     const emailPrefs = await getEmailPreferences()
     const regime = resolveTaxRegime(settings?.country_code, null, settings?.currency_code)
     const sampleNumber = new Intl.NumberFormat(regime.locale, { minimumFractionDigits: 2 }).format(100000)
@@ -55,7 +48,7 @@ export default async function SettingsPage({
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
                     <p className="text-muted-foreground mt-1">
-                        Manage your organization, branding, payment gateways, and workspace configuration.
+                        Manage your organization, branding, team and workspace configuration.
                     </p>
                 </div>
                 <Link
@@ -83,9 +76,6 @@ export default async function SettingsPage({
                     </TabsTrigger>
                     <TabsTrigger value="account" className="flex items-center gap-2">
                         <Globe className="h-4 w-4" /> Regional
-                    </TabsTrigger>
-                    <TabsTrigger value="gateways" className="flex items-center gap-2">
-                        <WalletCards className="h-4 w-4" /> Payment Gateways
                     </TabsTrigger>
                     <TabsTrigger value="billing" className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4" /> Billing
@@ -158,14 +148,9 @@ export default async function SettingsPage({
                     </div>
                 </TabsContent>
 
-                {/* Payment Gateways */}
-                <TabsContent value="gateways">
-                    <PaymentGatewaysTab initialConfig={gatewayConfig} appUrl={siteUrl} />
-                </TabsContent>
-
                 {/* Billing Settings */}
                 <TabsContent value="billing">
-                    <BillingTab settings={settings} pricing={billingPricing} checkoutResult={checkoutResult} planFeatures={planFeatures} />
+                    <BillingTab settings={settings} pricing={billingPricing} planFeatures={planFeatures} />
                 </TabsContent>
 
                 {/* Team & Access (workspace admins only) */}

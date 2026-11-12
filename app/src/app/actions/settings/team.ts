@@ -5,7 +5,6 @@ import { getTenantAdminId } from "@/lib/get-tenant-id"
 import { getCurrentUser } from "@/lib/current-user"
 import { revalidatePath } from "next/cache"
 import { appUrl } from "@/lib/app-url"
-import { sendSystemEmail } from "@/lib/system-email"
 import { createInviteToken } from "@/lib/invite-token"
 import { INVITE_DAYS, readTeam, updateTeam, type InviteRole } from "@/lib/team-settings"
 import { planLimitError } from "@/lib/plan-limits"
@@ -38,7 +37,7 @@ export interface PendingInvite {
     createdAt: string
     expiresAt: string
     expired: boolean
-    /** The link to share if the email didn't arrive */
+    /** The link the admin shares with the person */
     inviteUrl: string
 }
 
@@ -199,7 +198,8 @@ export async function setTeamMemberActive(
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 /**
- * Invites someone by email: they get a link to set a password and join this
+ * Creates an invitation and returns its link for the admin to share (the app
+ * doesn't email it). The person opens the link, sets a password and joins this
  * workspace with the role and module access chosen here. Inviting the same
  * email again replaces the earlier invite (and its link).
  */
@@ -208,7 +208,7 @@ export async function inviteTeamMember(input: {
     fullName: string
     role: TeamRole
     access?: ModuleAccess
-}, opts: { resend?: boolean } = {}): Promise<{ success: boolean; error?: string; inviteUrl?: string; emailSent?: boolean; emailError?: string }> {
+}, opts: { resend?: boolean } = {}): Promise<{ success: boolean; error?: string; inviteUrl?: string }> {
     try {
         const tenantId = await getTenantAdminId()
         const caller = await getCurrentUser()
@@ -221,7 +221,8 @@ export async function inviteTeamMember(input: {
 
         const existing = await prisma.user.findFirst({ where: { email: { equals: email, mode: "insensitive" } }, select: { tenantId: true } })
         if (existing?.tenantId === tenantId) return { success: false, error: "This person is already in your team." }
-        if (existing) return { success: false, error: "This email already has a Genesoft account in another workspace. Ask them to use a different email." }
+        // Same wording whether or not the address is known elsewhere, so this can't be used to look people up
+        if (existing) return { success: false, error: "This email can't be invited. Ask them to use a different email address." }
 
         // A new invite takes a seat on the plan; re-inviting the same email replaces the old one
         const settings = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
@@ -229,10 +230,7 @@ export async function inviteTeamMember(input: {
         const limit = await planLimitError(tenantId, "users", { adding: replacing ? 0 : 1 })
         if (limit) return { success: false, error: limit }
 
-        const [tenant, inviter] = await Promise.all([
-            prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true } }),
-            prisma.user.findUnique({ where: { id: caller.id }, select: { fullName: true, email: true } }),
-        ])
+        const inviter = await prisma.user.findUnique({ where: { id: caller.id }, select: { fullName: true, email: true } })
         const invitedByName = inviter?.fullName || inviter?.email || "Your admin"
         const id = crypto.randomUUID()
         const expiresAt = new Date(Date.now() + INVITE_DAYS * 24 * 3600 * 1000)
@@ -255,25 +253,17 @@ export async function inviteTeamMember(input: {
         }))
 
         const url = inviteUrl(tenantId, id, expiresAt)
-        const mail = await sendSystemEmail("TEAM_INVITE", email, {
-            invitee_name: fullName,
-            inviter_name: invitedByName,
-            company_name: tenant?.name || "your team",
-            invite_url: url,
-            expires_on: expiresAt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
-        })
-
         revalidatePath("/settings")
         revalidatePath("/admin/users")
-        await logTenantAudit(tenantId, opts.resend ? "TEAM_INVITE_RESENT" : "TEAM_INVITE_SENT", { target: { type: "INVITE", id }, metadata: { email, role: input.role, emailSent: mail.sent } })
-        return { success: true, inviteUrl: url, emailSent: mail.sent, emailError: mail.reason }
+        await logTenantAudit(tenantId, opts.resend ? "TEAM_INVITE_RESENT" : "TEAM_INVITE_SENT", { target: { type: "INVITE", id }, metadata: { email, role: input.role } })
+        return { success: true, inviteUrl: url }
     } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : "Failed to send the invite" }
+        return { success: false, error: error instanceof Error ? error.message : "Failed to create the invitation" }
     }
 }
 
-/** Sends a pending invite again with a fresh 7-day link. */
-export async function resendInvite(inviteId: string): Promise<{ success: boolean; error?: string; inviteUrl?: string; emailSent?: boolean; emailError?: string }> {
+/** Replaces a pending invite with a fresh 7-day link (the old link stops working). */
+export async function resendInvite(inviteId: string): Promise<{ success: boolean; error?: string; inviteUrl?: string }> {
     try {
         const tenantId = await getTenantAdminId()
         const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
@@ -282,7 +272,7 @@ export async function resendInvite(inviteId: string): Promise<{ success: boolean
         await updateTeam(tenantId, (t) => ({ ...t, invites: t.invites.filter((i) => i.id !== inviteId) }))
         return inviteTeamMember({ email: invite.email, fullName: invite.fullName, role: invite.role, access: invite.access }, { resend: true })
     } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : "Failed to resend the invite" }
+        return { success: false, error: error instanceof Error ? error.message : "Failed to renew the invitation" }
     }
 }
 

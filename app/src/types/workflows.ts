@@ -121,7 +121,7 @@ export const TRIGGER_CATALOG: TriggerMeta[] = [
         label: "Payment Settled",
         category: "SALES",
         entityType: "PAYMENT",
-        description: "Fires when customer settles funds via bank, cash, Stripe, or Razorpay.",
+        description: "Fires when customer settles funds by bank, cash, card or UPI.",
         fields: [
             { key: "amount", label: "Amount Paid", type: "number" },
             { key: "paymentMethod", label: "Payment Gateway", type: "string" },

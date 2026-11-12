@@ -25,29 +25,29 @@ async function main() {
     { regionCode: 'IN', tier: Plan.PRO, amount: 999, currency: 'INR', gateway: 'RAZORPAY', isActive: true },
     { regionCode: 'IN', tier: Plan.ENTERPRISE, amount: 4999, currency: 'INR', gateway: 'RAZORPAY', isActive: true },
 
-    // United States (US) Plans - Stripe
-    { regionCode: 'US', tier: Plan.FREE, amount: 0, currency: 'USD', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'US', tier: Plan.BASIC, amount: 9, currency: 'USD', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'US', tier: Plan.PRO, amount: 29, currency: 'USD', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'US', tier: Plan.ENTERPRISE, amount: 99, currency: 'USD', gateway: 'STRIPE', isActive: true },
+    // United States (US) Plans - Razorpay
+    { regionCode: 'US', tier: Plan.FREE, amount: 0, currency: 'USD', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'US', tier: Plan.BASIC, amount: 9, currency: 'USD', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'US', tier: Plan.PRO, amount: 29, currency: 'USD', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'US', tier: Plan.ENTERPRISE, amount: 99, currency: 'USD', gateway: 'RAZORPAY', isActive: true },
 
-    // United Kingdom (UK) Plans - Stripe
-    { regionCode: 'UK', tier: Plan.FREE, amount: 0, currency: 'GBP', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'UK', tier: Plan.BASIC, amount: 8, currency: 'GBP', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'UK', tier: Plan.PRO, amount: 25, currency: 'GBP', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'UK', tier: Plan.ENTERPRISE, amount: 80, currency: 'GBP', gateway: 'STRIPE', isActive: true },
+    // United Kingdom (UK) Plans - Razorpay
+    { regionCode: 'UK', tier: Plan.FREE, amount: 0, currency: 'GBP', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'UK', tier: Plan.BASIC, amount: 8, currency: 'GBP', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'UK', tier: Plan.PRO, amount: 25, currency: 'GBP', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'UK', tier: Plan.ENTERPRISE, amount: 80, currency: 'GBP', gateway: 'RAZORPAY', isActive: true },
 
-    // United Arab Emirates (AE) Plans - Stripe
-    { regionCode: 'AE', tier: Plan.FREE, amount: 0, currency: 'AED', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'AE', tier: Plan.BASIC, amount: 35, currency: 'AED', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'AE', tier: Plan.PRO, amount: 110, currency: 'AED', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'AE', tier: Plan.ENTERPRISE, amount: 360, currency: 'AED', gateway: 'STRIPE', isActive: true },
+    // United Arab Emirates (AE) Plans - Razorpay
+    { regionCode: 'AE', tier: Plan.FREE, amount: 0, currency: 'AED', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'AE', tier: Plan.BASIC, amount: 35, currency: 'AED', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'AE', tier: Plan.PRO, amount: 110, currency: 'AED', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'AE', tier: Plan.ENTERPRISE, amount: 360, currency: 'AED', gateway: 'RAZORPAY', isActive: true },
 
-    // Saudi Arabia (SA) Plans - Stripe
-    { regionCode: 'SA', tier: Plan.FREE, amount: 0, currency: 'SAR', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'SA', tier: Plan.BASIC, amount: 35, currency: 'SAR', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'SA', tier: Plan.PRO, amount: 110, currency: 'SAR', gateway: 'STRIPE', isActive: true },
-    { regionCode: 'SA', tier: Plan.ENTERPRISE, amount: 375, currency: 'SAR', gateway: 'STRIPE', isActive: true }
+    // Saudi Arabia (SA) Plans - Razorpay
+    { regionCode: 'SA', tier: Plan.FREE, amount: 0, currency: 'SAR', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'SA', tier: Plan.BASIC, amount: 35, currency: 'SAR', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'SA', tier: Plan.PRO, amount: 110, currency: 'SAR', gateway: 'RAZORPAY', isActive: true },
+    { regionCode: 'SA', tier: Plan.ENTERPRISE, amount: 375, currency: 'SAR', gateway: 'RAZORPAY', isActive: true }
   ];
 
   console.log('Seeding pricing plans...');

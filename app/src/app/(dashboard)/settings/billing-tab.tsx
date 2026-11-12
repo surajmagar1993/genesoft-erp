@@ -64,8 +64,6 @@ interface BillingTabProps {
     settings: BillingWorkspace | null
     /** Live prices from Admin → Pricing for this workspace's currency */
     pricing?: EffectivePricing
-    /** Set when Stripe Checkout sends the customer back (?success=true / ?canceled=true) */
-    checkoutResult?: "success" | "canceled"
     /** Feature bullets per plan from Admin → Pricing & Plans */
     planFeatures?: Partial<Record<PlanTier, string[]>>
 }
@@ -78,7 +76,7 @@ declare global {
     }
 }
 
-export default function BillingTab({ settings, pricing, checkoutResult, planFeatures }: BillingTabProps) {
+export default function BillingTab({ settings, pricing, planFeatures }: BillingTabProps) {
     const router = useRouter()
     const currentPlan: PlanTier = (settings?.plan as PlanTier) || "FREE"
     const currency = settings?.currency_code || settings?.currencyCode || "INR"
@@ -181,13 +179,9 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
         }
     }
 
-    // Checkout: Stripe redirects; Razorpay opens its modal, then the server verifies the signature
+    // Checkout: Razorpay opens its payment window, then the server verifies the signature
     const payForPlanChange = async (plan: PlanTier) => {
         const checkout = await createPlanCheckout(plan, billingCycle)
-        if (checkout.gateway === "STRIPE") {
-            window.location.href = checkout.url
-            return
-        }
         if (!window.Razorpay) throw new Error("Payment window failed to load. Refresh the page and try again.")
 
         await new Promise<void>((resolve, reject) => {
@@ -253,22 +247,7 @@ export default function BillingTab({ settings, pricing, checkoutResult, planFeat
 
     return (
         <div className="space-y-8 animate-in fade-in duration-300">
-            {checkoutResult === "success" && (
-                <div className="flex items-start gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:text-emerald-300">
-                    <CheckCircle2 className="h-5 w-5 mt-0.5 shrink-0" />
-                    <p>
-                        Payment received. Your plan switches as soon as Stripe confirms it, usually within a few seconds.
-                        If it still shows the old plan, refresh this page.
-                    </p>
-                </div>
-            )}
-            {checkoutResult === "canceled" && (
-                <div className="flex items-start gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300">
-                    <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />
-                    <p>Checkout was cancelled. You haven&apos;t been charged and your plan hasn&apos;t changed.</p>
-                </div>
-            )}
-            {intendedPlan && !checkoutResult && (
+            {intendedPlan && (
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
                     <div className="flex items-start gap-3 text-sm">
                         <Sparkles className="h-5 w-5 mt-0.5 shrink-0 text-primary" />

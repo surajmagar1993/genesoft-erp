@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Copy, Loader2, Mail, RefreshCw, ShieldCheck, UserPlus, X } from "lucide-react"
+import { Copy, Link2, Loader2, RefreshCw, ShieldCheck, UserPlus, X } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -122,7 +122,7 @@ export default function TeamTab({ initialMembers, invites, planModules = {} }: {
     const [inviteRole, setInviteRole] = useState<TeamRole>("MEMBER")
     const [inviteAccess, setInviteAccess] = useState<ModuleAccess>(uniformAccess("VIEW"))
     const [sending, setSending] = useState(false)
-    const [sharedLink, setSharedLink] = useState<{ url: string; reason?: string } | null>(null)
+    const [sharedLink, setSharedLink] = useState<{ url: string; name: string } | null>(null)
 
     const patch = (id: string, changes: Partial<TeamMember>) =>
         setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, ...changes } : m)))
@@ -164,16 +164,15 @@ export default function TeamTab({ initialMembers, invites, planModules = {} }: {
         const result = await inviteTeamMember({ email: inviteEmail, fullName: inviteName, role: inviteRole, access: inviteRole === "MEMBER" ? inviteAccess : undefined })
         setSending(false)
         if (!result.success) {
-            toast.error(result.error || "Failed to send the invite")
+            toast.error(result.error || "Failed to create the invitation")
             return
         }
+        setSharedLink({ url: result.inviteUrl!, name: inviteName.trim() })
         setInviteOpen(false)
         setInviteName("")
         setInviteEmail("")
         setInviteRole("MEMBER")
         setInviteAccess(uniformAccess("VIEW"))
-        if (result.emailSent) toast.success(`Invitation emailed to ${inviteEmail.trim()}`)
-        else setSharedLink({ url: result.inviteUrl!, reason: result.emailError })
         router.refresh()
     }
 
@@ -182,11 +181,10 @@ export default function TeamTab({ initialMembers, invites, planModules = {} }: {
         const result = await resendInvite(invite.id)
         setPendingId(null)
         if (!result.success) {
-            toast.error(result.error || "Failed to resend")
+            toast.error(result.error || "Failed to renew the invitation")
             return
         }
-        if (result.emailSent) toast.success(`Invitation sent again to ${invite.email}`)
-        else setSharedLink({ url: result.inviteUrl!, reason: result.emailError })
+        setSharedLink({ url: result.inviteUrl!, name: invite.fullName })
         router.refresh()
     }
 
@@ -279,7 +277,7 @@ export default function TeamTab({ initialMembers, invites, planModules = {} }: {
             <Card>
                 <CardHeader>
                     <CardTitle>Pending invitations</CardTitle>
-                    <CardDescription>Invitations are valid for 7 days. Cancel one to stop its link working.</CardDescription>
+                    <CardDescription>Copy a link and send it to the person yourself. Links are valid for 7 days; cancel one to stop it working.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {invites.length === 0 ? (
@@ -315,7 +313,7 @@ export default function TeamTab({ initialMembers, invites, planModules = {} }: {
                                                     <Button size="icon" variant="ghost" className="h-8 w-8" title="Copy link" disabled={i.expired} onClick={() => copy(i.inviteUrl)}>
                                                         <Copy className="h-4 w-4" />
                                                     </Button>
-                                                    <Button size="icon" variant="ghost" className="h-8 w-8" title="Send again" disabled={pendingId === i.id} onClick={() => handleResend(i)}>
+                                                    <Button size="icon" variant="ghost" className="h-8 w-8" title="New link (the old one stops working)" disabled={pendingId === i.id} onClick={() => handleResend(i)}>
                                                         <RefreshCw className="h-4 w-4" />
                                                     </Button>
                                                     <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" title="Cancel invitation" disabled={pendingId === i.id} onClick={() => handleRevoke(i)}>
@@ -358,7 +356,7 @@ export default function TeamTab({ initialMembers, invites, planModules = {} }: {
                 <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Invite a team member</DialogTitle>
-                        <DialogDescription>They get an email with a link to set a password and join this workspace.</DialogDescription>
+                        <DialogDescription>You get a link to send them. They open it, set a password and join this workspace.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 min-w-0">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -377,20 +375,20 @@ export default function TeamTab({ initialMembers, invites, planModules = {} }: {
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setInviteOpen(false)} disabled={sending}>Cancel</Button>
                         <Button onClick={sendInvite} disabled={sending || !inviteEmail.trim() || !inviteName.trim()}>
-                            {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mail className="mr-2 h-4 w-4" />}
-                            Send invitation
+                            {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Link2 className="mr-2 h-4 w-4" />}
+                            Create invitation link
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
 
-            {/* Link to share when the email couldn't be sent */}
+            {/* The link the admin sends to the person */}
             <Dialog open={!!sharedLink} onOpenChange={(o) => !o && setSharedLink(null)}>
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Share the invitation link</DialogTitle>
                         <DialogDescription>
-                            The invitation is saved, but the email couldn&apos;t be sent{sharedLink?.reason ? ` (${sharedLink.reason})` : ""}. Send this link to them yourself.
+                            Send this link to {sharedLink?.name || "them"}. It works once, for the email address you entered, and is valid for 7 days.
                         </DialogDescription>
                     </DialogHeader>
                     <Input readOnly value={sharedLink?.url || ""} onFocus={(e) => e.target.select()} className="min-w-0" />

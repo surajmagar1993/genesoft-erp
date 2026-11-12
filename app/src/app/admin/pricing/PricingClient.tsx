@@ -44,14 +44,13 @@ function RegionRow({ region }: { region: PricingRegionRow }) {
     const save = async () => {
         setSaving(true)
         try {
-            const result = unwrap(
+            unwrap(
                 await savePricingRegion(
                     region.code,
                     TIERS.map((tier) => ({ tier, amount: Number(draft[tier].amount), isActive: draft[tier].isActive }))
                 )
             )
-            if (result.stripeSync.error) toast.warning(`${region.label} prices saved, but Stripe wasn't updated: ${result.stripeSync.error}`)
-            else toast.success(`${region.label} prices saved${result.stripeSync.synced ? " and updated in Stripe" : ""}`)
+            toast.success(`${region.label} prices saved`)
             router.refresh()
         } catch (err) {
             toast.error(err instanceof Error ? err.message : "Couldn't save the prices")
@@ -68,7 +67,7 @@ function RegionRow({ region }: { region: PricingRegionRow }) {
                     <span className="truncate">{region.label}</span>
                 </div>
                 <div className="mt-0.5 text-xs text-muted-foreground">
-                    {region.currency} · {region.gateway === "RAZORPAY" ? "Razorpay" : "Stripe"}
+                    {region.currency} · Razorpay
                 </div>
                 {unsaved && (
                     <Badge variant="outline" className="mt-1 h-5 border-amber-500/40 text-[10px] text-amber-600 dark:text-amber-400">

@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { annualFromMonthly } from "@/lib/plan-pricing-math"
 import { getRegionalPricing, type PlanTier, type RegionalPricing } from "@/lib/saas-subscription-engine"
 
-export type BillingGateway = "RAZORPAY" | "STRIPE"
+export type BillingGateway = "RAZORPAY"
 
 export interface EffectivePricing extends RegionalPricing {
     gateway: BillingGateway
@@ -18,21 +18,20 @@ export { annualFromMonthly }
  * of truth: its monthly prices override the built-in catalog, and the annual
  * price is derived from them. A paid plan switched off there is hidden (not
  * offered or sold). Tiers or currencies with no row keep the catalog price.
- * The gateway comes from the rows (INR defaults to Razorpay, everything else
- * to Stripe).
+ * Every currency is paid through Razorpay.
  */
 export async function getEffectivePricing(currencyCode?: string | null): Promise<EffectivePricing> {
     const catalog = getRegionalPricing(currencyCode)
     const currency = catalog.currency
     const monthly = { ...catalog.monthly }
     const annual = { ...catalog.annual }
-    let gateway: BillingGateway = currency === "INR" ? "RAZORPAY" : "STRIPE"
+    const gateway: BillingGateway = "RAZORPAY"
     const hidden: PlanTier[] = []
 
     try {
-        const rows: { tier: PlanTier; amount: unknown; gateway: string; isActive: boolean }[] = await prisma.pricingPlan.findMany({
+        const rows: { tier: PlanTier; amount: unknown; isActive: boolean }[] = await prisma.pricingPlan.findMany({
             where: { currency },
-            select: { tier: true, amount: true, gateway: true, isActive: true },
+            select: { tier: true, amount: true, isActive: true },
         })
         for (const row of rows) {
             if (!PAID_TIERS.includes(row.tier as Exclude<PlanTier, "FREE">)) continue
@@ -43,8 +42,6 @@ export async function getEffectivePricing(currencyCode?: string | null): Promise
             monthly[row.tier] = price
             annual[row.tier] = annualFromMonthly(price)
         }
-        const rowGateway = rows.find((r) => r.gateway === "RAZORPAY" || r.gateway === "STRIPE")?.gateway
-        if (rowGateway) gateway = rowGateway as BillingGateway
     } catch (err) {
         console.error("getEffectivePricing: falling back to the built-in catalog", err)
     }

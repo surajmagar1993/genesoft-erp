@@ -35,7 +35,6 @@ const salesStaff: ModuleAccess = { ...uniformAccess("NONE"), sales: "EDIT", fina
 async function inviteAndJoin(email: string, access: ModuleAccess, role: "ADMIN" | "MEMBER" = "MEMBER") {
     const res = await inviteTeamMember({ email, fullName: "Priya Sharma", role, access })
     expect(res.success).toBe(true)
-    expect(res.emailSent).toBe(false) // no Resend key in tests: the admin gets the link to share
     const token = tokenOf(res.inviteUrl!)
     expect(await redirectOf(() => acceptInvite(form({ token, fullName: "Priya Sharma", password: "s3cret-pass", confirmPassword: "s3cret-pass" })))).toMatch(/joined the team/)
     return prisma.user.findFirstOrThrow({ where: { email } })
@@ -110,7 +109,7 @@ describe("team invitations and module access", () => {
         const other = await createTestTenant()
         actAs(other.user)
         expect((await updateTeamMember(viewer.id, { role: "ADMIN" })).error).toMatch(/not found/)
-        expect((await inviteTeamMember({ email: admin.email, fullName: "A", role: "MEMBER" })).error).toMatch(/another workspace/)
+        expect((await inviteTeamMember({ email: admin.email, fullName: "A", role: "MEMBER" })).error).toMatch(/can.t be invited/)
     })
 
     it("the Super Admin sees every business's users and access but can't change their roles", async () => {

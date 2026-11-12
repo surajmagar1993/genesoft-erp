@@ -53,7 +53,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                 allowSignups,
                 bannerMessage: bannerMessage.trim() ? bannerMessage.trim() : null
             }))
-            toast.success("System settings and broadcast message updated successfully")
+            toast.success(bannerMessage.trim() ? "Saved. The broadcast message is live." : "Saved. No broadcast message is showing.")
             router.refresh()
         } catch (error) {
             console.error("Failed to save global settings:", error)
@@ -99,19 +99,19 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                                 <Megaphone className="h-4 w-4 text-primary" />
                                 <CardTitle className="text-base">System-wide Announcement Broadcast</CardTitle>
                             </div>
-                            {bannerMessage.trim() ? (
+                            {(initialSettings.bannerMessage || "").trim() ? (
                                 <Badge className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 text-[10px] uppercase font-bold flex items-center gap-1">
                                     <Radio className="h-3 w-3 animate-pulse" />
-                                    Broadcast Live
+                                    Live now
                                 </Badge>
                             ) : (
                                 <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                                    No Broadcast Active
+                                    Nothing showing
                                 </Badge>
                             )}
                         </div>
                         <CardDescription>
-                            Displays an urgent notification banner across all active tenant dashboards immediately.
+                            Shows a notice at the top of every business&apos;s app. People already signed in see it within five minutes; each person can close it, and it comes back only if you change the message.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="pt-6 space-y-4">
@@ -124,7 +124,8 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                                 rows={3}
                                 value={bannerMessage}
                                 onChange={e => setBannerMessage(e.target.value)}
-                                placeholder="E.g., 📢 Scheduled Maintenance: The platform will undergo a brief database optimization tonight at 02:00 UTC."
+                                placeholder="Write the message every business will see at the top of the app"
+                                maxLength={500}
                                 className="font-medium text-sm bg-background"
                             />
                         </div>
@@ -154,7 +155,7 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                                     onClick={clearBanner}
                                     className="text-xs text-muted-foreground"
                                 >
-                                    Clear Banner
+                                    Clear message
                                 </Button>
                             )}
                         </div>
@@ -243,8 +244,8 @@ export function SettingsClient({ initialSettings }: SettingsClientProps) {
                                     <span className="font-semibold text-muted-foreground">Payment Gateways</span>
                                     <ShieldCheck className="h-3.5 w-3.5 text-purple-500" />
                                 </div>
-                                <div className="font-bold text-foreground">Stripe & Razorpay</div>
-                                <div className="text-[10px] text-purple-600 font-semibold">Dual-Gateway Active</div>
+                                <div className="font-bold text-foreground">Razorpay</div>
+                                <div className="text-[10px] text-purple-600 font-semibold">All regions</div>
                             </div>
                         </div>
                     </CardContent>

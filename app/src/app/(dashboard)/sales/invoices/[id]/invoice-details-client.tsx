@@ -4,7 +4,7 @@ import { COMPLIANCE_MODULES_ENABLED, PARKED_MODULES_ENABLED } from "@/lib/featur
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Download, CreditCard, Pencil, Trash2, FileText, CheckCircle2, IndianRupee, ArrowRightLeft, Stamp, ShieldCheck, Scale, Truck, MessageSquare, ExternalLink, Loader2, Link2, Copy, Check, Palette } from "lucide-react"
+import { ArrowLeft, Download, CreditCard, Pencil, Trash2, FileText, IndianRupee, ArrowRightLeft, Stamp, ShieldCheck, Scale, Truck, MessageSquare, ExternalLink, Loader2, Palette } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -37,7 +37,6 @@ import { COMPANY } from "@/lib/constants/company"
 import { InvoiceTemplateDialog } from "@/components/invoices/invoice-template-dialog"
 import { INVOICE_TEMPLATES } from "@/components/invoices/templates/invoice-templates"
 import { RequireRole } from "@/components/auth/role-context"
-import { PORTAL_ONLINE_PAYMENTS_ENABLED } from "@/app/actions/portal/portal-types"
 import { toast } from "sonner"
 
 const formatCurrency = (amount: number, currency: string = "INR") =>
@@ -146,24 +145,6 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
         window.open(link, "_blank")
     }
 
-    // ONLINE PAYMENT GATEWAY LINK STATE
-    const [openPaymentLinkModal, setOpenPaymentLinkModal] = useState(false)
-    const [copiedPaymentLink, setCopiedPaymentLink] = useState(false)
-
-    const getPortalPaymentUrl = () => {
-        const origin = typeof window !== "undefined" ? window.location.origin : ""
-        return `${origin}/portal/${invoice.id}?pay=true`
-    }
-
-    const handleCopyPaymentLink = () => {
-        const url = getPortalPaymentUrl()
-        if (typeof navigator !== "undefined" && navigator.clipboard) {
-            navigator.clipboard.writeText(url)
-        }
-        setCopiedPaymentLink(true)
-        setTimeout(() => setCopiedPaymentLink(false), 2500)
-    }
-
     const handleRecordPayment = async (e: React.FormEvent) => {
         e.preventDefault()
         startTransition(async () => {
@@ -269,18 +250,6 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                             <MessageSquare className="mr-1.5 h-4 w-4 text-emerald-600" />
                             WhatsApp
                         </Button>
-                    )}
-                    {/* Online payment of invoices isn't live yet (PORTAL_ONLINE_PAYMENTS_ENABLED) */}
-                    {PORTAL_ONLINE_PAYMENTS_ENABLED && (
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-indigo-500/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 font-semibold"
-                        onClick={() => setOpenPaymentLinkModal(true)}
-                    >
-                        <CreditCard className="mr-1.5 h-4 w-4 text-indigo-600" />
-                        Pay Link
-                    </Button>
                     )}
                     {invoice.type === "PROFORMA" && (
                         <Button
@@ -518,23 +487,6 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                             <CardDescription>History of receipts against this invoice.</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {PORTAL_ONLINE_PAYMENTS_ENABLED && balanceDue > 0 && (
-                                <div className="mb-4 p-3 rounded-lg border border-indigo-500/30 bg-indigo-500/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-                                    <div className="flex items-center gap-2">
-                                        <div className="p-1.5 rounded-full bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600">
-                                            <CreditCard className="h-4 w-4" />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-foreground text-xs">Online Payment Gateway</p>
-                                            <p className="text-muted-foreground text-[11px]">Clients can pay outstanding {formatCurrency(balanceDue, invoice.currency_code)} directly via Stripe or PayPal checkout.</p>
-                                        </div>
-                                    </div>
-                                    <Button size="sm" variant="outline" className="h-8 text-xs border-indigo-300 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 shrink-0" onClick={() => setOpenPaymentLinkModal(true)}>
-                                        <Link2 className="mr-1.5 h-3.5 w-3.5" />
-                                        Share Pay Link
-                                    </Button>
-                                </div>
-                            )}
                             {payments.length === 0 ? (
                                 <div className="text-center p-8 border border-dashed rounded-lg bg-muted/20">
                                     <p className="text-muted-foreground">No payments recorded yet.</p>
@@ -769,99 +721,6 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                 Send WhatsApp
                             </Button>
                         </div>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* ONLINE PAYMENT LINK MODAL */}
-            <Dialog open={openPaymentLinkModal} onOpenChange={setOpenPaymentLinkModal}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2 text-lg">
-                            <CreditCard className="h-5 w-5 text-indigo-600" />
-                            Online Customer Payment Link
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-2">
-                        <p className="text-sm text-muted-foreground">
-                            Share this link with <span className="font-semibold text-foreground">{invoice.customer_name}</span> to collect payment online via Stripe (Cards, Apple Pay, Google Pay) or PayPal.
-                        </p>
-
-                        <div className="p-3 bg-muted/40 rounded-lg border space-y-2">
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground">Invoice Reference:</span>
-                                <span className="font-medium">{invoice.invoice_number}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground">Outstanding Balance:</span>
-                                <span className="font-bold text-orange-600 dark:text-orange-400">
-                                    {formatCurrency(balanceDue, invoice.currency_code)}
-                                </span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                                <span className="text-muted-foreground">Supported Gateways:</span>
-                                <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20">
-                                    Stripe &bull; PayPal
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Payment URL</Label>
-                            <div className="flex items-center gap-2">
-                                <Input
-                                    readOnly
-                                    value={getPortalPaymentUrl()}
-                                    className="text-xs font-mono select-all bg-muted/30"
-                                    onClick={(e) => (e.target as HTMLInputElement).select()}
-                                />
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    onClick={handleCopyPaymentLink}
-                                    className="shrink-0 font-semibold"
-                                >
-                                    {copiedPaymentLink ? (
-                                        <>
-                                            <Check className="h-4 w-4 mr-1.5 text-emerald-300" />
-                                            Copied!
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="h-4 w-4 mr-1.5" />
-                                            Copy Link
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        </div>
-
-                        <div className="rounded-lg bg-indigo-50/70 dark:bg-indigo-950/30 p-3 border border-indigo-200 dark:border-indigo-900/40 text-xs text-indigo-900 dark:text-indigo-300 flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-indigo-600 shrink-0 mt-0.5" />
-                            <span>
-                                Once settled online, real-time webhooks automatically record the transaction and update this invoice&apos;s status to <strong>PAID</strong>.
-                            </span>
-                        </div>
-                    </div>
-                    <DialogFooter className="flex items-center justify-between sm:justify-between pt-2">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(getPortalPaymentUrl(), "_blank")}
-                            className="text-xs"
-                        >
-                            <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                            Preview Portal
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="default"
-                            onClick={() => setOpenPaymentLinkModal(false)}
-                        >
-                            Done
-                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

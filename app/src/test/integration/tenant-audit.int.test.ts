@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { prisma } from "@/lib/prisma"
 import { applyPlanChange } from "@/lib/plan-change"
 import { inviteTeamMember } from "@/app/actions/settings/team"
-import { saveTenantPaymentGateways } from "@/app/actions/finance/gateways"
 import { getClientActivity, getMyActivityLog } from "@/app/actions/activity"
 import { updateTenantSettings } from "@/app/actions/settings/tenant"
 import { purgeTenantData } from "@/lib/tenant-data"
@@ -20,21 +19,21 @@ describe("client activity log (separate from the Super Admin log)", () => {
         expect(rows).toMatchObject([{ action: "TENANT_PLAN_UPGRADE", actorEmail: user.email, metadata: { fromPlan: "FREE", toPlan: "BASIC" } }])
     })
 
-    it("team invites and credential changes are recorded without secrets; each business sees only its own log", async () => {
+    it("team invites are recorded with their link returned, not emailed; each business sees only its own log", async () => {
         const a = await createTestTenant()
         const b = await createTestTenant()
         actAs(a.user)
-        await inviteTeamMember({ email: "new.person@example.test", fullName: "New Person", role: "MEMBER" })
-        await saveTenantPaymentGateways({ stripeSecretKey: "sk_test_SUPERSECRET123" } as never)
+        const invite = await inviteTeamMember({ email: "new.person@example.test", fullName: "New Person", role: "MEMBER" })
+        expect(invite).toMatchObject({ success: true, inviteUrl: expect.stringContaining("/join?token=") })
+        expect(invite).not.toHaveProperty("emailSent")
         actAs(b.user)
         await inviteTeamMember({ email: "other@example.test", fullName: "Other", role: "MEMBER" })
 
         actAs(a.user)
         const mine = (await getMyActivityLog()).rows
-        expect(mine.map((r) => r.action).sort()).toEqual(["PAYMENT_GATEWAY_UPDATED", "TEAM_INVITE_SENT"])
+        expect(mine.map((r) => r.action)).toEqual(["TEAM_INVITE_SENT"])
         expect(mine.every((r) => r.tenantId === a.tenant.id)).toBe(true)
-        expect(JSON.stringify(mine)).not.toContain("SUPERSECRET")
-        expect(mine.find((r) => r.action === "PAYMENT_GATEWAY_UPDATED")?.metadata).toEqual({ fields: ["stripeSecretKey"] })
+        expect(mine[0].metadata).toEqual({ email: "new.person@example.test", role: "MEMBER" })
     })
 
     it("only the Super Admin can read every business's log", async () => {
@@ -73,15 +72,6 @@ describe("client activity log (separate from the Super Admin log)", () => {
         const rows = await prisma.tenantAuditLog.findMany({ where: { tenantId: tenant.id, action: "SETTINGS_UPDATED" } })
         expect(rows).toHaveLength(1)
         expect(rows[0].metadata).toEqual({ fields: ["phone"] })
-    })
-
-    it("an unchanged masked secret isn't logged as a credential change", async () => {
-        const { tenant, user } = await createTestTenant()
-        actAs(user)
-        await saveTenantPaymentGateways({ stripeSecretKey: "sk_test_ONE" } as never)
-        await saveTenantPaymentGateways({ stripeSecretKey: "••••ONE", stripePublishableKey: "pk_test_NEW" } as never)
-        const rows = await prisma.tenantAuditLog.findMany({ where: { tenantId: tenant.id, action: "PAYMENT_GATEWAY_UPDATED" }, orderBy: { createdAt: "asc" } })
-        expect(rows.map((r) => r.metadata)).toEqual([{ fields: ["stripeSecretKey"] }, { fields: ["stripePublishableKey"] }])
     })
 
     it("purging a closed workspace keeps its activity log", async () => {

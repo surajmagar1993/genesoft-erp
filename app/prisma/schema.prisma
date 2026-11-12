@@ -40,7 +40,7 @@ model Tenant {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  // Stripe Billing IDs
+  // Old Stripe ids: no longer used (plans are paid through Razorpay); columns kept in the database
   stripeCustomerId     String? @unique @map("stripe_customer_id")
   stripeSubscriptionId String? @unique @map("stripe_subscription_id")
 
@@ -1127,7 +1127,7 @@ model PricingPlan {
   tier       Plan
   amount     Decimal  @map("price") @db.Decimal(15, 2)
   currency   String   @default("INR")
-  gateway    String   @default("RAZORPAY") // RAZORPAY or STRIPE
+  gateway    String   @default("RAZORPAY") // always RAZORPAY (older rows may say STRIPE; ignored)
   isActive   Boolean  @default(true) @map("is_active")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
@@ -1150,15 +1150,6 @@ model SystemLog {
   @@index([tenantId])
   @@index([level])
   @@map("system_logs")
-}
-
-model ProcessedStripeEvent {
-  id          String   @id @default(cuid())
-  eventId     String   @unique @map("event_id")
-  processedAt DateTime @default(now()) @map("processed_at")
-
-  @@index([eventId])
-  @@map("processed_stripe_events")
 }
 
 enum LogLevel {

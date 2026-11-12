@@ -39,7 +39,7 @@ New workspaces get a 15-day free trial. No payment details are needed to start. 
 
 ## Paid plans and billing {#billing}
 - Prices are shown on our [Pricing](/erp/pricing) page in your currency and include applicable taxes. You pay in advance for each monthly or yearly period.
-- In India we take payments through Razorpay; you pay for each new period when it's due. In other countries we use Stripe, which renews your plan automatically until you cancel.
+- We take payments through Razorpay in every country. Plans don't renew automatically: you pay for each new period when it's due.
 - If you upgrade during a period, you pay the prorated difference straight away. Downgrades take effect at your next renewal.
 - If a renewal isn't paid, we may move your workspace to the free plan. Your data stays in your workspace.
 - We'll tell you in advance before changing the price of your plan. New prices apply from your next period.
@@ -71,7 +71,7 @@ Don't use the Service to:
 Genesoft ERP calculates GST, VAT or sales tax from the rates and details you enter, and gives you a tax summary for any period. It isn't tax or legal advice. You're responsible for checking your figures and filing returns with your tax authority, or asking your accountant to. Direct filing with government systems isn't part of the Service yet.
 
 ## Third-party services {#third-parties}
-Some features rely on services you connect, such as Razorpay, Stripe, PayPal, WhatsApp or your own email server. Their terms apply to your use of them, and we're not responsible for their availability or actions.
+Some features rely on services you connect, such as Razorpay, WhatsApp or your own email server. Their terms apply to your use of them, and we're not responsible for their availability or actions.
 
 ## Availability and changes {#availability}
 We work to keep the Service available and reliable, but we can't promise it will never be interrupted. We may need to pause it for maintenance or updates, and we'll try to give notice for planned work. We may add, change or remove features; if we remove something important to paying customers, we'll tell you in advance.
@@ -104,7 +104,7 @@ We play two roles. For your **account data** (who you are, how you pay us) and f
 ## What we collect {#what-we-collect}
 - **Account details:** your name, work email, phone number, company name, country and currency. Passwords are handled by our sign-in provider and stored only in hashed form.
 - **Business data you enter:** contacts, leads, products, invoices, bills, expenses, employees, attendance and other records you choose to keep in your workspace.
-- **Billing details:** your plan and payment history. Card and bank details are entered with Razorpay or Stripe; we never see or store full card numbers.
+- **Billing details:** your plan and payment history. Card and bank details are entered with Razorpay; we never see or store full card numbers.
 - **Technical data:** IP address, browser and device type, and logs of sign-ins and important actions, which we use to keep accounts secure.
 - **Messages to us:** what you send through our contact form, email or support tickets.
 
@@ -143,7 +143,7 @@ We don't sell personal data. We share it only with providers that help us run ou
 - **Vercel:** hosting of the website and app.
 - **Resend:** sending emails.
 - **Cloudflare (Turnstile):** the spam check on our website forms and sign-up page. It looks at technical signals such as your IP address and browser to tell people from bots, and doesn't use advertising cookies.
-- **Razorpay** (India) and **Stripe** (other countries): taking payments.
+- **Razorpay**: taking payments.
 - **Meta (WhatsApp)** and your own email provider: only if you connect them to send messages from your workspace.
 
 We may also share data if the law requires it, to protect people's safety, or as part of a merger or sale of our business (with the same protections).
@@ -207,7 +207,7 @@ The guarantee applies once per business. It doesn't apply to later payments, or 
 You can cancel anytime by switching to the Free plan in **Settings → Billing**, or by emailing {email} from your account email address.
 - Your plan stays active until the end of the period you've paid for, then your workspace moves to the free plan.
 - Your data isn't deleted when you cancel. You can export it, or ask us to close your account and delete it.
-- In India (Razorpay), plans don't renew automatically, so not paying for a new period also ends your paid plan. In other countries (Stripe), cancelling stops automatic renewal.
+- Plans don't renew automatically, so not paying for a new period also ends your paid plan.
 
 ## Duplicate or incorrect charges {#errors}
 If you were charged twice, or charged an amount that doesn't match your plan, tell us and we'll refund the extra amount in full, whenever it happened.
@@ -228,7 +228,7 @@ Genesoft ERP is software you use online, in your web browser. We don't ship any 
 Your workspace is created as soon as you complete sign-up, and you can start using it straight away. If we ask you to confirm your email address, you can sign in once you've clicked the link we send you. Every new workspace starts with a 15-day free trial.
 
 ## When you buy or change a plan {#paid-plans}
-You pay for plans in Settings → Billing, through Razorpay in India or Stripe in other countries. Your new plan starts as soon as the payment provider confirms the payment, which is usually within a few seconds.
+You pay for plans in Settings → Billing, through Razorpay. Your new plan starts as soon as the payment provider confirms the payment, which is usually within a few seconds.
 
 A receipt is added to Settings → Billing for every payment.
 
@@ -252,7 +252,7 @@ Cookies are small files a website saves in your browser. Browser storage works i
 We don't use advertising cookies, analytics cookies or anything that tracks you across other websites.
 
 ## Cookies from payment providers {#payments}
-When you pay for a plan, the payment window is provided by Razorpay (India) or Stripe (other countries). They may set their own cookies, for example to prevent fraud. Those cookies are covered by their own policies.
+When you pay for a plan, the payment window is provided by Razorpay. It may set its own cookies, for example to prevent fraud. Those cookies are covered by their own policies.
 
 ## Your choices {#control}
 You can block or delete cookies in your browser settings. If you block the sign-in cookie you won't be able to stay signed in. Because we only use cookies that the service needs or that remember your own settings, we don't show a cookie banner.
@@ -484,6 +484,5 @@ export const SUBPROCESSORS = [
     { name: "Supabase", purpose: "Database, file storage and sign-in", location: "Mumbai, India" },
     { name: "Vercel", purpose: "Hosting the website and app", location: "Global network" },
     { name: "Resend", purpose: "Sending emails from the service", location: "United States" },
-    { name: "Razorpay", purpose: "Subscription payments (India)", location: "India" },
-    { name: "Stripe", purpose: "Subscription payments (other countries)", location: "United States and other countries" },
+    { name: "Razorpay", purpose: "Subscription payments", location: "India" },
 ]

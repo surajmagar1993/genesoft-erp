@@ -86,7 +86,7 @@ describe("Admin → Pricing & Plans", () => {
         actAs(user)
         const regions = await getPricingPlans()
         const au = regions.find((r) => r.code === "AU")!
-        expect(au).toMatchObject({ currency: "AUD", gateway: "STRIPE" })
+        expect(au).toMatchObject({ currency: "AUD", gateway: "RAZORPAY" })
         expect(au.plans.every((p) => !p.saved)).toBe(true)
 
         const res = await savePricingRegion("AU", [
@@ -97,7 +97,7 @@ describe("Admin → Pricing & Plans", () => {
         expect(res).toMatchObject({ success: true, data: { changed: 3 } })
         const rows = await prisma.pricingPlan.findMany({ where: { regionCode: "AU" } })
         expect(rows).toHaveLength(3)
-        expect(rows.every((r) => r.currency === "AUD" && r.gateway === "STRIPE")).toBe(true)
+        expect(rows.every((r) => r.currency === "AUD" && r.gateway === "RAZORPAY")).toBe(true)
 
         const pricing = await getEffectivePricing("AUD")
         expect(pricing.monthly.BASIC).toBe(25)

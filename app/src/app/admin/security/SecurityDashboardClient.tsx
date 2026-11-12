@@ -507,7 +507,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                                         className="bg-muted/50 text-muted-foreground font-mono text-xs"
                                     />
                                     <p className="text-[11px] text-muted-foreground">
-                                        Enforced via Razorpay & Stripe signature timestamp validation.
+                                        Enforced via Razorpay signature validation.
                                     </p>
                                 </div>
                             </div>

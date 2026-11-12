@@ -6,22 +6,17 @@ import type { BillingCycle, PlanTier } from "../../../lib/saas-subscription-engi
 import { quotePlanChange } from "../../../lib/plan-change"
 import { PLAN_CHANGE_KIND, applyPaidRazorpayOrder } from "../../../lib/razorpay-plan"
 import { toSmallestCurrencyUnit } from "../../../lib/payment-gateway-engine"
-import type { PaidPlan } from "../../../lib/stripe-plans"
-import { createCheckoutSession } from "./stripe"
 import { revalidatePath } from "next/cache"
 import crypto from "crypto"
 
 const PAID_PLANS: PlanTier[] = ["BASIC", "PRO", "ENTERPRISE"]
 
-export type PlanCheckout =
-  | { gateway: "RAZORPAY"; keyId: string; orderId: string; amount: number; currency: string; plan: PlanTier; cycle: BillingCycle }
-  | { gateway: "STRIPE"; url: string }
+export type PlanCheckout = { gateway: "RAZORPAY"; keyId: string; orderId: string; amount: number; currency: string; plan: PlanTier; cycle: BillingCycle }
 
 /**
  * Starts paying for an upgrade. The amount is the server's prorated quote at
- * the live price (Admin → Pricing). INR-style regions pay through Razorpay
- * (order pinned to this tenant, plan and cycle); Stripe regions go to Stripe
- * Checkout. The plan only changes once the gateway confirms payment.
+ * the live price (Admin → Pricing), in the business's own currency, paid
+ * through Razorpay (order pinned to this tenant, plan and cycle). The plan only changes once the gateway confirms payment.
  */
 export async function createPlanCheckout(plan: PlanTier, cycle: BillingCycle = "MONTHLY"): Promise<PlanCheckout> {
   const tenantId = await getTenantAdminId()
@@ -31,12 +26,6 @@ export async function createPlanCheckout(plan: PlanTier, cycle: BillingCycle = "
   if (pricing.hidden.includes(plan)) throw new Error("This plan isn't available right now")
   if (!(quote.netPayableToday > 0)) {
     throw new Error("Nothing to pay for this change. Use the plan change button instead.")
-  }
-
-  if (pricing.gateway === "STRIPE") {
-    const { url } = await createCheckoutSession(plan as PaidPlan, cycle)
-    if (!url) throw new Error("Stripe checkout is not available")
-    return { gateway: "STRIPE", url }
   }
 
   const keyId = process.env.RAZORPAY_KEY_ID

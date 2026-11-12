@@ -10,7 +10,7 @@ export const TENANT_ACTION_LABEL: Record<string, string> = {
     TENANT_CLOSED_BY_OWNER: "Workspace closed",
     DATA_EXPORT: "Data exported",
     TEAM_INVITE_SENT: "Team member invited",
-    TEAM_INVITE_RESENT: "Invitation resent",
+    TEAM_INVITE_RESENT: "Invitation link renewed",
     TEAM_INVITE_REVOKED: "Invitation cancelled",
     TEAM_INVITE_ACCEPTED: "Invitation accepted",
     TEAM_MEMBER_UPDATED: "Role or access changed",

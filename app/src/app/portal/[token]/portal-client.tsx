@@ -11,9 +11,7 @@ import {
   getPortalTicketDetail,
   createPortalTicket,
   addPortalTicketMessage,
-  payPortalInvoice,
 } from "@/app/actions/portal/portal"
-import { PORTAL_ONLINE_PAYMENTS_ENABLED } from "@/app/actions/portal/portal-types"
 import { toast } from "sonner"
 import type {
   PortalDashboardData,
@@ -224,21 +222,40 @@ export function PortalClient({
   const handleCreateTicket = async () => {
     if (!newTicket.subject.trim() || !newTicket.message.trim()) return
     setLoading(true)
-    await createPortalTicket(token, newTicket)
-    setNewTicket({ subject: "", category: "general", message: "" })
-    setShowNewTicket(false)
-    setTickets(await getPortalTickets(token))
-    setLoading(false)
+    try {
+      const result = await createPortalTicket(token, newTicket)
+      if (!result.success) {
+        // Keep what they typed so nothing is lost
+        toast.error(result.error || "We couldn't send your ticket. Please try again.")
+        return
+      }
+      setNewTicket({ subject: "", category: "general", message: "" })
+      setShowNewTicket(false)
+      setTickets(await getPortalTickets(token))
+      toast.success("Ticket sent")
+    } catch (err) {
+      toast.error(errorMessage(err) || "We couldn't send your ticket. Please try again.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleReply = async () => {
     if (!ticketDetail || !ticketReply.trim()) return
     setLoading(true)
-    await addPortalTicketMessage(token, ticketDetail.id, ticketReply)
-    setTicketReply("")
-    const updated = await getPortalTicketDetail(token, ticketDetail.id)
-    setTicketDetail(updated)
-    setLoading(false)
+    try {
+      const result = await addPortalTicketMessage(token, ticketDetail.id, ticketReply)
+      if (!result.success) {
+        toast.error(result.error || "We couldn't send your reply. Please try again.")
+        return
+      }
+      setTicketReply("")
+      setTicketDetail(await getPortalTicketDetail(token, ticketDetail.id))
+    } catch (err) {
+      toast.error(errorMessage(err) || "We couldn't send your reply. Please try again.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const currency = dashData?.profile.currencyCode || "INR"
@@ -312,7 +329,6 @@ export function PortalClient({
                 invoices={invoices}
                 currency={currency}
                 token={token}
-                onRefresh={() => loadTab("invoices")}
               />
             )}
             {activeTab === "payments" && <PaymentsTab payments={payments} currency={currency} />}
@@ -484,39 +500,15 @@ function OverviewTab({
 // INVOICES TAB
 // ════════════════════════════════════════════
 
-function InvoicesTab({ invoices, token, onRefresh }: {
+function InvoicesTab({ invoices, token }: {
   invoices: PortalInvoiceRecord[]
   currency: string
   token: string
-  onRefresh?: () => void
 }) {
   const [filter, setFilter] = useState<string>("ALL")
-  const [payInvoice, setPayInvoice] = useState<PortalInvoiceRecord | null>(null)
-  const [payGateway, setPayGateway] = useState<"STRIPE" | "PAYPAL">("STRIPE")
-  const [paying, setPaying] = useState(false)
-  const [paySuccessMsg, setPaySuccessMsg] = useState<string | null>(null)
-
   const filtered = filter === "ALL" ? invoices : invoices.filter((i) => i.status === filter)
 
   const statuses = ["ALL", "SENT", "VIEWED", "PARTIALLY_PAID", "PAID", "OVERDUE", "CANCELLED"]
-
-  const handleExecutePayment = async () => {
-    if (!payInvoice) return
-    setPaying(true)
-    try {
-      const res = await payPortalInvoice(token, payInvoice.id, payGateway)
-      if (res.success) {
-        setPaySuccessMsg(res.message)
-        onRefresh?.()
-      } else {
-        toast.error(res.error || res.message)
-      }
-    } catch (err) {
-      toast.error(errorMessage(err) || "Payment failed")
-    } finally {
-      setPaying(false)
-    }
-  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -583,19 +575,6 @@ function InvoicesTab({ invoices, token, onRefresh }: {
                   <span>Tax: {formatCurrency(inv.taxAmount, inv.currencyCode)}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  {PORTAL_ONLINE_PAYMENTS_ENABLED && inv.balanceDue > 0 && inv.status !== "PAID" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPayInvoice(inv)
-                        setPaySuccessMsg(null)
-                      }}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition-all"
-                    >
-                      <IconCreditCard className="w-3.5 h-3.5" />
-                      Pay Online
-                    </button>
-                  )}
                   <a
                     href={`/api/portal/invoice/${inv.id}?token=${token}`}
                     target="_blank"
@@ -609,115 +588,6 @@ function InvoicesTab({ invoices, token, onRefresh }: {
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Online Checkout Modal */}
-      {payInvoice && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-base text-slate-900 dark:text-white">Online Invoice Settlement</h3>
-                <p className="text-xs text-slate-500">Invoice: {payInvoice.invoiceNumber}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPayInvoice(null)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm p-1"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-5 space-y-4">
-              {paySuccessMsg ? (
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
-                  <div className="w-10 h-10 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center text-lg font-bold">
-                    ✓
-                  </div>
-                  <h4 className="font-bold text-emerald-800 dark:text-emerald-300 text-sm">Payment Successful!</h4>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-400">{paySuccessMsg}</p>
-                  <button
-                    type="button"
-                    onClick={() => setPayInvoice(null)}
-                    className="mt-3 px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700"
-                  >
-                    Close & Return
-                  </button>
-                </div>
-              ) : (
-                <>
-                  {/* Amount breakdown */}
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                    <div>
-                      <p className="text-xs text-slate-500">Total Outstanding Balance</p>
-                      <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">
-                        {formatCurrency(payInvoice.balanceDue, payInvoice.currencyCode)}
-                      </p>
-                    </div>
-                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
-                      Instant Settlement
-                    </span>
-                  </div>
-
-                  {/* Gateway selector */}
-                  <div className="space-y-2">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                      Select Payment Method
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setPayGateway("STRIPE")}
-                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                          payGateway === "STRIPE"
-                            ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300 shadow-sm"
-                            : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        }`}
-                      >
-                        <span className="text-xs font-bold">Credit / Debit Card</span>
-                        <span className="text-[10px] text-slate-500 mt-1">Stripe, Apple/Google Pay</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setPayGateway("PAYPAL")}
-                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                          payGateway === "PAYPAL"
-                            ? "border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 shadow-sm"
-                            : "border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        }`}
-                      >
-                        <span className="text-xs font-bold">PayPal</span>
-                        <span className="text-[10px] text-slate-500 mt-1">Wallet & Pay in 4</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <p className="text-[11px] text-slate-400 text-center">
-                    🔒 256-bit encrypted secure checkout. Your financial details never touch our servers.
-                  </p>
-
-                  <button
-                    type="button"
-                    disabled={paying}
-                    onClick={handleExecutePayment}
-                    className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                  >
-                    {paying ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Processing Settlement...
-                      </>
-                    ) : (
-                      <>Pay {formatCurrency(payInvoice.balanceDue, payInvoice.currencyCode)} Now</>
-                    )}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
         </div>
       )}
     </div>
