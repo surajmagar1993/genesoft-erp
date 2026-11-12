@@ -1,5 +1,7 @@
 "use server"
 
+import { applyPlanChange } from "@/lib/plan-change"
+import { isUuid } from "@/lib/utils"
 import { reportCaught } from "@/lib/error-reporting"
 import { prisma } from "../../../lib/prisma"
 import { readTeam } from "@/lib/team-settings"
@@ -212,18 +214,27 @@ export async function getAdminAuditLogs(page: number = 1, limit: number = 50) {
 }
 
 async function _updateTenantPlan(tenantId: string, plan: string) {
-    await ensureSuperAdmin()
+    const admin = await ensureSuperAdmin()
     assertPlan(plan)
+    if (!isUuid(tenantId)) throw new Error("Tenant not found")
+    const current = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
+    if (!current) throw new Error("Tenant not found")
+    const cycle = ((current.settings as { subscription?: { billingCycle?: string } } | null)?.subscription?.billingCycle === "ANNUAL" ? "ANNUAL" : "MONTHLY") as "ANNUAL" | "MONTHLY"
 
-    const updated = await prisma.tenant.update({
-        where: { id: tenantId },
-        data: { plan, isTrial: false }
+    // The same path as every plan change: a plan the platform sets without a payment is
+    // recorded as given (compedByPlatform), so the daily job never ends it for being unpaid.
+    // Logged in both the Super Admin and the business's activity logs.
+    await applyPlanChange(tenantId, {
+        targetPlan: plan,
+        billingCycle: cycle,
+        paymentMethod: "Set by platform admin",
+        actor: { id: admin.id, email: admin.email || "" },
+        actorIsSuperAdmin: true,
     })
-    
-    await logAdminAction("TENANT_PLAN_UPDATE", tenantId, "TENANT", { newPlan: plan })
-    
+
     revalidatePath('/admin/tenants')
-    return updated
+    revalidatePath(`/admin/tenants/${tenantId}`)
+    return prisma.tenant.findUniqueOrThrow({ where: { id: tenantId } })
 }
 
 async function _extendTenantTrial(tenantId: string, days: number) {

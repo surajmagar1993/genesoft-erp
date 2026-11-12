@@ -6,6 +6,8 @@ import { expireLapsedPlans } from "@/lib/plan-expiry"
 import { updateTeam, readTeam } from "@/lib/team-settings"
 import { uniformAccess } from "@/lib/access"
 import { actAs, createTestTenant } from "./helpers"
+import { updateTenantPlan } from "@/app/actions/saas/admin"
+import { unwrap } from "@/lib/action-result"
 
 const subOf = async (tenantId: string) =>
     ((((await prisma.tenant.findUniqueOrThrow({ where: { id: tenantId } })).settings as Record<string, unknown>) || {}).subscription || {}) as Record<string, unknown>
@@ -92,5 +94,17 @@ describe("plan billing rules", () => {
         expect(await prisma.tenantAuditLog.count({ where: { tenantId: lapsed.tenant.id, action: "TENANT_PLAN_EXPIRED" } })).toBe(1)
         // Its data and receipts are kept
         expect(((await subOf(lapsed.tenant.id)).invoices as unknown[]).length).toBe(1)
+    })
+
+    it("a plan the Super Admin sets is kept by the daily job, even past its old unpaid renewal date", async () => {
+        const { tenant } = await createTestTenant({ plan: "FREE" })
+        await applyPlanChange(tenant.id, { targetPlan: "PRO", billingCycle: "MONTHLY", paymentRef: "pay_old", amountPaid: 999 })
+        const admin = await createTestTenant({ role: "SUPER_ADMIN" })
+        actAs(admin.user)
+        unwrap(await updateTenantPlan(tenant.id, "ENTERPRISE"))
+        expect(await subOf(tenant.id)).toMatchObject({ compedByPlatform: true })
+        await expireLapsedPlans(new Date(Date.now() + 400 * 86_400_000))
+        expect((await prisma.tenant.findUniqueOrThrow({ where: { id: tenant.id } })).plan).toBe("ENTERPRISE")
+        expect(await prisma.adminAuditLog.count({ where: { targetId: tenant.id } })).toBeGreaterThan(0)
     })
 })
