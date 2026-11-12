@@ -1277,7 +1277,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Salary Min (INR)</Label>
+                            <Label className="text-xs font-semibold">Salary Min</Label>
                             <Input
                                 type="number"
                                 placeholder="Enter salary min"
@@ -1287,7 +1287,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Salary Max (INR)</Label>
+                            <Label className="text-xs font-semibold">Salary Max</Label>
                             <Input
                                 type="number"
                                 placeholder="Enter salary max"
@@ -1417,7 +1417,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Current Annual CTC (INR)</Label>
+                            <Label className="text-xs font-semibold">Current Annual CTC</Label>
                             <Input
                                 type="number"
                                 placeholder="Enter current annual CTC"
@@ -1427,7 +1427,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
                         </div>
 
                         <div className="space-y-1.5">
-                            <Label className="text-xs font-semibold">Expected Annual CTC (INR)</Label>
+                            <Label className="text-xs font-semibold">Expected Annual CTC</Label>
                             <Input
                                 type="number"
                                 placeholder="Enter expected annual CTC"
@@ -1755,7 +1755,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
 
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1">
-                                <Label className="text-xs font-semibold">Monthly Basic Salary (INR) *</Label>
+                                <Label className="text-xs font-semibold">Monthly Basic Salary *</Label>
                                 <Input
                                     type="number"
                                     value={hireSalary}

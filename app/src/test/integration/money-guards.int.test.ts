@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { prisma } from "@/lib/prisma"
-import { createInvoice, updateInvoice, type CreateInvoicePayload } from "@/app/actions/sales/invoices"
+import { createInvoice, deleteInvoice, updateInvoice, type CreateInvoicePayload } from "@/app/actions/sales/invoices"
 import { createPayment } from "@/app/actions/finance/payments"
 import { applyCreditToInvoice, createCreditNote, recordCreditNoteRefund, voidCreditNote } from "@/app/actions/sales/credit-notes"
 import { createContact, updateContact } from "@/app/actions/crm/contacts"
@@ -137,5 +137,21 @@ describe("money guards", () => {
         expect(Number(after.creditLimit)).toBe(9000) // the workspace admin has full Finance access
 
         expect((await createContact({ type: "INDIVIDUAL" } as never)).error).toMatch(/name, a company name or an email/)
+    })
+
+    it("deleting a paid invoice puts the customer's balance back to where it was", async () => {
+        const { tenant, user } = await createTestTenant()
+        actAs(user)
+        const customer = await createCustomer(tenant.id)
+        const balance = async () => Number((await prisma.contact.findFirstOrThrow({ where: { id: customer.id } })).balance)
+        const before = await balance()
+        const inv = await createInvoice(invoicePayload(customer.id)) // 1,180 owed
+        expect(await balance()).toBe(before + 1180)
+        expect((await createPayment({ invoice_id: inv.id!, contact_id: customer.id, amount: 500, payment_date: "2026-09-10", payment_method: "CASH" })).error).toBeNull()
+        expect(await balance()).toBe(before + 680)
+        expect((await deleteInvoice(inv.id!)).error).toBeNull()
+        expect(await balance()).toBe(before)
+        expect(await prisma.ledgerEntry.count({ where: { tenantId: tenant.id, contactId: customer.id } })).toBe(0)
+        expect(await prisma.payment.count({ where: { tenantId: tenant.id } })).toBe(0)
     })
 })

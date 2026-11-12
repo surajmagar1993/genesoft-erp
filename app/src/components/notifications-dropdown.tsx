@@ -18,8 +18,10 @@ import {
     Notification 
 } from "@/app/actions/notifications"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export function NotificationsDropdown() {
+    const router = useRouter()
     const [notifications, setNotifications] = useState<Notification[]>([])
     
     // Calculate unread count correctly from is_read property
@@ -63,6 +65,7 @@ export function NotificationsDropdown() {
                     <Bell className="h-4 w-4" />
                     {unreadCount > 0 && (
                         <Badge
+                            aria-hidden="true"
                             variant="destructive"
                             className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-xs"
                         >
@@ -74,20 +77,13 @@ export function NotificationsDropdown() {
             <DropdownMenuContent align="end" className="w-80">
                 <div className="flex items-center justify-between px-4 py-2 border-b">
                     <span className="text-sm font-semibold">Notifications</span>
-                    {unreadCount > 0 && (
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-auto p-0 text-xs text-muted-foreground hover:text-primary h-8 px-2 uppercase tracking-tight"
-                            onClick={(e) => {
-                                e.preventDefault()
-                                handleMarkAllAsRead()
-                            }}
-                        >
-                            Mark all as read
-                        </Button>
-                    )}
                 </div>
+                {unreadCount > 0 && (
+                    // A real menu item, so it can be reached with the arrow keys
+                    <DropdownMenuItem className="justify-center text-xs text-muted-foreground" onSelect={(e) => { e.preventDefault(); handleMarkAllAsRead() }}>
+                        Mark all as read
+                    </DropdownMenuItem>
+                )}
                 <div className="max-h-[350px] overflow-auto">
                     {notifications.length === 0 ? (
                         <div className="p-8 text-center text-sm text-muted-foreground">
@@ -97,8 +93,12 @@ export function NotificationsDropdown() {
                         notifications.map((n) => (
                             <DropdownMenuItem 
                                 key={n.id} 
-                                className={`flex flex-col items-start gap-1 p-4 cursor-pointer focus:bg-accent border-b last:border-0 rounded-none ${!n.is_read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
-                                onSelect={() => handleMarkAsRead(n.id)}
+                                className={`flex flex-col items-start gap-1 p-4 cursor-pointer focus:bg-accent border-b last:border-0 rounded-none ${!n.is_read ? 'bg-primary/5' : ''}`}
+                                // Opening a notification marks it read and goes to what it is about
+                                onSelect={() => {
+                                    handleMarkAsRead(n.id)
+                                    if (n.link) router.push(n.link)
+                                }}
                             >
                                 <div className="flex items-center justify-between w-full">
                                     <span className={`text-sm ${!n.is_read ? 'font-semibold text-primary' : 'font-medium'}`}>
@@ -111,16 +111,8 @@ export function NotificationsDropdown() {
                                 <p className="text-xs text-muted-foreground line-clamp-2">
                                     {n.description}
                                 </p>
-                                {n.link && (
-                                    <Link 
-                                        href={n.link} 
-                                        className="text-xs text-primary hover:underline mt-1 font-medium"
-                                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                                    >
-                                        View details
-                                    </Link>
-
-                                )}
+                                {n.link && <span className="text-xs text-primary mt-1 font-medium">Open</span>}
+                                {!n.is_read && <span className="sr-only">Unread</span>}
                             </DropdownMenuItem>
                         ))
                     )}

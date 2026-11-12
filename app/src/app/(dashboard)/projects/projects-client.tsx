@@ -1535,7 +1535,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="proj-budget">Budget (INR)</Label>
+                                <Label htmlFor="proj-budget">Budget</Label>
                                 <Input
                                     id="proj-budget"
                                     type="number"
@@ -1870,7 +1870,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="member-rate">Hourly Rate (INR)</Label>
+                                <Label htmlFor="member-rate">Hourly Rate</Label>
                                 <Input
                                     id="member-rate"
                                     type="number"

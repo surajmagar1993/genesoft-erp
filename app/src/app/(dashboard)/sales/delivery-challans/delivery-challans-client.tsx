@@ -518,7 +518,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                 <TableHead>Consignee / Recipient</TableHead>
                                 <TableHead>Vehicle & Transporter</TableHead>
                                 <TableHead>Source Depot</TableHead>
-                                <TableHead>Value (INR)</TableHead>
+                                <TableHead>Value</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
@@ -849,9 +849,9 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                             <TableHead className="w-[100px]">HSN/SAC</TableHead>
                                             <TableHead className="w-[90px]">Qty</TableHead>
                                             <TableHead className="w-[80px]">Unit</TableHead>
-                                            <TableHead className="w-[120px]">Unit Price (INR)</TableHead>
+                                            <TableHead className="w-[120px]">Unit Price</TableHead>
                                             <TableHead className="w-[90px]">GST Rate %</TableHead>
-                                            <TableHead className="w-[120px] text-right">Total (INR)</TableHead>
+                                            <TableHead className="w-[120px] text-right">Total</TableHead>
                                             <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>

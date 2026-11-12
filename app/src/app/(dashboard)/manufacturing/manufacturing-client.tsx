@@ -1214,7 +1214,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                             </h4>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-medium">Labor Cost (INR)</Label>
+                                    <Label className="text-xs font-medium">Labor Cost</Label>
                                     <Input
                                         type="number"
                                         value={bomLaborCost}
@@ -1223,7 +1223,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-medium">Overhead / Machine Run Cost (INR)</Label>
+                                    <Label className="text-xs font-medium">Overhead / Machine Run Cost</Label>
                                     <Input
                                         type="number"
                                         value={bomOverheadCost}

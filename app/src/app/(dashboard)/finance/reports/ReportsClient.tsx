@@ -289,7 +289,7 @@ export default function ReportsClient({
                     <TableHeader>
                       <TableRow className="bg-muted/50">
                         <TableHead className="pl-6">Line Item</TableHead>
-                        <TableHead className="text-right pr-6">Amount (INR)</TableHead>
+                        <TableHead className="text-right pr-6">Amount</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>

@@ -721,28 +721,20 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
     // Its payments are deleted with it (cascade); their journals are voided below
     const paymentIds: string[] = (await prisma.payment.findMany({ where: { invoiceId: id, tenantId }, select: { id: true } })).map((p: { id: string }) => p.id)
 
-    // ─── LEDGER INTEGRATION CLEANUP ───
-    const entry = await prisma.ledgerEntry.findFirst({
-      where: { referenceId: id, tenantId },
-    })
-
-    if (entry) {
-      await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    // One transaction: the customer's statement entries for the invoice AND its payments are
+    // reversed, then the lines, payments and invoice go. A failure part-way leaves nothing half-deleted.
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const entries = await tx.ledgerEntry.findMany({ where: { tenantId, referenceId: { in: [id, ...paymentIds] } } })
+      for (const entry of entries) {
         await tx.contact.update({
-          where: { id: entry.contactId },
+          where: { id: entry.contactId, tenantId },
           data: { balance: { decrement: entry.amount } },
         })
-        await tx.ledgerEntry.delete({ where: { id: entry.id } })
-      })
-    }
-
-    // Delete invoice items and invoice
-    await prisma.invoiceItem.deleteMany({
-      where: { invoiceId: id },
-    })
-
-    await prisma.invoice.delete({
-      where: { id, tenantId },
+      }
+      if (entries.length) await tx.ledgerEntry.deleteMany({ where: { tenantId, id: { in: entries.map((e: { id: string }) => e.id) } } })
+      await tx.invoiceItem.deleteMany({ where: { invoiceId: id } })
+      await tx.payment.deleteMany({ where: { invoiceId: id, tenantId } })
+      await tx.invoice.delete({ where: { id, tenantId } })
     })
 
     await postToLedger(tenantId, { kind: "invoice", id })
