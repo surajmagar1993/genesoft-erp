@@ -14,6 +14,12 @@ import {
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
+/** A sentence for screen readers in place of the picture: each month's figure */
+function summarize(data: unknown[], key: "sales" | "leads", prefix = ""): string {
+    const rows = (data as Record<string, unknown>[]).map((d) => `${d.name}: ${prefix}${Number(d[key] || 0).toLocaleString()}`)
+    return `${key === "sales" ? "Sales" : "New leads"} by month. ${rows.join(", ")}.`
+}
+
 interface ChartProps {
     data: unknown[]
     currencySymbol?: string
@@ -27,7 +33,7 @@ export function RevenueChart({ data, currencySymbol = "" }: ChartProps) {
                 <CardDescription>Invoices issued each month, last 6 months</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="h-[300px] w-full mt-4">
+                <div className="h-[300px] w-full mt-4" role="img" aria-label={summarize(data, "sales", currencySymbol)}>
                     <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={data}>
                             <defs>
@@ -82,7 +88,7 @@ export function LeadsChart({ data }: ChartProps) {
                 <CardDescription>Leads added each month, last 6 months</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="h-[300px] w-full mt-4">
+                <div className="h-[300px] w-full mt-4" role="img" aria-label={summarize(data, "leads")}>
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={data}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />

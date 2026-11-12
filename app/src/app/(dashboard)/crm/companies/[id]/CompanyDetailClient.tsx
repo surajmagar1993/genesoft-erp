@@ -395,8 +395,7 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
                             onClick={(e) => {
                               e.stopPropagation()
                               router.push(`/crm/contacts/${contact.id}`)
-                            }}
-                          >
+                            }} aria-label="Open in a new tab">
                             <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                           </Button>
                         </TableCell>
@@ -484,8 +483,7 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
                               onClick={(e) => {
                                 e.stopPropagation()
                                 router.push(`/crm/deals/${deal.id}`)
-                              }}
-                            >
+                              }} aria-label="Open in a new tab">
                               <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" />
                             </Button>
                           </TableCell>

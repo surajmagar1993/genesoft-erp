@@ -56,6 +56,8 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      // An icon-only button with a tooltip title is named by it for screen readers
+      aria-label={props["aria-label"] ?? (String(size).startsWith("icon") && typeof props.title === "string" ? props.title : undefined)}
       {...props}
     />
   )

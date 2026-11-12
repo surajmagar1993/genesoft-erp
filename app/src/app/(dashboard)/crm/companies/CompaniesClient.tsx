@@ -158,7 +158,7 @@ export default function CompaniesClient({ initialCompanies, total }: Props) {
                                 <TableCell onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={deletingId === company.id}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" disabled={deletingId === company.id} aria-label="More actions">
                                                 {deletingId === company.id
                                                     ? <Loader2 className="h-4 w-4 animate-spin" />
                                                     : <MoreHorizontal className="h-4 w-4" />}

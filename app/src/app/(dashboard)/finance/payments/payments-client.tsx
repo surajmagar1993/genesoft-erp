@@ -210,8 +210,7 @@ export default function PaymentsClient({ initialPayments }: Props) {
                                                             if (await confirmAction("Are you sure you want to delete this payment? Balance will be recalculated.")) {
                                                                 handleDelete(p.id)
                                                             }
-                                                        }}
-                                                    >
+                                                        }} aria-label="Delete">
                                                         <Trash2 className="h-4 w-4 text-destructive" />
                                                     </Button></RequireRole>
                                                 </TableCell>

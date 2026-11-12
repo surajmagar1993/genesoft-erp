@@ -203,7 +203,7 @@ export default function QuotesClient({ initialQuotes, total }: Props) {
                                                 <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/quotes/${q.id}/edit`)} aria-label="Edit">
                                                     <Pencil className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
-                                                <RequireRole min="MANAGER"><Button variant="ghost" size="icon" disabled={pendingId === q.id} onClick={() => handleDelete(q.id)}>
+                                                <RequireRole min="MANAGER"><Button variant="ghost" size="icon" disabled={pendingId === q.id} onClick={() => handleDelete(q.id)} aria-label="Delete">
                                                     {pendingId === q.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
                                                 </Button></RequireRole>
                                             </TableCell>

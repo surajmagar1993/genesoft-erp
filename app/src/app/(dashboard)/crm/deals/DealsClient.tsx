@@ -118,7 +118,7 @@ export default function DealsClient({ initialDeals, total }: Props) {
     const DealActions = ({ deal }: { deal: Deal }) => (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8" disabled={pendingId === deal.id}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" disabled={pendingId === deal.id} aria-label="More actions">
                     {pendingId === deal.id
                         ? <Loader2 className="h-4 w-4 animate-spin" />
                         : <MoreHorizontal className="h-4 w-4" />}

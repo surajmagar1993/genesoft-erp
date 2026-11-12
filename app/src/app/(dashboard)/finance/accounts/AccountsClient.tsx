@@ -317,7 +317,7 @@ export default function AccountsClient({ initialAccounts }: Props) {
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="More actions">
                               {deletingId === account.id
                                 ? <Loader2 className="h-4 w-4 animate-spin" />
                                 : <MoreHorizontal className="h-4 w-4" />}

@@ -182,7 +182,7 @@ export default function OrdersClient({ initialOrders, total }: Props) {
                                                 <Button variant="ghost" size="icon" onClick={() => router.push(`/sales/orders/${o.id}/edit`)} aria-label="Edit">
                                                     <Pencil className="h-4 w-4 text-muted-foreground" />
                                                 </Button>
-                                                <RequireRole min="MANAGER"><Button variant="ghost" size="icon" disabled={pendingId === o.id} onClick={() => handleDelete(o.id)}>
+                                                <RequireRole min="MANAGER"><Button variant="ghost" size="icon" disabled={pendingId === o.id} onClick={() => handleDelete(o.id)} aria-label="Delete">
                                                     {pendingId === o.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4 text-destructive" />}
                                                 </Button></RequireRole>
                                             </TableCell>

@@ -680,7 +680,7 @@ export function WorkflowsClient({
                                                     />
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
+                                                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" aria-label="Settings">
                                                                 <Settings2 className="h-3.5 w-3.5" />
                                                             </Button>
                                                         </DropdownMenuTrigger>

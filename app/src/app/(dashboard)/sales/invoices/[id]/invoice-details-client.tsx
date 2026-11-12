@@ -532,8 +532,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                                                 if (await confirmAction("Delete this payment? Invoice status will recalculate.")) {
                                                                     handleDeletePayment(p.id)
                                                                 }
-                                                            }}
-                                                        >
+                                                            }} aria-label="Delete">
                                                             <Trash2 className="h-4 w-4 text-destructive/80" />
                                                         </Button></RequireRole>
                                                     </TableCell>

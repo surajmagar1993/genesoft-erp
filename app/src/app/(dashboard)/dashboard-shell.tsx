@@ -314,6 +314,7 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
                 </SidebarMenu>
             </SidebarHeader>
 
+            <nav aria-label="Main menu" className="contents">
             <SidebarContent>
                 {filteredNavigation.map((group) => (
                     <SidebarGroup key={group.label}>
@@ -349,6 +350,7 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
                     </SidebarGroup>
                 ))}
             </SidebarContent>
+            </nav>
 
 
             <SidebarFooter className="border-t border-sidebar-border">

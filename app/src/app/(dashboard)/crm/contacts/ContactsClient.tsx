@@ -295,7 +295,7 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
                                 <TableCell onClick={(e) => e.stopPropagation()}>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" disabled={deletingId === contact.id}>
+                                            <Button variant="ghost" size="icon" disabled={deletingId === contact.id} aria-label="More actions">
                                                 {deletingId === contact.id
                                                     ? <Loader2 className="h-4 w-4 animate-spin" />
                                                     : <MoreHorizontal className="h-4 w-4" />}

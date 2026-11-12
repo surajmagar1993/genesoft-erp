@@ -817,8 +817,7 @@ export function EmailTemplatesClient({ initialData }: Props) {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7 text-muted-foreground group-hover:text-primary shrink-0"
-                                                >
+                                                    className="h-7 w-7 text-muted-foreground group-hover:text-primary shrink-0" aria-label="Save">
                                                     {isCopied ? (
                                                         <Check className="h-3.5 w-3.5 text-emerald-500" />
                                                     ) : (

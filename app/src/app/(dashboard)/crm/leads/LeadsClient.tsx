@@ -209,7 +209,7 @@ export default function LeadsClient({ initialLeads, total }: Props) {
                                         <TableCell>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8" disabled={pendingId === lead.id}>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8" disabled={pendingId === lead.id} aria-label="More actions">
                                                         {pendingId === lead.id
                                                             ? <Loader2 className="h-4 w-4 animate-spin" />
                                                             : <MoreHorizontal className="h-4 w-4" />}

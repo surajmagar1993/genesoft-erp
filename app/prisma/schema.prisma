@@ -477,6 +477,8 @@ model StockMovement {
   @@index([tenantId])
   @@index([productId])
   @@index([warehouseId])
+  @@index([tenantId, referenceNo])
+  @@index([tenantId, createdAt])
   @@map("stock_movements")
 }
 
@@ -586,6 +588,9 @@ model Invoice {
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([recurringProfileId])
+  @@index([tenantId, invoiceDate])
+  @@index([tenantId, createdAt])
+  @@index([contactId])
   @@map("invoices")
 }
 
@@ -633,6 +638,10 @@ model InvoiceItem {
   // Relations
   invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id])
+
+  @@index([invoiceId])
+
+  @@index([productId])
 
   @@map("invoice_line_items")
 }
@@ -867,6 +876,8 @@ model Payment {
   @@index([invoiceId])
   @@index([billId])
   @@index([contactId])
+  @@index([tenantId, type, paymentDate])
+  @@index([tenantId, invoiceId])
   @@map("payments")
 }
 
@@ -924,6 +935,7 @@ model Bill {
   @@unique([tenantId, billNumber])
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([tenantId, billDate])
   @@map("bills")
 }
 
@@ -1149,6 +1161,7 @@ model SystemLog {
 
   @@index([tenantId])
   @@index([level])
+  @@index([timestamp])
   @@map("system_logs")
 }
 
@@ -1215,6 +1228,7 @@ model Notification {
   tenant Tenant @relation(fields: [tenantId], references: [id])
 
   @@index([userId, tenantId])
+  @@index([tenantId, userId, createdAt])
   @@map("notifications")
 }
 
@@ -1243,6 +1257,7 @@ model LedgerEntry {
   contact Contact @relation(fields: [contactId], references: [id])
 
   @@index([tenantId, contactId])
+  @@index([tenantId, referenceId])
   @@map("ledger_entries")
 }
 
@@ -2005,6 +2020,7 @@ model Expense {
   @@index([vendorId])
   @@index([employeeId])
   @@index([status])
+  @@index([tenantId, expenseDate])
   @@map("expenses")
 }
 
@@ -2034,6 +2050,8 @@ model JournalEntry {
   @@index([tenantId])
   @@index([date])
   @@index([status])
+  @@index([tenantId, sourceType, sourceId, status])
+  @@index([tenantId, status, date])
   @@map("journal_entries")
 }
 
@@ -2057,6 +2075,7 @@ model JournalEntryLine {
   @@index([journalEntryId])
   @@index([accountId])
   @@index([contactId])
+  @@index([tenantId, accountId])
   @@map("journal_entry_lines")
 }
 

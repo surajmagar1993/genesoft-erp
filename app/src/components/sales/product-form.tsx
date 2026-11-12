@@ -351,6 +351,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                     <Button
                                         variant="outline"
                                         size="icon"
+                                        aria-label="Remove this attribute"
                                         onClick={() => {
                                             const newAttrs = form.customAttributes.filter((_, i) => i !== index)
                                             update("customAttributes", newAttrs)

@@ -326,8 +326,7 @@ export default function TasksClient({ initialTasks, total }: Props) {
                                                 size="icon" 
                                                 className={`h-8 w-8 rounded-full transition-colors ${task.status === "COMPLETED" ? "text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20" : "text-muted-foreground hover:text-emerald-500"}`}
                                                 onClick={() => handleStatusUpdate(task.id, task.status === "COMPLETED" ? "TODO" : "COMPLETED")}
-                                                disabled={pendingId === task.id}
-                                            >
+                                                disabled={pendingId === task.id} aria-label="Mark done">
                                                 {pendingId === task.id 
                                                     ? <Loader2 className="h-4 w-4 animate-spin" />
                                                     : task.status === "COMPLETED" ? <CheckCircle2 className="h-5 w-5" /> : <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30 group-hover:border-emerald-500/50" />}

@@ -130,6 +130,7 @@ function AdminSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
+            <nav aria-label="Main menu" className="contents">
             <SidebarContent>
                 {adminNavigation.map((group) => (
                     <SidebarGroup key={group.label}>
@@ -164,6 +165,7 @@ function AdminSidebar() {
                     </SidebarGroup>
                 ))}
             </SidebarContent>
+            </nav>
 
             <SidebarFooter className="border-t border-sidebar-border">
                 <SidebarMenu>
@@ -259,7 +261,7 @@ function AdminTopBar() {
                     <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
                 </Button>
                 
-                <Button variant="ghost" size="icon" className="h-9 w-9 relative text-muted-foreground hover:text-primary transition-colors">
+                <Button variant="ghost" size="icon" className="h-9 w-9 relative text-muted-foreground hover:text-primary transition-colors" aria-label="Notifications">
                     <Bell className="h-4 w-4" />
                     <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-primary" />
                 </Button>

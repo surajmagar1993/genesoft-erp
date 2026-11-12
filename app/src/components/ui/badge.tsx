@@ -30,16 +30,35 @@ function Badge({
   className,
   variant = "default",
   asChild = false,
+  onClick,
+  onKeyDown,
   ...props
 }: React.ComponentProps<"span"> &
   VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
   const Comp = asChild ? Slot.Root : "span"
+  // A badge used as a filter or toggle behaves like a button for keyboard and screen readers
+  const clickable = !!onClick && !asChild
 
   return (
     <Comp
       data-slot="badge"
       data-variant={variant}
-      className={cn(badgeVariants({ variant }), className)}
+      className={cn(badgeVariants({ variant }), clickable && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
+      onClick={onClick}
+      {...(clickable
+        ? {
+            role: "button",
+            tabIndex: 0,
+            "aria-pressed": variant === "default",
+            onKeyDown: (event: React.KeyboardEvent<HTMLSpanElement>) => {
+              onKeyDown?.(event)
+              if (!event.defaultPrevented && (event.key === "Enter" || event.key === " ")) {
+                event.preventDefault()
+                event.currentTarget.click()
+              }
+            },
+          }
+        : { onKeyDown })}
       {...props}
     />
   )
