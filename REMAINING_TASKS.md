@@ -34,10 +34,10 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **Sales: Credit Notes & Refunds** (`/sales/credit-notes`) — Customer refunds, returns against invoices, credit memo ledger, inventory restock ✅ **(2026-09-12)**
 - [x] **Finance: Expense Management & General Ledger** (`/finance/expenses`) — Operational business expenses, employee reimbursement claims, double-entry journal vouchers (`JE-YYYY-XXXX`), and Account T-Ledgers ✅ **(2026-09-12)**
 - [x] **Sales: Price Lists & Customer Tier Pricing** (`/sales/price-lists`) — Wholesale/retail rate cards, volume discount breaks, and interactive price resolution simulator ✅ **(2026-09-12)**
-- [x] **Finance: Bank Reconciliation** (`/finance/bank-reconciliation`) — Multi-bank accounts, statement batch imports, rule-based auto-matching engine, split-screen match desk, and discrepancy diagnostics ✅ **(2026-09-12)**
+- [x] **Finance: Bank Reconciliation** (`/finance/bank-reconciliation`) — Multi-bank accounts, statement batch imports, rule-based auto-matching engine, split-screen match desk, and discrepancy diagnostics ✅ **(2026-09-12)** **Switched off for businesses 2026-11-12 (hidden, code and data kept).**
 - [x] **Invoice Features: Recurring Invoices** (`/sales/invoices/recurring`) — Automated subscription retainers, cyclical schedules, next run countdowns, and instant invoice generation ✅ **(2026-09-12)**
-- [x] **CRM: Email Integration** (`/crm/emails`) — Connect corporate IMAP/SMTP mailboxes, email thread synchronization, CRM entity linking, and merge-tag templates ✅ **(2026-09-12)**
-- [x] **CRM: Web Forms & Lead Capture** (`/crm/forms`) — Embeddable lead intake forms, public CORS intake API route (`/api/forms/[id]/submit`), honeypot spam protection, standalone public view (`/forms/[code]`), and Form Studio visual builder ✅ **(2026-09-12)**
+- [x] **CRM: Email Integration** (`/crm/emails`) — Connect corporate IMAP/SMTP mailboxes, email thread synchronization, CRM entity linking, and merge-tag templates ✅ **(2026-09-12)** **Switched off for businesses 2026-11-12 (hidden, code and data kept).**
+- [x] **CRM: Web Forms & Lead Capture** (`/crm/forms`) — Embeddable lead intake forms, public CORS intake API route (`/api/forms/[id]/submit`), honeypot spam protection, standalone public view (`/forms/[code]`), and Form Studio visual builder ✅ **(2026-09-12)** **Switched off for businesses 2026-11-12 (hidden, code and data kept).**
 - [x] **Retail: Customer Portal** (`/portal/[token]`) — Token-authenticated self-service account center with 5-tab UI (Overview, Invoices, Payments, Statement, Support), PortalTicket system, invoice PDF download API, and admin portal management ✅ **(2026-09-12)**
 - [x] ~~**Retail: Walk-in / POS Sales** (`/sales/pos`)~~ **Removed 2026-11-12.** — Full-screen POS terminal with product grid, cart, session management, quick walk-in customer creation, multi-payment (Cash/Card/UPI), auto-invoice generation ✅ **(2026-09-12)**
 - [x] **Invoice Features: Terms & Conditions, Authorized Signature, Statutory Declaration & Proforma Invoices** (`/sales/invoices`) — Configurable legal clauses with presets, digital signatory stamp & designation, statutory Indian GST declaration, proforma numbering (`PI-YYYY-YY-XXXX`), 1-click Convert to Tax Invoice, and dual-mode PDF rendering ✅ **(2026-09-12)**
@@ -52,14 +52,14 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] **Tax (United Kingdom): VAT (20%), VRN Validation & Making Tax Digital (MTD) 9-Box Return** (`/finance/vat-uk`) — Pure TS statutory HMRC VAT engine (VATA 1994), Standard 20%, Reduced 5%, and Zero-rate 0%, 9-digit VRN validation with official HMRC Modulus 97 algorithm, HMRC MTD 9-Box Return compiler (Box 1 to Box 9), EU dispatch & acquisition reverse charge, HMRC MTD API JSON and CSV exporters, and printable HMRC Return Certificate ✅ **(2026-09-12)**
 - [x] **Admin: System Email Templates & Audit Logging** (`/admin/email-templates`) — Pure TS transactional template engine (6 core presets: Invoice Sent, Payment Receipt, Welcome Onboarding, Payment Overdue Dunning, Support Ticket Update, Credit Note Issued), dynamic merge tag interpolation (`{{tag}}`), responsive HTML boilerplate with mobile/desktop live preview, test email dispatch (Resend API + simulated fallback), factory default reset, and expanded `AdminAuditLog` governance tracking ✅ **(2026-09-12)**
 - [x] **SaaS: Plan Upgrade/Downgrade, Subscription Lifecycle & Platform Invoicing** (`/settings` & `/admin/tenants/[id]`) — 4-tier matrix (`FREE`, `BASIC`, `PRO`, `ENTERPRISE`), multi-region pricing (INR, USD, GBP, AED, SAR, AUD), Monthly vs Annual switcher (20% discount), real-time proration mathematics (used days, unused credit, target plan charge, net payable today), downgrade scheduling at cycle end, automated platform B2B invoices (`SAAS-INV-YYYY-XXXX`) with regional tax splits (IN 18%, GB 20%, AE 5%, SA 15%, AU 10%, US 0%), printable receipt slip modal, and Super Admin manual invoice generator ✅ **(2026-09-12)**
-- [x] **Integrations: WhatsApp Business API** (`/crm/whatsapp`) — Meta Graph API v20.0 client, E.164 phone normalizer (IN, US, UK, AE, SA, AU), 7 statutory templates (Invoice, Receipt, Dunning, Order, Support, Welcome, Custom), 1-click wa.me direct links, webhook event verification and receiver (`/api/webhooks/whatsapp`), WhatsApp Studio 4-KPI dashboard & live conversational bubble chat, and 1-click Invoice modal dispatch (`/sales/invoices/[id]`) ✅ **(2026-09-12)**
+- [x] **Integrations: WhatsApp Business API** (`/crm/whatsapp`) — Meta Graph API v20.0 client, E.164 phone normalizer (IN, US, UK, AE, SA, AU), 7 statutory templates (Invoice, Receipt, Dunning, Order, Support, Welcome, Custom), 1-click wa.me direct links, webhook event verification and receiver (`/api/webhooks/whatsapp`), WhatsApp Studio 4-KPI dashboard & live conversational bubble chat, and 1-click Invoice modal dispatch (`/sales/invoices/[id]`) ✅ **(2026-09-12)** **Switched off for businesses 2026-11-12 (hidden, code and data kept).**
 - [x] **Integrations: Stripe & PayPal Multi-Currency Payment Gateway Suite** (`/settings`, `/portal/[token]`, `/api/webhooks/stripe`, `/api/webhooks/paypal`, `/sales/invoices/[id]`) — Multi-currency subunit normalization (cents, fils, paise, zero-decimal currencies), Stripe Checkout Session compiler, PayPal Orders v2 API compiler, tenant payment gateway settings & credentials management, test connection verification, customer portal "Pay Online" modal dialog with instant balance settlement, invoice view payment link generator, and real-time webhook receivers (`/api/webhooks/stripe`, `/api/webhooks/paypal`) with automated ledger and invoice status transitions ✅ **(2026-09-13)**
 - [x] **Tax: Tax Exemptions Suite** (`/sales/invoices`, `/crm/contacts`, `/lib/gst-engine.ts`, `/lib/pdf/TaxInvoice.tsx`) — Pure TS statutory tax exemption engine supporting 8 official categories (SEZ unit/developer, LUT export, government bodies, charitable trusts, reseller certificates, diplomatic missions, basic agricultural produce, and general statutory notifications), customer & invoice certificate tracking, auto-zeroing GST/VAT with exempt subtotal tracking, line-item level selective exemption, and dynamic statutory notice injection on web views and printable PDF invoices ✅ **(2026-09-14)**
 - [x] **Inventory: Inventory Reports Studio** (`/inventory?tab=reports`, `/app/actions/inventory.ts`) — Dedicated 6th studio tab in Inventory featuring real-time financial asset accounting: Total Asset Cost Value, Retail Market Value, Potential Gross Profit & Margin Yield, Deficit/Reorder SKUs, Stock Valuation Matrix with category and status filtering, Stock Turnover & Movement Velocity classification (Fast Moving, Moderate, Slow Moving, Dead Stock), Multi-Depot Distribution cross-tabulation matrix, time-range analysis (30d, 90d, 365d, all-time), and 1-click PapaParse CSV & Print exports ✅ **(2026-09-14)**
 
 ### CRM (ALL P2 MODULES COMPLETE ✅)
-- [x] CRM: Email Integration (`/crm/emails`) ✅ **(2026-09-12)**
-- [x] CRM: Web Forms / Lead Capture (`/crm/forms`) ✅ **(2026-09-12)**
+- [x] CRM: Email Integration (`/crm/emails`) ✅ **(2026-09-12)** **Switched off for businesses 2026-11-12 (hidden, code and data kept).**
+- [x] CRM: Web Forms / Lead Capture (`/crm/forms`) ✅ **(2026-09-12)** **Switched off for businesses 2026-11-12 (hidden, code and data kept).**
 
 ### Retail (ALL P2 MODULES COMPLETE ✅)
 - [x] Retail: Customer Portal (`/portal/[token]`) ✅ **(2026-09-12)**
@@ -82,7 +82,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 
 ### Finance
 - [x] Finance: General Ledger (`/finance/expenses`) ✅ **(2026-09-12)**
-- [x] Finance: Bank Reconciliation (`/finance/bank-reconciliation`) ✅ **(2026-09-12)**
+- [x] Finance: Bank Reconciliation (`/finance/bank-reconciliation`) ✅ **(2026-09-12)** **Switched off for businesses 2026-11-12 (hidden, code and data kept).**
 - [x] Finance: Expense Management (`/finance/expenses`) ✅ **(2026-09-12)**
 
 ### Tax (ALL P1/P2 REGIONAL TAX MODULES COMPLETE ✅)
@@ -123,7 +123,7 @@ All P1 tasks have been completed as of 2026-04-08. Key completions this session:
 - [x] SaaS: Platform Subscription Invoice Generation (`/admin/tenants/[id]` & `/settings`) ✅ **(2026-09-12)**
 
 ### Integrations (ALL P2 MODULES COMPLETE ✅)
-- [x] Integrations: WhatsApp Business API (`/crm/whatsapp`) ✅ **(2026-09-12)**
+- [x] Integrations: WhatsApp Business API (`/crm/whatsapp`) ✅ **(2026-09-12)** **Switched off for businesses 2026-11-12 (hidden, code and data kept).**
 - [x] Integrations: Stripe & PayPal Multi-Currency Payment Gateway Suite (`/settings`, `/portal/[token]`, `/api/webhooks/stripe`, `/api/webhooks/paypal`, `/sales/invoices/[id]`) ✅ **(2026-09-13)**
 
 ---
@@ -176,6 +176,13 @@ These are marked done above but are simulated or not enforced. The UI now says s
 ## 📋 Open items (review 2026-11-12)
 Done on 2026-11-12 (pushed, live on genesoftdev): lint at 0 errors; Next.js 16.4.6 and other security updates (production dependencies 0 known vulnerabilities); workspace settings no longer sent whole to the browser; fixed the Settings → Billing trial banner, bills list supplier name and PAN, Super Admin → Subscriptions receipts, report builder invoice fields; removed invented values (sample e-way transporters, payslip bank and designation, budget approver, "ITC 18%", address country "India").
 
+**Modules taken out on 2026-11-12 (owner's decision, pushed and live):**
+- CRM Emails, WhatsApp and Web Forms and Finance → Bank Reconciliation are switched off for every business: out of the menu, their pages redirect, public form links (`/forms/…`, `/api/forms/*/submit`) answer "not found", the invoice WhatsApp button is hidden and the daily inbox sync is skipped. Code and saved data are kept; `NEXT_PUBLIC_ENABLE_PARKED_MODULES=true` brings them back (`src/lib/features.ts`). Sending an invoice by email still works.
+- The POS Terminal (`/sales/pos`) is removed completely: pages, server actions, the POS session model and the "Point of Sale" plan switch. Past POS sales remain as ordinary invoices.
+- Plan features and the ERP page no longer mention any of these.
+- [ ] Left over: the unused `pos_sessions` table is still in the live database; Terms, Privacy and DPA still say customers may connect WhatsApp or their own email server (owner / legal review); the WhatsApp webhook address still answers; web form CAPTCHA and CRM email open tracking (under "Product gaps") only matter if the modules come back.
+- [ ] Check in a browser, signed in on genesoftdev: the menu, Super Admin → Pricing & Plans → Limits & modules, and the invoice page.
+
 **Check next:** sign in on genesoftdev (Fixo test business) and look at Settings → Billing, Finance → Bills and Super Admin → Subscriptions; these were changed on 2026-11-12 and verified by tests and build only.
 
 Done on 2026-10-14: general ledger (all documents post double-entry journals; trial balance, balance sheet, account ledger, opening balances, rebuild); P&L fixed (expenses, payroll, credit notes were missing); built-in error monitoring (System Logs + email alerts, no Sentry); marketing emails with unsubscribe links; workspace data export + close workspace + super admin permanent delete; customer ledger no longer assumes INR (UAE/UK/… balances were converted from INR by mistake); payments moved to Prisma with tenant checks; integration test suite.
@@ -207,6 +214,7 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [ ] Live database has drifted from `prisma/schema.prisma`: rebuild the schema from the live DB (`prisma db pull` on a copy) and move to real migrations.
 - [x] Lint errors: 0 (was ~1,000; done 2026-11-12). 25 warnings left (hook dependencies, `<img>`).
 - [ ] Browser tests.
+- [ ] `npm run lint` still fails on old files outside the app source (`app/scripts/verify-*.ts`, `app/check-migration.ts`); `npx eslint src` is at 0 errors.
 - [x] Assumed India defaults removed (2026-11-12): new contacts, bank accounts and imported contacts/products take the business's own country and currency (`src/lib/tenant-defaults.ts`; forms prefill from `useTaxRegime`); a product row without a name is rejected; the fixed "+12%" on the Super Admin dashboard is gone.
 - [ ] Still assumed: imported contacts with no name or email are saved as "Imported Contact"; demo bank seeds use INR (only with `ENABLE_DEMO_SEED`).
 - [ ] Hydration error #418 on `/settings` (seen 2026-11-12). Fixo test business: billing shows a renewal date in the past (old free-upgrade data) and it has no bills, so the bills list fix is verified by tests only.
