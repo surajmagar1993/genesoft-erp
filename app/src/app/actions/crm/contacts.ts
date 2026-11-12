@@ -375,11 +375,14 @@ export async function importContacts(
       if (type !== "INDIVIDUAL" && type !== "COMPANY") return { error: `Row ${i + 1}: type must be INDIVIDUAL or COMPANY`, count: 0 }
       const balance = Number(c.balance || 0)
       if (!Number.isFinite(balance)) return { error: `Row ${i + 1}: balance isn't a number`, count: 0 }
+      // A contact is known by its name, or failing that its email; never by a made-up name
+      const displayName = String(c.display_name || c.displayName || c.name || email || "").trim()
+      if (!displayName) return { error: `Row ${i + 1}: add a name or an email`, count: 0 }
       rows.push({
         balance,
         data: {
           tenantId,
-          displayName: String(c.display_name || c.displayName || c.name || email || "Imported Contact").trim(),
+          displayName,
           type,
           email,
           phone: c.phone ? String(c.phone) : null,

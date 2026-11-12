@@ -57,6 +57,19 @@ describe("L1/L2 contacts", () => {
         expect(Number(c.balance)).toBe(250)
         expect((await importContacts([{ display_name: "X", type: "ROBOT" }])).error).toMatch(/Row 1: type/)
     })
+
+    it("import refuses a row with no name and no email instead of inventing a name", async () => {
+        const { tenant, user } = await createTestTenant()
+        actAs(user)
+        const res = await importContacts([{ name: "Named" }, { phone: "5550100" }])
+        expect(res).toMatchObject({ count: 0 })
+        expect(res.error).toMatch(/Row 2: add a name or an email/)
+        expect(await prisma.contact.count({ where: { tenantId: tenant.id } })).toBe(0)
+        // With only an email, the email is the name
+        expect(await importContacts([{ email: "only@example.test" }])).toMatchObject({ error: null, count: 1 })
+        const c = await prisma.contact.findFirstOrThrow({ where: { tenantId: tenant.id } })
+        expect(c.displayName).toBe("only@example.test")
+    })
 })
 
 describe("L7 budgets and L8 proration", () => {

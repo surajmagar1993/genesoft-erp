@@ -216,8 +216,8 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [ ] Browser tests.
 - [ ] `npm run lint` still fails on old files outside the app source (`app/scripts/verify-*.ts`, `app/check-migration.ts`); `npx eslint src` is at 0 errors.
 - [x] Assumed India defaults removed (2026-11-12): new contacts, bank accounts and imported contacts/products take the business's own country and currency (`src/lib/tenant-defaults.ts`; forms prefill from `useTaxRegime`); a product row without a name is rejected; the fixed "+12%" on the Super Admin dashboard is gone.
-- [ ] Still assumed: imported contacts with no name or email are saved as "Imported Contact"; demo bank seeds use INR (only with `ENABLE_DEMO_SEED`).
-- [ ] Hydration error #418 on `/settings` (seen 2026-11-12). Fixo test business: billing shows a renewal date in the past (old free-upgrade data) and it has no bills, so the bills list fix is verified by tests only.
+- [ ] Still assumed: demo bank seeds use INR (only with `ENABLE_DEMO_SEED`). (Done 2026-11-12: a contact import row with no name and no email is refused instead of being saved as "Imported Contact".)
+- [ ] Fixo test business (hydration error #418 on `/settings` no longer appears on genesoftdev, checked 2026-11-12): billing shows a renewal date in the past (old free-upgrade data) and it has no bills, so the bills list fix is verified by tests only.
 - [ ] `npm audit` run from `app/` reads the stale root lockfile and reports false results; audit a copy of `app/package.json` + `app/package-lock.json` instead (production deps: 0 known vulnerabilities on 2026-11-12, Next.js 16.4.6).
 - [ ] The root `package-lock.json` is out of date (Vercel builds from `app/` with `app/package-lock.json`); regenerate or remove it in a coordinated change.
 
