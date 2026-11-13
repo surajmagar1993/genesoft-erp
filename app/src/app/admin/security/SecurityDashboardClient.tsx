@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { format } from "date-fns"
 import { toast } from "sonner"
+import { TwoFactorCard } from "@/components/auth/two-factor-card"
 import { 
     updateSecurityPolicy, 
     addBlockedIp, 
@@ -269,11 +270,12 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="pt-6 space-y-4">
-                            <div className="flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
-                                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                            <div className="flex items-start gap-2 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                                <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
                                 <p>
-                                    Not enforced yet: these settings are saved, but 2FA, the session timeout and the failed-login lockout
-                                    aren&apos;t applied at sign-in. Supabase Auth&apos;s own rate limits apply. Maintenance mode, the signup switch and the IP blocklist below are enforced.
+                                    Applied at sign-in: admin accounts without an authenticator app are asked to set one up (including yours);
+                                    the timeout signs out idle sessions; the lockout pauses an email for 15 minutes after that many wrong
+                                    passwords (and an IP address after 4× as many). Supabase Auth&apos;s own limits also apply.
                                 </p>
                             </div>
                             <div className="flex items-center justify-between p-3.5 rounded-lg border bg-muted/20">
@@ -299,13 +301,15 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                                     <select
                                         id="sessionTimeout"
                                         value={policyForm.sessionTimeoutMinutes}
-                                        onChange={e => setPolicyForm(prev => ({ ...prev, sessionTimeoutMinutes: parseInt(e.target.value) || 30 }))}
+                                        onChange={e => setPolicyForm(prev => ({ ...prev, sessionTimeoutMinutes: Number.isNaN(parseInt(e.target.value)) ? 30 : parseInt(e.target.value) }))}
                                         className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
                                     >
                                         <option value={15}>15 Minutes</option>
                                         <option value={30}>30 Minutes (Recommended)</option>
                                         <option value={60}>1 Hour</option>
                                         <option value={120}>2 Hours</option>
+                                        <option value={480}>8 Hours</option>
+                                        <option value={0}>Off (stay signed in)</option>
                                     </select>
                                     <p className="text-xs text-muted-foreground">
                                         Forces re-authentication when a session is idle.
@@ -332,6 +336,8 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             </div>
                         </CardContent>
                     </Card>
+
+                    <TwoFactorCard returnTo="/admin/security" />
 
                     <Card className="border-primary/10 shadow-sm bg-card/60 backdrop-blur">
                         <CardHeader className="bg-muted/20 border-b pb-3">
@@ -474,8 +480,9 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                             <div className="flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-300">
                                 <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                                 <p>
-                                    Not enforced yet: these limits are saved but no request limiter reads them. Vercel&apos;s platform DDoS
-                                    protection and the 5-per-10-minutes limit on public web forms do apply.
+                                    Applied to API calls and form or button submissions: per signed-in user (or per IP address when signed out),
+                                    with 10× that per IP address for shared offices. Gateway webhooks and the daily job are exempt. Counted per
+                                    server instance; for a hard platform-wide cap add a Vercel Firewall rate-limit rule.
                                 </p>
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -493,7 +500,7 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                                         className="bg-background"
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        Standard default is 120 requests/min. Enterprise tenants receive 500+ via tier assignment.
+                                        Default 120 per minute. Page views and prefetches aren&apos;t counted.
                                     </p>
                                 </div>
 

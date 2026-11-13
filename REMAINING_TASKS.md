@@ -136,7 +136,7 @@ These are marked done above but are simulated or not enforced. The UI now says s
 - [ ] **Stripe / PayPal invoice checkout**: live mode isn't wired to the gateway APIs; portal online payment is switched off.
 - [x] **Stripe SaaS billing**: plan comes from the price; a failed renewal keeps the plan; prices sync from Admin → Pricing automatically (2026-10-13).
 - [x] **Plan upgrades**: tenants used to upgrade for free (fake `MANUAL-` payment reference). Upgrades now pay the prorated amount through Razorpay or Stripe Checkout first (2026-10-13).
-- [ ] **Platform Security (`/admin/security`)**: IP blocklist, maintenance mode and the signup switch are enforced (2026-10-13). 2FA, session timeout, login lockout and API rate limits are still stored only (labelled in the UI).
+- [x] **Platform Security (`/admin/security`)**: IP blocklist, maintenance mode and the signup switch are enforced (2026-10-13); 2FA, session timeout, login lockout and rate limits are enforced (2026-11-13). Left: the rate limit counts per server instance (add a Vercel Firewall rule for a hard cap); the lockout covers the app's sign-in form, not direct calls to Supabase Auth (its own limits apply).
 - [x] **Web Forms**: 5 submissions / 10 min per IP, alert emails escaped and actually sent (2026-10-13). Left: CAPTCHA (the fake settings card was removed).
 - [x] **Recurring invoices**: due profiles run in the daily cron (2026-10-13).
 - [x] **Tests**: unit tests (`npm test`) plus integration tests of whole flows against a throwaway PGlite database (`npm run test:integration`: sign-up, invoice → payment → ledger, Razorpay plan checkout, export/close/purge) (2026-10-14). Left: browser (UI) tests.
@@ -179,7 +179,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 **Also done 2026-11-13 (second pass):** all browser `confirm()` pop-ups replaced by one in-app confirm dialog; all example placeholders replaced by instructions (lint now blocks both); app text below 12 px raised; Content-Security-Policy; GitHub Actions CI (type check, lint, tests, build); form pop-ups no longer close on a stray click and scroll when tall; keyboard access for clickable rows, filter chips and wide tables; every icon button named; chart summaries; notifications open what they're about; fixed "(INR)" removed from labels; deleting a paid invoice now restores the customer's balance (one transaction); the customer invoice PDF and the plan file with personal emails are no longer published (kept locally, ignored; still in old git history).
 
 **Still open from the review:**
-- [ ] Run `app/review_indexes_migration.sql` on the live database (20 additive indexes, no data changes) — waiting for the owner's OK.
+- [x] `app/review_indexes_migration.sql` run on the live database 2026-11-13 (17 indexes, all valid).
 - [ ] Creating or editing an invoice still runs as separate steps (document, customer balance, ledger, stock); failures are reported to System Logs and "Rebuild ledger" repairs the ledger. Making it one transaction means ledger/stock code must accept a transaction (larger refactor).
 - [ ] Large create/edit forms are still pop-ups in HR, Purchase, Projects, Inventory, RFQ, Recurring invoices (rule: full pages). Data loss on outside clicks is fixed; moving them to pages is a larger UI job.
 - [ ] Other number series (orders, quotes, bills, credit notes…) still use max+1; invoices retry on a clash. A counter table would fix all (needs a database change).
@@ -211,7 +211,7 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [ ] Legal review of Privacy, Terms and Refund pages.
 
 **Product gaps:**
-- [ ] Enforce platform 2FA (Supabase TOTP is on, no app screen), session timeout, login lockout, API rate limits (stored only today).
+- [x] Enforce platform 2FA, session timeout, login lockout and rate limits (done 2026-11-13).
 - [ ] Customer portal online payment of invoices (would be through Razorpay).
 - [ ] Workflow "update status" actions; CRM email open tracking; web form CAPTCHA.
 - [ ] REST API (`/api/v1`) for the planned mobile app; then integrations (Tally/QuickBooks, Shopify/WooCommerce, Zapier, Google Workspace, Microsoft 365, Twilio SMS), white-labelling, withholding tax.

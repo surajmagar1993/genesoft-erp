@@ -4,7 +4,8 @@ import { unwrap } from "@/lib/action-result"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Building2, Check, Clock, Copy, Mail, MoreHorizontal, Search, UserCheck, Users, UserX } from "lucide-react"
+import { confirmAction } from "@/components/confirm-dialog"
+import { Building2, Check, Clock, Copy, Mail, MoreHorizontal, Search, ShieldOff, UserCheck, Users, UserX } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,7 +19,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { toggleUserStatus, type PlatformTeam, type PlatformTeamMember } from "@/app/actions/saas/admin"
+import { resetUserTwoFactor, toggleUserStatus, type PlatformTeam, type PlatformTeamMember } from "@/app/actions/saas/admin"
 import { toast } from "sonner"
 import { format } from "date-fns"
 
@@ -72,6 +73,25 @@ export function UsersClient({
             router.refresh()
         } catch (error) {
             toast.error(error instanceof Error ? error.message : "Failed to update user status")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleResetTwoFactor = async (user: PlatformTeamMember) => {
+        const ok = await confirmAction({
+            title: "Reset two-factor sign-in?",
+            description: `${user.fullName || user.email} will sign in with their password only until they set up an authenticator app again. Do this only after confirming who is asking.`,
+            confirmLabel: "Reset 2FA",
+            destructive: true,
+        })
+        if (!ok) return
+        try {
+            setIsLoading(true)
+            const { removed } = unwrap(await resetUserTwoFactor(user.id))
+            toast.success(removed > 0 ? "Two-factor sign-in reset" : "This account had no authenticator app set up")
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to reset two-factor sign-in")
         } finally {
             setIsLoading(false)
         }
@@ -234,6 +254,10 @@ export function UsersClient({
                                                                 <Mail className="h-3.5 w-3.5 opacity-70" />
                                                                 Email user
                                                             </a>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleResetTwoFactor(u)} className="gap-2 cursor-pointer text-xs">
+                                                            <ShieldOff className="h-3.5 w-3.5 opacity-70" />
+                                                            Reset two-factor
                                                         </DropdownMenuItem>
                                                         <DropdownMenuSeparator />
                                                         <DropdownMenuItem

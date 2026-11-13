@@ -14,6 +14,7 @@ import { getBillingPricing } from "@/app/actions/saas/subscription"
 import { getPlanConfig, PLAN_ORDER } from "@/lib/plan-config"
 import { getEmailPreferences } from "@/app/actions/settings/email-preferences"
 import { EmailPreferencesCard } from "./email-preferences-card"
+import { TwoFactorCard } from "@/components/auth/two-factor-card"
 import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
 import { getMyActivityLog } from "@/app/actions/activity"
 import { ActivityLogTable } from "@/components/activity-log-table"
@@ -143,6 +144,9 @@ export default async function SettingsPage({
                             </div>
                         </CardContent>
                     </Card>
+                    <div className="mt-4">
+                        <TwoFactorCard returnTo="/settings?tab=account" />
+                    </div>
                     <div className="mt-4">
                         <EmailPreferencesCard initial={emailPrefs} />
                     </div>

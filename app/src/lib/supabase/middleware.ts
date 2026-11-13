@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import type { PlatformGate } from '@/lib/platform-security'
+import { DEFAULT_SECURITY_POLICY, clientIp, type PlatformGate } from '@/lib/platform-security'
+import { IDLE_COOKIE, IDLE_COOKIE_OPTIONS, idleRemainingMs, idleTimeoutEnabled, makeIdleCookie, readIdleCookie } from '@/lib/idle-session'
+import { hitRateLimit } from '@/lib/rate-limit'
 import { APP_AREAS } from '@/lib/app-areas'
 import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute, PARKED_MODULES_ENABLED, isParkedRoute } from '@/lib/features'
 
@@ -43,6 +45,89 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
     const {
         data: { user },
     } = await supabase.auth.getUser()
+
+    const pathname = request.nextUrl.pathname
+    const policy = gate?.policy ?? DEFAULT_SECURITY_POLICY
+
+    // A redirect that keeps any session cookies Supabase just refreshed or cleared
+    const redirectTo = (path: string, search = '') => {
+        const url = request.nextUrl.clone()
+        url.pathname = path
+        url.search = search
+        const res = NextResponse.redirect(url)
+        supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
+        return res
+    }
+
+    // Rate limit (Admin → Security): API calls and form/action submissions, per
+    // signed-in user (or per IP when signed out), plus a wider cap per IP.
+    // Gateway webhooks and the cron job are exempt.
+    const isWrite = !['GET', 'HEAD', 'OPTIONS'].includes(request.method)
+    const isApi = pathname.startsWith('/api/')
+    if ((isWrite || isApi) && !pathname.startsWith('/api/webhooks/') && !pathname.startsWith('/api/cron/')) {
+        const ip = clientIp(request.headers) ?? 'unknown'
+        const own = hitRateLimit(user ? `u:${user.id}` : `ip:${ip}`, policy.rateLimitPerMin)
+        const wide = hitRateLimit(`ipall:${ip}`, policy.rateLimitPerMin * 10)
+        if (own.limited || wide.limited) {
+            return new NextResponse('Too many requests. Please wait a moment and try again.', {
+                status: 429,
+                headers: { 'Retry-After': String(Math.max(own.retryAfterSec, wide.limited ? wide.retryAfterSec : 0)) },
+            })
+        }
+    }
+
+    // Signed-in areas that the session rules below apply to: the app itself and
+    // the API routes that act for the signed-in user
+    const isTwoFactorPage = pathname === '/two-factor'
+    const isSessionApi = ['/api/invoices/', '/api/settings/', '/api/session/'].some((p) => pathname.startsWith(p))
+    const isGuardedArea = APP_AREAS.some((p) => pathname === p || pathname.startsWith(`${p}/`)) || isSessionApi
+
+    if (!user && isTwoFactorPage) return redirectTo('/login')
+
+    let roleLookup: Promise<string | null> | null = null
+    const ownRole = () => {
+        roleLookup ??= Promise.resolve(
+            supabase.from('profiles').select('role').eq('id', user!.id).single()
+        ).then(({ data }) => (data?.role as string | undefined) ?? null, () => null)
+        return roleLookup
+    }
+
+    if (user && (isGuardedArea || isTwoFactorPage)) {
+        // Session inactivity timeout. /api/session/activity handles the timer itself.
+        if (idleTimeoutEnabled(policy.sessionTimeoutMinutes) && pathname !== '/api/session/activity') {
+            const lastActive = readIdleCookie(request.cookies.get(IDLE_COOKIE)?.value, user.id)
+            if (lastActive !== null && idleRemainingMs(lastActive, policy.sessionTimeoutMinutes) <= 0) {
+                await supabase.auth.signOut({ scope: 'local' })
+                if (isApi) {
+                    const res = NextResponse.json({ error: 'Signed out after inactivity' }, { status: 401 })
+                    supabaseResponse.cookies.getAll().forEach((c) => res.cookies.set(c))
+                    return res
+                }
+                return redirectTo('/login', `?message=${encodeURIComponent(`You were signed out after ${policy.sessionTimeoutMinutes} minutes without activity. Please sign in again.`)}`)
+            }
+            // Page visits count as activity; prefetches and background calls don't.
+            // No cookie yet (a session from before this rule): start the clock now.
+            const prefetch = request.headers.has('next-router-prefetch') || request.headers.has('next-router-segment-prefetch') ||
+                request.headers.get('sec-purpose')?.includes('prefetch') || request.headers.get('purpose') === 'prefetch'
+            if (lastActive === null || (request.method === 'GET' && !isApi && !prefetch)) {
+                const value = makeIdleCookie(user.id)
+                if (value) supabaseResponse.cookies.set(IDLE_COOKIE, value, IDLE_COOKIE_OPTIONS)
+            }
+        }
+
+        // Two-factor sign-in: an account with an authenticator app must enter its code;
+        // when the Super Admin enforces 2FA, admin accounts must set one up first.
+        if (!isTwoFactorPage) {
+            const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+            const hasFactor = aal?.nextLevel === 'aal2'
+            const needsCode = hasFactor && aal?.currentLevel !== 'aal2'
+            const needsSetup = !hasFactor && policy.enforce2FA && ['SUPER_ADMIN', 'ADMIN'].includes((await ownRole()) ?? '')
+            if (needsCode || needsSetup) {
+                if (isApi) return NextResponse.json({ error: 'Two-factor verification required' }, { status: 401 })
+                return redirectTo('/two-factor', `?next=${encodeURIComponent(pathname + request.nextUrl.search)}`)
+            }
+        }
+    }
 
     // Protected routes: redirect to login if not authenticated
     const isAuthPage = request.nextUrl.pathname.startsWith('/login') ||

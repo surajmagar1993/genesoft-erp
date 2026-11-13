@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { LogoutMenuItem } from '@/components/auth/logout-button'
 import { RoleProvider } from "@/components/auth/role-context"
 import { SkipLink } from "@/components/skip-link"
+import { IdleWatcher } from "@/components/auth/idle-watcher"
 import { getMyAccess } from "@/lib/get-tenant-id"
 import { MODULES, isAdminRole, moduleForPath, type ModuleAccess } from "@/lib/access"
 import Link from "next/link"
@@ -561,6 +562,7 @@ export function DashboardShell({
         <SidebarProvider>
             <SkipLink />
             <ConfirmHost />
+            <IdleWatcher />
             <Script {...({ id: "razorpay-checkout", src: "https://checkout.razorpay.com/v1/checkout.js", strategy: "lazyOnload" })} />
             <AppSidebar
                 access={isAdminRole(role) ? null : access}

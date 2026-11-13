@@ -11,27 +11,43 @@ import { prisma } from '@/lib/prisma'
 import { sendWelcomeEmailOnce } from '@/lib/welcome-email'
 import { clientIp, getPlatformGate } from '@/lib/platform-security'
 import { cleanWorkspaceSlug } from '@/lib/workspace-slug'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
+import { LOGIN_LOCK_MINUTES, clearLoginFailures, loginLocked, recordLoginFailure } from '@/lib/login-lockout'
+import { IDLE_COOKIE, IDLE_COOKIE_OPTIONS, makeIdleCookie } from '@/lib/idle-session'
 import { TURNSTILE_FAILED, turnstileEnabled, verifyTurnstile } from '@/lib/turnstile'
 import { SIGNUP_COUNTRIES, getTaxJurisdiction } from '@/lib/tax-jurisdiction'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
 
-  const email = formData.get('email') as string
-  const password = formData.get('password') as string
+  const email = String(formData.get('email') || '').trim()
+  const password = String(formData.get('password') || '')
 
   if (!email || !password) {
     redirect('/login?error=Email+and+password+are+required')
   }
 
+  // Failed-login lockout (Admin → Security)
+  const ip = clientIp(await headers())
+  const { policy } = await getPlatformGate()
+  if (await loginLocked(email, ip, policy.authLockoutAttempts)) {
+    redirect(`/login?error=${encodeURIComponent(`Too many failed sign-in attempts. Try again in ${LOGIN_LOCK_MINUTES} minutes or reset your password.`)}`)
+  }
+
   const { data: { user }, error } = await supabase.auth.signInWithPassword({ email, password })
 
   if (error) {
+    if (error.code === 'invalid_credentials') await recordLoginFailure(email, ip)
     redirect(`/login?error=${encodeURIComponent(error.message)}`)
   }
 
   if (user) {
+    await clearLoginFailures(email)
+
+    // Start the inactivity clock (Admin → Security → session timeout)
+    const idle = makeIdleCookie(user.id)
+    if (idle) (await cookies()).set(IDLE_COOKIE, idle, IDLE_COOKIE_OPTIONS)
+
     // New business owner who hasn't had the welcome email yet (e.g. confirmed on another device)
     after(() => sendWelcomeEmailOnce(user.id))
 
@@ -42,10 +58,14 @@ export async function login(formData: FormData) {
     })
 
     revalidatePath('/', 'layout')
+    const home = profile?.role === 'SUPER_ADMIN' ? '/admin/dashboard' : '/reports'
 
-    if (profile?.role === 'SUPER_ADMIN') {
-      redirect('/admin/dashboard')
+    // Accounts with an authenticator app enter its code next
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    if (aal && aal.nextLevel === 'aal2' && aal.currentLevel !== 'aal2') {
+      redirect(`/two-factor?next=${encodeURIComponent(home)}`)
     }
+    redirect(home)
   }
 
   revalidatePath('/', 'layout')

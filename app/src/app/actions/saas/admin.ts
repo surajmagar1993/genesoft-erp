@@ -7,7 +7,7 @@ import { prisma } from "../../../lib/prisma"
 import { readTeam } from "@/lib/team-settings"
 import type { Prisma } from "@prisma/client"
 import { isAdminRole, resolveAccess, summarizeAccess } from "@/lib/access"
-import { clearPlatformGateCache } from "@/lib/platform-security"
+import { cleanSecurityPolicy, clearPlatformGateCache, loadSecurityPolicy } from "@/lib/platform-security"
 type PaidPlan = "BASIC" | "PRO" | "ENTERPRISE"
 import { PRICING_REGIONS } from "@/lib/pricing-regions"
 import { PLAN_CONFIG_ACTION, PLAN_ORDER, getPlanConfig, normalizePlanConfig, planName, type PlanConfig } from "@/lib/plan-config"
@@ -1058,10 +1058,7 @@ export async function getSecurityOverview() {
     await ensureSuperAdmin()
 
     try {
-        const latestPolicyLog = await prisma.adminAuditLog.findFirst({
-            where: { action: "SECURITY_POLICY_UPDATE" },
-            orderBy: { createdAt: "desc" }
-        })
+        const savedPolicy = await loadSecurityPolicy()
 
         const ipBlockLogs = await prisma.adminAuditLog.findMany({
             where: {
@@ -1090,15 +1087,11 @@ export async function getSecurityOverview() {
             }
         })
 
-        const savedPolicy = (latestPolicyLog?.metadata as Partial<SecuritySettings> | null) || {}
         // Maintenance mode and signups live in global_settings, which is what the proxy enforces
         const globalSettings = await prisma.globalSettings.findUnique({ where: { id: "system_config" } })
 
         const settings: SecuritySettings = {
-            enforce2FA: savedPolicy.enforce2FA ?? DEFAULT_SECURITY_SETTINGS.enforce2FA,
-            rateLimitPerMin: savedPolicy.rateLimitPerMin ?? DEFAULT_SECURITY_SETTINGS.rateLimitPerMin,
-            authLockoutAttempts: savedPolicy.authLockoutAttempts ?? DEFAULT_SECURITY_SETTINGS.authLockoutAttempts,
-            sessionTimeoutMinutes: savedPolicy.sessionTimeoutMinutes ?? DEFAULT_SECURITY_SETTINGS.sessionTimeoutMinutes,
+            ...savedPolicy,
             allowSignups: globalSettings?.allowSignups ?? DEFAULT_SECURITY_SETTINGS.allowSignups,
             maintenanceMode: globalSettings?.maintenanceMode ?? DEFAULT_SECURITY_SETTINGS.maintenanceMode,
             blockedIps: Array.from(blockedIpMap.values())
@@ -1158,7 +1151,11 @@ export async function getSecurityOverview() {
 async function _updateSecurityPolicy(policy: Partial<SecuritySettings>) {
     await ensureSuperAdmin()
 
-    await logAdminAction("SECURITY_POLICY_UPDATE", "system_security", "SECURITY", policy)
+    // Only the policy fields, checked and clamped (maintenance/signups live in global_settings)
+    const clean = cleanSecurityPolicy(policy)
+    if (Object.keys(clean).length > 0) {
+        await logAdminAction("SECURITY_POLICY_UPDATE", "system_security", "SECURITY", clean)
+    }
 
     if (policy.maintenanceMode !== undefined || policy.allowSignups !== undefined) {
         await prisma.globalSettings.upsert({
@@ -1429,6 +1426,22 @@ async function _toggleUserStatus(userId: string, isActive: boolean) {
 
     revalidatePath("/admin/users")
     return updated
+}
+
+/**
+ * For a user who lost their authenticator app: removes their two-factor
+ * factors so they can sign in with their password and set up a new one.
+ * (Supabase's admin API needs the service role key, so this deletes the rows
+ * in auth.mfa_factors directly; their challenges go with them.)
+ */
+async function _resetUserTwoFactor(userId: string) {
+    await ensureSuperAdmin()
+    if (!isUuid(userId)) throw new Error("User not found")
+    const target = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, tenantId: true } })
+    if (!target) throw new Error("User not found")
+    const removed = await prisma.$executeRaw`DELETE FROM auth.mfa_factors WHERE user_id = ${userId}::uuid`
+    await logAdminAction("SECURITY_2FA_RESET", userId, "USER", { userEmail: target.email, tenantId: target.tenantId, factorsRemoved: removed })
+    return { removed }
 }
 
 async function _updateUserRole(userId: string, role: string) {
@@ -1707,6 +1720,10 @@ export async function updateGlobalSettings(...args: Parameters<typeof _updateGlo
 
 export async function toggleUserStatus(...args: Parameters<typeof _toggleUserStatus>) {
     return toActionResult(() => _toggleUserStatus(...args))
+}
+
+export async function resetUserTwoFactor(...args: Parameters<typeof _resetUserTwoFactor>) {
+    return toActionResult(() => _resetUserTwoFactor(...args))
 }
 
 export async function updateUserRole(...args: Parameters<typeof _updateUserRole>) {

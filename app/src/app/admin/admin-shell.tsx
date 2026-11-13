@@ -2,6 +2,7 @@
 
 import { ConfirmHost } from "@/components/confirm-dialog"
 import { SkipLink } from "@/components/skip-link"
+import { IdleWatcher } from "@/components/auth/idle-watcher"
 import { LogoutMenuItem } from '@/components/auth/logout-button'
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -279,6 +280,7 @@ export function AdminShell({
         <SidebarProvider>
             <SkipLink />
             <ConfirmHost />
+            <IdleWatcher />
             <AdminSidebar />
             <SidebarInset id="main-content" tabIndex={-1} className="bg-muted/10 focus:outline-none">
                 <AdminTopBar />
