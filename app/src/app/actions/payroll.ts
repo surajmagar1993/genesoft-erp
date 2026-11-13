@@ -1,5 +1,6 @@
 "use server"
 
+import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { postToLedger } from "@/lib/ledger"
@@ -814,10 +815,10 @@ export async function updatePfWageCeiling(ceiling: number): Promise<ActionResult
         const tenantId = await getTenantAdminId()
         const value = Number(ceiling)
         if (!Number.isFinite(value) || value < 0) throw new Error("Enter a ceiling of 0 or more")
-        const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
-        const settings = (tenant?.settings || {}) as Record<string, unknown>
-        const payroll = (settings.payroll || {}) as Record<string, unknown>
-        await prisma.tenant.update({ where: { id: tenantId }, data: { settings: { ...settings, payroll: { ...payroll, pfWageCeiling: value } } as never } })
+        await patchTenantSettings(tenantId, (settings) => ({
+            ...settings,
+            payroll: { ...((settings.payroll || {}) as Record<string, unknown>), pfWageCeiling: value },
+        }))
         revalidatePath("/hr")
         await logTenantAudit(tenantId, "PF_CEILING_UPDATED", { metadata: { pfWageCeiling: value } })
         return { pfWageCeiling: value }

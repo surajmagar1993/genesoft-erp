@@ -1,5 +1,6 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
 import { prisma } from "@/lib/prisma"
 import { getTenantAdminId } from "@/lib/get-tenant-id"
 import { getCurrentUser } from "@/lib/current-user"
@@ -160,7 +161,7 @@ export async function updateTeamMember(
         await logTenantAudit(tenantId, "TEAM_MEMBER_UPDATED", { target: { type: "USER", id: userId }, metadata: { memberEmail: member.email, role: change.role, ...(change.access ? { access: change.access } : {}) } })
         return { success: true }
     } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : "Failed to update the member" }
+        return { success: false, error: await actionErrorMessage(error, "Failed to update the member") }
     }
 }
 
@@ -191,7 +192,7 @@ export async function setTeamMemberActive(
         await logTenantAudit(tenantId, isActive ? "TEAM_MEMBER_REACTIVATED" : "TEAM_MEMBER_DEACTIVATED", { target: { type: "USER", id: userId }, metadata: { memberEmail: member.email } })
         return { success: true }
     } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : "Failed to update status" }
+        return { success: false, error: await actionErrorMessage(error, "Failed to update status") }
     }
 }
 
@@ -258,7 +259,7 @@ export async function inviteTeamMember(input: {
         await logTenantAudit(tenantId, opts.resend ? "TEAM_INVITE_RESENT" : "TEAM_INVITE_SENT", { target: { type: "INVITE", id }, metadata: { email, role: input.role } })
         return { success: true, inviteUrl: url }
     } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : "Failed to create the invitation" }
+        return { success: false, error: await actionErrorMessage(error, "Failed to create the invitation") }
     }
 }
 
@@ -272,7 +273,7 @@ export async function resendInvite(inviteId: string): Promise<{ success: boolean
         await updateTeam(tenantId, (t) => ({ ...t, invites: t.invites.filter((i) => i.id !== inviteId) }))
         return inviteTeamMember({ email: invite.email, fullName: invite.fullName, role: invite.role, access: invite.access }, { resend: true })
     } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : "Failed to renew the invitation" }
+        return { success: false, error: await actionErrorMessage(error, "Failed to renew the invitation") }
     }
 }
 
@@ -293,6 +294,6 @@ export async function revokeInvite(inviteId: string): Promise<{ success: boolean
         revalidatePath("/admin/users")
         return { success: true }
     } catch (error) {
-        return { success: false, error: error instanceof Error ? error.message : "Failed to cancel the invite" }
+        return { success: false, error: await actionErrorMessage(error, "Failed to cancel the invite") }
     }
 }

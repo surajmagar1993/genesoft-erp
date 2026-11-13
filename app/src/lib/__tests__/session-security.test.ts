@@ -72,6 +72,11 @@ describe("safeNextPath", () => {
         expect(safeNextPath("/\\evil.example")).toBe("/reports")
         expect(safeNextPath("https://evil.example")).toBe("/reports")
         expect(safeNextPath("/two-factor?next=/x")).toBe("/reports")
+        // the URL parser drops tabs and newlines: "/\t/evil" would be "//evil"
+        expect(safeNextPath("/\t/evil.example")).toBe("/reports")
+        expect(safeNextPath("/\n/evil.example")).toBe("/reports")
+        expect(safeNextPath("/a\\b")).toBe("/reports")
+        expect(new URL(safeNextPath("/\t/evil.example"), "https://app.example").host).toBe("app.example")
         expect(safeNextPath(undefined, "/admin/dashboard")).toBe("/admin/dashboard")
     })
 })

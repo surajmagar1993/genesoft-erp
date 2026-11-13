@@ -1,5 +1,6 @@
 "use server"
 
+import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import { redirect } from "next/navigation"
 import { Resend } from "resend"
 import { prisma } from "@/lib/prisma"
@@ -62,10 +63,9 @@ export async function closeWorkspace(input: { confirmName: string; reason?: stri
         reason: (input.reason || "").trim().slice(0, 1000) || undefined,
         purgeAfter: new Date(now.getTime() + CLOSURE_GRACE_DAYS * 86_400_000).toISOString(),
     }
-    const settings = (tenant.settings || {}) as Record<string, unknown>
-    await prisma.tenant.update({
-        where: { id: tenantId },
-        data: { isActive: false, settings: { ...settings, closure } as never },
+    await prisma.$transaction(async (tx) => {
+        await patchTenantSettings(tenantId, (settings) => ({ ...settings, closure }), tx)
+        await tx.tenant.update({ where: { id: tenantId }, data: { isActive: false } })
     })
     await logTenantAudit(tenantId, "TENANT_CLOSED_BY_OWNER", {
         target: { type: "TENANT", id: tenantId },

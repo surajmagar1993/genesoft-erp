@@ -1,5 +1,6 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { fromRow, toRow, toRows } from "@/lib/pg-row"
@@ -141,7 +142,7 @@ export async function createQuote(
     return { id: quote.id, error: null }
   } catch (err) {
     console.error("createQuote error:", err)
-    return { id: null, error: err instanceof Error ? err.message : "Failed to create quote" }
+    return { id: null, error: await actionErrorMessage(err, "Failed to create quote") }
   }
 }
 
@@ -171,7 +172,7 @@ export async function updateQuote(
     return { error: null }
   } catch (err) {
     console.error("updateQuote error:", err)
-    return { error: err instanceof Error ? err.message : "Failed to update quote" }
+    return { error: await actionErrorMessage(err, "Failed to update quote") }
   }
 }
 
@@ -184,7 +185,7 @@ export async function deleteQuote(id: string): Promise<{ error: string | null }>
   } catch (err) {
     console.error("deleteQuote error:", err)
     if ((err as { code?: string })?.code === "P2003") return { error: "This quote has been turned into a sales order, so it can't be deleted." }
-    return { error: err instanceof Error ? err.message : "Failed to delete quote" }
+    return { error: await actionErrorMessage(err, "Failed to delete quote") }
   }
 
   revalidatePath("/sales/quotes")

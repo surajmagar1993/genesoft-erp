@@ -1,5 +1,6 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
 import { reportCaught } from "@/lib/error-reporting"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -136,7 +137,7 @@ export async function createProduct(
     return { id: row.id, error: null }
   } catch (err) {
     console.error("createProduct error:", err)
-    return { id: null, error: err instanceof Error ? err.message : "Invalid product" }
+    return { id: null, error: await actionErrorMessage(err, "Invalid product") }
   }
 }
 
@@ -157,7 +158,7 @@ export async function updateProduct(
     if (count === 0) return { error: "Product not found" }
   } catch (err) {
     console.error("updateProduct error:", err)
-    return { error: err instanceof Error ? err.message : "Invalid product" }
+    return { error: await actionErrorMessage(err, "Invalid product") }
   }
 
   revalidatePath("/sales/products")
@@ -174,7 +175,7 @@ export async function deleteProduct(id: string): Promise<{ error: string | null 
   } catch (err) {
     console.error("deleteProduct error:", err)
     if ((err as { code?: string })?.code === "P2003") return { error: "This product is used on invoices, orders or stock records, so it can't be deleted. Mark it inactive instead." }
-    return { error: err instanceof Error ? err.message : "Failed to delete product" }
+    return { error: await actionErrorMessage(err, "Failed to delete product") }
   }
 
   revalidatePath("/sales/products")
@@ -222,7 +223,7 @@ export async function importProducts(
       }
     })
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Invalid file", count: 0 }
+    return { error: await actionErrorMessage(err, "Invalid file"), count: 0 }
   }
 
   let created: { count: number }
@@ -230,7 +231,7 @@ export async function importProducts(
     created = await prisma.product.createMany({ data: insertData.map((r) => ({ ...(fromRow("Product", r) as Omit<Prisma.ProductCreateManyInput, "tenantId">), tenantId })) })
   } catch (err) {
     console.error("importProducts error:", err)
-    return { error: err instanceof Error ? err.message : "Failed to import products", count: 0 }
+    return { error: await actionErrorMessage(err, "Failed to import products"), count: 0 }
   }
 
   revalidatePath("/sales/products")

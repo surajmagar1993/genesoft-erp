@@ -1,5 +1,6 @@
 "use server"
 
+import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import { fromRow, toRow } from "@/lib/pg-row"
 import { prisma } from "@/lib/prisma"
 import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
@@ -102,23 +103,22 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
     // admin rewrite their own subscription. The tax ID, state and tax overrides are mirrored
     // there because invoices, tax reports and the tax engine read them from settings.
     const touchesSettings = data.gstin !== undefined || data.address !== undefined || data.tax_settings !== undefined
+    // The settings keys to change, applied under the row lock when saving (see below)
+    const settingsPatch: Record<string, unknown> = {}
     if (touchesSettings) {
-      const current = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { settings: true } })
-      const merged: Record<string, unknown> = { ...((current?.settings as Record<string, unknown>) || {}) }
-      if (data.gstin !== undefined) merged.gstin = data.gstin?.trim() || null
+      if (data.gstin !== undefined) settingsPatch.gstin = data.gstin?.trim() || null
       if (data.address !== undefined && data.address && typeof data.address === "object" && "state" in data.address) {
-        merged.state = (data.address as TenantAddress).state || null
+        settingsPatch.state = (data.address as TenantAddress).state || null
       }
       if (data.tax_settings !== undefined) {
         const t = data.tax_settings || {}
         const rates = (t.rates || []).map(Number).filter((r) => Number.isFinite(r) && r >= 0 && r <= 100)
-        merged.tax = {
+        settingsPatch.tax = {
           label: t.label?.trim() || undefined,
           rates,
           defaultRate: typeof t.defaultRate === "number" && rates.includes(t.defaultRate) ? t.defaultRate : rates[0],
         }
       }
-      payload.settings = merged
     }
 
     // What actually changes (for the activity log), compared before saving
@@ -133,10 +133,15 @@ export async function updateTenantSettings(data: Partial<TenantSettings>): Promi
       gstin: beforeSettings.gstin ?? null,
     }
     const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
-    const changedFields = Object.keys(payload).filter((k) => k !== "settings" && !same(beforeValues[k], payload[k]))
-    if (data.tax_settings !== undefined && payload.settings && !same(beforeSettings.tax, (payload.settings as Record<string, unknown>).tax)) changedFields.push("tax_settings")
+    const changedFields = Object.keys(payload).filter((k) => !same(beforeValues[k], payload[k]))
+    if ("tax" in settingsPatch && !same(beforeSettings.tax, settingsPatch.tax)) changedFields.push("tax_settings")
 
-    await prisma.tenant.update({ where: { id: tenantId }, data: fromRow("Tenant", payload) })
+    // Settings JSON under the row lock, so a payment or team change saved at the same time isn't undone
+    await prisma.$transaction(async (tx) => {
+      if (Object.keys(settingsPatch).length) await patchTenantSettings(tenantId, (settings) => ({ ...settings, ...settingsPatch }), tx)
+      const columns = fromRow("Tenant", payload)
+      if (Object.keys(columns).length) await tx.tenant.update({ where: { id: tenantId }, data: columns })
+    })
 
     revalidatePath("/settings")
     revalidatePath("/reports")

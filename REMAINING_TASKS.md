@@ -180,6 +180,11 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 
 **Sign-in security (2026-11-13, live):** verified on a local build (setup by QR key, sign-in asks for the code, app and session APIs blocked until verified). Not yet re-checked on genesoftdev itself.
 
+**Security audit 2026-11-13 (Supabase advisors + code review):** fixed in code: open redirect through a tab character in `next` (`/two-factor`, `/auth/confirm`), workspace settings saved without the row lock in 15 places (company settings, invoice template, PF ceiling, closing/reopening a workspace, SaaS invoices, TDS, e-way bills, WhatsApp), raw database errors shown to users in 31 actions (now reported to System Logs), and server-side 2FA check (`awaitingSecondFactor`) behind the proxy.
+- [ ] Run `app/drop_duplicate_indexes_migration.sql` on the live database (3 duplicate indexes from `review_indexes_migration.sql`; advisor WARN).
+- [ ] Supabase Auth settings (owner, dashboard): minimum password length 8 (the app asks for 8, but Supabase's own sign-up API accepts its default of 6), Auth CAPTCHA with the Turnstile secret once keys exist, and Leaked Password Protection (needs the Supabase Pro plan). The app's login lockout only covers the app form; Supabase's built-in auth rate limits cover direct API calls.
+- [ ] Left as is: `script-src 'unsafe-inline'` in the CSP (Next.js inline scripts; nonces would make every page dynamic); the WhatsApp webhook's own settings writes (module off); 21 tables with RLS on and no policies is intended (only Prisma reads them).
+
 **Still open from the review:**
 - [x] `app/review_indexes_migration.sql` run on the live database 2026-11-13 (17 indexes, all valid).
 - [ ] Creating or editing an invoice still runs as separate steps (document, customer balance, ledger, stock); failures are reported to System Logs and "Rebuild ledger" repairs the ledger. Making it one transaction means ledger/stock code must accept a transaction (larger refactor).

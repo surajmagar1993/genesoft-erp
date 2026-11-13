@@ -1,5 +1,6 @@
 "use server"
 
+import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import type { InvoiceStatus as DbInvoiceStatus, InvoiceType, Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantAdminId, getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -883,22 +884,7 @@ export async function updateTenantDefaultTemplate(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const tenantId = await getTenantAdminId()
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-      select: { settings: true }
-    })
-
-    if (!tenant) {
-      return { success: false, error: "Tenant not found" }
-    }
-
-    const currentSettings = (tenant.settings as Prisma.JsonObject | null) || {}
-    const updatedSettings = { ...currentSettings, invoice_template: templateId }
-
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: { settings: updatedSettings }
-    })
+    await patchTenantSettings(tenantId, (settings) => ({ ...settings, invoice_template: templateId }))
 
     revalidatePath("/sales/invoices")
     revalidatePath("/sales/invoices/templates")

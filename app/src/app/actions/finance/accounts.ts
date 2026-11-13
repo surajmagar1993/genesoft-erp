@@ -1,5 +1,6 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
 import { reportCaught } from "@/lib/error-reporting"
 import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@prisma/client"
@@ -78,7 +79,7 @@ export async function createAccount(
     await prisma.account.create({ data: { ...data, balance: 0, tenantId } })
   } catch (err) {
     if ((err as { code?: string })?.code === "P2002") return { error: "An account with this code already exists" }
-    return { error: err instanceof Error ? err.message : "Failed to create account" }
+    return { error: await actionErrorMessage(err, "Failed to create account") }
   }
   revalidatePath("/finance/accounts")
   return { error: null }
@@ -97,7 +98,7 @@ export async function updateAccount(
     if (count === 0) return { error: "Account not found" }
   } catch (err) {
     if ((err as { code?: string })?.code === "P2002") return { error: "An account with this code already exists" }
-    return { error: err instanceof Error ? err.message : "Failed to update account" }
+    return { error: await actionErrorMessage(err, "Failed to update account") }
   }
   revalidatePath("/finance/accounts")
   return { error: null }
@@ -122,7 +123,7 @@ export async function deleteAccount(id: string): Promise<{ error: string | null 
     await prisma.account.deleteMany({ where: { id, tenantId } })
   } catch (err) {
     if ((err as { code?: string })?.code === "P2003") return { error: "This account has journal entries or is used by other records, so it can't be deleted. Mark it inactive instead." }
-    return { error: err instanceof Error ? err.message : "Failed to delete account" }
+    return { error: await actionErrorMessage(err, "Failed to delete account") }
   }
   revalidatePath("/finance/accounts")
   return { error: null }
@@ -192,7 +193,7 @@ export async function seedDefaultAccounts(): Promise<{ error: string | null; cou
   try {
     await prisma.account.createMany({ data: defaultAccounts.map((a) => ({ ...(fromRow("Account", a) as Omit<Prisma.AccountCreateManyInput, "tenantId">), tenantId })) })
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to create accounts", count: 0 }
+    return { error: await actionErrorMessage(err, "Failed to create accounts"), count: 0 }
   }
   
   revalidatePath("/finance/accounts")

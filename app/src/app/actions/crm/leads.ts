@@ -1,5 +1,6 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
 import type { Prisma } from "@prisma/client"
 import { createClient } from "@/lib/supabase/server"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -179,7 +180,7 @@ export async function createLead(
     const contactId = await linkContact(tenantId, String(formData.contact_name || "").trim(), String(formData.email || "").trim(), String(formData.phone || "").trim(), null)
     lead = await prisma.lead.create({ data: { ...data, title: data.title as string, tenantId, contactId }, select: { id: true } })
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Couldn't create the lead" }
+    return { error: await actionErrorMessage(err, "Couldn't create the lead") }
   }
 
   fireWorkflowEvent(tenantId, "LEAD_CREATED", {
@@ -233,7 +234,7 @@ export async function updateLead(
     }
     await prisma.lead.updateMany({ where: { id, tenantId }, data })
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Couldn't update the lead" }
+    return { error: await actionErrorMessage(err, "Couldn't update the lead") }
   }
   revalidatePath("/crm/leads")
   revalidatePath(`/crm/leads/${id}`)
@@ -246,7 +247,7 @@ export async function deleteLead(id: string): Promise<{ error: string | null }> 
     const { count } = await prisma.lead.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Lead not found" }
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Couldn't delete the lead" }
+    return { error: await actionErrorMessage(err, "Couldn't delete the lead") }
   }
   revalidatePath("/crm/leads")
   return { error: null }

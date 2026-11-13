@@ -1,5 +1,6 @@
 "use server"
 
+import { awaitingSecondFactor } from "@/lib/current-user"
 import { cache } from "react"
 import { createClient } from "@/lib/supabase/server"
 import { readClosure } from "@/lib/workspace-closure"
@@ -49,6 +50,8 @@ const getTenantContext = cache(async (): Promise<TenantContext> => {
   } = await supabase.auth.getUser()
 
   if (!user) redirect("/login")
+  // A password alone isn't enough on an account with an authenticator app
+  if (await awaitingSecondFactor(supabase)) redirect("/two-factor")
 
   // profiles links auth.users → tenants (Prisma model User)
   const profile = await prisma.user.findUnique({ where: { id: user.id }, select: { tenantId: true, role: true, isActive: true } })

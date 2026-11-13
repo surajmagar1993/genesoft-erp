@@ -1,5 +1,7 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
+import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import { applyPlanChange } from "@/lib/plan-change"
 import { isUuid } from "@/lib/utils"
 import { reportCaught } from "@/lib/error-reporting"
@@ -283,12 +285,15 @@ async function _toggleTenantStatus(tenantId: string, isActive: boolean) {
     }
     // Activating a workspace its owner closed reopens it
     const reopening = isActive && closure?.status === "CLOSED"
-    const settings = { ...((current.settings || {}) as Record<string, unknown>) }
-    if (reopening) delete settings.closure
-
-    const updated = await prisma.tenant.update({
-        where: { id: tenantId },
-        data: { isActive, ...(reopening ? { settings: settings as never } : {}) }
+    const updated = await prisma.$transaction(async (tx) => {
+        if (reopening) {
+            await patchTenantSettings(tenantId, (settings) => {
+                const next = { ...settings }
+                delete next.closure
+                return next
+            }, tx)
+        }
+        return tx.tenant.update({ where: { id: tenantId }, data: { isActive } })
     })
     
     await logAdminAction(reopening ? "TENANT_REOPEN" : isActive ? "TENANT_ACTIVATE" : "TENANT_SUSPEND", tenantId, "TENANT")
@@ -882,7 +887,7 @@ export async function getDatabaseHealth() {
     } catch (err) {
         return {
             status: "UNHEALTHY",
-            error: err instanceof Error ? err.message : "Database connection failed",
+            error: await actionErrorMessage(err, "Database connection failed"),
             timestamp: new Date().toISOString()
         }
     }
@@ -902,7 +907,7 @@ async function timedCheck(name: string, configured: boolean, check: () => Promis
         const detail = await check()
         return { name, status: "Operational", latencyMs: Date.now() - started, detail }
     } catch (err) {
-        return { name, status: "Down", latencyMs: Date.now() - started, detail: err instanceof Error ? err.message : "Check failed" }
+        return { name, status: "Down", latencyMs: Date.now() - started, detail: await actionErrorMessage(err, "Check failed") }
     }
 }
 

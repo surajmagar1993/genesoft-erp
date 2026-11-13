@@ -1,5 +1,6 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
 import { reportCaught } from "@/lib/error-reporting"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -152,7 +153,7 @@ export async function createOrder(
     return { id: order.id, error: null }
   } catch (err) {
     console.error("createOrder error:", err)
-    return { id: null, error: err instanceof Error ? err.message : "Failed to create order" }
+    return { id: null, error: await actionErrorMessage(err, "Failed to create order") }
   }
 }
 
@@ -182,7 +183,7 @@ export async function updateOrder(
     return { error: null }
   } catch (err) {
     console.error("updateOrder error:", err)
-    return { error: err instanceof Error ? err.message : "Failed to update order" }
+    return { error: await actionErrorMessage(err, "Failed to update order") }
   }
 }
 
@@ -195,7 +196,7 @@ export async function deleteOrder(id: string): Promise<{ error: string | null }>
   } catch (err) {
     console.error("deleteOrder error:", err)
     if ((err as { code?: string })?.code === "P2003") return { error: "This order has been invoiced or delivered, so it can't be deleted. Cancel it instead." }
-    return { error: err instanceof Error ? err.message : "Failed to delete order" }
+    return { error: await actionErrorMessage(err, "Failed to delete order") }
   }
 
   revalidatePath("/sales/orders")
@@ -310,7 +311,7 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceI
     revalidatePath("/sales/orders")
     return { invoiceId: invoice.id, error: null }
   } catch (err) {
-    return { invoiceId: null, error: err instanceof Error ? err.message : "Couldn't create the invoice" }
+    return { invoiceId: null, error: await actionErrorMessage(err, "Couldn't create the invoice") }
   }
 }
 

@@ -1,5 +1,6 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
 import { planLimitError } from "@/lib/plan-limits"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
@@ -1329,6 +1330,6 @@ export async function createProjectInvoice(input: ProjectInvoiceInput): Promise<
         revalidatePath("/sales/invoices")
         return { success: true, invoiceId: invoice.id }
     } catch (err) {
-        return { success: false, error: err instanceof Error ? err.message : "Couldn't create the invoice" }
+        return { success: false, error: await actionErrorMessage(err, "Couldn't create the invoice") }
     }
 }

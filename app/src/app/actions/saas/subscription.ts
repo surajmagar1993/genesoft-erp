@@ -339,21 +339,11 @@ export async function generateSaaSInvoice(params: {
             pricing,
         })
 
-        const settings = ((tenant.settings ?? {}) as SubSettings)
-        const currentSub = settings.subscription || {}
-        const existingInvoices = Array.isArray(currentSub.invoices) ? currentSub.invoices : []
-
-        await prisma.tenant.update({
-            where: { id: tenantId },
-            data: {
-                settings: {
-                    ...settings,
-                    subscription: {
-                        ...currentSub,
-                        invoices: [invoice, ...existingInvoices],
-                    },
-                } as unknown as Prisma.InputJsonObject,
-            },
+        await patchTenantSettings(tenantId, (raw) => {
+            const settings = raw as SubSettings
+            const currentSub = settings.subscription || {}
+            const existingInvoices = Array.isArray(currentSub.invoices) ? currentSub.invoices : []
+            return { ...settings, subscription: { ...currentSub, invoices: [invoice, ...existingInvoices] } } as Record<string, unknown>
         })
 
         await logAudit("SAAS_INVOICE_ISSUED", tenantId, {

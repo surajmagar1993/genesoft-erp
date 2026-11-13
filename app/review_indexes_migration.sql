@@ -6,13 +6,16 @@
 -- To undo: DROP INDEX CONCURRENTLY IF EXISTS <name>;
 
 -- Invoice lines: every invoice list, detail page, edit and stock sync looks them up by invoice
-CREATE INDEX CONCURRENTLY IF NOT EXISTS invoice_line_items_invoice_id_idx ON public.invoice_line_items (invoice_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS invoice_line_items_product_id_idx ON public.invoice_line_items (product_id);
+-- duplicate of an existing idx_* index; dropped by drop_duplicate_indexes_migration.sql
+-- CREATE INDEX CONCURRENTLY IF NOT EXISTS invoice_line_items_invoice_id_idx ON public.invoice_line_items (invoice_id);
+-- duplicate of an existing idx_* index; dropped by drop_duplicate_indexes_migration.sql
+-- CREATE INDEX CONCURRENTLY IF NOT EXISTS invoice_line_items_product_id_idx ON public.invoice_line_items (product_id);
 
 -- Invoices: P&L / dashboard by date, list order and monthly plan limit by creation, customer statements
 CREATE INDEX CONCURRENTLY IF NOT EXISTS invoices_tenant_id_invoice_date_idx ON public.invoices (tenant_id, invoice_date);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS invoices_tenant_id_created_at_idx ON public.invoices (tenant_id, created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS invoices_contact_id_idx ON public.invoices (contact_id);
+-- duplicate of an existing idx_* index; dropped by drop_duplicate_indexes_migration.sql
+-- CREATE INDEX CONCURRENTLY IF NOT EXISTS invoices_contact_id_idx ON public.invoices (contact_id);
 
 -- Journals: every ledger posting looks up the document's journal; reports filter posted lines by date
 CREATE INDEX CONCURRENTLY IF NOT EXISTS journal_entries_tenant_id_source_type_source_id_status_idx ON public.journal_entries (tenant_id, source_type, source_id, status);

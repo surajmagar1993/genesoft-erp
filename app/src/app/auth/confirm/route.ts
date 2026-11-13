@@ -1,4 +1,5 @@
 import { after, NextResponse, type NextRequest } from "next/server"
+import { safeNextPath } from "@/lib/safe-next"
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { createClient } from "@/lib/supabase/server"
 import { sendWelcomeEmailOnce } from "@/lib/welcome-email"
@@ -8,10 +9,6 @@ export const dynamic = "force-dynamic"
 const OTP_TYPES: EmailOtpType[] = ["signup", "invite", "magiclink", "recovery", "email_change", "email"]
 
 /** Only same-site paths, so the link can't be used to redirect anywhere else. */
-function safeNext(next: string | null, fallback: string): string {
-    // One leading slash, and no backslash anywhere (browsers read "/\\host" as another site)
-    return next && /^\/(?![/\\])/.test(next) && !next.includes("\\") ? next : fallback
-}
 
 /**
  * Target of every Supabase auth email (signup confirmation, password reset,
@@ -24,7 +21,7 @@ export async function GET(request: NextRequest) {
     const tokenHash = searchParams.get("token_hash")
     const type = searchParams.get("type") as EmailOtpType | null
     const code = searchParams.get("code")
-    const next = safeNext(searchParams.get("next"), type === "recovery" ? "/reset-password" : "/reports")
+    const next = safeNextPath(searchParams.get("next"), type === "recovery" ? "/reset-password" : "/reports")
 
     const supabase = await createClient()
     let error: { message: string } | null = null

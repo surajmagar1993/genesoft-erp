@@ -36,3 +36,20 @@ export async function safeAction<T>(fn: () => Promise<T>): Promise<ActionResult<
         return { success: false, error: "Something went wrong. It has been reported to the Genesoft team; please try again." }
     }
 }
+
+/**
+ * For actions that return `{ error }` themselves: the message to show for a
+ * caught error. Messages written for the user pass through; anything else
+ * (database errors, bugs) is reported to System Logs and the user sees
+ * `fallback`, so table and column names never reach the browser.
+ */
+export async function actionErrorMessage(err: unknown, fallback: string): Promise<string> {
+    if (isUserMessage(err)) return err.message
+    await reportError({
+        source: "server",
+        kind: "action",
+        message: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+    })
+    return fallback
+}

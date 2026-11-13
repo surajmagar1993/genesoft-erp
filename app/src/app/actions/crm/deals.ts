@@ -1,5 +1,6 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
 import { pick, toRow } from "@/lib/pg-row"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
@@ -173,7 +174,7 @@ export async function createDeal(
     revalidatePath("/crm/deals")
     return { error: null, id: deal.id }
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Couldn't create the deal" }
+    return { error: await actionErrorMessage(err, "Couldn't create the deal") }
   }
 }
 
@@ -194,7 +195,7 @@ export async function updateDeal(
     }
     await prisma.deal.updateMany({ where: { id, tenantId }, data })
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Couldn't update the deal" }
+    return { error: await actionErrorMessage(err, "Couldn't update the deal") }
   }
 
   const deal = await getDealById(id)
@@ -221,7 +222,7 @@ export async function deleteDeal(id: string): Promise<{ error: string | null }> 
     const { count } = await prisma.deal.deleteMany({ where: { id, tenantId } })
     if (count === 0) return { error: "Deal not found" }
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Couldn't delete the deal" }
+    return { error: await actionErrorMessage(err, "Couldn't delete the deal") }
   }
   revalidatePath("/crm/deals")
   return { error: null }

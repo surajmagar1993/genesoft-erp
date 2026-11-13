@@ -1,5 +1,6 @@
 "use server"
 
+import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -435,15 +436,10 @@ export async function generateEwayBill(payload: {
 
   const updatedBills = [newBill, ...currentBills]
 
-  await prisma.tenant.update({
-    where: { id: tenantId },
-    data: {
-      settings: {
-        ...currentSettings,
+  await patchTenantSettings(tenantId, (latest) => ({
+          ...latest,
         ewayBills: updatedBills,
-      } as unknown as Prisma.InputJsonValue,
-    },
-  })
+        }))
 
   // If linked to invoice, tag the invoice with EWB Number
   if (payload.invoiceId) {
@@ -535,15 +531,10 @@ export async function updateEwayBillVehicle(
 
   currentBills[targetIndex] = updatedBill
 
-  await prisma.tenant.update({
-    where: { id: tenantId },
-    data: {
-      settings: {
-        ...currentSettings,
+  await patchTenantSettings(tenantId, (latest) => ({
+          ...latest,
         ewayBills: currentBills,
-      } as unknown as Prisma.InputJsonValue,
-    },
-  })
+        }))
 
   revalidatePath("/sales/eway-bills")
   return { success: true }
@@ -598,15 +589,10 @@ export async function cancelEwayBill(
 
   currentBills[targetIndex] = updatedBill
 
-  await prisma.tenant.update({
-    where: { id: tenantId },
-    data: {
-      settings: {
-        ...currentSettings,
+  await patchTenantSettings(tenantId, (latest) => ({
+          ...latest,
         ewayBills: currentBills,
-      } as unknown as Prisma.InputJsonValue,
-    },
-  })
+        }))
 
   revalidatePath("/sales/eway-bills")
   if (bill.invoiceId) {
@@ -704,7 +690,6 @@ export async function saveTransporter(
     where: { id: tenantId },
     select: { settings: true },
   })
-  const currentSettings = (tenant?.settings as Record<string, unknown>) || {}
   const { transporters } = getEwayStore(tenant?.settings)
 
   const updatedList = [...transporters]
@@ -725,15 +710,10 @@ export async function saveTransporter(
     updatedList.push(savedRecord)
   }
 
-  await prisma.tenant.update({
-    where: { id: tenantId },
-    data: {
-      settings: {
-        ...currentSettings,
+  await patchTenantSettings(tenantId, (latest) => ({
+          ...latest,
         ewayTransporters: updatedList,
-      } as unknown as Prisma.InputJsonValue,
-    },
-  })
+        }))
 
   revalidatePath("/sales/eway-bills")
   return { success: true, transporter: savedRecord }

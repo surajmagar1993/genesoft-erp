@@ -1,5 +1,6 @@
 "use server"
 
+import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import type { Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -417,17 +418,12 @@ export async function recordTdsDeduction(input: {
     const { deductions, challans, profile } = getTdsStore(tenant?.settings)
     deductions.unshift(newRecord)
 
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: {
-        settings: {
-          ...(typeof tenant?.settings === "object" && tenant?.settings !== null ? tenant.settings : {}),
+    await patchTenantSettings(tenantId, (latest) => ({
+          ...latest,
           tdsDeductions: deductions as unknown as Prisma.InputJsonValue,
           tdsChallans: challans as unknown as Prisma.InputJsonValue,
           tdsProfile: profile as unknown as Prisma.InputJsonValue,
-        },
-      },
-    })
+        }))
 
     revalidatePath("/finance/tds")
     revalidatePath("/finance/bills")
@@ -537,17 +533,12 @@ export async function recordTdsChallan(input: {
 
     challans.unshift(newChallan)
 
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: {
-        settings: {
-          ...(typeof tenant?.settings === "object" && tenant?.settings !== null ? tenant.settings : {}),
+    await patchTenantSettings(tenantId, (latest) => ({
+          ...latest,
           tdsDeductions: updatedDeductions as unknown as Prisma.InputJsonValue,
           tdsChallans: challans as unknown as Prisma.InputJsonValue,
           tdsProfile: profile as unknown as Prisma.InputJsonValue,
-        },
-      },
-    })
+        }))
 
     revalidatePath("/finance/tds")
     return { success: true, challan: newChallan }
@@ -598,17 +589,12 @@ export async function updateTdsProfile(
         : existingProfile.responsiblePersonPan,
     }
 
-    await prisma.tenant.update({
-      where: { id: tenantId },
-      data: {
-        settings: {
-          ...(typeof tenant?.settings === "object" && tenant?.settings !== null ? tenant.settings : {}),
+    await patchTenantSettings(tenantId, (latest) => ({
+          ...latest,
           tdsDeductions: deductions as unknown as Prisma.InputJsonValue,
           tdsChallans: challans as unknown as Prisma.InputJsonValue,
           tdsProfile: updatedProfile as unknown as Prisma.InputJsonValue,
-        },
-      },
-    })
+        }))
 
     revalidatePath("/finance/tds")
     return { success: true }

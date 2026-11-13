@@ -1,5 +1,6 @@
 "use server"
 
+import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import { localeForCurrency, errorMessage } from "@/lib/utils"
 import { prisma } from "@/lib/prisma"
 import { appUrl } from "@/lib/app-url"
@@ -18,7 +19,6 @@ import {
     interpolateWhatsAppTemplate,
     normalizeE164Phone,
 } from "@/lib/whatsapp-engine"
-import type { Prisma } from "@prisma/client"
 
 /** tenants.settings as these actions read it */
 type WaSettings = { whatsapp?: Partial<WhatsAppConfig> & { messages?: WhatsAppMessage[] }; [key: string]: unknown }
@@ -134,18 +134,13 @@ export async function saveWhatsAppConfig(payload: {
             senderDisplayName: payload.senderDisplayName || currentWa.senderDisplayName,
         }
 
-        await prisma.tenant.update({
-            where: { id: tenantId },
-            data: {
-                settings: {
-                    ...currentSettings,
+        await patchTenantSettings(tenantId, (latest) => ({
+          ...latest,
                     whatsapp: {
                         ...currentWa,
                         ...updatedWa,
                     },
-                } as unknown as Prisma.InputJsonObject,
-            },
-        })
+        }))
 
         revalidatePath("/crm/whatsapp")
         await logTenantAudit(tenantId, "WHATSAPP_CONFIG_UPDATED", { target: { type: "TENANT", id: tenantId }, metadata: { mode: payload.mode, credentialsChanged: isNewSecret(payload.appSecret) || isNewSecret(payload.accessToken) } })
@@ -287,18 +282,13 @@ export async function sendWhatsAppMessage(payload: {
             : []
         const updatedMessages = [newMessage, ...currentMessages].slice(0, 100)
 
-        await prisma.tenant.update({
-            where: { id: tenantId },
-            data: {
-                settings: {
-                    ...settings,
+        await patchTenantSettings(tenantId, (latest) => ({
+          ...latest,
                     whatsapp: {
                         ...(settings.whatsapp || {}),
                         messages: updatedMessages,
                     },
-                } as unknown as Prisma.InputJsonObject,
-            },
-        })
+        }))
 
         // Also record in polymorphic CommunicationLog if contactId is provided
         if (payload.contactId) {
