@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { prisma } from "@/lib/prisma"
-import { createRecurringProfile, triggerGenerateInvoice } from "@/app/actions/sales/recurring-invoices"
+import { createRecurringProfile, triggerGenerateInvoice, updateRecurringProfile } from "@/app/actions/sales/recurring-invoices"
 import { actAs, createTestTenant } from "./helpers"
 
 const num = (v: unknown) => Number(v ?? 0)
@@ -62,5 +62,35 @@ describe("invoices made from a recurring profile", () => {
         const cr = journal.lines.reduce((s, l) => s + num(l.credit), 0)
         expect(dr).toBeCloseTo(cr, 2)
         expect(dr).toBeCloseTo(1470, 2)
+    })
+
+    it("editing a profile saves its lines and totals; the currency is always the business's", async () => {
+        const { tenant, user } = await createTestTenant({ country: "AE", currency: "AED" })
+        actAs(user)
+        const customer = await prisma.contact.create({ data: { tenantId: tenant.id, displayName: "Client" } })
+        const created = await createRecurringProfile({
+            title: "Support", contactId: customer.id, frequency: "MONTHLY" as never, startDate: "2026-10-01", currencyCode: "INR",
+            items: [{ description: "Support", quantity: 1, unitPrice: 100, taxRate: 5 }],
+        })
+        expect(created).toMatchObject({ success: true })
+        const profile = await prisma.recurringProfile.findFirstOrThrow({ where: { tenantId: tenant.id } })
+        expect(profile.currencyCode).toBe("AED")
+
+        const res = await updateRecurringProfile(profile.id, {
+            title: "Support plus",
+            items: [
+                { description: "Support", quantity: 2, unitPrice: 100, taxRate: 5 },
+                { description: "Hosting", quantity: 1, unitPrice: 50, taxRate: 0 },
+            ],
+        })
+        expect(res).toMatchObject({ success: true })
+        const after = await prisma.recurringProfile.findUniqueOrThrow({ where: { id: profile.id }, include: { items: true } })
+        expect(after.title).toBe("Support plus")
+        expect(after.items).toHaveLength(2)
+        expect(num(after.subtotal)).toBe(250)
+        expect(num(after.taxAmount)).toBe(10)
+        expect(num(after.totalAmount)).toBe(260)
+
+        expect(await updateRecurringProfile(profile.id, { items: [{ description: "Bad", quantity: 0, unitPrice: 10, taxRate: 5 }] })).toMatchObject({ error: expect.stringMatching(/quantity/) })
     })
 })

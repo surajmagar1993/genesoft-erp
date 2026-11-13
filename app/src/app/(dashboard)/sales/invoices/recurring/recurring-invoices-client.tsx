@@ -8,8 +8,6 @@ import Link from "next/link"
 import {
     RecurringInvoicesOverview,
     RecurringProfileRecord,
-    createRecurringProfile,
-    updateRecurringProfile,
     deleteRecurringProfile,
     toggleRecurringProfileStatus,
     triggerGenerateInvoice,
@@ -44,7 +42,6 @@ import {
     Receipt,
     Building2,
     Sparkles,
-    X,
     ExternalLink,
     PieChart,
     BarChart3
@@ -70,37 +67,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
     const [actionMessage, setActionMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
     // Modals
-    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-    const [editingProfile, setEditingProfile] = useState<RecurringProfileRecord | null>(null)
     const [inspectingProfile, setInspectingProfile] = useState<RecurringProfileRecord | null>(null)
-
-    // Form state
-    const [formData, setFormData] = useState({
-        title: "",
-        description: "",
-        contactId: initialData.customers[0]?.id || "",
-        frequency: "MONTHLY" as RecurringProfileRecord["frequency"],
-        startDate: new Date().toISOString().split("T")[0],
-        endDate: "",
-        maxCycles: "",
-        autoSendEmail: false,
-        autoApprove: true,
-        paymentTerms: "NET_30",
-        currencyCode: "INR",
-        notes: "",
-        terms: "",
-        items: [
-            {
-                productId: "",
-                description: "",
-                hsnSacCode: "",
-                quantity: 1,
-                unitPrice: 0,
-                taxRate: 18,
-                discount: 0,
-            },
-        ],
-    })
 
     // Confirmation Run Modal
     const [runConfirmProfile, setRunConfirmProfile] = useState<RecurringProfileRecord | null>(null)
@@ -143,119 +110,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
         return `Overdue by ${Math.abs(days)} day(s)`
     }
 
-    // Line item calculations
-    const calculateTotals = (items: typeof formData.items) => {
-        let subtotal = 0
-        let tax = 0
-        items.forEach((item) => {
-            const base = Math.max(0, item.quantity * item.unitPrice - (item.discount || 0))
-            const itemTax = base * ((item.taxRate || 0) / 100)
-            subtotal += base
-            tax += itemTax
-        })
-        return { subtotal, tax, total: subtotal + tax }
-    }
 
-    const currentTotals = calculateTotals(formData.items)
-
-    // Handle Item Change
-    const handleItemChange = (index: number, field: string, val: string | number) => {
-        const newItems = [...formData.items]
-        newItems[index] = { ...newItems[index], [field]: val }
-
-        // If product selected, auto-populate price and description if empty
-        if (field === "productId" && val) {
-            const prod = data.products.find((p) => p.id === val)
-            if (prod) {
-                if (!newItems[index].description) newItems[index].description = prod.name
-                if (!newItems[index].unitPrice) newItems[index].unitPrice = prod.unitPrice
-                if (prod.hsnSacCode) newItems[index].hsnSacCode = prod.hsnSacCode
-            }
-        }
-
-        setFormData({ ...formData, items: newItems })
-    }
-
-    const addItemRow = () => {
-        setFormData({
-            ...formData,
-            items: [
-                ...formData.items,
-                {
-                    productId: "",
-                    description: "",
-                    hsnSacCode: "",
-                    quantity: 1,
-                    unitPrice: 0,
-                    taxRate: 18,
-                    discount: 0,
-                },
-            ],
-        })
-    }
-
-    const removeItemRow = (index: number) => {
-        if (formData.items.length <= 1) return
-        setFormData({
-            ...formData,
-            items: formData.items.filter((_, i) => i !== index),
-        })
-    }
-
-    // Submit Create / Edit Profile
-    const handleSubmitProfile = (e: React.FormEvent) => {
-        e.preventDefault()
-        startTransition(async () => {
-            if (editingProfile) {
-                const res = await updateRecurringProfile(editingProfile.id, {
-                    title: formData.title,
-                    description: formData.description,
-                    contactId: formData.contactId,
-                    frequency: formData.frequency,
-                    endDate: formData.endDate || undefined,
-                    maxCycles: formData.maxCycles ? parseInt(formData.maxCycles) : undefined,
-                    autoSendEmail: formData.autoSendEmail,
-                    autoApprove: formData.autoApprove,
-                    paymentTerms: formData.paymentTerms,
-                    notes: formData.notes,
-                    terms: formData.terms,
-                })
-                if (res.error) {
-                    setActionMessage({ type: "error", text: res.error })
-                } else {
-                    setActionMessage({ type: "success", text: "Recurring profile updated successfully." })
-                    setIsCreateModalOpen(false)
-                    router.refresh()
-                }
-            } else {
-                const res = await createRecurringProfile({
-                    title: formData.title,
-                    description: formData.description,
-                    contactId: formData.contactId,
-                    frequency: formData.frequency,
-                    startDate: formData.startDate,
-                    endDate: formData.endDate || undefined,
-                    maxCycles: formData.maxCycles ? parseInt(formData.maxCycles) : undefined,
-                    autoSendEmail: formData.autoSendEmail,
-                    autoApprove: formData.autoApprove,
-                    paymentTerms: formData.paymentTerms,
-                    currencyCode: formData.currencyCode,
-                    notes: formData.notes,
-                    terms: formData.terms,
-                    items: formData.items,
-                })
-                if (res.error) {
-                    setActionMessage({ type: "error", text: res.error })
-                } else {
-                    setActionMessage({ type: "success", text: "Recurring billing profile created successfully!" })
-                    setIsCreateModalOpen(false)
-                    router.refresh()
-                }
-            }
-        })
-    }
-
-    // Trigger Instant Run (Run Now)
     const handleExecuteRun = (profile: RecurringProfileRecord) => {
         startTransition(async () => {
             const res = await triggerGenerateInvoice(profile.id)
@@ -392,43 +247,11 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                         Run All Due Profiles
                     </Button></RequireRole>
 
-                    <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => {
-                            setEditingProfile(null)
-                            setFormData({
-                                title: "",
-                                description: "",
-                                contactId: data.customers[0]?.id || "",
-                                frequency: "MONTHLY",
-                                startDate: new Date().toISOString().split("T")[0],
-                                endDate: "",
-                                maxCycles: "",
-                                autoSendEmail: true,
-                                autoApprove: true,
-                                paymentTerms: "NET_30",
-                                currencyCode: "INR",
-                                notes: "",
-                                terms: "",
-                                items: [
-                                    {
-                                        productId: "",
-                                        description: "",
-                                        hsnSacCode: "",
-                                        quantity: 1,
-                                        unitPrice: 0,
-                                        taxRate: 18,
-                                        discount: 0,
-                                    },
-                                ],
-                            })
-                            setIsCreateModalOpen(true)
-                        }}
-                        className="gap-1.5 shadow-sm"
-                    >
-                        <Plus className="h-4 w-4" />
-                        New Recurring Schedule
+                    <Button variant="default" size="sm" className="gap-1.5 shadow-sm" asChild>
+                        <Link href="/sales/invoices/recurring/new">
+                            <Plus className="h-4 w-4" />
+                            New Recurring Schedule
+                        </Link>
                     </Button>
                 </div>
             </div>
@@ -687,6 +510,9 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                                         onClick={() => setInspectingProfile(profile)}
                                                     >
                                                         Details
+                                                    </Button>
+                                                    <Button size="sm" variant="ghost" className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground" asChild>
+                                                        <Link href={`/sales/invoices/recurring/${profile.id}/edit`}>Edit</Link>
                                                     </Button>
                                                     <Button
                                                         size="sm"
@@ -1002,321 +828,6 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                     </div>
                 </TabsContent>
             </Tabs>
-
-            {/* ========================================================= */}
-            {/* MODAL 1: CREATE / EDIT RECURRING PROFILE */}
-            {/* ========================================================= */}
-            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-                <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {editingProfile ? "Edit Recurring Profile" : "Create Recurring Billing Schedule"}
-                        </DialogTitle>
-                        <DialogDescription>
-                            Set up automated subscription cycles, retainer items, and tax calculations for cyclical customer billing.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleSubmitProfile} className="space-y-5 text-xs">
-                        {/* Profile Header Fields */}
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                                <label className="font-semibold text-foreground">Schedule Title *</label>
-                                <Input
-                                    required
-                                    placeholder="Enter profile title"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="font-semibold text-foreground">Customer Contact *</label>
-                                <select
-                                    required
-                                    value={formData.contactId}
-                                    onChange={(e) => setFormData({ ...formData, contactId: e.target.value })}
-                                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs"
-                                >
-                                    {data.customers.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.displayName} {c.companyName ? `(${c.companyName})` : ""}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="space-y-1.5">
-                                <label className="font-semibold text-foreground">Billing Cadence *</label>
-                                <select
-                                    value={formData.frequency}
-                                    onChange={(e) => setFormData({ ...formData, frequency: e.target.value as typeof formData.frequency })}
-                                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs"
-                                >
-                                    <option value="WEEKLY">Weekly</option>
-                                    <option value="BIWEEKLY">Biweekly (Every 14 Days)</option>
-                                    <option value="MONTHLY">Monthly</option>
-                                    <option value="QUARTERLY">Quarterly (Every 3 Months)</option>
-                                    <option value="BIANNUALLY">Biannually (Every 6 Months)</option>
-                                    <option value="ANNUALLY">Annually</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="font-semibold text-foreground">Start Date *</label>
-                                <Input
-                                    type="date"
-                                    required
-                                    value={formData.startDate}
-                                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="font-semibold text-foreground">End Date (Optional)</label>
-                                <Input
-                                    type="date"
-                                    value={formData.endDate}
-                                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="space-y-1.5">
-                                <label className="font-semibold text-foreground">Max Cycles (Blank = Ongoing)</label>
-                                <Input
-                                    type="number"
-                                    placeholder="Enter number of cycles"
-                                    value={formData.maxCycles}
-                                    onChange={(e) => setFormData({ ...formData, maxCycles: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="font-semibold text-foreground">Payment Terms</label>
-                                <select
-                                    value={formData.paymentTerms}
-                                    onChange={(e) => setFormData({ ...formData, paymentTerms: e.target.value })}
-                                    className="w-full h-9 rounded-md border border-input bg-background px-3 text-xs"
-                                >
-                                    <option value="DUE_ON_RECEIPT">Due on Receipt</option>
-                                    <option value="NET_15">Net 15 Days</option>
-                                    <option value="NET_30">Net 30 Days</option>
-                                    <option value="NET_60">Net 60 Days</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="font-semibold text-foreground">Automation Flags</label>
-                                <div className="flex items-center gap-4 pt-2">
-                                    <label className="flex items-center gap-1.5 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.autoApprove}
-                                            onChange={(e) =>
-                                                setFormData({ ...formData, autoApprove: e.target.checked })
-                                            }
-                                            className="rounded border-input text-primary h-3.5 w-3.5"
-                                        />
-                                        <span>Auto-Approve</span>
-                                    </label>
-                                    <label className="flex items-center gap-1.5 cursor-pointer">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.autoSendEmail}
-                                            onChange={(e) =>
-                                                setFormData({ ...formData, autoSendEmail: e.target.checked })
-                                            }
-                                            className="rounded border-input text-primary h-3.5 w-3.5"
-                                        />
-                                        <span>Auto-Email</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Line Items Editor */}
-                        <div className="space-y-2.5 pt-2 border-t border-border/40">
-                            <div className="flex items-center justify-between">
-                                <label className="font-semibold text-sm text-foreground">
-                                    Subscription Line Items ({formData.items.length})
-                                </label>
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={addItemRow}
-                                    className="h-7 text-xs gap-1"
-                                >
-                                    <Plus className="h-3 w-3" />
-                                    Add Line Item
-                                </Button>
-                            </div>
-
-                            <div className="space-y-2">
-                                {formData.items.map((item, index) => (
-                                    <div
-                                        key={index}
-                                        className="p-3 rounded-lg border border-border/60 bg-muted/20 grid grid-cols-12 gap-2 items-center"
-                                    >
-                                        <div className="col-span-4 space-y-1">
-                                            <span className="text-xs text-muted-foreground block">
-                                                Product / Service
-                                            </span>
-                                            <select
-                                                value={item.productId}
-                                                onChange={(e) =>
-                                                    handleItemChange(index, "productId", e.target.value)
-                                                }
-                                                className="w-full h-8 rounded border border-input bg-background px-2 text-xs"
-                                            >
-                                                <option value="">-- Custom Description --</option>
-                                                {data.products.map((p) => (
-                                                    <option key={p.id} value={p.id}>
-                                                        {p.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            <Input
-                                                required
-                                                placeholder="Item description or service scope..."
-                                                value={item.description}
-                                                onChange={(e) =>
-                                                    handleItemChange(index, "description", e.target.value)
-                                                }
-                                                className="h-7 text-xs mt-1"
-                                            />
-                                        </div>
-
-                                        <div className="col-span-2 space-y-1">
-                                            <span className="text-xs text-muted-foreground block">HSN/SAC</span>
-                                            <Input
-                                                placeholder="998313"
-                                                value={item.hsnSacCode}
-                                                onChange={(e) =>
-                                                    handleItemChange(index, "hsnSacCode", e.target.value)
-                                                }
-                                                className="h-8 text-xs"
-                                            />
-                                        </div>
-
-                                        <div className="col-span-2 space-y-1">
-                                            <span className="text-xs text-muted-foreground block">Unit Price</span>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                required
-                                                value={item.unitPrice}
-                                                onChange={(e) =>
-                                                    handleItemChange(
-                                                        index,
-                                                        "unitPrice",
-                                                        parseFloat(e.target.value) || 0
-                                                    )
-                                                }
-                                                className="h-8 text-xs"
-                                            />
-                                        </div>
-
-                                        <div className="col-span-1 space-y-1">
-                                            <span className="text-xs text-muted-foreground block">Qty</span>
-                                            <Input
-                                                type="number"
-                                                step="1"
-                                                min="1"
-                                                required
-                                                value={item.quantity}
-                                                onChange={(e) =>
-                                                    handleItemChange(
-                                                        index,
-                                                        "quantity",
-                                                        parseFloat(e.target.value) || 1
-                                                    )
-                                                }
-                                                className="h-8 text-xs"
-                                            />
-                                        </div>
-
-                                        <div className="col-span-2 space-y-1">
-                                            <span className="text-xs text-muted-foreground block">GST Rate</span>
-                                            <select
-                                                value={item.taxRate}
-                                                onChange={(e) =>
-                                                    handleItemChange(
-                                                        index,
-                                                        "taxRate",
-                                                        parseFloat(e.target.value) || 0
-                                                    )
-                                                }
-                                                className="w-full h-8 rounded border border-input bg-background px-2 text-xs"
-                                            >
-                                                <option value="0">0% (Nil)</option>
-                                                <option value="5">5% GST</option>
-                                                <option value="12">12% GST</option>
-                                                <option value="18">18% GST</option>
-                                                <option value="28">28% GST</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="col-span-1 text-right pt-4">
-                                            {formData.items.length > 1 && (
-                                                <Button
-                                                    type="button"
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={() => removeItemRow(index)}
-                                                    className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                                                 aria-label="Close">
-                                                    <X className="h-3.5 w-3.5" />
-                                                </Button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Summary Calculation */}
-                            <div className="p-3 bg-muted/40 rounded-lg flex justify-end">
-                                <div className="space-y-1 text-right text-xs">
-                                    <div className="text-muted-foreground">
-                                        Subtotal:{" "}
-                                        <span className="font-semibold text-foreground">
-                                            {formatCurrency(currentTotals.subtotal)}
-                                        </span>
-                                    </div>
-                                    <div className="text-muted-foreground">
-                                        GST Tax:{" "}
-                                        <span className="font-semibold text-foreground">
-                                            {formatCurrency(currentTotals.tax)}
-                                        </span>
-                                    </div>
-                                    <div className="text-sm font-bold text-foreground border-t border-border/40 pt-1">
-                                        Recurring Amount:{" "}
-                                        <span className="text-primary">
-                                            {formatCurrency(currentTotals.total)}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <DialogFooter className="pt-2">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsCreateModalOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={isPending}>
-                                {editingProfile ? "Save Changes" : "Create Schedule"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
 
             {/* ========================================================= */}
             {/* MODAL 2: CONFIRM RUN NOW */}

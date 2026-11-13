@@ -1,5 +1,7 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
+import { roundMoney } from "@/lib/gst-engine"
 import { getTenantDefaults } from "@/lib/tenant-defaults"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
@@ -392,6 +394,53 @@ export async function getRecurringInvoicesOverview(
 // CREATE RECURRING PROFILE
 // ============================================
 
+/**
+ * A profile's lines and totals, checked and worked out on the server. The rate
+ * is kept as CGST+SGST halves; each run splits it for the business's country
+ * and the customer's state (recurring-runner.ts).
+ */
+function profileLines(tenantId: string, items: CreateRecurringProfileInput["items"]) {
+    if (!Array.isArray(items) || items.length === 0) throw new Error("Add at least one line item")
+    let subtotal = 0
+    let taxAmount = 0
+    const computedItems = items.map((item, i) => {
+        const qty = Number(item.quantity)
+        const unitPrice = Number(item.unitPrice)
+        const discount = Number(item.discount || 0)
+        const taxRate = Number(item.taxRate || 0)
+        if (!item.description?.trim()) throw new Error(`Line ${i + 1}: enter a description`)
+        if (!(qty > 0)) throw new Error(`Line ${i + 1}: quantity must be more than 0`)
+        if (!(unitPrice >= 0)) throw new Error(`Line ${i + 1}: price can't be negative`)
+        if (!(discount >= 0) || discount > qty * unitPrice) throw new Error(`Line ${i + 1}: the discount must be between 0 and the line's value`)
+        if (!(taxRate >= 0 && taxRate <= 100)) throw new Error(`Line ${i + 1}: tax must be between 0 and 100%`)
+        const baseAmount = roundMoney(qty * unitPrice - discount)
+        const cgstRate = taxRate / 2
+        const sgstRate = taxRate / 2
+        const cgstAmount = roundMoney(baseAmount * (cgstRate / 100))
+        const sgstAmount = roundMoney(baseAmount * (sgstRate / 100))
+        const itemTax = cgstAmount + sgstAmount
+        subtotal += baseAmount
+        taxAmount += itemTax
+        return {
+            tenantId,
+            productId: item.productId || null,
+            description: item.description.trim(),
+            hsnSacCode: item.hsnSacCode?.trim() || null,
+            quantity: qty,
+            unitPrice,
+            cgstRate,
+            cgstAmount,
+            sgstRate,
+            sgstAmount,
+            igstRate: 0,
+            igstAmount: 0,
+            discount,
+            lineTotal: roundMoney(baseAmount + itemTax),
+        }
+    })
+    return { computedItems, subtotal: roundMoney(subtotal), taxAmount: roundMoney(taxAmount), totalAmount: roundMoney(subtotal + taxAmount) }
+}
+
 export async function createRecurringProfile(data: CreateRecurringProfileInput): Promise<{
     success?: boolean
     profileId?: string
@@ -413,47 +462,7 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
         const year = new Date().getFullYear()
         const profileNumber = await nextSequence(prisma, "recurringProfile", tenantId, `REC-${year}-`, 4)
 
-        // Calculate item totals & taxes
-        let subtotal = 0
-        let taxAmount = 0
-
-        const computedItems = data.items.map((item) => {
-            const qty = Number(item.quantity || 1)
-            const unitPrice = Number(item.unitPrice || 0)
-            const discount = Number(item.discount || 0)
-            const baseAmount = Math.max(0, qty * unitPrice - discount)
-            const taxRate = Number(item.taxRate || 0)
-
-            // Split into CGST (half) and SGST (half) or IGST
-            const cgstRate = taxRate / 2
-            const sgstRate = taxRate / 2
-            const cgstAmount = Math.round(baseAmount * (cgstRate / 100) * 100) / 100
-            const sgstAmount = Math.round(baseAmount * (sgstRate / 100) * 100) / 100
-            const itemTax = cgstAmount + sgstAmount
-            const lineTotal = baseAmount + itemTax
-
-            subtotal += baseAmount
-            taxAmount += itemTax
-
-            return {
-                tenantId,
-                productId: item.productId || null,
-                description: item.description.trim(),
-                hsnSacCode: item.hsnSacCode?.trim() || null,
-                quantity: qty,
-                unitPrice,
-                cgstRate,
-                cgstAmount,
-                sgstRate,
-                sgstAmount,
-                igstRate: 0,
-                igstAmount: 0,
-                discount,
-                lineTotal,
-            }
-        })
-
-        const totalAmount = subtotal + taxAmount
+        const { computedItems, subtotal, taxAmount, totalAmount } = profileLines(tenantId, data.items)
         const startDate = new Date(data.startDate)
         const nextRunDate = startDate // first run starts on start date
 
@@ -477,7 +486,8 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
                 subtotal,
                 taxAmount,
                 totalAmount,
-                currencyCode: data.currencyCode || (await getTenantDefaults(tenantId)).currencyCode,
+                // Always the business's own currency (the invoices it makes are in that currency)
+                currencyCode: (await getTenantDefaults(tenantId)).currencyCode,
                 notes: data.notes?.trim() || null,
                 terms: data.terms?.trim() || null,
                 items: {
@@ -489,8 +499,7 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
         revalidatePath("/sales/invoices/recurring")
         return { success: true, profileId: result.id }
     } catch (err) {
-        console.error("createRecurringProfile error:", err)
-        return { error: errorMessage(err) || "Failed to create recurring profile" }
+        return { error: await actionErrorMessage(err, "Failed to create recurring profile") }
     }
 }
 
@@ -524,17 +533,28 @@ export async function updateRecurringProfile(
             if (!ownsContact) return { error: "Customer contact not found" }
         }
 
-        const { count } = await prisma.recurringProfile.updateMany({
-            where: { id, tenantId },
-            data: updateData,
+        if (data.items) await assertTenantRefs(tenantId, { product: data.items.map((i) => i.productId) })
+        const lines = data.items ? profileLines(tenantId, data.items) : null
+        if (lines) {
+            updateData.subtotal = lines.subtotal
+            updateData.taxAmount = lines.taxAmount
+            updateData.totalAmount = lines.totalAmount
+        }
+
+        // Header and (when sent) the replaced lines change together
+        const count = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+            const { count } = await tx.recurringProfile.updateMany({ where: { id, tenantId }, data: updateData })
+            if (count === 0 || !lines) return count
+            await tx.recurringProfileItem.deleteMany({ where: { recurringProfileId: id } })
+            await tx.recurringProfileItem.createMany({ data: lines.computedItems.map((it) => ({ ...it, recurringProfileId: id })) })
+            return count
         })
         if (count === 0) return { error: "Recurring profile not found" }
 
         revalidatePath("/sales/invoices/recurring")
         return { success: true }
     } catch (err) {
-        console.error("updateRecurringProfile error:", err)
-        return { error: errorMessage(err) || "Failed to update recurring profile" }
+        return { error: await actionErrorMessage(err, "Failed to update recurring profile") }
     }
 }
 
