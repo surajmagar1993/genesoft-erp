@@ -1,0 +1,45 @@
+# Dependabot: opens pull requests with dependency updates. CI (.github/workflows/ci.yml:
+# type check, lint, tests, build) runs on each one and Vercel builds a preview, so updates are
+# reviewed and merged instead of done by hand. Merging to main deploys production.
+version: 2
+updates:
+  # The app. Vercel builds app/ with app/package-lock.json; the root lockfile is stale and
+  # isn't used, so the repository root is deliberately not listed here.
+  - package-ecosystem: npm
+    directory: /app
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Kolkata
+    open-pull-requests-limit: 6
+    labels: [dependencies]
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(dev-deps)"
+    groups:
+      # One PR a week for safe updates of what runs in production
+      production-minor-and-patch:
+        dependency-type: production
+        update-types: [minor, patch]
+      # One PR a week for build/test tooling
+      development:
+        dependency-type: development
+        update-types: [minor, patch]
+      # Framework packages that must move together
+      next-react:
+        patterns: [next, react, react-dom, eslint-config-next, "@types/react", "@types/react-dom"]
+        update-types: [major]
+      prisma:
+        patterns: [prisma, "@prisma/*"]
+        update-types: [major]
+    # Major versions of everything else arrive as their own PRs (they can need code changes).
+
+  # Versions of the GitHub Actions used by CI
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels: [dependencies]
+    commit-message:
+      prefix: "ci"
