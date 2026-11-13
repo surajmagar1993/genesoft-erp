@@ -193,7 +193,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 **Still open from the review:**
 - [x] `app/review_indexes_migration.sql` run on the live database 2026-11-13 (17 indexes, all valid).
 - [x] Creating, editing, converting (proforma) and deleting an invoice is one transaction (2026-11-13): document, customer statement, journal (`syncLedgerIn`) and stock (`syncInvoiceStock(…, tx)`) are saved together or not at all (`invoice-atomic.int.test.ts`). Other documents (payments, bills, credit notes…) still post their journal after saving via `postToLedger`.
-- [ ] Large create/edit forms are still pop-ups in HR, Purchase, Projects, Inventory, RFQ, Recurring invoices (rule: full pages). Data loss on outside clicks is fixed; moving them to pages is a larger UI job.
+- [x] Large create/edit forms are full pages (2026-11-13): /hr/employees/new and /[id]/edit, /purchase/orders/new, /purchase/vendors/new, /purchase/rfq/new, /projects/new, /inventory/warehouses/new and /[id]/edit, /sales/invoices/recurring/new and /[id]/edit. Quick actions (attendance, leave, receive goods, bids, tasks, time, stock moves…) stay as pop-ups.
 - [ ] Other number series (orders, quotes, bills, credit notes…) still use max+1; invoices retry on a clash. A counter table would fix all (needs a database change).
 - [ ] Exchange rate isn't stored on each document (matters only for foreign-currency documents).
 - [ ] Rate limits on /join and the customer portal beyond the per-customer ticket limits; portal links never expire (product decision).

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { unwrap } from "@/lib/action-result"
 import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
@@ -44,8 +45,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
-import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -69,11 +68,8 @@ import { toast } from "sonner"
 import { 
     InventoryOverviewData, 
     InventoryProduct, 
-    WarehouseItem,
     InventoryReportsResult,
     getInventoryReportsData,
-    createWarehouse, 
-    updateWarehouse, 
     adjustStock, 
     transferStock 
 } from "@/app/actions/inventory"
@@ -295,9 +291,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
     // Modals
     const [isAdjustOpen, setIsAdjustOpen] = useState(false)
     const [isTransferOpen, setIsTransferOpen] = useState(false)
-    const [isWarehouseOpen, setIsWarehouseOpen] = useState(false)
     const [, setSelectedProductForAdjust] = useState<InventoryProduct | null>(null)
-    const [selectedWarehouseForEdit, setSelectedWarehouseForEdit] = useState<WarehouseItem | null>(null)
 
     // Form states: Adjust Stock
     const [adjustProductId, setAdjustProductId] = useState<string>("")
@@ -316,18 +310,6 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
     const [transferReason, setTransferReason] = useState<string>("")
     const [transferReference, setTransferReference] = useState<string>("")
     const [isSubmittingTransfer, setIsSubmittingTransfer] = useState(false)
-
-    // Form states: Warehouse Create/Edit
-    const [whName, setWhName] = useState("")
-    const [whCode, setWhCode] = useState("")
-    const [whAddress, setWhAddress] = useState("")
-    const [whCity, setWhCity] = useState("")
-    const [whState, setWhState] = useState("")
-    const [whCountry, setWhCountry] = useState("India")
-    const [whContactName, setWhContactName] = useState("")
-    const [whContactPhone, setWhContactPhone] = useState("")
-    const [whIsDefault, setWhIsDefault] = useState(false)
-    const [isSubmittingWh, setIsSubmittingWh] = useState(false)
 
     // Derived filtered products
     const filteredProducts = initialData.products.filter(p => {
@@ -374,36 +356,6 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
         setTransferReason("")
         setTransferReference("")
         setIsTransferOpen(true)
-    }
-
-    // Open Warehouse Edit modal
-    const openEditWarehouse = (warehouse: WarehouseItem) => {
-        setSelectedWarehouseForEdit(warehouse)
-        setWhName(warehouse.name)
-        setWhCode(warehouse.code)
-        setWhAddress(warehouse.address || "")
-        setWhCity(warehouse.city || "")
-        setWhState(warehouse.state || "")
-        setWhCountry(warehouse.country || "India")
-        setWhContactName(warehouse.contactName || "")
-        setWhContactPhone(warehouse.contactPhone || "")
-        setWhIsDefault(warehouse.isDefault)
-        setIsWarehouseOpen(true)
-    }
-
-    // Open Warehouse Create modal
-    const openCreateWarehouse = () => {
-        setSelectedWarehouseForEdit(null)
-        setWhName("")
-        setWhCode(`WH-${initialData.warehouses.length + 1}`)
-        setWhAddress("")
-        setWhCity("")
-        setWhState("")
-        setWhCountry("India")
-        setWhContactName("")
-        setWhContactPhone("")
-        setWhIsDefault(initialData.warehouses.length === 0)
-        setIsWarehouseOpen(true)
     }
 
     // Handle Stock Adjustment Submit
@@ -486,53 +438,6 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
         }
     }
 
-    // Handle Warehouse Submit (Create or Edit)
-    const handleWarehouseSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!whName.trim() || !whCode.trim()) {
-            toast.error("Warehouse name and code are required")
-            return
-        }
-
-        setIsSubmittingWh(true)
-        try {
-            if (selectedWarehouseForEdit) {
-                unwrap(await updateWarehouse(selectedWarehouseForEdit.id, {
-                    name: whName,
-                    code: whCode,
-                    address: whAddress,
-                    city: whCity,
-                    state: whState,
-                    country: whCountry,
-                    contactName: whContactName,
-                    contactPhone: whContactPhone,
-                    isDefault: whIsDefault
-                }))
-                toast.success("Warehouse updated successfully")
-            } else {
-                unwrap(await createWarehouse({
-                    name: whName,
-                    code: whCode,
-                    address: whAddress,
-                    city: whCity,
-                    state: whState,
-                    country: whCountry,
-                    contactName: whContactName,
-                    contactPhone: whContactPhone,
-                    isDefault: whIsDefault
-                }))
-                toast.success("Warehouse provisioned successfully")
-            }
-            setIsWarehouseOpen(false)
-            startTransition(() => {
-                router.refresh()
-            })
-        } catch (err) {
-            toast.error(errorMessage(err) || "Failed to save warehouse")
-        } finally {
-            setIsSubmittingWh(false)
-        }
-    }
 
     // Helper for selected product in adjust modal
     const activeAdjustProduct = initialData.products.find(p => p.id === adjustProductId)
@@ -612,13 +517,11 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                         <MoveRight className="h-4 w-4" />
                         Transfer Stock
                     </Button>
-                    <RequireRole min="MANAGER"><Button 
-                        size="sm" 
-                        className="gap-2"
-                        onClick={openCreateWarehouse}
-                    >
-                        <Plus className="h-4 w-4" />
-                        New Warehouse
+                    <RequireRole min="MANAGER"><Button size="sm" className="gap-2" asChild>
+                        <Link href="/inventory/warehouses/new">
+                            <Plus className="h-4 w-4" />
+                            New Warehouse
+                        </Link>
                     </Button></RequireRole>
                 </div>
             </div>
@@ -998,13 +901,10 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                                                 {warehouse.code}
                                             </CardDescription>
                                         </div>
-                                        <RequireRole min="MANAGER"><Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-7 w-7"
-                                            onClick={() => openEditWarehouse(warehouse)}
-                                         aria-label="Edit">
-                                            <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                                        <RequireRole min="MANAGER"><Button variant="ghost" size="icon" className="h-7 w-7" asChild>
+                                            <Link href={`/inventory/warehouses/${warehouse.id}/edit`} aria-label={`Edit ${warehouse.name}`}>
+                                                <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                                            </Link>
                                         </Button></RequireRole>
                                     </div>
                                 </CardHeader>
@@ -2267,169 +2167,6 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                 </DialogContent>
             </Dialog>
 
-            {/* MODAL 3: Warehouse Create/Edit Dialog */}
-            <Dialog open={isWarehouseOpen} onOpenChange={setIsWarehouseOpen}>
-                <DialogContent className="sm:max-w-[480px]">
-                    <DialogHeader>
-                        <DialogTitle>
-                            {selectedWarehouseForEdit ? "Edit Warehouse Depot" : "Provision New Warehouse"}
-                        </DialogTitle>
-                        <DialogDescription className="text-xs">
-                            Define storage locations, distribution centers, and retail depots for inventory stock isolation.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleWarehouseSubmit} className="space-y-4 py-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="col-span-1 sm:col-span-2 space-y-2">
-                                <Label className="text-xs font-medium">Warehouse Name *</Label>
-                                <Input 
-                                    placeholder="Enter warehouse name"
-                                    value={whName}
-                                    onChange={(e) => setWhName(e.target.value)}
-                                    required
-                                    className="text-xs"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-medium">Code *</Label>
-                                <Input 
-                                    placeholder="WH-02"
-                                    value={whCode}
-                                    onChange={(e) => setWhCode(e.target.value.toUpperCase())}
-                                    required
-                                    className="text-xs font-mono"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-xs font-medium">Physical Address</Label>
-                            <Input 
-                                placeholder="Plot 12, Industrial Area, Sector 5"
-                                value={whAddress}
-                                onChange={(e) => setWhAddress(e.target.value)}
-                                className="text-xs"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label className="text-xs font-medium">Country</Label>
-                            <AutoSuggestInput
-                                id="wh-country"
-                                value={whCountry}
-                                onChange={(e) => setWhCountry(e.target.value)}
-                                options={searchCountries(whCountry).map((c) => ({
-                                    label: c.name,
-                                    value: c.name,
-                                    subLabel: c.code,
-                                    icon: c.flag,
-                                }))}
-                                onSelectOption={(opt) => setWhCountry(opt.value)}
-                                placeholder="Start typing country..."
-                                className="text-xs h-9"
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-medium">State / Region</Label>
-                                <AutoSuggestInput
-                                    id="wh-state"
-                                    value={whState}
-                                    onChange={(e) => setWhState(e.target.value)}
-                                    options={searchStates(whState, whCountry).map((s) => ({
-                                        label: s.name,
-                                        value: s.name,
-                                        subLabel: s.code,
-                                    }))}
-                                    onSelectOption={(opt) => setWhState(opt.value)}
-                                    placeholder="Start typing state..."
-                                    className="text-xs h-9"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-medium">City</Label>
-                                <AutoSuggestInput
-                                    id="wh-city"
-                                    value={whCity}
-                                    onChange={(e) => setWhCity(e.target.value)}
-                                    options={searchCities(whCity, whState, whCountry).map((c) => ({
-                                        label: c.name,
-                                        value: c.name,
-                                        subLabel: `${c.stateName} • ${c.pincode}`,
-                                    }))}
-                                    onSelectOption={(opt) => {
-                                        setWhCity(opt.value)
-                                        if (opt.subLabel) {
-                                            const parts = opt.subLabel.split(" • ")
-                                            if (parts[0] && !whState) {
-                                                setWhState(parts[0].trim())
-                                            }
-                                        }
-                                    }}
-                                    placeholder="Start typing city..."
-                                    className="text-xs h-9"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-medium">Facility Manager</Label>
-                                <Input 
-                                    placeholder="Contact person name"
-                                    value={whContactName}
-                                    onChange={(e) => setWhContactName(e.target.value)}
-                                    className="text-xs"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-medium">Manager Phone</Label>
-                                <Input 
-                                    placeholder="Enter phone number with country code"
-                                    value={whContactPhone}
-                                    onChange={(e) => setWhContactPhone(e.target.value)}
-                                    className="text-xs"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 pt-1">
-                            <input 
-                                type="checkbox" 
-                                id="whDefaultCheck"
-                                checked={whIsDefault}
-                                onChange={(e) => setWhIsDefault(e.target.checked)}
-                                className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4"
-                            />
-                            <Label htmlFor="whDefaultCheck" className="text-xs font-normal cursor-pointer">
-                                Set as Primary Hub (Default receiving facility)
-                            </Label>
-                        </div>
-
-                        <DialogFooter className="pt-2">
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => setIsWarehouseOpen(false)}
-                                disabled={isSubmittingWh}
-                            >
-                                Cancel
-                            </Button>
-                            <Button 
-                                type="submit" 
-                                size="sm" 
-                                disabled={isSubmittingWh}
-                                className="gap-2"
-                            >
-                                {isSubmittingWh && <Loader2 className="h-4 w-4 animate-spin" />}
-                                {selectedWarehouseForEdit ? "Save Changes" : "Create Warehouse"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
 
             {/* MODAL 4: Barcode Scanner Desk */}
             <BarcodeScannerModal 
