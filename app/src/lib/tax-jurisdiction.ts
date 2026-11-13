@@ -202,7 +202,8 @@ export const SIGNUP_COUNTRIES = ["IN", "AE", "SA", "GB", "US", "AU"] as const
  * into a standardized 2-letter ISO code.
  */
 export function normalizeCountryCode(country?: string | null): string {
-  if (!country) return "IN"
+  // No country saved: the generic setup, never India's
+  if (!country || !country.trim()) return "OTHER"
   const upper = country.trim().toUpperCase()
   if (upper === "INDIA" || upper === "IND" || upper === "IN") return "IN"
   if (upper === "UNITED ARAB EMIRATES" || upper === "UAE" || upper === "DUBAI" || upper === "AE") return "AE"

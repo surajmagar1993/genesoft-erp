@@ -1,5 +1,6 @@
 "use server"
 
+import { roundMoney } from "@/lib/gst-engine"
 import { prisma } from "@/lib/prisma"
 import { nextSequence } from "@/lib/sequence"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
@@ -499,6 +500,7 @@ export async function getCreditNotesOverview(): Promise<CreditNotesOverviewData>
 async function _createCreditNote(input: CreateCreditNoteInput) {
     const tenantId = await getTenantManagerId(MODULE)
     if (!input.contactId) throw new Error("Customer contact is required")
+    if (!Object.values(CreditNoteReason).includes(input.reason)) throw new Error("Choose a reason for the credit note")
     if (!Array.isArray(input.items) || input.items.length === 0) throw new Error("At least one line item is required")
     await assertTenantRefs(tenantId, { contact: input.contactId, invoice: input.invoiceId, product: input.items.map((i) => i.productId), warehouse: input.items.map((i) => i.warehouseId) })
     for (const [i, item] of input.items.entries()) {
@@ -530,9 +532,9 @@ async function _createCreditNote(input: CreateCreditNoteInput) {
     const itemsToCreate = input.items.map(item => {
         const qty = item.quantity
         const price = item.unitPrice
-        const itemSubtotal = Math.round(qty * price * 100) / 100
+        const itemSubtotal = roundMoney(qty * price)
         const rate = item.taxRate ?? 0
-        const itemTax = Math.round((itemSubtotal * (rate / 100)) * 100) / 100
+        const itemTax = roundMoney(itemSubtotal * (rate / 100))
         const itemTotal = itemSubtotal + itemTax
 
         subtotal += itemSubtotal
@@ -552,9 +554,9 @@ async function _createCreditNote(input: CreateCreditNoteInput) {
         }
     })
 
-    subtotal = Math.round(subtotal * 100) / 100
-    taxAmount = Math.round(taxAmount * 100) / 100
-    const total = Math.round((subtotal + taxAmount) * 100) / 100
+    subtotal = roundMoney(subtotal)
+    taxAmount = roundMoney(taxAmount)
+    const total = roundMoney(subtotal + taxAmount)
     if (!(total > 0)) throw new Error("The credit note total must be more than zero")
     if (sourceInvoice) {
         // All credit against one invoice can't come to more than the invoice itself

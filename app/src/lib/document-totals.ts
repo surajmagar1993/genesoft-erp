@@ -1,3 +1,4 @@
+import { invoiceDiscountFraction, roundMoney } from "@/lib/gst-engine"
 /**
  * Quote / sales order lines → line totals and header totals, worked out on
  * the server (browser totals are never trusted). line_total is before tax,
@@ -11,9 +12,13 @@ export interface DocumentLineInput {
     tax_percent: number
 }
 
-const round2 = (n: number) => Math.round(n * 100) / 100
+const round2 = roundMoney
 
 export function documentTotals(lines: DocumentLineInput[], discount: number, discountType: "PERCENT" | "FIXED") {
+    const d = Number(discount || 0)
+    if (!Number.isFinite(d) || d < 0) throw new Error("Discount must be zero or more")
+    // The discount comes off before tax, the same way as on invoices (invoiceDiscountFraction)
+    const fraction = invoiceDiscountFraction(lines.map((li) => ({ qty: Number(li.qty) || 0, unitPrice: Number(li.unit_price) || 0 })), d, discountType)
     let subtotal = 0
     let taxAmount = 0
     const items = lines.map((li, i) => {
@@ -26,11 +31,9 @@ export function documentTotals(lines: DocumentLineInput[], discount: number, dis
         if (!Number.isFinite(rate) || rate < 0 || rate > 100) throw new Error(`Line ${i + 1}: tax must be between 0 and 100%`)
         const lineTotal = round2(qty * price)
         subtotal += lineTotal
-        taxAmount += lineTotal * (rate / 100)
+        taxAmount += roundMoney(lineTotal * (1 - fraction) * (rate / 100))
         return { product_name: li.product_name, description: li.description || null, qty, unit_price: price, tax_percent: rate, line_total: lineTotal }
     })
-    const d = Number(discount || 0)
-    if (!Number.isFinite(d) || d < 0) throw new Error("Discount must be zero or more")
-    const discountValue = discountType === "PERCENT" ? subtotal * (Math.min(d, 100) / 100) : d
+    const discountValue = round2(subtotal * fraction)
     return { items, subtotal: round2(subtotal), taxAmount: round2(taxAmount), total: round2(subtotal + taxAmount - discountValue) }
 }

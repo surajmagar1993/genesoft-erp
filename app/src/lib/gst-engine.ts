@@ -107,6 +107,17 @@ export function computeGstSplit(
   return { cgstPercent: 0, sgstPercent: 0, igstPercent: gstRate, vatPercent: 0 }
 }
 
+/**
+ * Rounds money to 2 decimals, half up. `toFixed(2)` rounds 47.925 down to
+ * 47.92 because the float is 47.92499…; trimming to 12 significant digits
+ * first removes that error.
+ */
+export function roundMoney(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  const cents = Number((n * 100).toPrecision(12))
+  return (Math.sign(cents) * Math.round(Math.abs(cents))) / 100 || 0
+}
+
 // ── Line Item Tax Amounts ────────────────────────────────────────────────────
 export interface LineItemGst extends GstSplit {
   taxableAmount: number
@@ -150,29 +161,21 @@ export function computeLineItemGst(
   const taxBase = taxableAmount * (1 - Math.min(Math.max(discountFraction, 0), 1))
   const split = computeGstSplit(gstRate, supplyType)
 
-  const cgstAmount = parseFloat(
-    ((taxBase * split.cgstPercent) / 100).toFixed(2)
-  )
-  const sgstAmount = parseFloat(
-    ((taxBase * split.sgstPercent) / 100).toFixed(2)
-  )
-  const igstAmount = parseFloat(
-    ((taxBase * split.igstPercent) / 100).toFixed(2)
-  )
-  const vatAmount = parseFloat(
-    ((taxBase * split.vatPercent) / 100).toFixed(2)
-  )
-  const totalTaxAmount = cgstAmount + sgstAmount + igstAmount + vatAmount
+  const cgstAmount = roundMoney((taxBase * split.cgstPercent) / 100)
+  const sgstAmount = roundMoney((taxBase * split.sgstPercent) / 100)
+  const igstAmount = roundMoney((taxBase * split.igstPercent) / 100)
+  const vatAmount = roundMoney((taxBase * split.vatPercent) / 100)
+  const totalTaxAmount = roundMoney(cgstAmount + sgstAmount + igstAmount + vatAmount)
 
   return {
     ...split,
-    taxableAmount: parseFloat(taxableAmount.toFixed(2)),
+    taxableAmount: roundMoney(taxableAmount),
     cgstAmount,
     sgstAmount,
     igstAmount,
     vatAmount,
-    totalTaxAmount: parseFloat(totalTaxAmount.toFixed(2)),
-    lineTotal: parseFloat((taxableAmount + totalTaxAmount).toFixed(2)),
+    totalTaxAmount,
+    lineTotal: roundMoney(taxableAmount + totalTaxAmount),
   }
 }
 
@@ -255,12 +258,10 @@ export function computeInvoiceGstSummary(
     }
   }
 
-  const discountAmount = parseFloat((subtotal * discountFraction).toFixed(2))
+  const discountAmount = roundMoney(subtotal * discountFraction)
 
-  const totalTax = parseFloat((cgstTotal + sgstTotal + igstTotal + vatTotal).toFixed(2))
-  const grandTotal = parseFloat(
-    (subtotal - discountAmount + totalTax).toFixed(2)
-  )
+  const totalTax = roundMoney(cgstTotal + sgstTotal + igstTotal + vatTotal)
+  const grandTotal = roundMoney(subtotal - discountAmount + totalTax)
 
   let taxExemptionNotice: string | undefined
   if (invoiceIsExempt) {
@@ -271,11 +272,11 @@ export function computeInvoiceGstSummary(
   }
 
   return {
-    subtotal: parseFloat(subtotal.toFixed(2)),
-    cgstTotal: parseFloat(cgstTotal.toFixed(2)),
-    sgstTotal: parseFloat(sgstTotal.toFixed(2)),
-    igstTotal: parseFloat(igstTotal.toFixed(2)),
-    vatTotal: parseFloat(vatTotal.toFixed(2)),
+    subtotal: roundMoney(subtotal),
+    cgstTotal: roundMoney(cgstTotal),
+    sgstTotal: roundMoney(sgstTotal),
+    igstTotal: roundMoney(igstTotal),
+    vatTotal: roundMoney(vatTotal),
     totalTax,
     discountAmount,
     grandTotal,
@@ -284,7 +285,7 @@ export function computeInvoiceGstSummary(
     taxExemptionReason: options?.taxExemptionReason,
     taxExemptionCertificate: options?.taxExemptionCertificate,
     taxExemptionNotice,
-    exemptSubtotal: parseFloat(exemptSubtotal.toFixed(2)),
+    exemptSubtotal: roundMoney(exemptSubtotal),
   }
 }
 
@@ -314,15 +315,15 @@ export function computeHsnSummary(
     const hsn = item.hsnSac || "Unspecified"
     const effectiveRate = item.isExempt ? 0 : item.gstRate
     const gross = computeLineItemGst(item.qty, item.unitPrice, effectiveRate, supplyType, discountFraction)
-    const gst = { ...gross, taxableAmount: parseFloat((gross.taxableAmount * (1 - discountFraction)).toFixed(2)) }
+    const gst = { ...gross, taxableAmount: roundMoney(gross.taxableAmount * (1 - discountFraction)) }
 
     const existing = map.get(hsn)
     if (existing) {
-      existing.taxableAmount = parseFloat((existing.taxableAmount + gst.taxableAmount).toFixed(2))
-      existing.cgstAmount = parseFloat((existing.cgstAmount + gst.cgstAmount).toFixed(2))
-      existing.sgstAmount = parseFloat((existing.sgstAmount + gst.sgstAmount).toFixed(2))
-      existing.igstAmount = parseFloat((existing.igstAmount + gst.igstAmount).toFixed(2))
-      existing.totalTaxAmount = parseFloat((existing.totalTaxAmount + gst.totalTaxAmount).toFixed(2))
+      existing.taxableAmount = roundMoney(existing.taxableAmount + gst.taxableAmount)
+      existing.cgstAmount = roundMoney(existing.cgstAmount + gst.cgstAmount)
+      existing.sgstAmount = roundMoney(existing.sgstAmount + gst.sgstAmount)
+      existing.igstAmount = roundMoney(existing.igstAmount + gst.igstAmount)
+      existing.totalTaxAmount = roundMoney(existing.totalTaxAmount + gst.totalTaxAmount)
     } else {
       map.set(hsn, {
         hsnSac: hsn,

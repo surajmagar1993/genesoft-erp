@@ -1,4 +1,5 @@
 "use client"
+import { invoiceDiscountFraction, roundMoney } from "@/lib/gst-engine"
 import { getCurrencySymbol } from "@/lib/utils"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { getNextQuoteNumber } from "@/app/actions/sales/quotes"
@@ -124,11 +125,16 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
     }
 
     /* ── Totals ── */
+    // Same maths as the server (discount before tax): src/lib/document-totals.ts
     const subtotal = form.lineItems.reduce((sum, li) => sum + lineTotal(li), 0)
-    const totalTax = form.lineItems.reduce((sum, li) => sum + lineTax(li), 0)
-    const discountAmount =
-        form.discountType === "PERCENT" ? subtotal * (form.discount / 100) : form.discount
-    const grandTotal = subtotal + totalTax - discountAmount
+    const discountFraction = invoiceDiscountFraction(
+        form.lineItems.map((li) => ({ qty: Number(li.qty) || 0, unitPrice: Number(li.unitPrice) || 0 })),
+        Number(form.discount) || 0,
+        form.discountType
+    )
+    const totalTax = form.lineItems.reduce((sum, li) => sum + roundMoney(lineTax(li) * (1 - discountFraction)), 0)
+    const discountAmount = roundMoney(subtotal * discountFraction)
+    const grandTotal = roundMoney(subtotal + totalTax - discountAmount)
 
     const { formatMoney: formatCurrency, taxLabel, defaultRate, regime } = useTaxRegime()
 

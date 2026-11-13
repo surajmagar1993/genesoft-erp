@@ -63,3 +63,15 @@ describe("invoice input checks", () => {
         expect(resolveInvoiceStatus({ requested: "SENT", isProforma: false, current: "DRAFT" })).toEqual({ status: "SENT" })
     })
 })
+
+describe("money rounding", () => {
+    it("rounds half a cent up, even where the float sits just below it", async () => {
+        const { roundMoney, computeLineItemGst } = await import("@/lib/gst-engine")
+        expect((47.925).toFixed(2)).toBe("47.92") // the float trap roundMoney avoids
+        expect(roundMoney(47.925)).toBe(47.93)
+        expect(roundMoney(1.005)).toBe(1.01)
+        expect(roundMoney(0.1 + 0.2)).toBe(0.3)
+        expect(roundMoney(-2.675)).toBe(-2.68)
+        expect(computeLineItemGst(1, 540, 8.875, "single").vatAmount).toBe(47.93)
+    })
+})

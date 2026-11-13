@@ -185,6 +185,8 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 - [ ] Supabase Auth settings (owner, dashboard): minimum password length 8 (the app asks for 8, but Supabase's own sign-up API accepts its default of 6), Auth CAPTCHA with the Turnstile secret once keys exist, and Leaked Password Protection (needs the Supabase Pro plan). The app's login lockout only covers the app form; Supabase's built-in auth rate limits cover direct API calls.
 - [ ] Left as is: `script-src 'unsafe-inline'` in the CSP (Next.js inline scripts; nonces would make every page dynamic); the WhatsApp webhook's own settings writes (module off); 21 tables with RLS on and no policies is intended (only Prisma reads them).
 
+**Country tax check 2026-11-13** (`countries-tax.int.test.ts`: IN intra/inter, AE, SA, GB, US, AU, Other): fixed — Tax Summary showed taxable sales before the discount; quotes and orders took the discount off after tax (an invoice made from them came to a different total); half-cent tax rounded down (`toFixed`), e.g. US 8.875%; a business with no country was treated as India; an invalid credit note reason gave a database error.
+
 **Still open from the review:**
 - [x] `app/review_indexes_migration.sql` run on the live database 2026-11-13 (17 indexes, all valid).
 - [ ] Creating or editing an invoice still runs as separate steps (document, customer balance, ledger, stock); failures are reported to System Logs and "Rebuild ledger" repairs the ledger. Making it one transaction means ledger/stock code must accept a transaction (larger refactor).

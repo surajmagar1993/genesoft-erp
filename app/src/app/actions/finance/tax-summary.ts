@@ -58,6 +58,7 @@ export async function getTaxSummary(params: { from: string; to: string }): Promi
                 invoiceDate: { gte: from, lte: to },
             },
             select: {
+                discount: true,
                 items: {
                     select: {
                         quantity: true, unitPrice: true,
@@ -83,10 +84,13 @@ export async function getTaxSummary(params: { from: string; to: string }): Promi
 
     const byRate = new Map<number, TaxRateRow>()
     let cgst = 0, sgst = 0, igst = 0, taxable = 0, tax = 0
-    for (const inv of invoices as { items: Record<string, unknown>[] }[]) {
+    for (const inv of invoices as { discount: unknown; items: Record<string, unknown>[] }[]) {
+        // Tax is charged after the document discount, so the taxable value is too
+        const gross = inv.items.reduce((s, it) => s + Number(it.quantity || 0) * Number(it.unitPrice || 0), 0)
+        const kept = gross > 0 ? 1 - Math.min(Math.max(Number(inv.discount || 0), 0), gross) / gross : 1
         for (const item of inv.items) {
             const n = (k: string) => Number(item[k] || 0)
-            const lineTaxable = n("quantity") * n("unitPrice")
+            const lineTaxable = n("quantity") * n("unitPrice") * kept
             const rate = n("cgstRate") + n("sgstRate") + n("igstRate") + n("vatRate")
             const lineTax = n("cgstAmount") + n("sgstAmount") + n("igstAmount") + n("vatAmount")
             const row = byRate.get(rate) || { rate, taxable: 0, tax: 0, cgst: 0, sgst: 0, igst: 0 }
