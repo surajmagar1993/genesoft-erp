@@ -5,7 +5,7 @@ This task list adapts the Genesoft ERP project for standard Node.js hosting plat
 > [!NOTE]
 > **Status**: Fully Compliant & Verified — All build, root workspace delegation, and deployment tasks completed as of 2026-09-10.
 >
-> **2026-11-13:** this list is historical. Current deployment: Vercel project `genesoftdev` (root directory `app`, region `bom1`), CI in GitHub Actions; environment variables in `app/README.md`; go-live steps in `GO_LIVE_CHECKLIST.md`. Install dependencies from `app/` with `npm install --workspaces=false`.
+> **2026-11-13:** this list is historical. Current deployment: Vercel project `genesoftdev` (root directory `app`, region `bom1`), CI in GitHub Actions; environment variables in `app/README.md`; go-live steps in `GO_LIVE_CHECKLIST.md`. Install dependencies from `app/` with `npm install`.
 
 ## ✅ Resolved This Session
 

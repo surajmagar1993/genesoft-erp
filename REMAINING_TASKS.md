@@ -188,7 +188,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 **Country tax check 2026-11-13** (`countries-tax.int.test.ts`: IN intra/inter, AE, SA, GB, US, AU, Other): fixed — Tax Summary showed taxable sales before the discount; quotes and orders took the discount off after tax (an invoice made from them came to a different total); half-cent tax rounded down (`toFixed`), e.g. US 8.875%; a business with no country was treated as India; an invalid credit note reason gave a database error.
 
 **Project-wide bug hunt 2026-11-13** (production-audit, click-path-audit, code-review on src/lib, browser QA of every app page, silent-failure and currency scans). Fixed: recurring invoices (always CGST+SGST, line discounts dropped, made-up HSN 998313, INR profiles); order → invoice taxed before the discount; ~25 creates fell back to IN/INR; six screens kept stale data after saving (invoice payments, projects, recurring, rentals, credit notes, accounts/products); thrown messages hidden in production (plan checkout, rental/PO conversions, QC); ledger side failures only in the console; workflow simulator claimed to send; dates a day early in US time; large-amount rounding. Browser QA: 62 pages, no server errors, no client crashes.
-- [ ] Left: quotes/orders round Indian tax per line rather than per CGST/SGST half (≤ 1 paisa per line).
+- [x] Quotes/orders now round Indian tax per CGST/SGST half like invoices (supply type from the customer's state).
 
 **Still open from the review:**
 - [x] `app/review_indexes_migration.sql` run on the live database 2026-11-13 (17 indexes, all valid).
@@ -196,7 +196,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 - [x] Large create/edit forms are full pages (2026-11-13): /hr/employees/new and /[id]/edit, /purchase/orders/new, /purchase/vendors/new, /purchase/rfq/new, /projects/new, /inventory/warehouses/new and /[id]/edit, /sales/invoices/recurring/new and /[id]/edit. Quick actions (attendance, leave, receive goods, bids, tasks, time, stock moves…) stay as pop-ups.
 - [x] Number series use a counter table (`document_counters`, `app/document_counters_migration.sql`, 2026-11-13): `nextSequence` locks and moves a per-business counter (never below the highest existing number); form previews use `peekSequence`. Invoices keep max+1 with a retry on a clash, since the number can be edited.
 - [x] Exchange rate is stored on invoices, credit notes, payments and bills (`exchange_rate`, `app/document_exchange_rates_migration.sql`, 2026-11-13): fixed when the document is first posted (`lockedRate` in ledger.ts); ledger rebuilds and the P&L reuse it. Rate lookups take the caller's transaction.
-- [ ] Rate limits on /join and the customer portal beyond the per-customer ticket limits; portal links never expire (product decision).
+- [x] /join and the customer portal reviewed (2026-11-13): portal links are 256-bit random tokens and invite links are signed with an expiry, so guessing isn't feasible; signed-out posts already have the per-address limit. Open product decision only: whether portal links should expire.
 - [ ] A separate production database with backups (needs the owner's Supabase account). Migration history: done (`prisma/migrations`).
 - [ ] Thin modules to mark beta or switch off before launch: Manufacturing, Batch & serial, Performance & training, Recruitment, RFQ, Budgets, Report builder (owner's decision).
 
@@ -238,10 +238,10 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [x] Migrations (2026-11-13): `schema.prisma` reconciled with the live database (indexes, enum names, foreign-key rules, column types/defaults copied from it); `prisma/migrations` = `0_baseline` (live as it was) + `1_document_counters_exchange_rates` + `2_drop_legacy_tables` (pos_sessions, processed_stripe_events). `migrations.int.test.ts` keeps them in step. The old hand-written `app/*.sql` files stay as history.
 - [x] Lint errors: 0 (was ~1,000; done 2026-11-12). 25 warnings left (hook dependencies, `<img>`).
 - [x] Browser tests (Playwright, 2026-11-13): `e2e/public.spec.ts` (19 public pages on desktop + phone: status, error screens, console errors, sideways scroll; redirects, 404, sign-in gate) runs in CI against the build with a throwaway database (`e2e/ci-db.mjs`). `e2e/app.spec.ts` opens every app page signed in, with `E2E_EMAIL`/`E2E_PASSWORD` (and `E2E_BASE_URL`) set; run by hand. First signed-in run found the rate limit tripping on quick navigation (fixed: 5× for signed-in users).
-- [ ] `npm run lint` still fails on old files outside the app source (`app/scripts/verify-*.ts`, `app/check-migration.ts`); `npx eslint src` is at 0 errors.
+- [x] `npm run lint` passes (old scripts are excluded; 0 errors).
 - [x] Assumed India defaults removed (2026-11-12): new contacts, bank accounts and imported contacts/products take the business's own country and currency (`src/lib/tenant-defaults.ts`; forms prefill from `useTaxRegime`); a product row without a name is rejected; the fixed "+12%" on the Super Admin dashboard is gone.
 - [ ] Still assumed: demo bank seeds use INR (only with `ENABLE_DEMO_SEED`). (Done 2026-11-12: a contact import row with no name and no email is refused instead of being saved as "Imported Contact".)
 - [ ] Fixo test business (hydration error #418 on `/settings` no longer appears on genesoftdev, checked 2026-11-12): billing shows a renewal date in the past (old free-upgrade data) and it has no bills, so the bills list fix is verified by tests only.
-- [ ] `npm audit` run from `app/` reads the stale root lockfile and reports false results; audit a copy of `app/package.json` + `app/package-lock.json` instead (production deps: 0 known vulnerabilities on 2026-11-12, Next.js 16.4.6).
-- [ ] The root `package-lock.json` is out of date (Vercel builds from `app/` with `app/package-lock.json`); regenerate or remove it in a coordinated change.
+- [x] `npm audit` from `app/` is correct again: the root workspace and its stale lockfile were removed (2026-11-13).
+- [x] Root `package-lock.json` removed; the root `package.json` only forwards `build`/`start` to `app/` (2026-11-13).
 

@@ -1,4 +1,4 @@
-import { invoiceDiscountFraction, roundMoney } from "@/lib/gst-engine"
+import { computeLineItemGst, invoiceDiscountFraction, roundMoney, type SupplyType } from "@/lib/gst-engine"
 /**
  * Quote / sales order lines → line totals and header totals, worked out on
  * the server (browser totals are never trusted). line_total is before tax,
@@ -14,7 +14,11 @@ export interface DocumentLineInput {
 
 const round2 = roundMoney
 
-export function documentTotals(lines: DocumentLineInput[], discount: number, discountType: "PERCENT" | "FIXED") {
+/**
+ * `supplyType`: how Indian GST is split ("intra" = CGST + SGST, each rounded on
+ * its own, like on invoices; "inter" = IGST); anything else is one tax line.
+ */
+export function documentTotals(lines: DocumentLineInput[], discount: number, discountType: "PERCENT" | "FIXED", supplyType: SupplyType = "single") {
     const d = Number(discount || 0)
     if (!Number.isFinite(d) || d < 0) throw new Error("Discount must be zero or more")
     // The discount comes off before tax, the same way as on invoices (invoiceDiscountFraction)
@@ -31,7 +35,8 @@ export function documentTotals(lines: DocumentLineInput[], discount: number, dis
         if (!Number.isFinite(rate) || rate < 0 || rate > 100) throw new Error(`Line ${i + 1}: tax must be between 0 and 100%`)
         const lineTotal = round2(qty * price)
         subtotal += lineTotal
-        taxAmount += roundMoney(lineTotal * (1 - fraction) * (rate / 100))
+        // Same line maths as invoices (computeLineItemGst), so a quote and the invoice made from it agree to the paisa
+        taxAmount += computeLineItemGst(qty, price, rate, supplyType, fraction).totalTaxAmount
         return { product_name: li.product_name, description: li.description || null, qty, unit_price: price, tax_percent: rate, line_total: lineTotal }
     })
     const discountValue = round2(subtotal * fraction)

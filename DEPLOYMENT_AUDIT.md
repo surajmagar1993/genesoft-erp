@@ -96,7 +96,7 @@ git clone <repo-url>
 cd CRM
 
 # 2. Install dependencies (from app/, using app/package-lock.json)
-cd app && npm install --workspaces=false && cd ..
+cd app && npm install && cd ..
 
 # 3. Build application
 npm run build

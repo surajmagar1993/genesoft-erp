@@ -84,3 +84,14 @@ describe("money rounding on large amounts", () => {
         expect(roundMoney(9999999999999.99)).toBe(9999999999999.99)
     })
 })
+
+describe("quotes and orders round tax like invoices", () => {
+    it("Indian GST in-state rounds CGST and SGST separately", async () => {
+        const { documentTotals } = await import("@/lib/document-totals")
+        const line = [{ product_name: "Item", qty: 1, unit_price: 0.5, tax_percent: 18 }]
+        expect(documentTotals(line, 0, "PERCENT", "intra").taxAmount).toBe(0.1) // 0.045 + 0.045 -> 0.05 + 0.05
+        expect(documentTotals(line, 0, "PERCENT", "inter").taxAmount).toBe(0.09)
+        expect(documentTotals(line, 0, "PERCENT").taxAmount).toBe(0.09)
+        expect(computeLineItemGst(1, 0.5, 18, "intra").totalTaxAmount).toBe(0.1)
+    })
+})

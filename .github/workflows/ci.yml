@@ -36,7 +36,7 @@ jobs:
           cache-dependency-path: app/package-lock.json
 
       - name: Install
-        run: npm ci --workspaces=false
+        run: npm ci
 
       - name: Type check
         run: npx tsc --noEmit

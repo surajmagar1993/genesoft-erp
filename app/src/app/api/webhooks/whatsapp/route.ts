@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma"
 import type { Prisma } from "@prisma/client"
 import { openSecret } from "@/lib/secret-box"
 import { parseMetaWebhookEvent, verifyMetaWebhookChallenge } from "@/lib/whatsapp-engine"
-import { errorMessage } from "@/lib/utils";
 
 /** tenants.settings as this webhook reads it: the saved WhatsApp chat history */
 type WaStore = { whatsapp?: { messages?: (Record<string, unknown> & { wamid?: string; errorMessage?: string })[]; [key: string]: unknown }; [key: string]: unknown }

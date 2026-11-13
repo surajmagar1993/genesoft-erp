@@ -85,8 +85,8 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 
 ### 1. Install Dependencies
 ```bash
-# from app/ — Vercel builds app/ with app/package-lock.json; the root lockfile is stale
-npm install --workspaces=false
+# from app/ (the only npm project; Vercel builds it with app/package-lock.json)
+npm install
 ```
 
 ### 2. Environment Setup

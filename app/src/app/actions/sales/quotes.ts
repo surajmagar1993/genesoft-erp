@@ -1,5 +1,7 @@
 "use server"
 
+import { contactPlaceOfSupply } from "@/lib/invoice-lines"
+import { getTenantTaxContext, supplyTypeFor } from "@/lib/tenant-tax"
 import { actionErrorMessage } from "@/lib/safe-action"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
@@ -115,10 +117,18 @@ export interface CreateQuotePayload {
   }>
 }
 
+/** How Indian GST splits for this customer (CGST+SGST or IGST); one tax line elsewhere. */
+async function documentSupplyType(tenantId: string, contactId: string | null | undefined) {
+  const ctx = await getTenantTaxContext(tenantId)
+  if (ctx.regime.mode !== "IN_GST") return "single" as const
+  const contact = contactId ? await prisma.contact.findFirst({ where: { id: contactId, tenantId }, select: { gstin: true, billingAddress: true } }) : null
+  return supplyTypeFor(ctx, undefined, contactPlaceOfSupply(contact) || "")
+}
+
 /** Header fields and line items, with totals worked out on the server. */
 async function quoteData(tenantId: string, payload: Omit<CreateQuotePayload, "currency_code"> & { currency_code?: string }) {
   const { line_items, ...headerFields } = payload
-  const { items, subtotal, taxAmount, total } = documentTotals(line_items, headerFields.discount, headerFields.discount_type)
+  const { items, subtotal, taxAmount, total } = documentTotals(line_items, headerFields.discount, headerFields.discount_type, await documentSupplyType(tenantId, headerFields.contact_id))
   const header = fromRow("Quote", {
     ...headerFields,
     subtotal,
