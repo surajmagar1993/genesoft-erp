@@ -8,8 +8,10 @@ export const metadata = {
     description: "Multi-vendor quotation solicitation, side-by-side bid comparison matrix, tender specifications, and 1-click Purchase Order awarding.",
 }
 
-export default async function RfqPage() {
+export default async function RfqPage({ searchParams }: { searchParams: Promise<{ rfq?: string }> }) {
+    const { rfq } = await searchParams
     const data = await getRfqOverview()
+    const initialRfqId = rfq && data.rfqs.some((r) => r.id === rfq) ? rfq : undefined
 
-    return <RfqClient initialData={data} />
+    return <RfqClient initialData={data} initialRfqId={initialRfqId} />
 }

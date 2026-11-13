@@ -65,13 +65,11 @@ import { toast } from "sonner"
 import {
     RfqOverviewData,
     RfqVendorRecord,
-    createRfq,
     updateRfqStatus,
     recordVendorQuote,
     awardVendorQuote,
     deleteRfq,
     inviteVendorsToRfq,
-    CreateRfqItemInput,
     RecordVendorQuoteItemInput,
 } from "@/app/actions/rfq"
 import { formatCurrency, errorMessage } from "@/lib/utils"
@@ -81,49 +79,17 @@ import { unwrap } from "@/lib/action-result"
 
 interface RfqClientProps {
     initialData: RfqOverviewData
+    initialRfqId?: string
 }
 
-interface NewRfqItemForm {
-    id: string
-    productId: string
-    description: string
-    quantity: string
-    targetUnitPrice: string
-    unit: string
-    hsnSacCode: string
-    notes: string
-}
-
-export function RfqClient({ initialData }: RfqClientProps) {
+export function RfqClient({ initialData, initialRfqId }: RfqClientProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("ALL")
-    const [activeRfqId, setActiveRfqId] = useState<string | null>(null)
+    const [activeRfqId, setActiveRfqId] = useState<string | null>(initialRfqId ?? null)
     const [activeDetailTab, setActiveDetailTab] = useState<string>("matrix")
-
-    // Create RFQ Modal State
-    const [isCreateOpen, setIsCreateOpen] = useState(false)
-    const [createTitle, setCreateTitle] = useState("")
-    const [createDueDate, setCreateDueDate] = useState("")
-    const [createNotes, setCreateNotes] = useState("")
-    const [createTerms, setCreateTerms] = useState(
-        "1. All bids must remain valid for at least 30 days.\n2. Delivery timelines, warranty, and freight charges must be specified.\n3. Goods must comply with statutory technical standards."
-    )
-    const [createItems, setCreateItems] = useState<NewRfqItemForm[]>([
-        {
-            id: "item-1",
-            productId: "",
-            description: "",
-            quantity: "100",
-            targetUnitPrice: "",
-            unit: "pcs",
-            hsnSacCode: "",
-            notes: "",
-        },
-    ])
-    const [createInvitedVendorIds, setCreateInvitedVendorIds] = useState<string[]>([])
 
     // Record Bid Modal State
     const [isBidModalOpen, setIsBidModalOpen] = useState(false)
@@ -163,140 +129,6 @@ export function RfqClient({ initialData }: RfqClientProps) {
             return matchesSearch && matchesStatus
         })
     }, [initialData.rfqs, searchQuery, statusFilter])
-
-    // Handler to open create dialog with clean state
-    const handleOpenCreate = () => {
-        const defaultDue = new Date()
-        defaultDue.setDate(defaultDue.getDate() + 14)
-
-        setCreateTitle("")
-        setCreateDueDate(format(defaultDue, "yyyy-MM-dd"))
-        setCreateNotes("")
-        setCreateItems([
-            {
-                id: "item-1",
-                productId: "",
-                description: "",
-                quantity: "100",
-                targetUnitPrice: "",
-                unit: "pcs",
-                hsnSacCode: "",
-                notes: "",
-            },
-        ])
-        setCreateInvitedVendorIds([])
-        setIsCreateOpen(true)
-    }
-
-    // Add item line in create dialog
-    const handleAddItemLine = () => {
-        setCreateItems((prev) => [
-            ...prev,
-            {
-                id: `item-${Date.now()}`,
-                productId: "",
-                description: "",
-                quantity: "1",
-                targetUnitPrice: "",
-                unit: "pcs",
-                hsnSacCode: "",
-                notes: "",
-            },
-        ])
-    }
-
-    // Update item line
-    const handleUpdateItemLine = (id: string, field: keyof NewRfqItemForm, value: string) => {
-        setCreateItems((prev) =>
-            prev.map((item) => {
-                if (item.id !== id) return item
-                const updated = { ...item, [field]: value }
-
-                // Auto-fill from catalog product
-                if (field === "productId" && value) {
-                    const product = initialData.products.find((p) => p.id === value)
-                    if (product) {
-                        updated.description = product.name
-                        updated.targetUnitPrice = product.unitPrice.toString()
-                        updated.unit = product.unit || "pcs"
-                        updated.hsnSacCode = product.hsnSacCode || ""
-                    }
-                }
-                return updated
-            })
-        )
-    }
-
-    // Remove item line
-    const handleRemoveItemLine = (id: string) => {
-        if (createItems.length <= 1) {
-            toast.error("At least one line item is required")
-            return
-        }
-        setCreateItems((prev) => prev.filter((i) => i.id !== id))
-    }
-
-    // Target estimated budget in create dialog
-    const createTargetTotal = useMemo(() => {
-        return createItems.reduce((sum, item) => {
-            const qty = parseFloat(item.quantity) || 0
-            const price = parseFloat(item.targetUnitPrice) || 0
-            return sum + qty * price
-        }, 0)
-    }, [createItems])
-
-    // Submit Create RFQ
-    const handleSubmitCreate = () => {
-        if (!createTitle.trim()) {
-            toast.error("Please enter a title for the RFQ tender")
-            return
-        }
-        if (!createDueDate) {
-            toast.error("Please select a bid submission deadline date")
-            return
-        }
-
-        const validItems: CreateRfqItemInput[] = []
-        for (const item of createItems) {
-            if (!item.description.trim()) {
-                toast.error("Each line item must have a description or product selected")
-                return
-            }
-            const qty = parseFloat(item.quantity)
-            if (isNaN(qty) || qty <= 0) {
-                toast.error(`Invalid quantity for item: ${item.description}`)
-                return
-            }
-            validItems.push({
-                productId: item.productId || undefined,
-                description: item.description.trim(),
-                quantity: qty,
-                targetUnitPrice: item.targetUnitPrice ? parseFloat(item.targetUnitPrice) : undefined,
-                unit: item.unit || "pcs",
-                hsnSacCode: item.hsnSacCode || undefined,
-                notes: item.notes || undefined,
-            })
-        }
-
-        startTransition(async () => {
-            try {
-                const res = unwrap(await createRfq({
-                    title: createTitle,
-                    dueDate: createDueDate,
-                    notes: createNotes,
-                    terms: createTerms,
-                    items: validItems,
-                    invitedVendorIds: createInvitedVendorIds,
-                }))
-                toast.success(`RFQ Tender ${res.rfqNumber} created successfully!`)
-                setIsCreateOpen(false)
-                router.refresh()
-                setActiveRfqId(res.rfqId)
-            } catch (err) {
-                toast.error(errorMessage(err) || "Failed to create RFQ")
-            }
-        })
-    }
 
     // Open Record Bid Modal
     const handleOpenRecordBid = (vendorQuote: RfqVendorRecord) => {
@@ -563,12 +395,11 @@ export function RfqClient({ initialData }: RfqClientProps) {
                             Purchase Orders
                         </Button>
                     </Link>
-                    <Button
-                        onClick={handleOpenCreate}
-                        className="gap-2 shadow-sm font-medium"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Create RFQ Tender
+                    <Button className="gap-2 shadow-sm font-medium" asChild>
+                        <Link href="/purchase/rfq/new">
+                            <Plus className="w-4 h-4" />
+                            Create RFQ Tender
+                        </Link>
                     </Button>
                 </div>
             </div>
@@ -689,8 +520,10 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                         </p>
                                     </div>
                                     {!searchQuery && statusFilter === "ALL" && (
-                                        <Button size="sm" onClick={handleOpenCreate} className="gap-1.5 mt-2">
-                                            <Plus className="w-4 h-4" /> Create First RFQ
+                                        <Button size="sm" className="gap-1.5 mt-2" asChild>
+                                            <Link href="/purchase/rfq/new">
+                                                <Plus className="w-4 h-4" /> Create First RFQ
+                                            </Link>
                                         </Button>
                                     )}
                                 </div>
@@ -1510,248 +1343,6 @@ export function RfqClient({ initialData }: RfqClientProps) {
                 )}
             </div>
 
-            {/* CREATE RFQ DIALOG */}
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Plus className="w-5 h-5 text-primary" /> Create Request for Quotation (RFQ)
-                        </DialogTitle>
-                        <DialogDescription>
-                            Initiate a procurement inquiry, specify required items with target prices, and invite qualified suppliers to bid.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="space-y-5 py-3">
-                        {/* Title & Deadline */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="rfq-title">Tender Title *</Label>
-                                <Input
-                                    id="rfq-title"
-                                    placeholder="Enter tender title"
-                                    value={createTitle}
-                                    onChange={(e) => setCreateTitle(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="rfq-due-date">Submission Deadline *</Label>
-                                <Input
-                                    id="rfq-due-date"
-                                    type="date"
-                                    value={createDueDate}
-                                    onChange={(e) => setCreateDueDate(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Line items */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <Label className="text-sm font-semibold">Tender Line Items *</Label>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleAddItemLine}
-                                    className="h-7 text-xs gap-1"
-                                >
-                                    <Plus className="w-3 h-3" /> Add Item Line
-                                </Button>
-                            </div>
-
-                            <div className="space-y-3">
-                                {createItems.map((item, index) => (
-                                    <div
-                                        key={item.id}
-                                        className="p-3 border border-border/60 rounded-lg bg-muted/10 space-y-3"
-                                    >
-                                        <div className="flex items-center justify-between gap-2">
-                                            <span className="text-xs font-mono font-bold text-muted-foreground">
-                                                Line #{index + 1}
-                                            </span>
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleRemoveItemLine(item.id)}
-                                                className="h-6 w-6 p-0 text-muted-foreground hover:text-rose-500"
-                                             aria-label="Delete">
-                                                <Trash2 className="w-3.5 h-3.5" />
-                                            </Button>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                                            <div className="md:col-span-5 space-y-1">
-                                                <Label className="text-xs">Catalog Product (Optional)</Label>
-                                                <Select
-                                                    value={item.productId}
-                                                    onValueChange={(val) => handleUpdateItemLine(item.id, "productId", val)}
-                                                >
-                                                    <SelectTrigger className="h-8 text-xs">
-                                                        <SelectValue placeholder="Pick from catalog..." />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {initialData.products.map((p) => (
-                                                            <SelectItem key={p.id} value={p.id}>
-                                                                {p.name} {p.sku ? `(${p.sku})` : ""}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            <div className="md:col-span-7 space-y-1">
-                                                <Label className="text-xs">Item Description / Spec *</Label>
-                                                <Input
-                                                    className="h-8 text-xs"
-                                                    placeholder="Detailed technical description..."
-                                                    value={item.description}
-                                                    onChange={(e) => handleUpdateItemLine(item.id, "description", e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                            <div className="space-y-1">
-                                                <Label className="text-xs">Quantity *</Label>
-                                                <Input
-                                                    className="h-8 text-xs font-mono"
-                                                    type="number"
-                                                    min="0.01"
-                                                    step="any"
-                                                    value={item.quantity}
-                                                    onChange={(e) => handleUpdateItemLine(item.id, "quantity", e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-xs">Unit</Label>
-                                                <Input
-                                                    className="h-8 text-xs"
-                                                    placeholder="pcs, kg, m"
-                                                    value={item.unit}
-                                                    onChange={(e) => handleUpdateItemLine(item.id, "unit", e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-xs">Target Unit Price</Label>
-                                                <Input
-                                                    className="h-8 text-xs font-mono"
-                                                    type="number"
-                                                    min="0"
-                                                    step="any"
-                                                    placeholder="0.00"
-                                                    value={item.targetUnitPrice}
-                                                    onChange={(e) => handleUpdateItemLine(item.id, "targetUnitPrice", e.target.value)}
-                                                />
-                                            </div>
-                                            <div className="space-y-1">
-                                                <Label className="text-xs">HSN / SAC</Label>
-                                                <Input
-                                                    className="h-8 text-xs font-mono"
-                                                    placeholder="Enter HSN/SAC code"
-                                                    value={item.hsnSacCode}
-                                                    onChange={(e) => handleUpdateItemLine(item.id, "hsnSacCode", e.target.value)}
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="flex justify-end pt-2 text-xs">
-                                <span className="text-muted-foreground mr-2">Estimated Target Budget:</span>
-                                <strong className="font-bold text-foreground text-sm">
-                                    {formatCurrency(createTargetTotal)}
-                                </strong>
-                            </div>
-                        </div>
-
-                        {/* Invite Vendors */}
-                        <div className="space-y-2">
-                            <Label className="text-sm font-semibold">Invite Registered Suppliers</Label>
-                            <p className="text-xs text-muted-foreground">
-                                Select candidate vendors from your directory to participate in this bidding round.
-                            </p>
-                            <div className="max-h-40 overflow-y-auto border border-border/60 rounded-lg p-2 divide-y divide-border/30">
-                                {initialData.vendors.length === 0 ? (
-                                    <p className="text-xs text-muted-foreground p-2 text-center">
-                                        No active vendors in directory. You can create vendors in the Purchase Orders page.
-                                    </p>
-                                ) : (
-                                    initialData.vendors.map((v) => {
-                                        const isChecked = createInvitedVendorIds.includes(v.id)
-                                        return (
-                                            <label
-                                                key={v.id}
-                                                className="flex items-center gap-3 p-2 hover:bg-muted/30 cursor-pointer rounded text-xs"
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isChecked}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setCreateInvitedVendorIds((prev) => [...prev, v.id])
-                                                        } else {
-                                                            setCreateInvitedVendorIds((prev) => prev.filter((id) => id !== v.id))
-                                                        }
-                                                    }}
-                                                    className="rounded text-primary focus:ring-primary h-4 w-4"
-                                                />
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="font-semibold text-foreground">
-                                                        {v.companyName || v.displayName}
-                                                    </div>
-                                                    <div className="text-xs text-muted-foreground">
-                                                        {v.email || v.phone || "No contact info"}
-                                                    </div>
-                                                </div>
-                                            </label>
-                                        )
-                                    })
-                                )}
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                {createInvitedVendorIds.length} supplier(s) selected
-                            </p>
-                        </div>
-
-                        {/* Terms & Notes */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="rfq-notes">Internal Tender Notes</Label>
-                                <Textarea
-                                    id="rfq-notes"
-                                    placeholder="Internal procurement specifications or justification..."
-                                    rows={3}
-                                    className="text-xs"
-                                    value={createNotes}
-                                    onChange={(e) => setCreateNotes(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label htmlFor="rfq-terms">Commercial Terms & Instructions</Label>
-                                <Textarea
-                                    id="rfq-terms"
-                                    rows={3}
-                                    className="text-xs font-mono"
-                                    value={createTerms}
-                                    onChange={(e) => setCreateTerms(e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleSubmitCreate} disabled={isPending} className="gap-1.5">
-                            <Plus className="w-4 h-4" /> Create Tender
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             {/* RECORD VENDOR BID MODAL */}
             <Dialog open={isBidModalOpen} onOpenChange={setIsBidModalOpen}>
