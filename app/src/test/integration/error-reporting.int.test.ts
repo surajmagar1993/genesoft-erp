@@ -33,6 +33,8 @@ describe("built-in error monitoring", () => {
 
         expect(sent).toHaveLength(2) // the repeat of the invoice error isn't emailed
         expect(sent[0].subject).toMatch(/^\[Error\] Invoice/)
+        // alerts go to the errors mailbox unless ERROR_ALERT_EMAIL says otherwise
+        if (!process.env.ERROR_ALERT_EMAIL) expect(sent[0].to).toEqual(["errorserp@genesoftinfotech.com"])
         expect(sent[0].text).toContain("Reference shown to the user: 123")
         expect(sent[0].text).not.toContain("pw123")
     })

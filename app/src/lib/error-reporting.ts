@@ -7,8 +7,8 @@ import { PLATFORM } from "@/lib/constants/platform"
 /**
  * Built-in error monitoring (no third-party service): server errors go to
  * System Logs (Admin → System Logs) and the first occurrence of each new
- * error in 24 hours is emailed to ERROR_ALERT_EMAIL (default: the platform
- * email). Browser-reported errors are logged only. Never throws.
+ * error in 24 hours is emailed to ERROR_ALERT_EMAIL (default:
+ * PLATFORM.errorAlertEmail, errorserp@genesoftinfotech.com). Browser-reported errors are logged only. Never throws.
  * Server-only.
  */
 
@@ -76,7 +76,7 @@ async function sendAlert(report: ErrorReport, fingerprint: string, message: stri
     const apiKey = process.env.RESEND_API_KEY
     const domain = process.env.RESEND_DOMAIN
     if (!apiKey || !domain || !canAlertNow()) return
-    const to = process.env.ERROR_ALERT_EMAIL || PLATFORM.email
+    const to = process.env.ERROR_ALERT_EMAIL || PLATFORM.errorAlertEmail
     const firstLine = firstMeaningfulLine(message).slice(0, 120)
     await new Resend(apiKey).emails.send({
         from: `${PLATFORM.productName} alerts <alerts@${domain}>`,

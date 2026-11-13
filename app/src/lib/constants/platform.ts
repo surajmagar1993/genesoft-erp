@@ -17,6 +17,8 @@ export const PLATFORM = {
     email: process.env.PLATFORM_EMAIL || "info@genesoftinfotech.com",
     welcomeEmail: "hello@genesoftinfotech.com",
     careersEmail: "careers@genesoftinfotech.com",
+    /** Where new-error alerts go (src/lib/error-reporting.ts); ERROR_ALERT_EMAIL overrides it */
+    errorAlertEmail: "errorserp@genesoftinfotech.com",
     phone: process.env.PLATFORM_PHONE || "+91 8888885285",
     /** The main number is also on WhatsApp Business */
     whatsapp: "+91 8888885285",

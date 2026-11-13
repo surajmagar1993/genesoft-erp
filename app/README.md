@@ -108,7 +108,7 @@ Create `.env.local` in `app/` (never commit it). Variables the code reads:
 | `NEXT_PUBLIC_ENABLE_PARKED_MODULES` | No | `true` brings back CRM Emails, WhatsApp, Web Forms and Bank Reconciliation. |
 | `CRON_SECRET` | Recommended | Protects the daily job at `/api/cron/workflows` (scheduled in `vercel.json`): overdue-invoice / bill-due workflow rules, due recurring invoices and IMAP inbox sync. Vercel sends it automatically; without it the job refuses to run. |
 | `MARKETING_UNSUBSCRIBE_SECRET` | Optional | Signs the unsubscribe links in marketing emails (Admin → Marketing Emails). Falls back to `ENCRYPTION_KEY`, then `CRON_SECRET`. Changing whichever one is used breaks the links in emails already sent, so set this once and keep it. |
-| `ERROR_ALERT_EMAIL` | Optional | Where new-error alerts go (default: the platform email, info@genesoftinfotech.com). Every server error is also kept in Admin → System Logs. |
+| `ERROR_ALERT_EMAIL` | Optional | Where new-error alerts go (default: errorserp@genesoftinfotech.com, `PLATFORM.errorAlertEmail`). Every server error is also kept in Admin → System Logs. |
 | `SYSTEM_LOG_RETENTION_DAYS` | Optional | How long System Logs are kept (default 30); the daily job deletes older ones. |
 | `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Optional | Platform-wide Meta webhook verify token (tenants also get their own). Only used while WhatsApp is switched back on. |
 | `ENCRYPTION_KEY` | Recommended | Encrypts stored tenant credentials (gateway keys, WhatsApp tokens, SMTP passwords). Any long random string, e.g. `openssl rand -base64 32`. Changing it makes stored secrets unreadable. |
