@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { prisma } from "@/lib/prisma"
 import { tenantTimeZone, zonedDateTime } from "@/lib/timezone"
 import { nextSequence } from "@/lib/sequence"
@@ -450,7 +451,7 @@ async function _createEmployee(data: CreateEmployeeInput) {
             designationId: data.designationId || null,
             managerId: data.managerId || null,
             basicSalary: data.basicSalary ? Number(data.basicSalary) : null,
-            currencyCode: data.currencyCode || "INR",
+            currencyCode: data.currencyCode || (await getTenantDefaults(tenantId)).currencyCode,
             address: {
                 country: data.country?.trim() || "India",
                 state: data.state?.trim() || "",

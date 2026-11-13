@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
@@ -324,7 +325,7 @@ export async function createJobOpening(input: CreateJobOpeningInput) {
             requirements: input.requirements?.trim() || null,
             salaryMin: input.salaryMin !== undefined ? input.salaryMin : null,
             salaryMax: input.salaryMax !== undefined ? input.salaryMax : null,
-            currencyCode: input.currencyCode || "INR",
+            currencyCode: input.currencyCode || (await getTenantDefaults(tenantId)).currencyCode,
             status: JobStatus.PUBLISHED,
             targetDate: input.targetDate ? new Date(input.targetDate) : null
         }
@@ -536,6 +537,7 @@ export interface HireApplicantInput {
 async function _hireApplicant(applicantId: string, employeeData: HireApplicantInput) {
     const tenantId = await getTenantManagerId(MODULE)
 
+    const businessCurrency = (await getTenantDefaults(tenantId)).currencyCode
     return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const applicant = await tx.jobApplicant.findUnique({
             where: { id: applicantId, tenantId },
@@ -574,7 +576,7 @@ async function _hireApplicant(applicantId: string, employeeData: HireApplicantIn
                 status: EmployeeStatus.ACTIVE,
                 employmentType: employeeData.employmentType || applicant.jobOpening.employmentType || EmploymentType.FULL_TIME,
                 basicSalary: employeeData.basicSalary,
-                currencyCode: employeeData.currencyCode || applicant.jobOpening.currencyCode || "INR"
+                currencyCode: employeeData.currencyCode || applicant.jobOpening.currencyCode || businessCurrency
             }
         })
 

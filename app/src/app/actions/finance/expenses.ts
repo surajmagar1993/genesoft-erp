@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { prisma } from "@/lib/prisma"
 import { nextSequence } from "@/lib/sequence"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
@@ -188,7 +189,7 @@ async function ensureDefaultAccounts(tenantId: string) {
 
     for (const acc of defaultAccounts) {
         await prisma.account.create({
-            data: acc,
+            data: { ...acc, currencyCode: taxCtx.currency },
         })
     }
 }
@@ -682,6 +683,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
         let journalEntryId: string | null = null
 
         // Interactive transaction
+        const businessCurrency = (await getTenantDefaults(tenantId)).currencyCode
         const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // If PAID or APPROVED and autoPostJournal is true, post a balanced Journal Entry
             if (
@@ -740,7 +742,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
                         status: JournalStatus.POSTED,
                         totalDebit: totalAmount,
                         totalCredit: totalAmount,
-                        currencyCode: data.currencyCode || "INR",
+                        currencyCode: data.currencyCode || businessCurrency,
                         lines: {
                             create: linesToCreate,
                         },
@@ -776,7 +778,7 @@ export async function createExpense(data: CreateExpenseInput): Promise<{
                     amount: data.amount,
                     taxAmount,
                     totalAmount,
-                    currencyCode: data.currencyCode || "INR",
+                    currencyCode: data.currencyCode || businessCurrency,
                     expenseDate,
                     paymentMethod: data.paymentMethod || PaymentMethod.BANK_TRANSFER,
                     paymentReference: data.paymentReference?.trim() || null,
@@ -989,10 +991,12 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
         const entryNumber = await nextSequence(prisma, "journalEntry", tenantId, `JE-${year}-`, 4)
         const entryDate = data.date ? new Date(data.date) : new Date()
 
+        const journalCurrency = (await getTenantDefaults(tenantId)).currencyCode
         await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             const je = await tx.journalEntry.create({
                 data: {
                     tenantId,
+                    currencyCode: journalCurrency,
                     entryNumber,
                     date: entryDate,
                     reference: data.reference?.trim() || null,

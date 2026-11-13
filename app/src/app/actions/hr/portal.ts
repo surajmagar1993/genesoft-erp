@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { prisma } from "@/lib/prisma"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { canActForAnyEmployee, assertCanActForEmployee, findOwnEmployeeId, fireLeaveRequested } from "@/lib/employee-access"
@@ -393,7 +394,7 @@ export async function getEmployeePortalData(overrideEmployeeId?: string): Promis
             designationTitle: targetEmployee.designation?.title || null,
             managerName: targetEmployee.manager?.displayName || null,
             basicSalary: targetEmployee.basicSalary ? Number(targetEmployee.basicSalary) : null,
-            currencyCode: targetEmployee.currencyCode || "INR",
+            currencyCode: targetEmployee.currencyCode || (await getTenantDefaults(tenantId)).currencyCode,
             bankDetails: targetEmployee.bankDetails,
             emergencyContact: targetEmployee.emergencyContact
         }

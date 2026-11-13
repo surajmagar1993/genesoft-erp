@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { prisma } from "@/lib/prisma"
 import { isDemoSeedEnabled } from "@/lib/demo-seed"
 import { getTenantId, getTenantManagerId } from "@/lib/get-tenant-id"
@@ -663,6 +664,7 @@ export async function createPriceList(data: CreatePriceListInput): Promise<{
             return { error: `Price list with code "${cleanCode}" already exists` }
         }
 
+        const businessCurrency = (await getTenantDefaults(tenantId)).currencyCode
         await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             if (data.isDefault) {
                 // Unmark existing default
@@ -679,7 +681,7 @@ export async function createPriceList(data: CreatePriceListInput): Promise<{
                     name: data.name.trim(),
                     description: data.description?.trim() || null,
                     type: data.type || PriceListType.SALES,
-                    currencyCode: data.currencyCode || "INR",
+                    currencyCode: data.currencyCode || businessCurrency,
                     pricingScheme: data.pricingScheme || PricingScheme.FIXED_OVERRIDE,
                     defaultDiscount: Number(data.defaultDiscount || 0),
                     targetGroup: data.targetGroup?.trim() || null,

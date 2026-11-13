@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
@@ -308,15 +309,17 @@ async function _createVendor(data: {
     const limit = await planLimitError(tenantId, "contacts")
     if (limit) return { success: false as const, error: limit }
 
+    const defaults = await getTenantDefaults(tenantId)
     const newVendor = await prisma.contact.create({
         data: {
             tenantId,
+            currencyCode: defaults.currencyCode,
             displayName: cleanDisplayName,
             companyName: data.companyName?.trim() || null,
             email: data.email?.trim() || null,
             phone: data.phone?.trim() || null,
             gstin: data.gstin?.trim()?.toUpperCase() || null,
-            countryCode: data.countryCode || "IN",
+            countryCode: data.countryCode || defaults.countryCode,
             customerGroup: "vendor",
             tags: ["vendor", "supplier"],
             billingAddress: {
@@ -390,7 +393,7 @@ async function _createPurchaseOrder(data: CreatePurchaseOrderInput) {
             taxAmount: totalTax,
             discount: 0,
             total: grandTotal,
-            currencyCode: data.currencyCode || "INR",
+            currencyCode: data.currencyCode || (await getTenantDefaults(tenantId)).currencyCode,
             notes: data.notes?.trim() || null,
             terms: data.terms?.trim() || "Payment Net 30 days upon delivery",
             items: {

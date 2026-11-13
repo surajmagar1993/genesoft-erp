@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { actionErrorMessage } from "@/lib/safe-action"
 import type { Prisma } from "@prisma/client"
 import { createClient } from "@/lib/supabase/server"
@@ -162,8 +163,9 @@ async function linkContact(tenantId: string, name: string, email: string, phone:
     if (err instanceof PlanLimitError) return null
     throw err
   }
+  const { countryCode, currencyCode } = await getTenantDefaults(tenantId)
   const created = await prisma.contact.create({
-    data: { tenantId, displayName: name || email || phone, email: email || null, phone: phone || null, type: "INDIVIDUAL" },
+    data: { tenantId, displayName: name || email || phone, email: email || null, phone: phone || null, type: "INDIVIDUAL", countryCode, currencyCode },
     select: { id: true },
   })
   return created.id
@@ -265,6 +267,7 @@ export async function convertLeadToDeal(leadId: string) {
 async function _convertLeadToDeal(leadId: string) {
   const tenantId = await getTenantWriterId(MODULE)
 
+  const { countryCode, currencyCode } = await getTenantDefaults(tenantId)
   return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // 1. Fetch lead
     const lead = await tx.lead.findUnique({
@@ -282,6 +285,8 @@ async function _convertLeadToDeal(leadId: string) {
       const newContact = await tx.contact.create({
         data: {
           tenantId,
+          countryCode,
+          currencyCode,
           displayName: lead.contactName || lead.title,
           type: "INDIVIDUAL",
         }

@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { actionErrorMessage } from "@/lib/safe-action"
 import { planLimitError } from "@/lib/plan-limits"
 import type { Prisma } from "@prisma/client"
@@ -840,7 +841,7 @@ export async function createProject(input: CreateProjectInput): Promise<{ succes
                 startDate: input.startDate ? new Date(input.startDate) : null,
                 targetEndDate: input.targetEndDate ? new Date(input.targetEndDate) : null,
                 budget: input.budget !== undefined ? input.budget : null,
-                currencyCode: input.currencyCode || "INR",
+                currencyCode: input.currencyCode || (await getTenantDefaults(tenantId)).currencyCode,
                 clientId: input.clientId || null,
                 managerId: input.managerId || null,
             }

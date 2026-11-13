@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { actionErrorMessage } from "@/lib/safe-action"
 import { pick, toRow } from "@/lib/pg-row"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
@@ -124,8 +125,9 @@ async function resolveDealContact(tenantId: string, name: string, company: strin
     return existing.id
   }
   await assertWithinLimit(tenantId, "contacts")
+  const { countryCode, currencyCode } = await getTenantDefaults(tenantId)
   const created = await prisma.contact.create({
-    data: { tenantId, displayName, companyName: company || null, type: company && !name ? "COMPANY" : "INDIVIDUAL" },
+    data: { tenantId, displayName, companyName: company || null, type: company && !name ? "COMPANY" : "INDIVIDUAL", countryCode, currencyCode },
     select: { id: true },
   })
   return created.id

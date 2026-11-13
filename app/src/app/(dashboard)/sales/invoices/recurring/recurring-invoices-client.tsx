@@ -92,7 +92,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
             {
                 productId: "",
                 description: "",
-                hsnSacCode: "998313",
+                hsnSacCode: "",
                 quantity: 1,
                 unitPrice: 0,
                 taxRate: 18,
@@ -183,7 +183,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                 {
                     productId: "",
                     description: "",
-                    hsnSacCode: "998313",
+                    hsnSacCode: "",
                     quantity: 1,
                     unitPrice: 0,
                     taxRate: 18,
@@ -414,7 +414,7 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
                                     {
                                         productId: "",
                                         description: "",
-                                        hsnSacCode: "998313",
+                                        hsnSacCode: "",
                                         quantity: 1,
                                         unitPrice: 0,
                                         taxRate: 18,

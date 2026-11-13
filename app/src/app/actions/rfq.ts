@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
@@ -386,6 +387,7 @@ async function _createRfq(input: CreateRfqInput) {
     const year = new Date().getFullYear()
     const rfqNumber = await nextSequence(prisma, "rfq", tenantId, `RFQ-${year}-`, 4)
 
+    const rfqCurrency = (await getTenantDefaults(tenantId)).currencyCode
     const rfq = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         const createdRfq = await tx.requestForQuotation.create({
             data: {
@@ -419,6 +421,7 @@ async function _createRfq(input: CreateRfqInput) {
                 await tx.rfqVendorQuote.create({
                     data: {
                         tenantId,
+                        currencyCode: rfqCurrency,
                         rfqId: createdRfq.id,
                         vendorId,
                         status: RfqVendorStatus.INVITED,
@@ -484,6 +487,7 @@ async function _inviteVendorsToRfq(rfqId: string, vendorIds: string[]) {
             },
             create: {
                 tenantId,
+                currencyCode: (await getTenantDefaults(tenantId)).currencyCode,
                 rfqId,
                 vendorId,
                 status: RfqVendorStatus.INVITED,
@@ -526,6 +530,7 @@ async function _recordVendorQuote(input: RecordVendorQuoteInput) {
     let calculatedSubtotal = 0
     let calculatedTax = 0
 
+    const businessCurrency = (await getTenantDefaults(tenantId)).currencyCode
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // Delete previous items for this quote and reinsert fresh
         await tx.rfqVendorQuoteItem.deleteMany({
@@ -570,7 +575,7 @@ async function _recordVendorQuote(input: RecordVendorQuoteInput) {
                 quoteReference: input.quoteReference?.trim() || null,
                 quoteDate: input.quoteDate ? new Date(input.quoteDate) : new Date(),
                 validUntil: input.validUntil ? new Date(input.validUntil) : null,
-                currencyCode: input.currencyCode || "INR",
+                currencyCode: input.currencyCode || businessCurrency,
                 subtotal: calculatedSubtotal,
                 taxAmount: calculatedTax,
                 totalAmount: calculatedTotal,
@@ -620,6 +625,7 @@ async function _awardVendorQuote(rfqId: string, quoteId: string) {
     const year = new Date().getFullYear()
     const orderNumber = await nextSequence(prisma, "purchaseOrder", tenantId, `PO-${year}-`, 4)
 
+    const businessCurrency = (await getTenantDefaults(tenantId)).currencyCode
     const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
         // 1. Mark winning quote as ACCEPTED, others as REJECTED
         for (const v of rfq.vendors) {
@@ -678,7 +684,7 @@ async function _awardVendorQuote(rfqId: string, quoteId: string) {
                 taxAmount: poTax,
                 discount: 0,
                 total: poTotal,
-                currencyCode: winningQuote.currencyCode || "INR",
+                currencyCode: winningQuote.currencyCode || businessCurrency,
                 notes: `Awarded from ${rfq.rfqNumber}: ${rfq.title}. ${winningQuote.notes ? "Vendor notes: " + winningQuote.notes : ""}`,
                 terms: rfq.terms || winningQuote.vendor.notes || null,
                 items: {

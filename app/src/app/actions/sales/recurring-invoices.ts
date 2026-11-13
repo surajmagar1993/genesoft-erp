@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
 import { prisma } from "@/lib/prisma"
@@ -309,7 +310,7 @@ export async function getRecurringInvoicesOverview(
     // 3. Fetch products
     const rawProducts = await prisma.product.findMany({
         where: { tenantId, isActive: true },
-        select: { id: true, name: true, sku: true, unitPrice: true },
+        select: { id: true, name: true, sku: true, unitPrice: true, hsnSacCode: true },
         orderBy: { name: "asc" },
     })
 
@@ -318,7 +319,7 @@ export async function getRecurringInvoicesOverview(
         name: p.name,
         sku: p.sku,
         unitPrice: Number(p.unitPrice),
-        hsnSacCode: "998313",
+        hsnSacCode: p.hsnSacCode || "",
     }))
 
     // 4. Fetch recent executions across all profiles
@@ -438,7 +439,7 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
                 tenantId,
                 productId: item.productId || null,
                 description: item.description.trim(),
-                hsnSacCode: item.hsnSacCode?.trim() || "998313",
+                hsnSacCode: item.hsnSacCode?.trim() || null,
                 quantity: qty,
                 unitPrice,
                 cgstRate,
@@ -476,7 +477,7 @@ export async function createRecurringProfile(data: CreateRecurringProfileInput):
                 subtotal,
                 taxAmount,
                 totalAmount,
-                currencyCode: data.currencyCode || "INR",
+                currencyCode: data.currencyCode || (await getTenantDefaults(tenantId)).currencyCode,
                 notes: data.notes?.trim() || null,
                 terms: data.terms?.trim() || null,
                 items: {

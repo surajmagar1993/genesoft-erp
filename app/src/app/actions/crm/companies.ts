@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
@@ -90,7 +91,7 @@ export async function createCompany(
         city: formData.city || null,
         state: formData.state || null,
         country: formData.country || null,
-        countryCode: formData.country_code || "IN",
+        countryCode: formData.country_code || (await getTenantDefaults(tenantId)).countryCode,
         gstin: formData.gstin || null,
         employeeCount: num(formData.employee_count) ?? null,
         annualRevenue: num(formData.annual_revenue) ?? null,

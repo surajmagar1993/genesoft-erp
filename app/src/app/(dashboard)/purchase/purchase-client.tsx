@@ -120,7 +120,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
     const [vendorCity, setVendorCity] = useState("")
     const [vendorState, setVendorState] = useState("")
     const [vendorCountry, setVendorCountry] = useState("India")
-    const [vendorCountryCode, setVendorCountryCode] = useState("IN")
+    const [vendorCountryCode, setVendorCountryCode] = useState("")
     const [isSubmittingVendor, setIsSubmittingVendor] = useState(false)
 
     // Form state: Create Purchase Order
@@ -329,7 +329,7 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                 gstin: vendorGstin.trim() || undefined,
                 city: vendorCity.trim() || undefined,
                 state: vendorState.trim() || undefined,
-                countryCode: vendorCountryCode || "IN",
+                countryCode: vendorCountryCode || undefined,
             }))
 
             if (res.success) {

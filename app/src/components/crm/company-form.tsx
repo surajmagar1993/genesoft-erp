@@ -80,7 +80,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
             city: form.city || undefined,
             state: form.state || undefined,
             country: form.country || undefined,
-            country_code: form.countryCode || "IN",
+            country_code: form.countryCode || undefined,
             gstin: form.gstin || undefined,
             employee_count: form.employeeCount ? Number(form.employeeCount) : undefined,
             annual_revenue: form.annualRevenue ? Number(form.annualRevenue) : undefined,

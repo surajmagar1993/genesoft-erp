@@ -1,4 +1,6 @@
 import { reportCaught } from "@/lib/error-reporting"
+import { getStateNameFromCode } from "@/lib/gst-returns-engine"
+import { roundMoney } from "@/lib/gst-engine"
 import type { Prisma } from "@prisma/client"
 import { planLimitError } from "@/lib/plan-limits"
 import { prisma } from "@/lib/prisma"
@@ -7,7 +9,7 @@ import { postInvoiceStock } from "@/lib/stock"
 import { recordContactTransaction } from "@/lib/contact-ledger"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
-import { getTenantTaxContext, invoiceItemTaxColumns } from "@/lib/tenant-tax"
+import { getTenantTaxContext, invoiceItemTaxColumns, supplyTypeFor } from "@/lib/tenant-tax"
 import {
     RecurringFrequency,
     RecurringStatus,
@@ -98,6 +100,27 @@ if (!profile) return { error: "Recurring profile not found" }
     if (limit) return { error: limit }
 
     const taxCtx = await getTenantTaxContext(tenantId)
+    // Worked out now, the same way as an invoice made by hand: the customer's state decides
+    // CGST+SGST or IGST (India), each line's discount comes off before tax, and the header
+    // totals are the sum of the lines (the profile's stored totals are only an estimate).
+    const billing = (profile.contact.billingAddress || {}) as { state?: string }
+    const gstinState = /^\d{2}/.test(profile.contact.gstin || "") ? getStateNameFromCode(profile.contact.gstin!.slice(0, 2)) : ""
+    const placeOfSupply = String(billing.state || gstinState || "")
+    const supplyType = supplyTypeFor(taxCtx, undefined, placeOfSupply)
+    const lines = profile.items.map((item) => {
+        const qty = Number(item.quantity)
+        const unitPrice = Number(item.unitPrice)
+        const gross = qty * unitPrice
+        const discount = Math.min(Math.max(Number(item.discount || 0), 0), gross)
+        // The profile keeps the line's total rate (stored as CGST+SGST or IGST)
+        const rate = Number(item.cgstRate || 0) + Number(item.sgstRate || 0) + Number(item.igstRate || 0)
+        const tax = invoiceItemTaxColumns(qty, unitPrice, rate, supplyType, gross > 0 ? discount / gross : 0)
+        return { item, gross, discount, tax }
+    })
+    const subtotal = roundMoney(lines.reduce((s, l) => s + l.gross, 0))
+    const discountTotal = roundMoney(lines.reduce((s, l) => s + l.discount, 0))
+    const taxTotal = roundMoney(lines.reduce((s, l) => s + l.tax.cgstAmount + l.tax.sgstAmount + l.tax.igstAmount + l.tax.vatAmount, 0))
+    const total = roundMoney(subtotal - discountTotal + taxTotal)
     let result
     try {
     result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -112,29 +135,26 @@ if (!profile) return { error: "Recurring profile not found" }
                 invoiceDate: now,
                 dueDate,
                 billTo,
-                subtotal: profile.subtotal,
-                taxAmount: profile.taxAmount,
-                total: profile.totalAmount,
+                subtotal,
+                discount: discountTotal,
+                taxAmount: taxTotal,
+                total,
+                placeOfSupply: placeOfSupply || null,
                 currencyCode: profile.currencyCode,
                 paymentTerms: profile.paymentTerms || "NET_30",
                 notes: profile.notes || `Generated from recurring subscription schedule: ${profile.title}`,
                 terms: profile.terms,
                 recurringProfileId: profile.id,
                 items: {
-                    create: profile.items.map((item) => {
-                        // Keep the profile's total rate; split it for the business's country now
-                        const rate = Number(item.cgstRate || 0) + Number(item.sgstRate || 0) + Number(item.igstRate || 0)
-                        const supplyType = taxCtx.regime.mode === "SINGLE" ? "single" : Number(item.igstRate || 0) > 0 ? "inter" : "intra"
-                        return {
-                            productId: item.productId,
-                            description: item.description,
-                            hsnSacCode: item.hsnSacCode,
-                            quantity: item.quantity,
-                            unitPrice: item.unitPrice,
-                            ...invoiceItemTaxColumns(Number(item.quantity), Number(item.unitPrice), rate, supplyType),
-                            discount: item.discount,
-                        }
-                    }),
+                    create: lines.map(({ item, tax }) => ({
+                        productId: item.productId,
+                        description: item.description,
+                        hsnSacCode: item.hsnSacCode,
+                        quantity: item.quantity,
+                        unitPrice: item.unitPrice,
+                        ...tax,
+                        discount: item.discount,
+                    })),
                 },
             },
         })
@@ -172,7 +192,7 @@ if (!profile) return { error: "Recurring profile not found" }
                 invoiceId: invoice.id,
                 executionDate: now,
                 status: RecurringExecutionStatus.SUCCESS,
-                amount: profile.totalAmount,
+                amount: total,
             },
         })
 
