@@ -2,7 +2,7 @@
 
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { localeForCurrency } from "@/lib/utils"
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -84,6 +84,11 @@ export default function AccountsClient({ initialAccounts }: Props) {
   const baseCurrency = useTaxRegime().regime?.currency || initialAccounts.find((a) => a.currency_code)?.currency_code || "INR"
   const router = useRouter()
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts)
+  // Pick up fresh server data after router.refresh() (seed / import)
+  useEffect(() => {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing fresh server props after router.refresh()
+      setAccounts(initialAccounts)
+  }, [initialAccounts])
   const [searchQuery, setSearchQuery] = useState("")
   const [filterType, setFilterType] = useState<"all" | AccountType>("all")
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())

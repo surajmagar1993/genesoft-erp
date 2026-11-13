@@ -77,7 +77,8 @@ export function RentalClient({ initialData }: RentalClientProps) {
     const { formatMoney } = useTaxRegime()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [data, ] = useState<RentalOverviewData>(initialData)
+    // Straight from the server, so router.refresh() after a change shows it
+    const data: RentalOverviewData = initialData
 
     // Active tab
     const [activeTab, setActiveTab] = useState("agreements")
@@ -361,7 +362,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
 
         startTransition(async () => {
             try {
-                const invoice = await convertAgreementToInvoice(ag.id)
+                const invoice = unwrap(await convertAgreementToInvoice(ag.id))
                 toast.success(`Generated official Sales Invoice #${invoice.invoiceNumber}!`)
                 router.refresh()
             } catch (err: unknown) {

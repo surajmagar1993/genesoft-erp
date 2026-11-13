@@ -535,11 +535,11 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
 
         setIsSubmittingBill(true)
         try {
-            const res = await convertPOToBill({
+            const res = unwrap(await convertPOToBill({
                 purchaseOrderId: selectedPO.id,
                 dueDate: billDueDate || undefined,
                 billNumber: billNumberInput.trim() || undefined,
-            })
+            }))
 
             if (res.success) {
                 toast.success(`Vendor bill ${res.billNumber} created in Accounts Payable!`)

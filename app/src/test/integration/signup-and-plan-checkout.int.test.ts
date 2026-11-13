@@ -1,3 +1,4 @@
+import { unwrap } from "@/lib/action-result"
 import crypto from "node:crypto"
 import { describe, expect, it } from "vitest"
 import { prisma } from "@/lib/prisma"
@@ -77,7 +78,7 @@ describe("plan checkout (Razorpay, test mode)", () => {
         })
         actAs(user)
 
-        const checkout = await createPlanCheckout("PRO", "MONTHLY")
+        const checkout = unwrap(await createPlanCheckout("PRO", "MONTHLY"))
         expect(checkout.gateway).toBe("RAZORPAY")
         if (checkout.gateway !== "RAZORPAY") return
         expect(checkout.currency).toBe("INR")
@@ -87,11 +88,11 @@ describe("plan checkout (Razorpay, test mode)", () => {
         expect((await prisma.tenant.findUniqueOrThrow({ where: { id: tenant.id } })).plan).toBe("FREE")
 
         const paymentId = "pay_test_1"
-        await expect(verifyRazorpayPayment(checkout.orderId, paymentId, "forged")).rejects.toThrow(/signature/)
-        await expect(verifyRazorpayPayment(checkout.orderId, paymentId, sign(checkout.orderId, paymentId))).rejects.toThrow(/not paid/)
+        await expect(verifyRazorpayPayment(checkout.orderId, paymentId, "forged").then(unwrap)).rejects.toThrow(/signature/)
+        await expect(verifyRazorpayPayment(checkout.orderId, paymentId, sign(checkout.orderId, paymentId)).then(unwrap)).rejects.toThrow(/not paid/)
 
         markOrderPaid(checkout.orderId)
-        const ok = await verifyRazorpayPayment(checkout.orderId, paymentId, sign(checkout.orderId, paymentId))
+        const ok = unwrap(await verifyRazorpayPayment(checkout.orderId, paymentId, sign(checkout.orderId, paymentId)))
         expect(ok.plan).toBe("PRO")
 
         const after = await prisma.tenant.findUniqueOrThrow({ where: { id: tenant.id } })
@@ -109,17 +110,17 @@ describe("plan checkout (Razorpay, test mode)", () => {
     it("another business can't claim the order; non-admins can't start checkout; no free upgrades", async () => {
         const a = await createTestTenant({ plan: "FREE" })
         actAs(a.user)
-        const checkout = await createPlanCheckout("BASIC", "MONTHLY")
+        const checkout = unwrap(await createPlanCheckout("BASIC", "MONTHLY"))
         if (checkout.gateway !== "RAZORPAY") throw new Error("expected Razorpay")
         markOrderPaid(checkout.orderId)
 
         const b = await createTestTenant({ plan: "FREE" })
         actAs(b.user)
-        await expect(verifyRazorpayPayment(checkout.orderId, "pay_x", sign(checkout.orderId, "pay_x"))).rejects.toThrow(/does not belong/)
+        await expect(verifyRazorpayPayment(checkout.orderId, "pay_x", sign(checkout.orderId, "pay_x")).then(unwrap)).rejects.toThrow(/does not belong/)
         expect((await prisma.tenant.findUniqueOrThrow({ where: { id: b.tenant.id } })).plan).toBe("FREE")
 
         actAs(await addUser(b.tenant.id, "MANAGER"))
-        await expect(createPlanCheckout("PRO", "MONTHLY")).rejects.toThrow()
+        await expect(createPlanCheckout("PRO", "MONTHLY").then(unwrap)).rejects.toThrow()
 
         actAs(b.user)
         const res = await executePlanChange({ targetPlan: "PRO", billingCycle: "MONTHLY" } as never).catch((e: Error) => e)

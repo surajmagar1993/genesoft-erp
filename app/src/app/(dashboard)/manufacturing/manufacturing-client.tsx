@@ -247,14 +247,14 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
         e.preventDefault()
         startTransition(async () => {
             try {
-                const res = await recordQualityInspection(qcWorkOrderId, {
+                const res = unwrap(await recordQualityInspection(qcWorkOrderId, {
                     inspectedQuantity: Number(qcInspectedQty),
                     passedQuantity: Number(qcPassedQty),
                     failedQuantity: Number(qcFailedQty),
                     defectReason: qcDefectReason || undefined,
                     inspectorName: qcInspector || undefined,
                     notes: qcNotes || undefined
-                })
+                }))
 
                 if (res.success) {
                     toast.success(`Inspection ${res.inspectionNumber} recorded: Verdict ${res.status}`)

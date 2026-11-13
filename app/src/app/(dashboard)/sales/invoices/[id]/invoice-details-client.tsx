@@ -64,7 +64,8 @@ interface Props {
 
 export default function InvoiceDetailsClient({ invoice, payments: initialPayments }: Props) {
     const router = useRouter()
-    const [payments, ] = useState<PaymentDB[]>(initialPayments)
+    // Straight from the server: router.refresh() after a payment brings the new list
+    const payments = initialPayments
     const [isPending, startTransition] = useTransition()
 
     // Invoice presentation template state
@@ -146,6 +147,12 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
         window.open(link, "_blank")
     }
 
+    // Each time the dialog opens it proposes what is still due today
+    const openPaymentDialog = () => {
+        setPaymentFormsState((s: CreatePaymentPayload) => ({ ...s, amount: balanceDue, payment_date: new Date().toISOString().split("T")[0] }))
+        setOpenPaymentModal(true)
+    }
+
     const handleRecordPayment = async (e: React.FormEvent) => {
         e.preventDefault()
         startTransition(async () => {
@@ -193,7 +200,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
         startTransition(async () => {
             const res = await convertProformaToInvoice(invoice.id)
             if (res.success) {
-                toast.error(`Successfully converted to Tax Invoice: ${res.newInvoiceNumber}`)
+                toast.success(`Converted to tax invoice ${res.newInvoiceNumber}`)
                 router.refresh()
             } else {
                 toast.error(`Conversion failed: ${res.error}`)
@@ -298,7 +305,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                     <Button 
                         size="sm" 
                         disabled={balanceDue <= 0 || isPending}
-                        onClick={() => setOpenPaymentModal(true)}
+                        onClick={openPaymentDialog}
                     >
                         <CreditCard className="mr-2 h-4 w-4" />
                         Record Payment
@@ -494,7 +501,7 @@ export default function InvoiceDetailsClient({ invoice, payments: initialPayment
                                     <Button 
                                         variant="link" 
                                         className="mt-2" 
-                                        onClick={() => setOpenPaymentModal(true)}
+                                        onClick={openPaymentDialog}
                                         disabled={balanceDue <= 0}
                                     >
                                         Record the first payment

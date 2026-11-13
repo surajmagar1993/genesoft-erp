@@ -115,7 +115,7 @@ describe("Admin → Pricing & Plans", () => {
             create: { regionCode: "IN", tier: "BASIC", amount: 499, currency: "INR", gateway: "RAZORPAY", isActive: false },
         })
         actAs(user)
-        await expect(createPlanCheckout("BASIC", "MONTHLY")).rejects.toThrow(/isn't available/)
+        await expect(createPlanCheckout("BASIC", "MONTHLY").then(unwrap)).rejects.toThrow(/isn't available/)
         await prisma.pricingPlan.deleteMany({ where: { regionCode: "IN", tier: "BASIC" } })
     })
 })

@@ -74,7 +74,8 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
     const { formatMoney } = useTaxRegime()
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [data, ] = useState<CreditNotesOverviewData>(initialData)
+    // Straight from the server, so router.refresh() after a change shows it
+    const data: CreditNotesOverviewData = initialData
 
     // Active tab
     const [activeTab, setActiveTab] = useState("all")

@@ -91,7 +91,8 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     const [billAmount, setBillAmount] = useState("")
     const [billing, setBilling] = useState(false)
     const [isPending, startTransition] = useTransition()
-    const [data, ] = useState<ProjectsOverviewData>(initialData)
+    // Straight from the server, so router.refresh() after a change shows it
+    const data: ProjectsOverviewData = initialData
 
     // Active project filter ("all" or projectId)
     const [selectedProjectId, setSelectedProjectId] = useState<string>(

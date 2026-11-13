@@ -26,12 +26,12 @@ describe("H1 purchase order → bill", () => {
                 items: { create: [{ description: "Parts", quantity: 10, unitPrice: 100, taxPercent: 18, taxAmount: 180, lineTotal: 1180 }] },
             } as never,
         })
-        const res = await convertPOToBill(po.id)
+        const res = unwrap(await convertPOToBill(po.id))
         expect(res.success).toBe(true)
         expect(await prisma.billItem.count({ where: { billId: res.billId } })).toBe(1)
         expect(Number((await prisma.contact.findUniqueOrThrow({ where: { id: vendor.id } })).balance)).toBe(-1180)
         expect(await prisma.journalEntry.count({ where: { tenantId: tenant.id, sourceId: res.billId, status: "POSTED" } })).toBe(1)
-        await expect(convertPOToBill(po.id)).rejects.toThrow(/already linked/)
+        await expect(convertPOToBill(po.id).then(unwrap)).rejects.toThrow(/already linked/)
     })
 })
 

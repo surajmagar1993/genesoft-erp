@@ -576,7 +576,7 @@ async function _receiveGoods(data: {
 /**
  * Converts an approved or received Purchase Order into an Accounts Payable vendor Bill.
  */
-export async function convertPOToBill(data: string | {
+async function _convertPOToBill(data: string | {
     purchaseOrderId: string
     dueDate?: string
     billNumber?: string
@@ -674,4 +674,9 @@ export async function updatePurchaseOrderStatus(...args: Parameters<typeof _upda
 }
 export async function receiveGoods(...args: Parameters<typeof _receiveGoods>) {
     return safeAction(() => _receiveGoods(...args))
+}
+
+// Return ActionResult so the screen can show the real message (Next.js hides thrown ones)
+export async function convertPOToBill(...args: Parameters<typeof _convertPOToBill>) {
+    return safeAction(() => _convertPOToBill(...args))
 }

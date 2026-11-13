@@ -71,7 +71,8 @@ export default function BankReconciliationClient({ initialData }: BankReconcilia
     const [isPending, startTransition] = useTransition()
 
     // State
-    const [data, ] = useState<BankReconciliationOverview>(initialData)
+    // Straight from the server, so router.refresh() after a change shows it
+    const data: BankReconciliationOverview = initialData
     const [selectedAccountId, setSelectedAccountId] = useState<string>(
         initialData.selectedAccount?.id || ""
     )

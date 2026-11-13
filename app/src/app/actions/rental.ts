@@ -1049,7 +1049,7 @@ async function _processRentalReturn(input: ProcessRentalReturnInput) {
 /**
  * Convert a rental agreement to an official Sales Invoice in `/sales/invoices`.
  */
-export async function convertAgreementToInvoice(agreementId: string) {
+async function _convertAgreementToInvoice(agreementId: string) {
     const tenantId = await getTenantWriterId(MODULE)
     await assertPlanFeature(tenantId, "rentals")
     if (!tenantId) throw new Error("Unauthorized tenant context")
@@ -1172,4 +1172,9 @@ export async function updateRentalAgreementStatus(...args: Parameters<typeof _up
 }
 export async function processRentalReturn(...args: Parameters<typeof _processRentalReturn>) {
     return safeAction(() => _processRentalReturn(...args))
+}
+
+// Return ActionResult so the screen can show the real message (Next.js hides thrown ones)
+export async function convertAgreementToInvoice(...args: Parameters<typeof _convertAgreementToInvoice>) {
+    return safeAction(() => _convertAgreementToInvoice(...args))
 }

@@ -1,4 +1,5 @@
 "use client"
+import { unwrap } from "@/lib/action-result"
 import { PLATFORM } from "@/lib/constants/platform"
 
 import React, { useState, useMemo } from "react"
@@ -181,7 +182,7 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
 
     // Checkout: Razorpay opens its payment window, then the server verifies the signature
     const payForPlanChange = async (plan: PlanTier) => {
-        const checkout = await createPlanCheckout(plan, billingCycle)
+        const checkout = unwrap(await createPlanCheckout(plan, billingCycle))
         if (!window.Razorpay) throw new Error("Payment window failed to load. Refresh the page and try again.")
 
         await new Promise<void>((resolve, reject) => {
@@ -195,11 +196,11 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                 prefill: { email: settings?.email || undefined },
                 handler: async (response: RazorpayResponse) => {
                     try {
-                        const res = await verifyRazorpayPayment(
+                        const res = unwrap(await verifyRazorpayPayment(
                             response.razorpay_order_id,
                             response.razorpay_payment_id,
                             response.razorpay_signature
-                        )
+                        ))
                         if (res.invoice) setInvoices((prev) => [res.invoice!, ...prev])
                         setScheduledDowngrade(null)
                         setIsChangeModalOpen(false)

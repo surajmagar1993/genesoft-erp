@@ -1,7 +1,7 @@
 "use client"
 
 import { confirmAction } from "@/components/confirm-dialog"
-import { useState, useTransition, useRef } from "react"
+import { useState, useTransition, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Papa from "papaparse"
 import { Search, Plus, Pencil, Trash2, Package, Wrench, CheckCircle2, AlertCircle, Loader2, Download, Upload } from "lucide-react"
@@ -31,6 +31,11 @@ interface ProductsClientProps {
 export function ProductsClient({ initialProducts }: ProductsClientProps) {
     const router = useRouter()
     const [products, setProducts] = useState<ProductDB[]>(initialProducts)
+    // Pick up fresh server data after router.refresh() (seed / import)
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing fresh server props after router.refresh()
+        setProducts(initialProducts)
+    }, [initialProducts])
     const [searchQuery, setSearchQuery] = useState("")
     const [filterType, setFilterType] = useState<"all" | "PRODUCT" | "SERVICE">("all")
     const [isDeleting, setIsDeleting] = useState<string | null>(null)

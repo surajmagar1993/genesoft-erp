@@ -684,7 +684,7 @@ async function _updateWorkOrderStatus(
 /**
  * Record a Quality Inspection (QC)
  */
-export async function recordQualityInspection(workOrderId: string, input: {
+async function _recordQualityInspection(workOrderId: string, input: {
     inspectedQuantity: number
     passedQuantity: number
     failedQuantity: number
@@ -738,4 +738,9 @@ export async function createWorkOrder(...args: Parameters<typeof _createWorkOrde
 }
 export async function updateWorkOrderStatus(...args: Parameters<typeof _updateWorkOrderStatus>) {
     return safeAction(() => _updateWorkOrderStatus(...args))
+}
+
+// Return ActionResult so the screen can show the real message (Next.js hides thrown ones)
+export async function recordQualityInspection(...args: Parameters<typeof _recordQualityInspection>) {
+    return safeAction(() => _recordQualityInspection(...args))
 }

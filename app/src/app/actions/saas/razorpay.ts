@@ -1,5 +1,6 @@
 "use server"
 
+import { safeAction } from "../../../lib/safe-action"
 import { razorpay } from "../../../lib/razorpay"
 import { getTenantAdminId, getTenantId } from "../../../lib/get-tenant-id"
 import type { BillingCycle, PlanTier } from "../../../lib/saas-subscription-engine"
@@ -18,7 +19,7 @@ export type PlanCheckout = { gateway: "RAZORPAY"; keyId: string; orderId: string
  * the live price (Admin → Pricing), in the business's own currency, paid
  * through Razorpay (order pinned to this tenant, plan and cycle). The plan only changes once the gateway confirms payment.
  */
-export async function createPlanCheckout(plan: PlanTier, cycle: BillingCycle = "MONTHLY"): Promise<PlanCheckout> {
+async function _createPlanCheckout(plan: PlanTier, cycle: BillingCycle = "MONTHLY"): Promise<PlanCheckout> {
   const tenantId = await getTenantAdminId()
   if (!PAID_PLANS.includes(plan)) throw new Error("Invalid plan")
 
@@ -57,7 +58,7 @@ export async function createPlanCheckout(plan: PlanTier, cycle: BillingCycle = "
  * Verifies a checkout signature and applies the plan recorded on the order itself.
  * Never trusts a client-supplied tenant or plan.
  */
-export async function verifyRazorpayPayment(orderId: string, paymentId: string, signature: string) {
+async function _verifyRazorpayPayment(orderId: string, paymentId: string, signature: string) {
   const tenantId = await getTenantId()
 
   const secret = process.env.RAZORPAY_KEY_SECRET
@@ -83,4 +84,13 @@ export async function verifyRazorpayPayment(orderId: string, paymentId: string, 
 
   revalidatePath("/settings")
   return { success: true, plan: notes.plan, invoice: result.invoice ?? null }
+}
+
+// Next.js hides a thrown message in production; these return it (safeAction) so the
+// screen can say why a checkout or payment check failed. The client calls unwrap().
+export async function createPlanCheckout(...args: Parameters<typeof _createPlanCheckout>) {
+  return safeAction(() => _createPlanCheckout(...args))
+}
+export async function verifyRazorpayPayment(...args: Parameters<typeof _verifyRazorpayPayment>) {
+  return safeAction(() => _verifyRazorpayPayment(...args))
 }

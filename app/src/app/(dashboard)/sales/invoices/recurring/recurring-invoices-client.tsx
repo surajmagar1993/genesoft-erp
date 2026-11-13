@@ -62,7 +62,8 @@ export default function RecurringInvoicesClient({ initialData }: RecurringInvoic
     const [isPending, startTransition] = useTransition()
 
     // State
-    const [data, ] = useState<RecurringInvoicesOverview>(initialData)
+    // Straight from the server, so router.refresh() after a change shows it
+    const data: RecurringInvoicesOverview = initialData
     const [activeTab, setActiveTab] = useState("profiles")
     const [statusFilter, setStatusFilter] = useState<string>("ALL")
     const [searchQuery, setSearchQuery] = useState("")
