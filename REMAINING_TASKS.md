@@ -187,6 +187,9 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 
 **Country tax check 2026-11-13** (`countries-tax.int.test.ts`: IN intra/inter, AE, SA, GB, US, AU, Other): fixed — Tax Summary showed taxable sales before the discount; quotes and orders took the discount off after tax (an invoice made from them came to a different total); half-cent tax rounded down (`toFixed`), e.g. US 8.875%; a business with no country was treated as India; an invalid credit note reason gave a database error.
 
+**Project-wide bug hunt 2026-11-13** (production-audit, click-path-audit, code-review on src/lib, browser QA of every app page, silent-failure and currency scans). Fixed: recurring invoices (always CGST+SGST, line discounts dropped, made-up HSN 998313, INR profiles); order → invoice taxed before the discount; ~25 creates fell back to IN/INR; six screens kept stale data after saving (invoice payments, projects, recurring, rentals, credit notes, accounts/products); thrown messages hidden in production (plan checkout, rental/PO conversions, QC); ledger side failures only in the console; workflow simulator claimed to send; dates a day early in US time; large-amount rounding. Browser QA: 62 pages, no server errors, no client crashes.
+- [ ] Left: quotes/orders round Indian tax per line rather than per CGST/SGST half (≤ 1 paisa per line).
+
 **Still open from the review:**
 - [x] `app/review_indexes_migration.sql` run on the live database 2026-11-13 (17 indexes, all valid).
 - [ ] Creating or editing an invoice still runs as separate steps (document, customer balance, ledger, stock); failures are reported to System Logs and "Rebuild ledger" repairs the ledger. Making it one transaction means ledger/stock code must accept a transaction (larger refactor).
