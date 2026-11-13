@@ -133,7 +133,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           <Link href="/refund-policy" target="_blank" className="underline hover:text-foreground">Refund Policy</Link>.
         </p>
 
-        <Turnstile />
+        <Turnstile action="signup" />
 
         <SubmitButton className="w-full h-10 font-medium" loadingText="Creating account...">
           <UserPlus className="mr-2 h-4 w-4" />

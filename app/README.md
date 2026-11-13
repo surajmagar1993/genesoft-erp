@@ -102,7 +102,8 @@ Create `.env.local` in `app/` (never commit it). Variables the code reads:
 | `RESEND_API_KEY`, `RESEND_DOMAIN` | For email | Transactional email; sender domain must be verified in Resend. |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | For SaaS billing | Plan checkout and the `/api/webhooks/razorpay` signature check. |
 | `SUPABASE_SERVICE_ROLE_KEY` | For uploads & admin | Server-only uploads to Supabase Storage (`src/lib/storage.ts`: tenant logos, website media, CVs), Super Admin create-tenant login and 2FA reset. Never expose it to the browser. |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional | Cloudflare Turnstile spam check on website forms and sign-up. Off until both are set. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional | Cloudflare Turnstile spam check on website forms and sign-up. Off until both are set. The site key is public; store the secret as a Sensitive variable. |
+| `TURNSTILE_HOSTNAMES` | No | Comma-separated hostnames a Turnstile token may come from. Default: genesoftinfotech.com, www.genesoftinfotech.com, genesoftdev.vercel.app, localhost and the host of `NEXT_PUBLIC_SITE_URL`. |
 | `NEXT_PUBLIC_ALLOW_INDEXING` | No | Overrides search-engine indexing (by default only genesoftinfotech.com is indexed; test copies send noindex). |
 | `NEXT_PUBLIC_ENABLE_PARKED_MODULES` | No | `true` brings back CRM Emails, WhatsApp, Web Forms and Bank Reconciliation. |
 | `CRON_SECRET` | Recommended | Protects the daily job at `/api/cron/workflows` (scheduled in `vercel.json`): overdue-invoice / bill-due workflow rules, due recurring invoices and IMAP inbox sync. Vercel sends it automatically; without it the job refuses to run. |

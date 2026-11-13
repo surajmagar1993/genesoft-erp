@@ -11,7 +11,7 @@ domain: links come from `NEXT_PUBLIC_SITE_URL` (`src/lib/app-url.ts`).
 - [ ] Supabase → Auth: `site_url` and redirect URLs (templates in `app/email-templates/supabase/`, see `_README.md`; push with `supabase config push`).
 - [ ] Razorpay webhook URL → `<site>/api/webhooks/razorpay` (event `order.paid`).
 - [ ] WhatsApp (Meta) webhook URL → `<site>/api/webhooks/whatsapp` (only if WhatsApp is switched back on).
-- [ ] Cloudflare Turnstile widget: add the final hostname(s); set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`.
+- [ ] Cloudflare Turnstile: widget created, site key set on Vercel (2026-11-13). Still to do: `TURNSTILE_SECRET_KEY` on Vercel (Sensitive, Production + Preview); the widget's hostnames must include the final domain(s) (and `TURNSTILE_HOSTNAMES` if the domain differs from the defaults).
 - [ ] Indexing: only genesoftinfotech.com is indexed (`src/lib/indexing.ts`); check robots/sitemap on the final domain.
 - [ ] Resend: sender domain is already `genesoftinfotech.com` (`RESEND_DOMAIN`). Keep it verified.
 

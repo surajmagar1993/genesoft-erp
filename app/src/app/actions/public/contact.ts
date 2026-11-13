@@ -111,7 +111,7 @@ export async function sendContactMessage(input: {
 }): Promise<ActionResult<{ sent: true }>> {
     return toActionResult(async () => {
         if (input.website) return { sent: true as const } // bot: pretend success
-        await assertTurnstile(input.turnstileToken, clientIp(await headers()))
+        await assertTurnstile(input.turnstileToken, clientIp(await headers()), "enquiry")
         const v = cleanVisitor(input)
         const topic = (CONTACT_TOPICS as readonly string[]).includes(input.topic) ? input.topic : "General"
         const message = (input.message || "").trim()
@@ -138,7 +138,7 @@ export async function sendRentalQuote(input: {
 }): Promise<ActionResult<{ sent: true }>> {
     return toActionResult(async () => {
         if (input.website) return { sent: true as const }
-        await assertTurnstile(input.turnstileToken, clientIp(await headers()))
+        await assertTurnstile(input.turnstileToken, clientIp(await headers()), "rental_quote")
         const v = cleanVisitor(input)
         const published = await getPublishedItems("rental_item")
         const categories = [...(published.length ? published.map((i) => String(i.data.name)) : RENTAL_CATEGORIES.map((c) => c.name)), "Other"]
@@ -171,7 +171,7 @@ export async function sendRentalQuote(input: {
 export async function sendJobApplication(formData: FormData): Promise<ActionResult<{ sent: true }>> {
     return toActionResult(async () => {
         if (formData.get("website")) return { sent: true as const }
-        await assertTurnstile(String(formData.get("cf-turnstile-response") || ""), clientIp(await headers()))
+        await assertTurnstile(String(formData.get("cf-turnstile-response") || ""), clientIp(await headers()), "job_apply")
         const v = cleanVisitor({
             name: String(formData.get("name") || ""),
             email: String(formData.get("email") || ""),

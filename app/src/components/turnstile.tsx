@@ -47,7 +47,7 @@ export function resetTurnstile() {
  * <form>: it adds a hidden "cf-turnstile-response" field the server checks.
  * Usually invisible; renders nothing until the site key is set.
  */
-export function Turnstile({ className }: { className?: string }) {
+export function Turnstile({ action, className }: { action: "signup" | "enquiry" | "rental_quote" | "job_apply"; className?: string }) {
     const box = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if (!SITE_KEY || !box.current) return
@@ -56,14 +56,14 @@ export function Turnstile({ className }: { className?: string }) {
         loadScript()
             .then(() => {
                 if (cancelled || !box.current || !window.turnstile) return
-                id = window.turnstile.render(box.current, { sitekey: SITE_KEY, theme: "auto", size: "flexible", appearance: "interaction-only" })
+                id = window.turnstile.render(box.current, { sitekey: SITE_KEY, action, theme: "auto", size: "flexible", appearance: "interaction-only" })
             })
             .catch((err) => console.warn(err))
         return () => {
             cancelled = true
             if (id) window.turnstile?.remove(id)
         }
-    }, [])
+    }, [action])
     if (!SITE_KEY) return null
     return <div ref={box} className={className} />
 }

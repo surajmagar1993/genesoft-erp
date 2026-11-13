@@ -17,7 +17,7 @@ describe("website forms with the Turnstile spam check on", () => {
     it("refuses a form without a passing check and saves nothing; accepts one that passes", async () => {
         process.env.TURNSTILE_SECRET_KEY = "secret"
         process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = "site"
-        vi.stubGlobal("fetch", vi.fn(async (_url: string, init: { body: URLSearchParams }) => new Response(JSON.stringify({ success: init.body.get("response") === "good" }))))
+        vi.stubGlobal("fetch", vi.fn(async (_url: string, init: { body: URLSearchParams }) => new Response(JSON.stringify({ success: init.body.get("response") === "good", action: "enquiry", hostname: "genesoftinfotech.com" }))))
 
         expect(await sendContactMessage({ ...visitor })).toMatchObject({ success: false, error: expect.stringMatching(/spam check/) })
         expect(await sendContactMessage({ ...visitor, turnstileToken: "bad" })).toMatchObject({ success: false, error: expect.stringMatching(/spam check/) })

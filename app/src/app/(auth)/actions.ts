@@ -110,7 +110,7 @@ export async function register(formData: FormData) {
     redirect('/register?error=Passwords+do+not+match')
   }
 
-  if (turnstileEnabled() && !(await verifyTurnstile(String(formData.get('cf-turnstile-response') || ''), clientIp(await headers())))) {
+  if (turnstileEnabled() && !(await verifyTurnstile(String(formData.get('cf-turnstile-response') || ''), clientIp(await headers()), 'signup'))) {
     redirect(`/register?error=${encodeURIComponent(TURNSTILE_FAILED)}`)
   }
 

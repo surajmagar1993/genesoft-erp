@@ -102,7 +102,7 @@ export function EnquiryForm({ topic = "General", title = "Send us a message", sh
             <div className="hidden" aria-hidden="true">
                 <label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label>
             </div>
-            <Turnstile className="sm:col-span-2" />
+            <Turnstile action="enquiry" className="sm:col-span-2" />
             <label className="flex items-start gap-2.5 text-sm leading-relaxed text-s-text sm:col-span-2">
                 <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#EF7F1A]" />
                 <span>
