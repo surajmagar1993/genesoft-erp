@@ -76,7 +76,7 @@ export default async function SettingsPage({
                         <ShieldCheck className="h-4 w-4" /> Taxation
                     </TabsTrigger>
                     <TabsTrigger value="account" className="flex items-center gap-2">
-                        <Globe className="h-4 w-4" /> Regional
+                        <Globe className="h-4 w-4" /> Account &amp; region
                     </TabsTrigger>
                     <TabsTrigger value="billing" className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4" /> Billing
