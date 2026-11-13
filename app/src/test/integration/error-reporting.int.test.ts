@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const sent: { subject: string; to: string[]; text: string }[] = []
+const sent: { subject: string; to: string[]; text: string; from?: string }[] = []
 vi.mock("resend", () => ({
     Resend: class {
-        emails = { send: async (msg: { subject: string; to: string[]; text: string }) => (sent.push(msg), { data: { id: "x" }, error: null }) }
+        emails = { send: async (msg: { subject: string; to: string[]; text: string; from?: string }) => (sent.push(msg), { data: { id: "x" }, error: null }) }
     },
 }))
 
@@ -35,6 +35,7 @@ describe("built-in error monitoring", () => {
         expect(sent[0].subject).toMatch(/^\[Error\] Invoice/)
         // alerts go to the errors mailbox unless ERROR_ALERT_EMAIL says otherwise
         if (!process.env.ERROR_ALERT_EMAIL) expect(sent[0].to).toEqual(["errorserp@genesoftinfotech.com"])
+        expect(sent[0].from).toMatch(/<errorserp@/)
         expect(sent[0].text).toContain("Reference shown to the user: 123")
         expect(sent[0].text).not.toContain("pw123")
     })

@@ -79,7 +79,8 @@ async function sendAlert(report: ErrorReport, fingerprint: string, message: stri
     const to = process.env.ERROR_ALERT_EMAIL || PLATFORM.errorAlertEmail
     const firstLine = firstMeaningfulLine(message).slice(0, 120)
     await new Resend(apiKey).emails.send({
-        from: `${PLATFORM.productName} alerts <alerts@${domain}>`,
+        // Sent from the errors mailbox itself (a real address on the sending domain), so replies don't bounce
+        from: `${PLATFORM.productName} alerts <${PLATFORM.errorAlertEmail.split("@")[0]}@${domain}>`,
         to: [to],
         subject: `[Error] ${firstLine}`.replace(/[\r\n]+/g, " "),
         text: [
