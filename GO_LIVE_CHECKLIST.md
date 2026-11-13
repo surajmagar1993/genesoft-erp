@@ -8,7 +8,7 @@ domain: links come from `NEXT_PUBLIC_SITE_URL` (`src/lib/app-url.ts`).
 ## 1. Domain switch to genesoftinfotech.com
 - [ ] DNS: point the app host (e.g. `app.genesoftinfotech.com`) at the hosting platform.
 - [ ] `NEXT_PUBLIC_SITE_URL` = the new https URL (all environments).
-- [ ] Supabase → Auth: `site_url` and redirect URLs (templates in `app/email-templates/supabase/`, see `_README.md`; push with `supabase config push`).
+- [ ] Supabase → Auth: set `site_url` to https://genesoftinfotech.com in `app/supabase/config.toml` (the redirect list already includes the domain) and `supabase config push` from `app/`. Email logos follow `{{ .SiteURL }}`, so they move with it.
 - [ ] Razorpay webhook URL → `<site>/api/webhooks/razorpay` (event `order.paid`).
 - [ ] WhatsApp (Meta) webhook URL → `<site>/api/webhooks/whatsapp` (only if WhatsApp is switched back on).
 - [ ] Cloudflare Turnstile: widget created, site key set on Vercel (2026-11-13). Still to do: `TURNSTILE_SECRET_KEY` on Vercel (Sensitive, Production + Preview); the widget's hostnames must include the final domain(s) (and `TURNSTILE_HOSTNAMES` if the domain differs from the defaults).

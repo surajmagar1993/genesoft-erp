@@ -6,6 +6,9 @@
  * system transactional communications.
  */
 
+import { appUrl } from "@/lib/app-url"
+import { PLATFORM } from "@/lib/constants/platform"
+
 export type SystemTemplateKey =
     | "INVOICE_SENT"
     | "PAYMENT_RECEIPT"
@@ -60,8 +63,11 @@ export function wrapEmailHtml(params: {
     // compiled with escaped values.
     const title = escapeHtml(params.title)
     const previewText = escapeHtml(params.previewText ?? "")
-    const companyName = escapeHtml(params.companyName ?? "Genesoft ERP")
     const { bodyContent } = params
+    // These emails come from Genesoft (the platform), so the header and footer are always ours;
+    // a business's name only appears inside the body
+    const logoUrl = escapeHtml(`${appUrl()}/email/genesoft-logo.png`)
+    const footerAddress = escapeHtml(`${PLATFORM.legalName} · ${PLATFORM.address.line1}, ${PLATFORM.address.line2}, ${PLATFORM.address.country}`)
     // A button only for a real web link
     const actionButton = params.actionButton && /^https?:\/\//i.test(params.actionButton.url.trim())
         ? { label: escapeHtml(params.actionButton.label), url: escapeHtml(params.actionButton.url.trim()) }
@@ -71,8 +77,8 @@ export function wrapEmailHtml(params: {
         ? `
         <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 28px 0;">
             <tr>
-                <td align="center" style="border-radius: 8px; background-color: #2563eb;">
-                    <a href="${actionButton.url}" target="_blank" style="font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 600; color: #ffffff; text-decoration: none; display: inline-block; padding: 12px 24px; border-radius: 8px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border: 1px solid #1d4ed8; letter-spacing: 0.02em;">
+                <td align="center" bgcolor="#EF7F1A" style="border-radius: 8px; background-color: #EF7F1A;">
+                    <a href="${actionButton.url}" target="_blank" style="font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 700; color: #1C1917; text-decoration: none; display: inline-block; padding: 12px 24px; border-radius: 8px; background-color: #EF7F1A; letter-spacing: 0.02em;">
                         ${actionButton.label} &rarr;
                     </a>
                 </td>
@@ -98,41 +104,30 @@ export function wrapEmailHtml(params: {
     </noscript>
     <![endif]-->
     <style>
-        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+        body { margin: 0; padding: 0; background-color: #F4F4F5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
         table { border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; }
         td { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px; vertical-align: top; }
-        a { color: #2563eb; text-decoration: none; }
+        a { color: #2B2A29; text-decoration: underline; }
         .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
         .data-table td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
         .data-table tr:last-child td { border-bottom: none; }
         .badge-pill { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
     </style>
 </head>
-<body style="background-color: #f8fafc; margin: 0; padding: 24px 12px;">
+<body style="background-color: #F4F4F5; margin: 0; padding: 24px 12px;">
     ${previewText ? `<div style="display: none; max-height: 0px; overflow: hidden;">${previewText}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>` : ""}
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); overflow: hidden;">
         <!-- Header -->
         <tr>
-            <td style="padding: 28px 32px; background: linear-gradient(135deg, #0f172a, #1e293b); color: #ffffff;">
-                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                    <tr>
-                        <td>
-                            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin-bottom: 4px;">System Notification</div>
-                            <h1 style="margin: 0; font-size: 20px; font-weight: 700; color: #ffffff; line-height: 1.3;">${title}</h1>
-                        </td>
-                        <td align="right" style="vertical-align: middle;">
-                            <span style="display: inline-block; padding: 6px 12px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.1); color: #f8fafc; font-size: 12px; font-weight: 600; border: 1px solid rgba(255, 255, 255, 0.15);">
-                                ${companyName}
-                            </span>
-                        </td>
-                    </tr>
-                </table>
+            <td bgcolor="#2B2A29" style="padding: 22px 32px; background-color: #2B2A29;">
+                <a href="${escapeHtml(PLATFORM.website)}" style="text-decoration: none;"><img src="${logoUrl}" width="200" height="81" alt="Genesoft Infotech" style="display: block; border: 0; width: 200px; height: auto; color: #ffffff; font-size: 18px; font-weight: bold;"></a>
             </td>
         </tr>
 
         <!-- Main Body -->
         <tr>
-            <td style="padding: 32px; color: #1e293b; line-height: 1.6;">
+            <td style="padding: 32px; color: #1C1917; line-height: 1.6;">
+                <h1 style="margin: 0 0 16px; font-size: 20px; font-weight: 700; color: #1C1917; line-height: 1.3;">${title}</h1>
                 ${bodyContent}
                 ${buttonSnippet}
             </td>
@@ -140,15 +135,10 @@ export function wrapEmailHtml(params: {
 
         <!-- Footer -->
         <tr>
-            <td style="padding: 24px 32px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 12px; line-height: 1.5;">
-                <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                    <tr>
-                        <td>
-                            <p style="margin: 0 0 8px 0; font-weight: 600; color: #334155;">${companyName} Platform Operations</p>
-                            <p style="margin: 0; color: #94a3b8;">This is an automated system dispatch. Please do not reply directly unless specified. For assistance, contact your administrator or reply to the support desk.</p>
-                        </td>
-                    </tr>
-                </table>
+            <td style="padding: 20px 32px; border-top: 1px solid #E7E5E4; color: #6B6560; font-size: 12px; line-height: 1.6;">
+                Need help? Reply to this email or write to <a href="mailto:${escapeHtml(PLATFORM.welcomeEmail)}">${escapeHtml(PLATFORM.welcomeEmail)}</a>.<br>
+                ${footerAddress}<br>
+                <a href="${escapeHtml(PLATFORM.website)}">${escapeHtml(PLATFORM.website.replace(/^https?:\/\//, ""))}</a>
             </td>
         </tr>
     </table>

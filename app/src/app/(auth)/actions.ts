@@ -132,7 +132,7 @@ export async function register(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${appUrl()}/auth/confirm?next=/crm/contacts`,
+      emailRedirectTo: `${appUrl()}/auth/confirm?next=/reports`,
       data: {
         full_name: fullName,
         company_name: company,

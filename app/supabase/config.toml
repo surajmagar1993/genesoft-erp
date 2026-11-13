@@ -1,0 +1,64 @@
+# Supabase Auth settings for the live project (genesoftinfotech). Only what is declared here is
+# pushed (`supabase config push` from app/); everything else stays as set in the dashboard.
+# Templates: email-templates/supabase/*.html (logo at {{ .SiteURL }}/email/genesoft-logo.png).
+project_id = "uyksfgdeypxganpbmuhk"
+
+[auth]
+# Switch to https://genesoftinfotech.com at go-live (GO_LIVE_CHECKLIST.md)
+site_url = "https://genesoftdev.vercel.app"
+additional_redirect_urls = [
+  "https://genesoftdev.vercel.app/**",
+  "https://genesoftinfotech.com/**",
+  "https://www.genesoftinfotech.com/**",
+  "http://localhost:3000/**",
+  "http://localhost:3001/**",
+]
+
+[auth.email.template.confirmation]
+subject = "Welcome to Genesoft ERP: confirm your email"
+content_path = "./email-templates/supabase/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your Genesoft ERP password"
+content_path = "./email-templates/supabase/recovery.html"
+
+[auth.email.template.invite]
+subject = "You've been invited to Genesoft ERP"
+content_path = "./email-templates/supabase/invite.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new Genesoft ERP email"
+content_path = "./email-templates/supabase/email_change.html"
+
+[auth.email.template.magic_link]
+subject = "Your Genesoft ERP sign-in link"
+content_path = "./email-templates/supabase/magic_link.html"
+
+[auth.email.template.reauthentication]
+subject = "Your Genesoft ERP confirmation code"
+content_path = "./email-templates/supabase/reauthentication.html"
+
+[auth.email.notification.password_changed]
+enabled = true
+subject = "Your Genesoft ERP password was changed"
+content_path = "./email-templates/supabase/password_changed_notification.html"
+
+[auth.email.notification.email_changed]
+enabled = true
+subject = "Your Genesoft ERP sign-in email was changed"
+content_path = "./email-templates/supabase/email_changed_notification.html"
+
+[auth.email.notification.identity_linked]
+enabled = true
+subject = "A new sign-in method was linked to your Genesoft ERP account"
+content_path = "./email-templates/supabase/identity_linked_notification.html"
+
+[auth.email.notification.mfa_factor_enrolled]
+enabled = true
+subject = "Two-factor sign-in was turned on for your Genesoft ERP account"
+content_path = "./email-templates/supabase/mfa_factor_enrolled_notification.html"
+
+[auth.email.notification.mfa_factor_unenrolled]
+enabled = true
+subject = "Two-factor sign-in was turned off for your Genesoft ERP account"
+content_path = "./email-templates/supabase/mfa_factor_unenrolled_notification.html"

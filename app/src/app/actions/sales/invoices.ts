@@ -1,5 +1,6 @@
 "use server"
 
+import { isOwnStorageUrl } from "@/lib/storage"
 import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import type { InvoiceStatus as DbInvoiceStatus, InvoiceType, Prisma } from "@prisma/client"
 import { prisma } from "@/lib/prisma"
@@ -789,13 +790,21 @@ export async function sendInvoiceEmail(
   // Display name in the From header: no quotes or angle brackets
   const fromName = supplierName.replace(/["<>\r\n]/g, "").trim() || "Invoices"
 
+  // Replies go to the business, not to Genesoft's sending address
+  const businessEmail = String(invoice.tenants?.email || "").trim()
+  const replyTo = /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(businessEmail) ? businessEmail : undefined
+  // The business's own logo, only when it's a file in our storage (never a typed-in address)
+  const logo = invoice.tenants?.logo_url && isOwnStorageUrl(invoice.tenants.logo_url, "tenant-logos") ? invoice.tenants.logo_url : null
+
   const { error: emailError } = await resend.emails.send({
     from: `"${fromName}" <invoices@${process.env.RESEND_DOMAIN}>`,
     to: [recipientEmail],
+    ...(replyTo ? { replyTo } : {}),
     subject: `${documentLabel} ${invoice.invoice_number} from ${supplierName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; color: #0f172a;">
-        <h2 style="color: #1e40af;">${esc(documentLabel)} ${esc(invoice.invoice_number)}</h2>
+        ${logo ? `<img src="${esc(logo)}" alt="${esc(supplierName)}" style="display:block;max-height:64px;max-width:240px;margin:0 0 16px;border:0">` : ""}
+        <h2 style="color: #0f172a;">${esc(documentLabel)} ${esc(invoice.invoice_number)}</h2>
         <p>Dear ${esc(invoice.customer_name)},</p>
         <p>Please find your ${esc(documentLabel.toLowerCase())} attached to this email.</p>
         <table style="width:100%; border-collapse:collapse; margin: 20px 0; font-size:14px;">
@@ -809,10 +818,10 @@ export async function sendInvoiceEmail(
           </tr>
           <tr>
             <td style="padding:8px; border:1px solid #e2e8f0; color:#64748b;">Grand Total</td>
-            <td style="padding:8px; border:1px solid #e2e8f0; font-weight:700; color:#1e40af;">${esc(grandTotal)}</td>
+            <td style="padding:8px; border:1px solid #e2e8f0; font-weight:700; color:#0f172a;">${esc(grandTotal)}</td>
           </tr>
         </table>
-        <p style="color:#64748b; font-size:13px;">If you have any questions, please reply to this email.</p>
+        <p style="color:#64748b; font-size:13px;">${replyTo ? "If you have any questions, just reply to this email." : `If you have any questions, please contact ${esc(supplierName)}.`}</p>
         <p>Regards,<br/><strong>${esc(supplierName)}</strong></p>
       </div>`,
     attachments: [
