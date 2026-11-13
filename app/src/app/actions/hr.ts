@@ -145,15 +145,19 @@ export interface UpdateEmployeeInput {
     lastName?: string
     email?: string
     phone?: string
+    joiningDate?: string
     status?: EmployeeStatus
     employmentType?: EmploymentType
-    departmentId?: string
-    designationId?: string
-    managerId?: string
-    basicSalary?: number
+    /** null clears it */
+    departmentId?: string | null
+    designationId?: string | null
+    managerId?: string | null
+    basicSalary?: number | null
     country?: string
     state?: string
     city?: string
+    emergencyContactName?: string
+    emergencyContactPhone?: string
 }
 
 /**
@@ -453,7 +457,8 @@ async function _createEmployee(data: CreateEmployeeInput) {
             basicSalary: data.basicSalary ? Number(data.basicSalary) : null,
             currencyCode: data.currencyCode || (await getTenantDefaults(tenantId)).currencyCode,
             address: {
-                country: data.country?.trim() || "India",
+                // Never an assumed country: empty until someone enters it
+                country: data.country?.trim() || "",
                 state: data.state?.trim() || "",
                 city: data.city?.trim() || ""
             },
@@ -483,12 +488,23 @@ async function _createEmployee(data: CreateEmployeeInput) {
  */
 async function _updateEmployee(employeeId: string, data: UpdateEmployeeInput) {
     const tenantId = await getTenantManagerId(MODULE)
-    await assertTenantRefs(tenantId, { employee: [employeeId, data.managerId], department: data.departmentId, designation: data.designationId })
+    await assertTenantRefs(tenantId, { employee: [employeeId, data.managerId ?? undefined], department: data.departmentId ?? undefined, designation: data.designationId ?? undefined })
 
     const existing = await prisma.employee.findFirst({
         where: { id: employeeId, tenantId }
     })
     if (!existing) throw new Error("Employee not found")
+    if (data.managerId && data.managerId === employeeId) throw new Error("An employee can't report to themselves")
+    if (data.firstName !== undefined && !data.firstName.trim()) throw new Error("First name is required")
+    if (data.email !== undefined) {
+        const email = data.email.trim().toLowerCase()
+        if (!email) throw new Error("Work email is required")
+        if (email !== existing.email && (await prisma.employee.count({ where: { tenantId, email, id: { not: employeeId } } }))) {
+            throw new Error(`An employee with email ${email} already exists`)
+        }
+    }
+    if (data.joiningDate !== undefined && data.joiningDate && Number.isNaN(new Date(data.joiningDate).getTime())) throw new Error("Choose a valid joining date")
+    const existingEmergency = (existing.emergencyContact || {}) as { name?: string; phone?: string }
 
     const firstName = data.firstName !== undefined ? data.firstName.trim() : existing.firstName
     const lastName = data.lastName !== undefined ? data.lastName.trim() : existing.lastName
@@ -503,12 +519,19 @@ async function _updateEmployee(employeeId: string, data: UpdateEmployeeInput) {
             displayName,
             email: data.email !== undefined ? data.email.trim().toLowerCase() : undefined,
             phone: data.phone !== undefined ? data.phone.trim() : undefined,
+            joiningDate: data.joiningDate ? new Date(data.joiningDate) : undefined,
             status: data.status,
             employmentType: data.employmentType,
-            departmentId: data.departmentId,
-            designationId: data.designationId,
-            managerId: data.managerId,
+            departmentId: data.departmentId === null ? null : data.departmentId,
+            designationId: data.designationId === null ? null : data.designationId,
+            managerId: data.managerId === null ? null : data.managerId,
             basicSalary: data.basicSalary !== undefined ? (data.basicSalary ? Number(data.basicSalary) : null) : undefined,
+            emergencyContact: data.emergencyContactName !== undefined || data.emergencyContactPhone !== undefined
+                ? {
+                      name: data.emergencyContactName !== undefined ? data.emergencyContactName.trim() : existingEmergency.name || "",
+                      phone: data.emergencyContactPhone !== undefined ? data.emergencyContactPhone.trim() : existingEmergency.phone || "",
+                  }
+                : undefined,
             address: {
                 ...(existingAddress || {}),
                 country: data.country !== undefined ? data.country.trim() : (existingAddress?.country || ""),

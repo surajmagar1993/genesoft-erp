@@ -34,8 +34,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
-import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -61,8 +59,6 @@ import {
     HROverviewData,
     EmployeeRecord,
     LeaveRecord,
-    createEmployee,
-    updateEmployee,
     createDepartment,
     createDesignation,
     recordAttendance,
@@ -72,7 +68,6 @@ import {
 import { formatCurrency, errorMessage } from "@/lib/utils"
 import {
     EmployeeStatus,
-    EmploymentType,
     AttendanceStatus,
     LeaveType,
     LeaveStatus,
@@ -108,36 +103,15 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
     const [leaveStatusFilter, setLeaveStatusFilter] = useState<string>("all")
 
     // Modals
-    const [isCreateEmployeeOpen, setIsCreateEmployeeOpen] = useState(false)
     const [isAttendanceDialogOpen, setIsAttendanceDialogOpen] = useState(false)
     const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false)
     const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = useState(false)
     const [isDesignationDialogOpen, setIsDesignationDialogOpen] = useState(false)
     const [isViewEmployeeOpen, setIsViewEmployeeOpen] = useState(false)
-    const [isEditEmployeeOpen, setIsEditEmployeeOpen] = useState(false)
 
     // Selected items
     const [selectedEmployee, setSelectedEmployee] = useState<EmployeeRecord | null>(null)
     const [, ] = useState<LeaveRecord | null>(null)
-
-    // Form state: Employee
-    const [empFirstName, setEmpFirstName] = useState("")
-    const [empLastName, setEmpLastName] = useState("")
-    const [empEmail, setEmpEmail] = useState("")
-    const [empPhone, setEmpPhone] = useState("")
-    const [empJoiningDate, setEmpJoiningDate] = useState(format(new Date(), "yyyy-MM-dd"))
-    const [empStatus, setEmpStatus] = useState<EmployeeStatus>("ACTIVE")
-    const [empType, setEmpType] = useState<EmploymentType>("FULL_TIME")
-    const [empDeptId, setEmpDeptId] = useState("")
-    const [empDesigId, setEmpDesigId] = useState("")
-    const [empManagerId, setEmpManagerId] = useState("")
-    const [empSalary, setEmpSalary] = useState("")
-    const [empCountry, setEmpCountry] = useState("India")
-    const [empState, setEmpState] = useState("")
-    const [empCity, setEmpCity] = useState("")
-    const [empEmergencyName, setEmpEmergencyName] = useState("")
-    const [empEmergencyPhone, setEmpEmergencyPhone] = useState("")
-    const [isSubmittingEmployee, setIsSubmittingEmployee] = useState(false)
 
     // Form state: Attendance
     const [attEmployeeId, setAttEmployeeId] = useState("")
@@ -168,14 +142,6 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
     const [desigDeptId, setDesigDeptId] = useState("")
     const [desigDescription, setDesigDescription] = useState("")
     const [isSubmittingDesig, setIsSubmittingDesig] = useState(false)
-
-    // Filtered designations based on selected department in Employee form
-    const availableDesignationsForEmp = useMemo(() => {
-        if (!empDeptId) return initialData.designations
-        return initialData.designations.filter(
-            (d) => !d.departmentId || d.departmentId === empDeptId
-        )
-    }, [initialData.designations, empDeptId])
 
     // Filtered Employees
     const filteredEmployees = useMemo(() => {
@@ -225,131 +191,6 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
             return leaveStatusFilter === "all" || l.status === leaveStatusFilter
         })
     }, [initialData.allLeaves, leaveStatusFilter])
-
-    // Reset Employee Form
-    const resetEmployeeForm = () => {
-        setEmpFirstName("")
-        setEmpLastName("")
-        setEmpEmail("")
-        setEmpPhone("")
-        setEmpJoiningDate(format(new Date(), "yyyy-MM-dd"))
-        setEmpStatus("ACTIVE")
-        setEmpType("FULL_TIME")
-        setEmpDeptId(initialData.departments[0]?.id || "")
-        setEmpDesigId("")
-        setEmpManagerId("")
-        setEmpSalary("")
-        setEmpCountry("India")
-        setEmpState("")
-        setEmpCity("")
-        setEmpEmergencyName("")
-        setEmpEmergencyPhone("")
-    }
-
-    // Handlers: Create Employee
-    const handleCreateEmployeeSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!empFirstName.trim()) {
-            toast.error("Employee first name is required")
-            return
-        }
-        if (!empEmail.trim()) {
-            toast.error("Work email address is required")
-            return
-        }
-
-        setIsSubmittingEmployee(true)
-        try {
-            const res = unwrap(await createEmployee({
-                firstName: empFirstName.trim(),
-                lastName: empLastName.trim() || undefined,
-                email: empEmail.trim(),
-                phone: empPhone.trim() || undefined,
-                joiningDate: empJoiningDate || undefined,
-                status: empStatus,
-                employmentType: empType,
-                departmentId: empDeptId || undefined,
-                designationId: empDesigId || undefined,
-                managerId: empManagerId || undefined,
-                basicSalary: empSalary ? parseFloat(empSalary) : undefined,
-                country: empCountry.trim() || undefined,
-                state: empState.trim() || undefined,
-                city: empCity.trim() || undefined,
-                emergencyContactName: empEmergencyName.trim() || undefined,
-                emergencyContactPhone: empEmergencyPhone.trim() || undefined,
-            }))
-
-            if (res.success) {
-                toast.success(`Employee ${res.employee.employeeNumber} registered successfully`)
-                setIsCreateEmployeeOpen(false)
-                resetEmployeeForm()
-                startTransition(() => {
-                    router.refresh()
-                })
-            }
-        } catch (err) {
-            toast.error(errorMessage(err) || "Failed to register employee")
-        } finally {
-            setIsSubmittingEmployee(false)
-        }
-    }
-
-    // Open Edit Employee
-    const handleOpenEditEmployee = (emp: EmployeeRecord) => {
-        setSelectedEmployee(emp)
-        setEmpFirstName(emp.firstName)
-        setEmpLastName(emp.lastName || "")
-        setEmpEmail(emp.email)
-        setEmpPhone(emp.phone || "")
-        setEmpStatus(emp.status)
-        setEmpType(emp.employmentType)
-        setEmpDeptId(emp.departmentId || "")
-        setEmpDesigId(emp.designationId || "")
-        setEmpManagerId(emp.managerId || "")
-        setEmpSalary(emp.basicSalary ? String(emp.basicSalary) : "")
-        setEmpCountry((emp.address)?.country || "India")
-        setEmpState((emp.address)?.state || "")
-        setEmpCity((emp.address)?.city || "")
-        setIsEditEmployeeOpen(true)
-    }
-
-    // Submit Edit Employee
-    const handleEditEmployeeSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!selectedEmployee) return
-
-        setIsSubmittingEmployee(true)
-        try {
-            const res = unwrap(await updateEmployee(selectedEmployee.id, {
-                firstName: empFirstName.trim(),
-                lastName: empLastName.trim() || undefined,
-                email: empEmail.trim(),
-                phone: empPhone.trim() || undefined,
-                status: empStatus,
-                employmentType: empType,
-                departmentId: empDeptId || undefined,
-                designationId: empDesigId || undefined,
-                managerId: empManagerId || undefined,
-                basicSalary: empSalary ? parseFloat(empSalary) : undefined,
-                country: empCountry.trim() || undefined,
-                state: empState.trim() || undefined,
-                city: empCity.trim() || undefined,
-            }))
-
-            if (res.success) {
-                toast.success("Employee updated successfully")
-                setIsEditEmployeeOpen(false)
-                setSelectedEmployee(null)
-                startTransition(() => {
-                    router.refresh()
-                })
-            }
-        } catch (err) {
-            toast.error(errorMessage(err) || "Failed to update employee")
-        } finally {
-            setIsSubmittingEmployee(false)
-        }
-    }
 
     // Open Attendance Dialog for employee
     const handleOpenAttendanceFor = (emp?: EmployeeRecord) => {
@@ -705,15 +546,11 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                         <Calendar className="mr-2 h-4 w-4" />
                         Apply Leave
                     </Button>
-                    <Button
-                        size="sm"
-                        onClick={() => {
-                            resetEmployeeForm()
-                            setIsCreateEmployeeOpen(true)
-                        }}
-                    >
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Add Employee
+                    <Button size="sm" asChild>
+                        <Link href="/hr/employees/new">
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Add Employee
+                        </Link>
                     </Button>
                 </div>
             </div>
@@ -912,15 +749,11 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                             ? "Try adjusting your filters or search keywords."
                                             : "Add your first employee to initiate your company's workforce directory."}
                                     </p>
-                                    <Button
-                                        onClick={() => {
-                                            resetEmployeeForm()
-                                            setIsCreateEmployeeOpen(true)
-                                        }}
-                                        size="sm"
-                                    >
-                                        <UserPlus className="mr-2 h-4 w-4" />
-                                        Register Employee
+                                    <Button size="sm" asChild>
+                                        <Link href="/hr/employees/new">
+                                            <UserPlus className="mr-2 h-4 w-4" />
+                                            Add Employee
+                                        </Link>
                                     </Button>
                                 </div>
                             ) : (
@@ -1013,10 +846,13 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-8 w-8"
-                                                                onClick={() => handleOpenEditEmployee(emp)}
                                                                 title="Edit Profile"
+                                                                aria-label={`Edit ${emp.displayName}`}
+                                                                asChild
                                                             >
-                                                                <Pencil className="h-4 w-4" />
+                                                                <Link href={`/hr/employees/${emp.id}/edit`}>
+                                                                    <Pencil className="h-4 w-4" />
+                                                                </Link>
                                                             </Button>
                                                             <Button
                                                                 variant="outline"
@@ -1455,421 +1291,6 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                 </TabsContent>
             </Tabs>
 
-            {/* Modal 1: Add Employee */}
-            <Dialog open={isCreateEmployeeOpen} onOpenChange={setIsCreateEmployeeOpen}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <UserPlus className="h-5 w-5 text-primary" />
-                            Register New Employee
-                        </DialogTitle>
-                        <DialogDescription>
-                            Create a verified employee record with organizational assignment and compensation structure.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleCreateEmployeeSubmit} className="space-y-4">
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-fn">
-                                    First Name <span className="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="emp-fn"
-                                    placeholder="Enter employee first name"
-                                    value={empFirstName}
-                                    onChange={(e) => setEmpFirstName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-ln">Last Name</Label>
-                                <Input
-                                    id="emp-ln"
-                                    placeholder="Enter employee last name"
-                                    value={empLastName}
-                                    onChange={(e) => setEmpLastName(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-mail">
-                                    Work Email <span className="text-red-500">*</span>
-                                </Label>
-                                <Input
-                                    id="emp-mail"
-                                    type="email"
-                                    placeholder="employee@company.com"
-                                    value={empEmail}
-                                    onChange={(e) => setEmpEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-tel">Phone Number</Label>
-                                <Input
-                                    id="emp-tel"
-                                    placeholder="Contact phone number"
-                                    value={empPhone}
-                                    onChange={(e) => setEmpPhone(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-dept">Department</Label>
-                                <Select value={empDeptId} onValueChange={setEmpDeptId}>
-                                    <SelectTrigger id="emp-dept">
-                                        <SelectValue placeholder="Select department" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {initialData.departments.map((d) => (
-                                            <SelectItem key={d.id} value={d.id}>
-                                                {d.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-desig">Designation</Label>
-                                <Select value={empDesigId} onValueChange={setEmpDesigId}>
-                                    <SelectTrigger id="emp-desig">
-                                        <SelectValue placeholder="Select designation" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {availableDesignationsForEmp.map((des) => (
-                                            <SelectItem key={des.id} value={des.id}>
-                                                {des.title}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-type">Employment Type</Label>
-                                <Select
-                                    value={empType}
-                                    onValueChange={(val) => setEmpType(val as EmploymentType)}
-                                >
-                                    <SelectTrigger id="emp-type">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="FULL_TIME">Full Time</SelectItem>
-                                        <SelectItem value="PART_TIME">Part Time</SelectItem>
-                                        <SelectItem value="CONTRACT">Contract</SelectItem>
-                                        <SelectItem value="INTERN">Intern</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-join">Joining Date</Label>
-                                <Input
-                                    id="emp-join"
-                                    type="date"
-                                    value={empJoiningDate}
-                                    onChange={(e) => setEmpJoiningDate(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-mgr">Reporting Manager</Label>
-                                <Select value={empManagerId} onValueChange={setEmpManagerId}>
-                                    <SelectTrigger id="emp-mgr">
-                                        <SelectValue placeholder="Select reporting manager" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {initialData.employees.map((e) => (
-                                            <SelectItem key={e.id} value={e.id}>
-                                                {e.displayName} ({e.employeeNumber})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-sal">Monthly Basic Salary</Label>
-                                <Input
-                                    id="emp-sal"
-                                    type="number"
-                                    placeholder="Enter monthly salary"
-                                    value={empSalary}
-                                    onChange={(e) => setEmpSalary(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-country">Country</Label>
-                                <AutoSuggestInput
-                                    id="emp-country"
-                                    placeholder="Enter country"
-                                    value={empCountry}
-                                    onChange={(e) => setEmpCountry(e.target.value)}
-                                    options={searchCountries(empCountry).map((c) => ({
-                                        label: c.name,
-                                        value: c.name,
-                                        subLabel: c.code,
-                                        icon: c.flag,
-                                    }))}
-                                    onSelectOption={(opt) => setEmpCountry(opt.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-state">State / Province</Label>
-                                <AutoSuggestInput
-                                    id="emp-state"
-                                    placeholder="Enter state or province"
-                                    value={empState}
-                                    onChange={(e) => setEmpState(e.target.value)}
-                                    options={searchStates(empState, empCountry).map((s) => ({
-                                        label: s.name,
-                                        value: s.name,
-                                        subLabel: s.code,
-                                    }))}
-                                    onSelectOption={(opt) => setEmpState(opt.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="emp-city">City</Label>
-                                <AutoSuggestInput
-                                    id="emp-city"
-                                    placeholder="Enter city"
-                                    value={empCity}
-                                    onChange={(e) => setEmpCity(e.target.value)}
-                                    options={searchCities(empCity, empState, empCountry).map((c) => ({
-                                        label: c.name,
-                                        value: c.name,
-                                        subLabel: `${c.stateName} • ${c.pincode}`,
-                                    }))}
-                                    onSelectOption={(opt) => {
-                                        setEmpCity(opt.value)
-                                        if (opt.subLabel) {
-                                            const parts = opt.subLabel.split(" • ")
-                                            if (parts[0] && !empState) setEmpState(parts[0].trim())
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsCreateEmployeeOpen(false)}
-                                disabled={isSubmittingEmployee}
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={isSubmittingEmployee}>
-                                {isSubmittingEmployee ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Check className="mr-2 h-4 w-4" />
-                                        Register Employee
-                                    </>
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-
-            {/* Modal 2: Edit Employee */}
-            <Dialog open={isEditEmployeeOpen} onOpenChange={setIsEditEmployeeOpen}>
-                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Pencil className="h-5 w-5 text-primary" />
-                            Edit Employee Profile
-                        </DialogTitle>
-                        <DialogDescription>
-                            Update organizational details and job assignments for {selectedEmployee?.displayName}.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleEditEmployeeSubmit} className="space-y-4">
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="space-y-1">
-                                <Label>First Name</Label>
-                                <Input
-                                    value={empFirstName}
-                                    onChange={(e) => setEmpFirstName(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label>Last Name</Label>
-                                <Input
-                                    value={empLastName}
-                                    onChange={(e) => setEmpLastName(e.target.value)}
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label>Work Email</Label>
-                                <Input
-                                    type="email"
-                                    value={empEmail}
-                                    onChange={(e) => setEmpEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <Label>Phone Number</Label>
-                                <Input
-                                    value={empPhone}
-                                    onChange={(e) => setEmpPhone(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>Status</Label>
-                                <Select
-                                    value={empStatus}
-                                    onValueChange={(val) => setEmpStatus(val as EmployeeStatus)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="ACTIVE">Active</SelectItem>
-                                        <SelectItem value="PROBATION">Probation</SelectItem>
-                                        <SelectItem value="ON_LEAVE">On Leave</SelectItem>
-                                        <SelectItem value="RESIGNED">Resigned</SelectItem>
-                                        <SelectItem value="TERMINATED">Terminated</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>Department</Label>
-                                <Select value={empDeptId} onValueChange={setEmpDeptId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select department" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {initialData.departments.map((d) => (
-                                            <SelectItem key={d.id} value={d.id}>
-                                                {d.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>Designation</Label>
-                                <Select value={empDesigId} onValueChange={setEmpDesigId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select designation" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {availableDesignationsForEmp.map((des) => (
-                                            <SelectItem key={des.id} value={des.id}>
-                                                {des.title}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>Monthly Salary</Label>
-                                <Input
-                                    type="number"
-                                    value={empSalary}
-                                    onChange={(e) => setEmpSalary(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>Country</Label>
-                                <AutoSuggestInput
-                                    placeholder="Enter country"
-                                    value={empCountry}
-                                    onChange={(e) => setEmpCountry(e.target.value)}
-                                    options={searchCountries(empCountry).map((c) => ({
-                                        label: c.name,
-                                        value: c.name,
-                                        subLabel: c.code,
-                                        icon: c.flag,
-                                    }))}
-                                    onSelectOption={(opt) => setEmpCountry(opt.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>State / Province</Label>
-                                <AutoSuggestInput
-                                    placeholder="Enter state or province"
-                                    value={empState}
-                                    onChange={(e) => setEmpState(e.target.value)}
-                                    options={searchStates(empState, empCountry).map((s) => ({
-                                        label: s.name,
-                                        value: s.name,
-                                        subLabel: s.code,
-                                    }))}
-                                    onSelectOption={(opt) => setEmpState(opt.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label>City</Label>
-                                <AutoSuggestInput
-                                    placeholder="Enter city"
-                                    value={empCity}
-                                    onChange={(e) => setEmpCity(e.target.value)}
-                                    options={searchCities(empCity, empState, empCountry).map((c) => ({
-                                        label: c.name,
-                                        value: c.name,
-                                        subLabel: `${c.stateName} • ${c.pincode}`,
-                                    }))}
-                                    onSelectOption={(opt) => {
-                                        setEmpCity(opt.value)
-                                        if (opt.subLabel) {
-                                            const parts = opt.subLabel.split(" • ")
-                                            if (parts[0] && !empState) setEmpState(parts[0].trim())
-                                        }
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsEditEmployeeOpen(false)}
-                                disabled={isSubmittingEmployee}
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={isSubmittingEmployee}>
-                                {isSubmittingEmployee ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Updating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Check className="mr-2 h-4 w-4" />
-                                        Save Changes
-                                    </>
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
 
             {/* Modal 3: Record Attendance */}
             <Dialog open={isAttendanceDialogOpen} onOpenChange={setIsAttendanceDialogOpen}>
@@ -2372,15 +1793,11 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                 >
                                     Close
                                 </Button>
-                                <Button
-                                    size="sm"
-                                    onClick={() => {
-                                        setIsViewEmployeeOpen(false)
-                                        handleOpenEditEmployee(selectedEmployee)
-                                    }}
-                                >
-                                    <Pencil className="mr-1 h-3.5 w-3.5" />
-                                    Edit Profile
+                                <Button size="sm" asChild>
+                                    <Link href={`/hr/employees/${selectedEmployee.id}/edit`}>
+                                        <Pencil className="mr-1 h-3.5 w-3.5" />
+                                        Edit Profile
+                                    </Link>
                                 </Button>
                             </DialogFooter>
                         </div>
