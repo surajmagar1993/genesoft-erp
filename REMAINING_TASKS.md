@@ -234,7 +234,7 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [ ] Period lock / year-end close; fixed assets & depreciation; accruals; stock as an inventory asset (purchases of stock go straight to COGS today); customer/supplier opening balances per contact; TDS on bills in the ledger; employer PF/ESI cost in payroll; bank feeds; Tally/QuickBooks/Xero export.
 
 **Engineering:**
-- [ ] Prisma CLI dependencies carry 14 audit warnings (hono, lodash, mysql2… from `prisma dev` tooling, not the running app); fixed only in Prisma 8 (still a release candidate). Upgrade when 8 is stable.
+- [ ] Prisma 8: still a release candidate on 2026-11-13 (npm `latest` = 8.0.0-rc.33), so not upgraded; Dependabot will offer it when final. Dev-tool audit warnings: 21 packages updated (hono, body-parser, qs, typescript-eslint…), 16 → 12 left, all in the shadcn command-line generator's own dependencies (not used by the app or the build). Production: 0.
 - [x] Migrations (2026-11-13): `schema.prisma` reconciled with the live database (indexes, enum names, foreign-key rules, column types/defaults copied from it); `prisma/migrations` = `0_baseline` (live as it was) + `1_document_counters_exchange_rates` + `2_drop_legacy_tables` (pos_sessions, processed_stripe_events). `migrations.int.test.ts` keeps them in step. The old hand-written `app/*.sql` files stay as history.
 - [x] Lint errors: 0 (was ~1,000; done 2026-11-12). 25 warnings left (hook dependencies, `<img>`).
 - [ ] Browser tests.
