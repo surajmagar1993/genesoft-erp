@@ -276,9 +276,9 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceI
         unitPrice: Number(li.unitPrice),
         taxRate: Number(li.taxPercent ?? 0),
       })),
-      contactPlaceOfSupply(order.contact)
+      contactPlaceOfSupply(order.contact),
+      { discount: Number(order.discount || 0), discountType: order.discountType }
     )
-    const discount = order.discountType === "PERCENT" ? Math.round(built.subtotal * Number(order.discount || 0)) / 100 : Number(order.discount || 0)
     const invoice = await prisma.invoice.create({
       data: {
         tenantId,
@@ -298,8 +298,8 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceI
         placeOfSupply: contactPlaceOfSupply(order.contact),
         subtotal: built.subtotal,
         taxAmount: built.taxAmount,
-        discount,
-        total: Math.round((built.total - discount) * 100) / 100,
+        discount: built.discount,
+        total: built.total,
         currencyCode: built.currencyCode,
         notes: order.notes || `From sales order ${order.orderNumber}`,
         terms: order.termsAndConditions || null,

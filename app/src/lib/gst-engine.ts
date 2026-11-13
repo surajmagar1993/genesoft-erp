@@ -109,12 +109,12 @@ export function computeGstSplit(
 
 /**
  * Rounds money to 2 decimals, half up. `toFixed(2)` rounds 47.925 down to
- * 47.92 because the float is 47.92499…; trimming to 12 significant digits
- * first removes that error.
+ * 47.92 because the float is 47.92499…; trimming to 15 significant digits
+ * first removes that error (exact for every amount a Decimal(15,2) column holds).
  */
 export function roundMoney(n: number): number {
   if (!Number.isFinite(n)) return 0
-  const cents = Number((n * 100).toPrecision(12))
+  const cents = Number((n * 100).toPrecision(15))
   return (Math.sign(cents) * Math.round(Math.abs(cents))) / 100 || 0
 }
 

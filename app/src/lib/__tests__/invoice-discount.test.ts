@@ -75,3 +75,12 @@ describe("money rounding", () => {
         expect(computeLineItemGst(1, 540, 8.875, "single").vatAmount).toBe(47.93)
     })
 })
+
+describe("money rounding on large amounts", () => {
+    it("keeps the cents up to the largest Decimal(15,2) value", async () => {
+        const { roundMoney } = await import("@/lib/gst-engine")
+        expect(roundMoney(10000000000.07)).toBe(10000000000.07)
+        expect(roundMoney(99999999999.99)).toBe(99999999999.99)
+        expect(roundMoney(9999999999999.99)).toBe(9999999999999.99)
+    })
+})

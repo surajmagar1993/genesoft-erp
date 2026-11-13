@@ -38,7 +38,15 @@ export function mapPrismaInvoiceToDB(inv: InvoiceWithRelations): InvoiceDB & { t
   const gstinStateCode = regime.mode === "IN_GST" && /^\d{2}/.test(supplierGstin) ? supplierGstin.slice(0, 2) : ""
   const supplierState = tenantSettings.state || COMPANY.state || (gstinStateCode ? getStateNameFromCode(gstinStateCode) : "")
   const placeOfSupply = inv.placeOfSupply || ""
-  const isInter = placeOfSupply ? placeOfSupply !== supplierState : false
+  // The saved tax lines are the truth (they were posted to the ledger); the states only decide
+  // when nothing was charged
+  const items = (inv.items || []) as { cgstAmount?: unknown; sgstAmount?: unknown; igstAmount?: unknown }[]
+  const charged = (k: "cgstAmount" | "sgstAmount" | "igstAmount") => items.some((it) => Number(it[k] || 0) > 0)
+  const isInter = charged("igstAmount")
+    ? true
+    : charged("cgstAmount") || charged("sgstAmount")
+      ? false
+      : !!placeOfSupply && !!supplierState && placeOfSupply.trim().toLowerCase() !== supplierState.trim().toLowerCase()
   const supplyType = regime.mode === "SINGLE" ? "single" : isInter ? "inter" : "intra"
 
   // KSA ZATCA phase 1: seller name, VAT number, timestamp, total with VAT, VAT total

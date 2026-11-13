@@ -1,6 +1,6 @@
 import { reportCaught } from "@/lib/error-reporting"
-import { getStateNameFromCode } from "@/lib/gst-returns-engine"
-import { roundMoney } from "@/lib/gst-engine"
+import { contactPlaceOfSupply } from "@/lib/invoice-lines"
+import { invoiceDiscountFraction, roundMoney } from "@/lib/gst-engine"
 import type { Prisma } from "@prisma/client"
 import { planLimitError } from "@/lib/plan-limits"
 import { prisma } from "@/lib/prisma"
@@ -101,24 +101,23 @@ if (!profile) return { error: "Recurring profile not found" }
 
     const taxCtx = await getTenantTaxContext(tenantId)
     // Worked out now, the same way as an invoice made by hand: the customer's state decides
-    // CGST+SGST or IGST (India), each line's discount comes off before tax, and the header
-    // totals are the sum of the lines (the profile's stored totals are only an estimate).
-    const billing = (profile.contact.billingAddress || {}) as { state?: string }
-    const gstinState = /^\d{2}/.test(profile.contact.gstin || "") ? getStateNameFromCode(profile.contact.gstin!.slice(0, 2)) : ""
-    const placeOfSupply = String(billing.state || gstinState || "")
-    const supplyType = supplyTypeFor(taxCtx, undefined, placeOfSupply)
+    // CGST+SGST or IGST (India), the discount comes off before tax and the header totals are
+    // the sum of the lines (the profile's stored totals are only an estimate). Line discounts
+    // become one document discount spread over the lines, which is how the invoice page, the
+    // PDF and the edit form read it, so all of them show the same tax.
+    const placeOfSupply = taxCtx.regime.mode === "IN_GST" ? contactPlaceOfSupply(profile.contact) || "" : ""
+    // No state on the customer: keep the profile's own choice (it was saved with IGST for an out-of-state customer)
+    const profileSaysInter = profile.items.some((item) => Number(item.igstRate || 0) > 0)
+    const supplyType = taxCtx.regime.mode === "IN_GST" && !placeOfSupply && profileSaysInter ? "inter" : supplyTypeFor(taxCtx, undefined, placeOfSupply)
+    const gross = profile.items.map((item) => Number(item.quantity) * Number(item.unitPrice))
+    const subtotal = roundMoney(gross.reduce((s, g) => s + g, 0))
+    const discountTotal = roundMoney(profile.items.reduce((s, item, i) => s + Math.min(Math.max(Number(item.discount || 0), 0), gross[i]), 0))
+    const fraction = invoiceDiscountFraction(profile.items.map((item) => ({ qty: Number(item.quantity), unitPrice: Number(item.unitPrice) })), discountTotal, "FIXED")
     const lines = profile.items.map((item) => {
-        const qty = Number(item.quantity)
-        const unitPrice = Number(item.unitPrice)
-        const gross = qty * unitPrice
-        const discount = Math.min(Math.max(Number(item.discount || 0), 0), gross)
         // The profile keeps the line's total rate (stored as CGST+SGST or IGST)
         const rate = Number(item.cgstRate || 0) + Number(item.sgstRate || 0) + Number(item.igstRate || 0)
-        const tax = invoiceItemTaxColumns(qty, unitPrice, rate, supplyType, gross > 0 ? discount / gross : 0)
-        return { item, gross, discount, tax }
+        return { item, tax: invoiceItemTaxColumns(Number(item.quantity), Number(item.unitPrice), rate, supplyType, fraction) }
     })
-    const subtotal = roundMoney(lines.reduce((s, l) => s + l.gross, 0))
-    const discountTotal = roundMoney(lines.reduce((s, l) => s + l.discount, 0))
     const taxTotal = roundMoney(lines.reduce((s, l) => s + l.tax.cgstAmount + l.tax.sgstAmount + l.tax.igstAmount + l.tax.vatAmount, 0))
     const total = roundMoney(subtotal - discountTotal + taxTotal)
     let result
@@ -153,7 +152,8 @@ if (!profile) return { error: "Recurring profile not found" }
                         quantity: item.quantity,
                         unitPrice: item.unitPrice,
                         ...tax,
-                        discount: item.discount,
+                        // the discount is on the invoice header (see above)
+                        discount: 0,
                     })),
                 },
             },
