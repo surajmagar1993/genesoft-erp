@@ -58,7 +58,7 @@
     "@playwright/test": "^1.65.0",
     "@tailwindcss/postcss": "^4",
     "@types/mailparser": "^3.4.6",
-    "@types/node": "^20",
+    "@types/node": "^24.19.2",
     "@types/nodemailer": "^8.0.2",
     "@types/papaparse": "^5.5.2",
     "@types/pg": "^8.20.0",
