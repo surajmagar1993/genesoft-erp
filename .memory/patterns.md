@@ -60,7 +60,7 @@
 - **Branch**: Single `main` branch (MVP stage). A push to `main` deploys to Vercel production (`genesoftdev`) and runs GitHub Actions CI.
 - **Remote**: `https://github.com/surajmagar1993/genesoft-erp.git`
 - **Secrets**: Never commit them — `.env` and `.env.*` are gitignored (`app/temp.env*` slipped in once and must be rotated). Tenant credentials stored in the DB go through `sealSecret()`/`openSecret()`.
-- **DATABASE_URL**: Supabase cloud endpoint (pooler 6543 on Vercel); `DIRECT_URL` (5432) for Prisma tooling. Never `db push`/`migrate dev` against the shared DB.
+- **DATABASE_URL**: Supabase cloud endpoint (pooler 6543 on Vercel); `DIRECT_URL` (5432) for Prisma tooling. Never `db push`/`migrate dev` against the shared DB; changes are migrations in `app/prisma/migrations` applied with `prisma migrate deploy`.
 - **Vercel Env**: Managed in the Vercel project (`vercel env`); the list of variables is in `app/README.md`.
 - **Commit Style**: `feat:`, `fix:`, `chore:` prefixes with descriptive body.
 

@@ -197,7 +197,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 - [x] Number series use a counter table (`document_counters`, `app/document_counters_migration.sql`, 2026-11-13): `nextSequence` locks and moves a per-business counter (never below the highest existing number); form previews use `peekSequence`. Invoices keep max+1 with a retry on a clash, since the number can be edited.
 - [x] Exchange rate is stored on invoices, credit notes, payments and bills (`exchange_rate`, `app/document_exchange_rates_migration.sql`, 2026-11-13): fixed when the document is first posted (`lockedRate` in ledger.ts); ledger rebuilds and the P&L reuse it. Rate lookups take the caller's transaction.
 - [ ] Rate limits on /join and the customer portal beyond the per-customer ticket limits; portal links never expire (product decision).
-- [ ] A separate production database with backups; migration history (needs the owner's Supabase account).
+- [ ] A separate production database with backups (needs the owner's Supabase account). Migration history: done (`prisma/migrations`).
 - [ ] Thin modules to mark beta or switch off before launch: Manufacturing, Batch & serial, Performance & training, Recruitment, RFQ, Budgets, Report builder (owner's decision).
 
 **Modules taken out on 2026-11-12 (owner's decision, pushed and live):**
@@ -235,7 +235,7 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 
 **Engineering:**
 - [ ] Prisma CLI dependencies carry 14 audit warnings (hono, lodash, mysql2… from `prisma dev` tooling, not the running app); fixed only in Prisma 8 (still a release candidate). Upgrade when 8 is stable.
-- [ ] Live database has drifted from `prisma/schema.prisma`: rebuild the schema from the live DB (`prisma db pull` on a copy) and move to real migrations.
+- [x] Migrations (2026-11-13): `schema.prisma` reconciled with the live database (indexes, enum names, foreign-key rules, column types/defaults copied from it); `prisma/migrations` = `0_baseline` (live as it was) + `1_document_counters_exchange_rates` + `2_drop_legacy_tables` (pos_sessions, processed_stripe_events). `migrations.int.test.ts` keeps them in step. The old hand-written `app/*.sql` files stay as history.
 - [x] Lint errors: 0 (was ~1,000; done 2026-11-12). 25 warnings left (hook dependencies, `<img>`).
 - [ ] Browser tests.
 - [ ] `npm run lint` still fails on old files outside the app source (`app/scripts/verify-*.ts`, `app/check-migration.ts`); `npx eslint src` is at 0 errors.

@@ -155,6 +155,7 @@ model User {
   tenant   Tenant?   @relation(fields: [tenantId], references: [id])
   employee Employee?
 
+  @@index([tenantId], map: "idx_profiles_tenant_id")
   @@map("profiles")
 }
 
@@ -254,7 +255,7 @@ model Contact {
   journalEntryLines JournalEntryLine[]
 
   priceListId       String?            @map("price_list_id") @db.Uuid
-  priceList         PriceList?         @relation(fields: [priceListId], references: [id], onDelete: SetNull)
+  priceList         PriceList?         @relation(fields: [priceListId], references: [id])
   recurringProfiles RecurringProfile[]
   emailMessages     EmailMessage[]
   formSubmissions   FormSubmission[]
@@ -267,6 +268,7 @@ model Contact {
   @@index([tenantId, gstin])
   @@index([tenantId, priceListId])
   @@index([portalToken])
+  @@index([priceListId], map: "idx_contacts_price_list_id")
   @@map("contacts")
 }
 
@@ -281,7 +283,7 @@ model Lead {
   contactId   String?    @map("contact_id") @db.Uuid
   title       String
   /// Person's name as entered on the lead (email/phone live on the linked contact)
-  contactName String?    @map("contact_name")
+  contactName String?    @default("") @map("contact_name")
   source      String? // web_form, referral, cold_call
   status      LeadStatus @default(NEW)
   score       Int        @default(0)
@@ -298,6 +300,7 @@ model Lead {
   formSubmissions   FormSubmission[]
 
   @@index([tenantId])
+  @@index([contactId], map: "idx_leads_contact_id")
   @@map("leads")
 }
 
@@ -330,6 +333,7 @@ model Deal {
   emailMessages     EmailMessage[]
 
   @@index([tenantId])
+  @@index([contactId], map: "idx_deals_contact_id")
   @@map("deals")
 }
 
@@ -389,6 +393,7 @@ model Product {
 
   @@index([tenantId])
   @@index([tenantId, sku])
+  @@index([taxGroupId], map: "idx_products_tax_group_id")
   @@map("products")
 }
 
@@ -473,13 +478,14 @@ model StockMovement {
   tenant               Tenant     @relation(fields: [tenantId], references: [id])
   product              Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   sourceWarehouse      Warehouse  @relation("SourceWarehouse", fields: [warehouseId], references: [id], onDelete: Cascade)
-  destinationWarehouse Warehouse? @relation("DestinationWarehouse", fields: [toWarehouseId], references: [id], onDelete: SetNull)
+  destinationWarehouse Warehouse? @relation("DestinationWarehouse", fields: [toWarehouseId], references: [id])
 
   @@index([tenantId])
   @@index([productId])
   @@index([warehouseId])
   @@index([tenantId, referenceNo])
   @@index([tenantId, createdAt])
+  @@index([toWarehouseId], map: "idx_stock_movements_to_warehouse_id")
   @@map("stock_movements")
 }
 
@@ -522,6 +528,7 @@ model TaxRate {
 
   taxGroup TaxGroup @relation(fields: [taxGroupId], references: [id])
 
+  @@index([taxGroupId], map: "idx_tax_rates_tax_group_id")
   @@map("tax_rates")
 }
 
@@ -547,12 +554,12 @@ model Invoice {
   placeOfSupply String? @map("place_of_supply")
 
   // Amounts
-  subtotal     Decimal @default(0) @db.Decimal(15, 2)
-  taxAmount    Decimal @default(0) @map("tax_amount") @db.Decimal(15, 2)
-  discount     Decimal @default(0) @db.Decimal(15, 2)
-  total        Decimal @default(0) @db.Decimal(15, 2)
-  totalInWords String? @map("total_in_words")
-  currencyCode String  @default("INR") @map("currency_code")
+  subtotal     Decimal  @default(0) @db.Decimal(15, 2)
+  taxAmount    Decimal  @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  discount     Decimal  @default(0) @db.Decimal(15, 2)
+  total        Decimal  @default(0) @db.Decimal(15, 2)
+  totalInWords String?  @map("total_in_words")
+  currencyCode String   @default("INR") @map("currency_code")
   /// Rate to the business's currency, fixed when the document is first posted (ledger.ts lockedRate)
   exchangeRate Decimal? @map("exchange_rate") @db.Decimal(20, 10)
 
@@ -583,7 +590,7 @@ model Invoice {
   payments            Payment[]
   creditNotes         CreditNote[]
   recurringProfileId  String?              @map("recurring_profile_id") @db.Uuid
-  recurringProfile    RecurringProfile?    @relation(fields: [recurringProfileId], references: [id], onDelete: SetNull)
+  recurringProfile    RecurringProfile?    @relation(fields: [recurringProfileId], references: [id])
   recurringExecutions RecurringExecution[]
   convertedChallans   DeliveryChallan[]    @relation("InvoiceConvertedChallan")
 
@@ -593,7 +600,7 @@ model Invoice {
   @@index([recurringProfileId])
   @@index([tenantId, invoiceDate])
   @@index([tenantId, createdAt])
-  @@index([contactId])
+  @@index([contactId], map: "idx_invoices_contact_id")
   @@map("invoices")
 }
 
@@ -642,10 +649,8 @@ model InvoiceItem {
   invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id])
 
-  @@index([invoiceId])
-
-  @@index([productId])
-
+  @@index([invoiceId], map: "idx_invoice_line_items_invoice_id")
+  @@index([productId], map: "idx_invoice_line_items_product_id")
   @@map("invoice_line_items")
 }
 
@@ -692,6 +697,7 @@ model Quote {
   @@unique([tenantId, quoteNumber])
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([contactId], map: "idx_quotes_contact_id")
   @@map("quotes")
 }
 
@@ -721,6 +727,7 @@ model QuoteItem {
   // Relations
   quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 
+  @@index([quoteId], map: "idx_quote_items_quote_id")
   @@map("quote_items")
 }
 
@@ -819,6 +826,8 @@ model SalesOrder {
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([contactId], map: "idx_sales_orders_contact_id")
+  @@index([quoteId], map: "idx_sales_orders_quote_id")
   @@map("sales_orders")
 }
 
@@ -844,6 +853,7 @@ model SalesOrderItem {
   // Relations
   order SalesOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
+  @@index([orderId], map: "idx_sales_order_items_order_id")
   @@map("sales_order_items")
 }
 
@@ -866,7 +876,7 @@ model Payment {
   notes         String?
   currencyCode  String        @default("INR") @map("currency_code")
   /// Rate to the business's currency, fixed when the document is first posted (ledger.ts lockedRate)
-  exchangeRate Decimal? @map("exchange_rate") @db.Decimal(20, 10)
+  exchangeRate  Decimal?      @map("exchange_rate") @db.Decimal(20, 10)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -919,11 +929,11 @@ model Bill {
   dueDate  DateTime? @map("due_date")
 
   // Amounts
-  subtotal     Decimal @default(0) @db.Decimal(15, 2)
-  taxAmount    Decimal @default(0) @map("tax_amount") @db.Decimal(15, 2)
-  discount     Decimal @default(0) @db.Decimal(15, 2)
-  total        Decimal @default(0) @db.Decimal(15, 2)
-  currencyCode String  @default("INR") @map("currency_code")
+  subtotal     Decimal  @default(0) @db.Decimal(15, 2)
+  taxAmount    Decimal  @default(0) @map("tax_amount") @db.Decimal(15, 2)
+  discount     Decimal  @default(0) @db.Decimal(15, 2)
+  total        Decimal  @default(0) @db.Decimal(15, 2)
+  currencyCode String   @default("INR") @map("currency_code")
   /// Rate to the business's currency, fixed when the document is first posted (ledger.ts lockedRate)
   exchangeRate Decimal? @map("exchange_rate") @db.Decimal(20, 10)
 
@@ -943,6 +953,7 @@ model Bill {
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([tenantId, billDate])
+  @@index([contactId], map: "idx_bills_contact_id")
   @@map("bills")
 }
 
@@ -974,6 +985,8 @@ model BillItem {
   bill    Bill     @relation(fields: [billId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id])
 
+  @@index([billId], map: "idx_bill_items_bill_id")
+  @@index([productId], map: "idx_bill_items_product_id")
   @@map("bill_items")
 }
 
@@ -1008,8 +1021,8 @@ model PurchaseOrder {
   // Relations
   tenant    Tenant                @relation(fields: [tenantId], references: [id])
   vendor    Contact               @relation(fields: [vendorId], references: [id])
-  warehouse Warehouse?            @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
-  bill      Bill?                 @relation(fields: [billId], references: [id], onDelete: SetNull)
+  warehouse Warehouse?            @relation(fields: [warehouseId], references: [id])
+  bill      Bill?                 @relation(fields: [billId], references: [id])
   items     PurchaseOrderItem[]
   rfqs      RequestForQuotation[]
   serials   ProductSerial[]
@@ -1017,6 +1030,9 @@ model PurchaseOrder {
   @@unique([tenantId, orderNumber])
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([billId], map: "idx_purchase_orders_bill_id")
+  @@index([vendorId], map: "idx_purchase_orders_vendor_id")
+  @@index([warehouseId], map: "idx_purchase_orders_warehouse_id")
   @@map("purchase_orders")
 }
 
@@ -1035,8 +1051,10 @@ model PurchaseOrderItem {
 
   // Relations
   purchaseOrder PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
-  product       Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  product       Product?      @relation(fields: [productId], references: [id])
 
+  @@index([purchaseOrderId], map: "idx_purchase_order_items_po_id")
+  @@index([productId], map: "idx_purchase_order_items_product_id")
   @@map("purchase_order_items")
 }
 
@@ -1236,6 +1254,7 @@ model Notification {
 
   @@index([userId, tenantId])
   @@index([tenantId, userId, createdAt])
+  @@index([tenantId], map: "idx_notifications_tenant_id")
   @@map("notifications")
 }
 
@@ -1265,6 +1284,7 @@ model LedgerEntry {
 
   @@index([tenantId, contactId])
   @@index([tenantId, referenceId])
+  @@index([contactId], map: "idx_ledger_entries_contact_id")
   @@map("ledger_entries")
 }
 
@@ -1323,7 +1343,7 @@ model TenantAuditLog {
   metadata   Json     @default("{}")
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([tenantId, createdAt(sort: Desc)], map: "idx_tenant_audit_logs_tenant_time")
   @@index([action], map: "idx_tenant_audit_logs_action")
@@ -1357,7 +1377,7 @@ model Department {
 
   // Relations
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  manager      Employee?     @relation("DepartmentManager", fields: [managerId], references: [id], onDelete: SetNull)
+  manager      Employee?     @relation("DepartmentManager", fields: [managerId], references: [id])
   employees    Employee[]    @relation("DepartmentEmployees")
   designations Designation[]
   jobOpenings  JobOpening[]
@@ -1365,6 +1385,7 @@ model Department {
 
   @@unique([tenantId, name])
   @@index([tenantId])
+  @@index([managerId], map: "idx_departments_manager_id")
   @@map("departments")
 }
 
@@ -1379,7 +1400,7 @@ model Designation {
 
   // Relations
   tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  department  Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  department  Department?  @relation(fields: [departmentId], references: [id])
   employees   Employee[]
   jobOpenings JobOpening[]
 
@@ -1421,10 +1442,10 @@ model Employee {
 
   // Relations
   tenant              Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user                User?                @relation(fields: [userId], references: [id], onDelete: SetNull)
-  department          Department?          @relation("DepartmentEmployees", fields: [departmentId], references: [id], onDelete: SetNull)
-  designation         Designation?         @relation(fields: [designationId], references: [id], onDelete: SetNull)
-  manager             Employee?            @relation("ReportingHierarchy", fields: [managerId], references: [id], onDelete: SetNull)
+  user                User?                @relation(fields: [userId], references: [id])
+  department          Department?          @relation("DepartmentEmployees", fields: [departmentId], references: [id])
+  designation         Designation?         @relation(fields: [designationId], references: [id])
+  manager             Employee?            @relation("ReportingHierarchy", fields: [managerId], references: [id])
   subordinates        Employee[]           @relation("ReportingHierarchy")
   managedDepartments  Department[]         @relation("DepartmentManager")
   attendances         Attendance[]
@@ -1434,7 +1455,7 @@ model Employee {
   assignedTasks       ProjectTask[]
   timeEntries         ProjectTimeEntry[]
   expenses            Expense[]
-  salaryStructure     SalaryStructure?     @relation(fields: [salaryStructureId], references: [id], onDelete: SetNull)
+  salaryStructure     SalaryStructure?     @relation(fields: [salaryStructureId], references: [id])
   payslips            Payslip[]
   convertedApplicant  JobApplicant?        @relation("ApplicantConvertedEmployee")
   interviews          ApplicantInterview[] @relation("EmployeeInterviews")
@@ -1449,6 +1470,7 @@ model Employee {
   @@index([departmentId])
   @@index([designationId])
   @@index([managerId])
+  @@index([salaryStructureId], map: "idx_employees_salary_structure_id")
   @@map("employees")
 }
 
@@ -1566,8 +1588,8 @@ model Project {
   updatedAt     DateTime           @updatedAt @map("updated_at")
 
   tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  client      Contact?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  manager     Employee?          @relation("ProjectManager", fields: [managerId], references: [id], onDelete: SetNull)
+  client      Contact?           @relation(fields: [clientId], references: [id])
+  manager     Employee?          @relation("ProjectManager", fields: [managerId], references: [id])
   members     ProjectMember[]
   milestones  ProjectMilestone[]
   tasks       ProjectTask[]
@@ -1645,8 +1667,8 @@ model ProjectTask {
 
   tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   project          Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  milestone        ProjectMilestone?  @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
-  assignedEmployee Employee?          @relation(fields: [assignedEmployeeId], references: [id], onDelete: SetNull)
+  milestone        ProjectMilestone?  @relation(fields: [milestoneId], references: [id])
+  assignedEmployee Employee?          @relation(fields: [assignedEmployeeId], references: [id])
   timeEntries      ProjectTimeEntry[]
 
   @@unique([tenantId, taskCode])
@@ -1674,7 +1696,7 @@ model ProjectTimeEntry {
 
   tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   project  Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  task     ProjectTask? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  task     ProjectTask? @relation(fields: [taskId], references: [id])
   employee Employee     @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
@@ -1744,7 +1766,7 @@ model RentalAsset {
   updatedAt       DateTime          @updatedAt @map("updated_at")
 
   tenant         Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  warehouse      Warehouse?            @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  warehouse      Warehouse?            @relation(fields: [warehouseId], references: [id])
   agreementItems RentalAgreementItem[]
   returns        RentalReturn[]
 
@@ -1777,7 +1799,7 @@ model RentalAgreement {
   updatedAt         DateTime           @updatedAt @map("updated_at")
 
   tenant  Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  contact Contact               @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  contact Contact               @relation(fields: [contactId], references: [id])
   items   RentalAgreementItem[]
   returns RentalReturn[]
 
@@ -1802,7 +1824,7 @@ model RentalAgreementItem {
 
   tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   agreement RentalAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
-  asset     RentalAsset     @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  asset     RentalAsset     @relation(fields: [assetId], references: [id])
 
   @@index([tenantId])
   @@index([agreementId])
@@ -1826,7 +1848,7 @@ model RentalReturn {
 
   tenant    Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   agreement RentalAgreement @relation(fields: [agreementId], references: [id], onDelete: Cascade)
-  asset     RentalAsset     @relation(fields: [assetId], references: [id], onDelete: Restrict)
+  asset     RentalAsset     @relation(fields: [assetId], references: [id])
 
   @@index([tenantId])
   @@index([agreementId])
@@ -1892,15 +1914,15 @@ model CreditNote {
   remainingBalance Decimal          @default(0) @map("remaining_balance") @db.Decimal(15, 2)
   currencyCode     String           @default("INR") @map("currency_code")
   /// Rate to the business's currency, fixed when the document is first posted (ledger.ts lockedRate)
-  exchangeRate Decimal? @map("exchange_rate") @db.Decimal(20, 10)
+  exchangeRate     Decimal?         @map("exchange_rate") @db.Decimal(20, 10)
   notes            String?
   terms            String?
   createdAt        DateTime         @default(now()) @map("created_at")
   updatedAt        DateTime         @updatedAt @map("updated_at")
 
   tenant  Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  contact Contact            @relation(fields: [contactId], references: [id], onDelete: Restrict)
-  invoice Invoice?           @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  contact Contact            @relation(fields: [contactId], references: [id])
+  invoice Invoice?           @relation(fields: [invoiceId], references: [id])
   items   CreditNoteItem[]
   refunds CreditNoteRefund[]
 
@@ -1929,8 +1951,8 @@ model CreditNoteItem {
 
   tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   creditNote CreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
-  product    Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
-  warehouse  Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  product    Product?   @relation(fields: [productId], references: [id])
+  warehouse  Warehouse? @relation(fields: [warehouseId], references: [id])
 
   @@index([tenantId])
   @@index([creditNoteId])
@@ -2017,9 +2039,9 @@ model Expense {
   tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   expenseAccount   Account           @relation("ExpenseAccount", fields: [accountId], references: [id])
   paymentAccount   Account?          @relation("PaymentAccount", fields: [paymentAccountId], references: [id])
-  vendor           Contact?          @relation(fields: [vendorId], references: [id], onDelete: SetNull)
-  employee         Employee?         @relation(fields: [employeeId], references: [id], onDelete: SetNull)
-  journalEntry     JournalEntry?     @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+  vendor           Contact?          @relation(fields: [vendorId], references: [id])
+  employee         Employee?         @relation(fields: [employeeId], references: [id])
+  journalEntry     JournalEntry?     @relation(fields: [journalEntryId], references: [id])
   bankTransactions BankTransaction[]
 
   @@unique([tenantId, expenseNumber])
@@ -2030,6 +2052,7 @@ model Expense {
   @@index([employeeId])
   @@index([status])
   @@index([tenantId, expenseDate])
+  @@index([journalEntryId], map: "idx_expenses_journal_entry_id")
   @@map("expenses")
 }
 
@@ -2078,7 +2101,7 @@ model JournalEntryLine {
   tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
   account      Account      @relation(fields: [accountId], references: [id])
-  contact      Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  contact      Contact?     @relation(fields: [contactId], references: [id])
 
   @@index([tenantId])
   @@index([journalEntryId])
@@ -2215,7 +2238,7 @@ model BankAccount {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   tenant         Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  chartOfAccount Account?          @relation(fields: [chartOfAccountId], references: [id], onDelete: SetNull)
+  chartOfAccount Account?          @relation(fields: [chartOfAccountId], references: [id])
   statements     BankStatement[]
   transactions   BankTransaction[]
 
@@ -2287,10 +2310,10 @@ model BankTransaction {
 
   tenant       Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   bankAccount  BankAccount    @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
-  statement    BankStatement? @relation(fields: [statementId], references: [id], onDelete: SetNull)
-  payment      Payment?       @relation(fields: [paymentId], references: [id], onDelete: SetNull)
-  expense      Expense?       @relation(fields: [expenseId], references: [id], onDelete: SetNull)
-  journalEntry JournalEntry?  @relation(fields: [journalEntryId], references: [id], onDelete: SetNull)
+  statement    BankStatement? @relation(fields: [statementId], references: [id])
+  payment      Payment?       @relation(fields: [paymentId], references: [id])
+  expense      Expense?       @relation(fields: [expenseId], references: [id])
+  journalEntry JournalEntry?  @relation(fields: [journalEntryId], references: [id])
 
   @@index([tenantId])
   @@index([bankAccountId])
@@ -2374,7 +2397,7 @@ model RecurringProfile {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   tenant     Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  contact    Contact                @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  contact    Contact                @relation(fields: [contactId], references: [id])
   items      RecurringProfileItem[]
   invoices   Invoice[]
   executions RecurringExecution[]
@@ -2411,7 +2434,7 @@ model RecurringProfileItem {
 
   tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   recurringProfile RecurringProfile @relation(fields: [recurringProfileId], references: [id], onDelete: Cascade)
-  product          Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  product          Product?         @relation(fields: [productId], references: [id])
 
   @@index([tenantId])
   @@index([recurringProfileId])
@@ -2433,7 +2456,7 @@ model RecurringExecution {
 
   tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   recurringProfile RecurringProfile @relation(fields: [recurringProfileId], references: [id], onDelete: Cascade)
-  invoice          Invoice?         @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  invoice          Invoice?         @relation(fields: [invoiceId], references: [id])
 
   @@index([tenantId])
   @@index([recurringProfileId])
@@ -2477,14 +2500,14 @@ model EmailAccount {
   smtpHost     String? @map("smtp_host")
   smtpPort     Int?    @default(587) @map("smtp_port")
   smtpUser     String? @map("smtp_user")
-  smtpPassword String? @map("smtp_password")
+  smtpPassword String? @default("") @map("smtp_password")
   smtpSecure   Boolean @default(true) @map("smtp_secure")
 
   // IMAP settings
   imapHost     String? @map("imap_host")
   imapPort     Int?    @default(993) @map("imap_port")
   imapUser     String? @map("imap_user")
-  imapPassword String? @map("imap_password")
+  imapPassword String? @default("") @map("imap_password")
   imapSecure   Boolean @default(true) @map("imap_secure")
 
   isDefault            Boolean   @default(false) @map("is_default")
@@ -2549,10 +2572,10 @@ model EmailMessage {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  emailAccount EmailAccount? @relation(fields: [emailAccountId], references: [id], onDelete: SetNull)
-  contact      Contact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  lead         Lead?         @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  deal         Deal?         @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  emailAccount EmailAccount? @relation(fields: [emailAccountId], references: [id])
+  contact      Contact?      @relation(fields: [contactId], references: [id])
+  lead         Lead?         @relation(fields: [leadId], references: [id])
+  deal         Deal?         @relation(fields: [dealId], references: [id])
 
   @@index([tenantId])
   @@index([emailAccountId])
@@ -2670,12 +2693,14 @@ model FormSubmission {
 
   tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   webForm WebForm  @relation(fields: [webFormId], references: [id], onDelete: Cascade)
-  lead    Lead?    @relation(fields: [leadId], references: [id], onDelete: SetNull)
-  contact Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  lead    Lead?    @relation(fields: [leadId], references: [id])
+  contact Contact? @relation(fields: [contactId], references: [id])
 
   @@index([tenantId])
   @@index([webFormId])
   @@index([tenantId, createdAt])
+  @@index([contactId], map: "idx_form_submissions_contact_id")
+  @@index([leadId], map: "idx_form_submissions_lead_id")
   @@map("form_submissions")
 }
 
@@ -3016,10 +3041,10 @@ model WorkOrder {
 
   // Relations
   tenant          Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  bom             BillOfMaterials     @relation(fields: [bomId], references: [id], onDelete: Restrict)
-  product         Product             @relation("ProductWorkOrders", fields: [productId], references: [id], onDelete: Restrict)
-  sourceWarehouse Warehouse           @relation("WorkOrderSourceWarehouse", fields: [sourceWarehouseId], references: [id], onDelete: Restrict)
-  targetWarehouse Warehouse           @relation("WorkOrderTargetWarehouse", fields: [targetWarehouseId], references: [id], onDelete: Restrict)
+  bom             BillOfMaterials     @relation(fields: [bomId], references: [id])
+  product         Product             @relation("ProductWorkOrders", fields: [productId], references: [id])
+  sourceWarehouse Warehouse           @relation("WorkOrderSourceWarehouse", fields: [sourceWarehouseId], references: [id])
+  targetWarehouse Warehouse           @relation("WorkOrderTargetWarehouse", fields: [targetWarehouseId], references: [id])
   qcInspections   QualityInspection[]
 
   @@unique([tenantId, orderNumber])
@@ -3027,6 +3052,8 @@ model WorkOrder {
   @@index([productId])
   @@index([bomId])
   @@index([status])
+  @@index([sourceWarehouseId], map: "idx_work_orders_source_warehouse_id")
+  @@index([targetWarehouseId], map: "idx_work_orders_target_warehouse_id")
   @@map("work_orders")
 }
 
@@ -3115,8 +3142,8 @@ model JobOpening {
 
   // Relations
   tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  department  Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  designation Designation?   @relation(fields: [designationId], references: [id], onDelete: SetNull)
+  department  Department?    @relation(fields: [departmentId], references: [id])
+  designation Designation?   @relation(fields: [designationId], references: [id])
   applicants  JobApplicant[]
 
   @@unique([tenantId, jobCode])
@@ -3156,7 +3183,7 @@ model JobApplicant {
   // Relations
   tenant            Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   jobOpening        JobOpening           @relation(fields: [jobOpeningId], references: [id], onDelete: Cascade)
-  convertedEmployee Employee?            @relation("ApplicantConvertedEmployee", fields: [convertedEmployeeId], references: [id], onDelete: SetNull)
+  convertedEmployee Employee?            @relation("ApplicantConvertedEmployee", fields: [convertedEmployeeId], references: [id])
   interviews        ApplicantInterview[]
 
   @@unique([tenantId, applicantNumber])
@@ -3188,7 +3215,7 @@ model ApplicantInterview {
   // Relations
   tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   applicant   JobApplicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
-  interviewer Employee?    @relation("EmployeeInterviews", fields: [interviewerId], references: [id], onDelete: SetNull)
+  interviewer Employee?    @relation("EmployeeInterviews", fields: [interviewerId], references: [id])
 
   @@index([tenantId])
   @@index([applicantId])
@@ -3271,10 +3298,10 @@ model DeliveryChallan {
 
   // Relations
   tenant           Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  contact          Contact?              @relation(fields: [contactId], references: [id], onDelete: SetNull)
-  sourceWarehouse  Warehouse?            @relation("WarehouseDeliveryChallans", fields: [sourceWarehouseId], references: [id], onDelete: SetNull)
-  salesOrder       SalesOrder?           @relation(fields: [salesOrderId], references: [id], onDelete: SetNull)
-  convertedInvoice Invoice?              @relation("InvoiceConvertedChallan", fields: [convertedInvoiceId], references: [id], onDelete: SetNull)
+  contact          Contact?              @relation(fields: [contactId], references: [id])
+  sourceWarehouse  Warehouse?            @relation("WarehouseDeliveryChallans", fields: [sourceWarehouseId], references: [id])
+  salesOrder       SalesOrder?           @relation(fields: [salesOrderId], references: [id])
+  convertedInvoice Invoice?              @relation("InvoiceConvertedChallan", fields: [convertedInvoiceId], references: [id])
   items            DeliveryChallanItem[]
 
   @@unique([tenantId, challanNumber])
@@ -3304,7 +3331,7 @@ model DeliveryChallanItem {
 
   // Relations
   challan DeliveryChallan @relation(fields: [challanId], references: [id], onDelete: Cascade)
-  product Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  product Product?        @relation(fields: [productId], references: [id])
 
   @@index([challanId])
   @@index([productId])
@@ -3321,17 +3348,17 @@ model RequestForQuotation {
   rfqNumber     String    @map("rfq_number")
   title         String
   status        RfqStatus @default(DRAFT)
-  issueDate     DateTime  @default(now()) @map("issue_date")
-  dueDate       DateTime  @map("due_date")
+  issueDate     DateTime  @default(now()) @map("issue_date") @db.Timestamptz(6)
+  dueDate       DateTime  @map("due_date") @db.Timestamptz(6)
   notes         String?
   terms         String?
   convertedPoId String?   @map("converted_po_id") @db.Uuid
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  tenant      Tenant           @relation(fields: [tenantId], references: [id])
-  convertedPo PurchaseOrder?   @relation(fields: [convertedPoId], references: [id], onDelete: SetNull)
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  convertedPo PurchaseOrder?   @relation(fields: [convertedPoId], references: [id], onUpdate: NoAction)
   items       RfqItem[]
   vendors     RfqVendorQuote[]
 
@@ -3352,12 +3379,12 @@ model RfqItem {
   unit            String   @default("pcs")
   hsnSacCode      String?  @map("hsn_sac_code")
   notes           String?
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  rfq        RequestForQuotation  @relation(fields: [rfqId], references: [id], onDelete: Cascade)
-  product    Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+  rfq        RequestForQuotation  @relation(fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  product    Product?             @relation(fields: [productId], references: [id], onUpdate: NoAction)
   quoteItems RfqVendorQuoteItem[]
 
   @@index([rfqId])
@@ -3372,8 +3399,8 @@ model RfqVendorQuote {
   vendorId       String          @map("vendor_id") @db.Uuid
   status         RfqVendorStatus @default(INVITED)
   quoteReference String?         @map("quote_reference")
-  quoteDate      DateTime?       @map("quote_date")
-  validUntil     DateTime?       @map("valid_until")
+  quoteDate      DateTime?       @map("quote_date") @db.Timestamptz(6)
+  validUntil     DateTime?       @map("valid_until") @db.Timestamptz(6)
   currencyCode   String          @default("INR") @map("currency_code")
   subtotal       Decimal         @default(0) @db.Decimal(15, 2)
   taxAmount      Decimal         @default(0) @map("tax_amount") @db.Decimal(15, 2)
@@ -3381,14 +3408,14 @@ model RfqVendorQuote {
   leadTimeDays   Int?            @map("lead_time_days")
   notes          String?
   isWinner       Boolean         @default(false) @map("is_winner")
-  awardedAt      DateTime?       @map("awarded_at")
-  createdAt      DateTime        @default(now()) @map("created_at")
-  updatedAt      DateTime        @updatedAt @map("updated_at")
+  awardedAt      DateTime?       @map("awarded_at") @db.Timestamptz(6)
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  tenant Tenant               @relation(fields: [tenantId], references: [id])
-  rfq    RequestForQuotation  @relation(fields: [rfqId], references: [id], onDelete: Cascade)
-  vendor Contact              @relation(fields: [vendorId], references: [id])
+  tenant Tenant               @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  rfq    RequestForQuotation  @relation(fields: [rfqId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  vendor Contact              @relation(fields: [vendorId], references: [id], onUpdate: NoAction)
   items  RfqVendorQuoteItem[]
 
   @@unique([rfqId, vendorId])
@@ -3408,12 +3435,12 @@ model RfqVendorQuoteItem {
   lineTotal    Decimal  @default(0) @map("line_total") @db.Decimal(15, 2)
   availableQty Decimal? @map("available_qty") @db.Decimal(15, 2)
   notes        String?
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  quote   RfqVendorQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-  rfqItem RfqItem        @relation(fields: [rfqItemId], references: [id], onDelete: Cascade)
+  quote   RfqVendorQuote @relation(fields: [quoteId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  rfqItem RfqItem        @relation(fields: [rfqItemId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([quoteId])
   @@index([rfqItemId])
@@ -3426,6 +3453,8 @@ enum RfqStatus {
   BIDDING_CLOSED
   CONVERTED
   CANCELLED
+
+  @@map("rfq_status")
 }
 
 enum RfqVendorStatus {
@@ -3433,6 +3462,8 @@ enum RfqVendorStatus {
   SUBMITTED
   ACCEPTED
   REJECTED
+
+  @@map("rfq_vendor_status")
 }
 
 // ============================================
@@ -3447,22 +3478,22 @@ model ProductBatch {
   batchNumber       String      @map("batch_number")
   initialQty        Decimal     @default(0) @map("initial_qty") @db.Decimal(15, 2)
   currentQty        Decimal     @default(0) @map("current_qty") @db.Decimal(15, 2)
-  manufacturingDate DateTime?   @map("manufacturing_date")
-  expiryDate        DateTime?   @map("expiry_date")
+  manufacturingDate DateTime?   @map("manufacturing_date") @db.Timestamptz(6)
+  expiryDate        DateTime?   @map("expiry_date") @db.Timestamptz(6)
   status            BatchStatus @default(ACTIVE)
   costPrice         Decimal?    @map("cost_price") @db.Decimal(15, 2)
   supplierBatchNo   String?     @map("supplier_batch_no")
   notes             String?
-  createdAt         DateTime    @default(now()) @map("created_at")
-  updatedAt         DateTime    @updatedAt @map("updated_at")
+  createdAt         DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  tenant    Tenant          @relation(fields: [tenantId], references: [id])
-  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
-  warehouse Warehouse       @relation(fields: [warehouseId], references: [id])
+  tenant    Tenant          @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  warehouse Warehouse       @relation(fields: [warehouseId], references: [id], onUpdate: NoAction)
   serials   ProductSerial[]
 
-  @@unique([tenantId, productId, batchNumber])
+  @@unique([tenantId, productId, batchNumber], map: "product_batches_tenant_product_batch_key")
   @@index([tenantId])
   @@index([productId])
   @@index([warehouseId])
@@ -3481,19 +3512,19 @@ model ProductSerial {
   status          SerialStatus @default(AVAILABLE)
   purchaseOrderId String?      @map("purchase_order_id") @db.Uuid
   warrantyMonths  Int?         @map("warranty_months")
-  warrantyExpiry  DateTime?    @map("warranty_expiry")
+  warrantyExpiry  DateTime?    @map("warranty_expiry") @db.Timestamptz(6)
   notes           String?
-  createdAt       DateTime     @default(now()) @map("created_at")
-  updatedAt       DateTime     @updatedAt @map("updated_at")
+  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  tenant        Tenant         @relation(fields: [tenantId], references: [id])
-  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
-  warehouse     Warehouse?     @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
-  batch         ProductBatch?  @relation(fields: [batchId], references: [id], onDelete: SetNull)
-  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onUpdate: NoAction)
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  warehouse     Warehouse?     @relation(fields: [warehouseId], references: [id], onUpdate: NoAction)
+  batch         ProductBatch?  @relation(fields: [batchId], references: [id], onUpdate: NoAction)
+  purchaseOrder PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onUpdate: NoAction)
 
-  @@unique([tenantId, productId, serialNumber])
+  @@unique([tenantId, productId, serialNumber], map: "product_serials_tenant_product_serial_key")
   @@index([tenantId])
   @@index([productId])
   @@index([warehouseId])
@@ -3508,6 +3539,8 @@ enum BatchStatus {
   EXPIRED
   RECALLED
   DEPLETED
+
+  @@map("batch_status")
 }
 
 enum SerialStatus {
@@ -3517,6 +3550,8 @@ enum SerialStatus {
   DEFECTIVE
   MAINTENANCE
   RETURNED
+
+  @@map("serial_status")
 }
 
 // ============================================
@@ -3526,32 +3561,32 @@ enum SerialStatus {
 model Budget {
   id                       String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   tenantId                 String           @map("tenant_id") @db.Uuid
-  name                     String
-  fiscalYear               String           @map("fiscal_year")
+  name                     String           @db.VarChar(255)
+  fiscalYear               String           @map("fiscal_year") @db.VarChar(50)
   periodType               BudgetPeriodType @default(ANNUAL) @map("period_type")
-  startDate                DateTime         @map("start_date")
-  endDate                  DateTime         @map("end_date")
+  startDate                DateTime         @map("start_date") @db.Timestamptz(6)
+  endDate                  DateTime         @map("end_date") @db.Timestamptz(6)
   status                   BudgetStatus     @default(DRAFT)
   departmentId             String?          @map("department_id") @db.Uuid
   totalBudgetedAmount      Decimal          @default(0) @map("total_budgeted_amount") @db.Decimal(15, 2)
   alertThresholdPercent    Int              @default(80) @map("alert_threshold_percent")
   criticalThresholdPercent Int              @default(100) @map("critical_threshold_percent")
   notes                    String?
-  approvedBy               String?          @map("approved_by")
-  approvedAt               DateTime?        @map("approved_at")
-  createdAt                DateTime         @default(now()) @map("created_at")
-  updatedAt                DateTime         @updatedAt @map("updated_at")
+  approvedBy               String?          @map("approved_by") @db.VarChar(255)
+  approvedAt               DateTime?        @map("approved_at") @db.Timestamptz(6)
+  createdAt                DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  department Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  tenant     Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  department Department?  @relation(fields: [departmentId], references: [id], onUpdate: NoAction)
   items      BudgetItem[]
 
   @@index([tenantId])
   @@index([departmentId])
   @@index([status])
   @@index([fiscalYear])
-  @@index([startDate, endDate])
+  @@index([startDate, endDate], map: "budgets_dates_idx")
   @@map("budgets")
 }
 
@@ -3560,16 +3595,16 @@ model BudgetItem {
   tenantId       String   @map("tenant_id") @db.Uuid
   budgetId       String   @map("budget_id") @db.Uuid
   accountId      String   @map("account_id") @db.Uuid
-  category       String?
+  category       String?  @db.VarChar(100)
   budgetedAmount Decimal  @default(0) @map("budgeted_amount") @db.Decimal(15, 2)
   notes          String?
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  budget  Budget  @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  budget  Budget  @relation(fields: [budgetId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([tenantId])
   @@index([budgetId])
@@ -3581,6 +3616,8 @@ enum BudgetPeriodType {
   ANNUAL
   QUARTERLY
   MONTHLY
+
+  @@map("budget_period_type")
 }
 
 enum BudgetStatus {
@@ -3590,6 +3627,8 @@ enum BudgetStatus {
   ACTIVE
   REVISED
   CLOSED
+
+  @@map("budget_status")
 }
 
 // ============================================================================
@@ -3662,7 +3701,7 @@ model AppraisalCycle {
   status      AppraisalCycleStatus @default(PLANNING)
   description String?
   createdAt   DateTime             @default(now()) @map("created_at")
-  updatedAt   DateTime             @updatedAt @map("updated_at")
+  updatedAt   DateTime             @default(now()) @updatedAt @map("updated_at")
 
   // Relations
   tenant  Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -3694,13 +3733,13 @@ model PerformanceReview {
   competencies         Json?
   completedAt          DateTime?    @map("completed_at")
   createdAt            DateTime     @default(now()) @map("created_at")
-  updatedAt            DateTime     @updatedAt @map("updated_at")
+  updatedAt            DateTime     @default(now()) @updatedAt @map("updated_at")
 
   // Relations
   tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   cycle    AppraisalCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
   employee Employee       @relation("EmployeeReviews", fields: [employeeId], references: [id], onDelete: Cascade)
-  reviewer Employee?      @relation("ReviewerConductedReviews", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewer Employee?      @relation("ReviewerConductedReviews", fields: [reviewerId], references: [id])
 
   @@unique([tenantId, reviewCode])
   @@index([tenantId])
@@ -3726,12 +3765,12 @@ model EmployeeGoal {
   status       GoalStatus   @default(NOT_STARTED)
   dueDate      DateTime?    @map("due_date")
   createdAt    DateTime     @default(now()) @map("created_at")
-  updatedAt    DateTime     @updatedAt @map("updated_at")
+  updatedAt    DateTime     @default(now()) @updatedAt @map("updated_at")
 
   // Relations
   tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   employee Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  cycle    AppraisalCycle? @relation(fields: [cycleId], references: [id], onDelete: SetNull)
+  cycle    AppraisalCycle? @relation(fields: [cycleId], references: [id])
 
   @@unique([tenantId, goalCode])
   @@index([tenantId])
@@ -3757,7 +3796,7 @@ model TrainingProgram {
   endDate         DateTime?             @map("end_date")
   maxParticipants Int                   @default(20) @map("max_participants")
   createdAt       DateTime              @default(now()) @map("created_at")
-  updatedAt       DateTime              @updatedAt @map("updated_at")
+  updatedAt       DateTime              @default(now()) @updatedAt @map("updated_at")
 
   // Relations
   tenant      Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -3782,7 +3821,7 @@ model TrainingEnrollment {
   feedback       String?
   certificateUrl String?          @map("certificate_url")
   createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
+  updatedAt      DateTime         @default(now()) @updatedAt @map("updated_at")
 
   // Relations
   tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -3810,7 +3849,7 @@ model CustomReport {
   config      Json
   isPrebuilt  Boolean  @default(false) @map("is_prebuilt")
   createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
 
   // Relations
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -3838,10 +3877,10 @@ model WorkflowRule {
   executionCount Int       @default(0) @map("execution_count")
   lastRunAt      DateTime? @map("last_run_at") @db.Timestamptz(6)
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
-  tenant     Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant     Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   executions WorkflowExecution[]
 
   @@unique([tenantId, code], map: "uq_workflow_rules_tenant_code")
@@ -3863,8 +3902,8 @@ model WorkflowExecution {
   createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
   // Relations
-  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  workflow WorkflowRule @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  workflow WorkflowRule @relation(fields: [workflowId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([tenantId, status], map: "idx_workflow_executions_tenant_status")
   @@index([workflowId, createdAt(sort: Desc)], map: "idx_workflow_executions_workflow_created")
@@ -3892,7 +3931,7 @@ model Company {
   countryCode   String?  @default("IN") @map("country_code")
   state         String?  @default("")
 
-  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([tenantId], map: "idx_companies_tenant_id")
   @@map("companies")
@@ -3951,6 +3990,7 @@ model SiteItem {
   updatedBy String?  @map("updated_by") @db.Uuid
 
   @@index([kind, status, sort], map: "idx_site_items_kind_status")
+  // Also on the database (not expressible here without a preview feature): unique (kind, slug) where slug is not null, "uq_site_items_kind_slug"
   @@map("site_items")
 }
 

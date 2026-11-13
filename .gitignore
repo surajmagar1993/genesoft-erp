@@ -44,6 +44,8 @@ app/test-us-east.js
 # Local testing assets & scratch files
 screenshot_*.png
 *.sql
+# Prisma migrations are always committed
+!app/prisma/migrations/**/migration.sql
 
 # Private business documents and notes with personal details (kept locally, not published)
 INV-*.pdf

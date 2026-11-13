@@ -118,7 +118,7 @@ Create `.env.local` in `app/` (never commit it). Variables the code reads:
 | `ENABLE_DEMO_SEED` | No | `true` fills empty modules with sample data. Leave unset in production. |
 
 > [!IMPORTANT]
-> Never run `prisma db push` or `prisma migrate dev` against the shared database: the live schema has drifted from `schema.prisma` and Prisma would drop data. Schema changes are applied with reviewed SQL files in `app/*.sql`.
+> Schema changes go through migrations in `app/prisma/migrations` (since 2026-11-13; `0_baseline` is the live database as it was then). To change the database: edit `schema.prisma`, write the SQL as a new numbered folder (`N_name/migration.sql`; `npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script` with `DATABASE_URL=<DIRECT_URL>?sslmode=require` prints it, read-only; drop any line touching `uq_site_items_kind_slug`, a partial index Prisma can't describe), then apply with `npx prisma migrate deploy` (same URL) before deploying code that needs it. `migrations.int.test.ts` fails if the migrations and the schema disagree. Never `prisma db push` or `prisma migrate dev`/`reset` against the shared database.
 
 ### 3. Generate Prisma Client
 ```bash
