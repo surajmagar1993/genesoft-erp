@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft } from "lucide-react"
@@ -49,7 +50,7 @@ export const defaultProductForm: ProductFormData = {
     description: "",
     customAttributes: [],
     unitPrice: 0,
-    currency: "INR",
+    currency: "",
     unit: "Nos",
     taxGroupId: "",
     stockQty: 0,
@@ -62,6 +63,7 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ initialData, onSave }: ProductFormProps) {
+    const { regime } = useTaxRegime()
     const router = useRouter()
     const mode = initialData ? "edit" : "create"
     const [form, setForm] = useState<ProductFormData>(initialData || defaultProductForm)
@@ -382,7 +384,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                 <Label htmlFor="unitPrice">Unit Price</Label>
                                 <div className="relative">
                                     <span className="absolute left-3 top-2.5 text-sm text-muted-foreground">
-                                        {form.currency}
+                                        {form.currency || regime?.currency}
                                     </span>
                                     <Input
                                         id="unitPrice"
@@ -397,6 +399,7 @@ export function ProductForm({ initialData, onSave }: ProductFormProps) {
                                 <Label htmlFor="currency">Currency</Label>
                                 <Input
                                     id="currency"
+                                    placeholder={regime?.currency || "Your business currency"}
                                     value={form.currency}
                                     onChange={(e) => update("currency", e.target.value.toUpperCase())}
                                 />

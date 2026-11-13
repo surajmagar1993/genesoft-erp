@@ -39,7 +39,7 @@ export default function NewAccountForm({ parentAccounts }: Props) {
     is_group: false,
     description: "",
     balance: 0,
-    currency_code: "INR",
+    currency_code: "",
     is_active: true,
     is_system: false,
   })

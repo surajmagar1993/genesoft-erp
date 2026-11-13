@@ -1,5 +1,6 @@
 "use server"
 
+import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { actionErrorMessage } from "@/lib/safe-action"
 import { reportCaught } from "@/lib/error-reporting"
 import { prisma } from "@/lib/prisma"
@@ -76,7 +77,8 @@ export async function createAccount(
   try {
     const tenantId = await getTenantManagerId(MODULE)
     const data = (await accountData(tenantId, formData)) as Omit<Prisma.AccountUncheckedCreateInput, "tenantId">
-    await prisma.account.create({ data: { ...data, balance: 0, tenantId } })
+    // Accounts are kept in the business's own currency (the ledger posts in it)
+    await prisma.account.create({ data: { ...data, currencyCode: (await getTenantDefaults(tenantId)).currencyCode, balance: 0, tenantId } })
   } catch (err) {
     if ((err as { code?: string })?.code === "P2002") return { error: "An account with this code already exists" }
     return { error: await actionErrorMessage(err, "Failed to create account") }

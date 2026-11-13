@@ -132,7 +132,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
     const [bidQuoteDate, setBidQuoteDate] = useState(format(new Date(), "yyyy-MM-dd"))
     const [bidValidUntil, setBidValidUntil] = useState("")
     const [bidLeadTimeDays, setBidLeadTimeDays] = useState("7")
-    const [bidCurrency, setBidCurrency] = useState("INR")
+    const [bidCurrency, setBidCurrency] = useState("")
     const [bidNotes, setBidNotes] = useState("")
     const [bidItemInputs, setBidItemInputs] = useState<Record<string, { unitPrice: string; taxPercent: string; availableQty: string; notes: string }>>({})
 
@@ -360,7 +360,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                     quoteReference: bidQuoteRef,
                     quoteDate: bidQuoteDate,
                     validUntil: bidValidUntil || undefined,
-                    currencyCode: bidCurrency,
+                    currencyCode: bidCurrency || undefined,
                     leadTimeDays: parseInt(bidLeadTimeDays, 10) || undefined,
                     notes: bidNotes,
                     items: itemPayload,
@@ -1878,7 +1878,7 @@ export function RfqClient({ initialData }: RfqClientProps) {
                                                             />
                                                         </TableCell>
                                                         <TableCell className="text-right font-mono text-xs font-semibold">
-                                                            {formatCurrency(lineTotal, bidCurrency)}
+                                                            {formatCurrency(lineTotal, bidCurrency || undefined)}
                                                         </TableCell>
                                                     </TableRow>
                                                 )

@@ -75,6 +75,8 @@ async function productData(tenantId: string, input: Record<string, unknown>): Pr
   if (typeof data.taxGroupId === "string" && !(await prisma.taxGroup.findFirst({ where: { id: data.taxGroupId, tenantId }, select: { id: true } }))) {
     throw new Error("Tax group not found")
   }
+  // A product without a currency is priced in the business's own (never an assumed INR)
+  if ("currency" in data && !String(data.currency ?? "").trim()) data.currency = (await getTenantDefaults(tenantId)).currencyCode
   return data
 }
 

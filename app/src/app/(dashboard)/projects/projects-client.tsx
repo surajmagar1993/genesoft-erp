@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { confirmAction } from "@/components/confirm-dialog"
 import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { useState, useTransition, useMemo } from "react"
@@ -52,7 +53,6 @@ import {
     ProjectsOverviewData,
     ProjectMilestoneRecord,
     ProjectTaskRecord,
-    createProject,
     deleteProject,
     createProjectTask,
     updateProjectTask,
@@ -71,7 +71,6 @@ import { GanttChartView } from "@/components/projects/gantt-chart-view"
 import {
     ProjectStatus,
     ProjectPriority,
-    ProjectBillingType,
     MilestoneStatus,
     ProjectTaskStatus,
 } from "@prisma/client"
@@ -109,26 +108,10 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
     const [activeTab, setActiveTab] = useState("kanban")
 
     // Modal dialog states
-    const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false)
     const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false)
     const [isCreateMilestoneOpen, setIsCreateMilestoneOpen] = useState(false)
     const [isLogTimeOpen, setIsLogTimeOpen] = useState(false)
     const [isAddMemberOpen, setIsAddMemberOpen] = useState(false)
-
-    // Form inputs: Create Project
-    const [newProject, setNewProject] = useState({
-        name: "",
-        description: "",
-        priority: "MEDIUM" as ProjectPriority,
-        status: "PLANNING" as ProjectStatus,
-        billingType: "FIXED_FEE" as ProjectBillingType,
-        startDate: "",
-        targetEndDate: "",
-        budget: "",
-        currencyCode: "INR",
-        clientId: "",
-        managerId: "",
-    })
 
     // Form inputs: Create Task
     const [newTask, setNewTask] = useState({
@@ -284,58 +267,7 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
         }
     }
 
-    // Refresh action
-    () => {
-            startTransition(() => {
-                router.refresh()
-            })
-        };
-
     // Handlers
-    const handleCreateProject = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!newProject.name.trim()) {
-            toast.error("Project name is required")
-            return
-        }
-
-        startTransition(async () => {
-            const res = await createProject({
-                name: newProject.name,
-                description: newProject.description || undefined,
-                priority: newProject.priority,
-                status: newProject.status,
-                billingType: newProject.billingType,
-                startDate: newProject.startDate || undefined,
-                targetEndDate: newProject.targetEndDate || undefined,
-                budget: newProject.budget ? parseFloat(newProject.budget) : undefined,
-                currencyCode: newProject.currencyCode,
-                clientId: newProject.clientId || undefined,
-                managerId: newProject.managerId || undefined,
-            })
-
-            if (res.success) {
-                toast.success("Project created successfully")
-                setIsCreateProjectOpen(false)
-                setNewProject({
-                    name: "",
-                    description: "",
-                    priority: "MEDIUM",
-                    status: "PLANNING",
-                    billingType: "FIXED_FEE",
-                    startDate: "",
-                    targetEndDate: "",
-                    budget: "",
-                    currencyCode: "INR",
-                    clientId: "",
-                    managerId: "",
-                })
-                router.refresh()
-            } else {
-                toast.error(res.error || "Failed to create project")
-            }
-        })
-    }
 
     const handleCreateTask = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -669,10 +601,12 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                     <Button
                         size="sm"
                         className="h-9"
-                        onClick={() => setIsCreateProjectOpen(true)}
+                        asChild
                     >
-                        <Plus className="h-4 w-4 mr-1.5" />
-                        New Project
+                        <Link href="/projects/new">
+                            <Plus className="h-4 w-4 mr-1.5" />
+                            New Project
+                        </Link>
                     </Button>
                 </div>
             </div>
@@ -989,10 +923,12 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                         <Button
                             size="sm"
                             className="h-9"
-                            onClick={() => setIsCreateProjectOpen(true)}
+                            asChild
                         >
-                            <Plus className="h-4 w-4 mr-1.5" />
-                            Create Project
+                            <Link href="/projects/new">
+                                <Plus className="h-4 w-4 mr-1.5" />
+                                Create Project
+                            </Link>
                         </Button>
                     </div>
 
@@ -1424,163 +1360,6 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                 </TabsContent>
             </Tabs>
 
-            {/* ========================================================================= */}
-            {/* DIALOG: CREATE PROJECT */}
-            {/* ========================================================================= */}
-            <Dialog open={isCreateProjectOpen} onOpenChange={setIsCreateProjectOpen}>
-                <DialogContent className="sm:max-w-[560px]">
-                    <DialogHeader>
-                        <DialogTitle>Create New Project</DialogTitle>
-                        <DialogDescription>
-                            Set up a new client engagement or internal project with milestones and budget.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleCreateProject} className="space-y-4 py-2">
-                        <div className="space-y-1.5">
-                            <Label htmlFor="proj-name">Project Title *</Label>
-                            <Input
-                                id="proj-name"
-                                placeholder="Enter project title"
-                                value={newProject.name}
-                                onChange={(e) => setNewProject(p => ({ ...p, name: e.target.value }))}
-                                required
-                            />
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <Label htmlFor="proj-desc">Description & Objectives</Label>
-                            <Textarea
-                                id="proj-desc"
-                                placeholder="Enter description and objectives"
-                                value={newProject.description}
-                                onChange={(e) => setNewProject(p => ({ ...p, description: e.target.value }))}
-                                rows={2}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                                <Label>Client / Account</Label>
-                                <Select
-                                    value={newProject.clientId}
-                                    onValueChange={(val) => setNewProject(p => ({ ...p, clientId: val === "internal" ? "" : val }))}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Internal / None" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="internal">Internal / None</SelectItem>
-                                        {data.availableClients.map(c => (
-                                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <Label>Project Lead / Manager</Label>
-                                <Select
-                                    value={newProject.managerId}
-                                    onValueChange={(val) => setNewProject(p => ({ ...p, managerId: val === "unassigned" ? "" : val }))}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select manager" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                                        {data.availableEmployees.map(e => (
-                                            <SelectItem key={e.id} value={e.id}>
-                                                {e.name} ({e.designationTitle || "Staff"})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="space-y-1.5">
-                                <Label>Priority</Label>
-                                <Select
-                                    value={newProject.priority}
-                                    onValueChange={(val) => setNewProject(p => ({ ...p, priority: val as ProjectPriority }))}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="LOW">Low</SelectItem>
-                                        <SelectItem value="MEDIUM">Medium</SelectItem>
-                                        <SelectItem value="HIGH">High</SelectItem>
-                                        <SelectItem value="URGENT">Urgent</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <Label>Billing Type</Label>
-                                <Select
-                                    value={newProject.billingType}
-                                    onValueChange={(val) => setNewProject(p => ({ ...p, billingType: val as ProjectBillingType }))}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="FIXED_FEE">Fixed Fee</SelectItem>
-                                        <SelectItem value="TIME_AND_MATERIALS">T&M</SelectItem>
-                                        <SelectItem value="NON_BILLABLE">Non-Billable</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <Label htmlFor="proj-budget">Budget</Label>
-                                <Input
-                                    id="proj-budget"
-                                    type="number"
-                                    placeholder="Enter budget"
-                                    value={newProject.budget}
-                                    onChange={(e) => setNewProject(p => ({ ...p, budget: e.target.value }))}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                                <Label htmlFor="proj-start">Start Date</Label>
-                                <Input
-                                    id="proj-start"
-                                    type="date"
-                                    value={newProject.startDate}
-                                    onChange={(e) => setNewProject(p => ({ ...p, startDate: e.target.value }))}
-                                />
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <Label htmlFor="proj-end">Target Completion Date</Label>
-                                <Input
-                                    id="proj-end"
-                                    type="date"
-                                    value={newProject.targetEndDate}
-                                    onChange={(e) => setNewProject(p => ({ ...p, targetEndDate: e.target.value }))}
-                                />
-                            </div>
-                        </div>
-
-                        <DialogFooter className="pt-2">
-                            <Button type="button" variant="outline" onClick={() => setIsCreateProjectOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={isPending}>
-                                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Create Project
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
 
             {/* ========================================================================= */}
             {/* DIALOG: CREATE TASK */}

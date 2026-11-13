@@ -103,7 +103,7 @@ export default function PriceListsClient({
         name: "",
         description: "",
         type: PriceListType.SALES,
-        currencyCode: "INR",
+        currencyCode: "",
         pricingScheme: PricingScheme.FIXED_OVERRIDE,
         defaultDiscount: "15",
         targetGroup: "WHOLESALE",
@@ -145,13 +145,12 @@ export default function PriceListsClient({
     const [isCalculating, setIsCalculating] = useState(false)
 
     // Format Currency Helper
-    const formatINR = (val: number) => {
-        return new Intl.NumberFormat(appLocale, {
-            style: "currency",
-            currency: "INR",
-            maximumFractionDigits: 2,
-        }).format(val)
-    }
+    // Amounts in the business's own currency (a plain number until it has loaded)
+    const businessCurrency = moneyRegime?.currency || ""
+    const formatMoney = (val: number) =>
+        businessCurrency
+            ? new Intl.NumberFormat(appLocale, { style: "currency", currency: businessCurrency, maximumFractionDigits: 2 }).format(val)
+            : new Intl.NumberFormat(appLocale, { maximumFractionDigits: 2 }).format(val)
 
     // Filtered Price Lists
     const filteredPriceLists = useMemo(() => {
@@ -194,7 +193,7 @@ export default function PriceListsClient({
                 name: plForm.name,
                 description: plForm.description || undefined,
                 type: plForm.type,
-                currencyCode: plForm.currencyCode,
+                currencyCode: plForm.currencyCode || businessCurrency,
                 pricingScheme: plForm.pricingScheme,
                 defaultDiscount: parseFloat(plForm.defaultDiscount) || 0,
                 targetGroup: plForm.targetGroup || undefined,
@@ -621,7 +620,7 @@ export default function PriceListsClient({
                                                     </div>
                                                 </td>
                                                 <td className="py-3.5 px-4 text-right font-mono font-bold text-foreground whitespace-nowrap">
-                                                    {formatINR(prod.basePrice)}
+                                                    {formatMoney(prod.basePrice)}
                                                     <span className="text-xs text-muted-foreground block font-sans">
                                                         per {prod.unit}
                                                     </span>
@@ -638,7 +637,7 @@ export default function PriceListsClient({
                                                     return (
                                                         <td key={pl.id} className="py-3.5 px-4 text-right whitespace-nowrap">
                                                             <div className="font-mono font-bold text-foreground">
-                                                                {formatINR(priceInfo.effectivePrice)}
+                                                                {formatMoney(priceInfo.effectivePrice)}
                                                             </div>
                                                             <div className="flex items-center justify-end gap-1 mt-0.5">
                                                                 {priceInfo.discountPercent > 0 && (
@@ -725,7 +724,7 @@ export default function PriceListsClient({
                                                 </div>
                                                 <div className="text-right">
                                                     <div className="font-mono font-bold text-foreground">
-                                                        {formatINR(it.effectiveUnitPrice)}
+                                                        {formatMoney(it.effectiveUnitPrice)}
                                                     </div>
                                                     {it.discountPercent !== null && (
                                                         <span className="text-xs text-emerald-600 font-mono block">
@@ -792,7 +791,7 @@ export default function PriceListsClient({
                                     >
                                         {products.map((p) => (
                                             <option key={p.id} value={p.id}>
-                                                {p.name} (Base: {formatINR(p.unitPrice)})
+                                                {p.name} (Base: {formatMoney(p.unitPrice)})
                                             </option>
                                         ))}
                                     </select>
@@ -852,19 +851,19 @@ export default function PriceListsClient({
                                         <div className="p-3 rounded-lg bg-background/60 border">
                                             <span className="text-xs text-muted-foreground block">Catalog Base Unit Price</span>
                                             <span className="text-base font-mono font-semibold line-through text-muted-foreground">
-                                                {formatINR(simResult.basePrice)}
+                                                {formatMoney(simResult.basePrice)}
                                             </span>
                                         </div>
                                         <div className="p-3 rounded-lg bg-background/60 border">
                                             <span className="text-xs text-muted-foreground block">Effective Contract Unit Price</span>
                                             <span className="text-xl font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                                                {formatINR(simResult.unitPrice)}
+                                                {formatMoney(simResult.unitPrice)}
                                             </span>
                                         </div>
                                         <div className="p-3 rounded-lg bg-background/60 border">
                                             <span className="text-xs text-muted-foreground block">Net Line Total</span>
                                             <span className="text-xl font-mono font-bold text-foreground">
-                                                {formatINR(simResult.totalAmount)}
+                                                {formatMoney(simResult.totalAmount)}
                                             </span>
                                         </div>
                                         <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
@@ -872,7 +871,7 @@ export default function PriceListsClient({
                                                 Total Customer Savings
                                             </span>
                                             <span className="text-xl font-mono font-bold text-emerald-600 dark:text-emerald-300">
-                                                {formatINR(simResult.totalSavings)} ({simResult.discountPercent}%)
+                                                {formatMoney(simResult.totalSavings)} ({simResult.discountPercent}%)
                                             </span>
                                         </div>
                                     </div>
@@ -1090,7 +1089,7 @@ export default function PriceListsClient({
                                 >
                                     {products.map((p) => (
                                         <option key={p.id} value={p.id}>
-                                            {p.name} (Base: {formatINR(p.unitPrice)})
+                                            {p.name} (Base: {formatMoney(p.unitPrice)})
                                         </option>
                                     ))}
                                 </select>
