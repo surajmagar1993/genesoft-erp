@@ -8,8 +8,10 @@ export const metadata = {
     description: "Multi-vendor procurement, purchase order lifecycle, warehouse receipt intake, and accounts payable bill generation.",
 }
 
-export default async function PurchasePage() {
+export default async function PurchasePage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+    const { tab } = await searchParams
     const overviewData = await getPurchaseOverview()
+    const initialTab = tab === "vendors" || tab === "receipts" ? tab : "orders"
 
-    return <PurchaseClient initialData={overviewData} />
+    return <PurchaseClient initialData={overviewData} initialTab={initialTab} />
 }

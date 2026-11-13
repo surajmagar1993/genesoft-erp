@@ -24,7 +24,6 @@ import {
     Loader2,
     Phone,
     Mail,
-    Trash2,
     ExternalLink
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -63,38 +62,24 @@ import { toast } from "sonner"
 import {
     PurchaseOverviewData,
     PurchaseOrderRecord,
-    createPurchaseOrder,
-    createVendor,
     updatePurchaseOrderStatus,
     receiveGoods,
     convertPOToBill,
-    PurchaseOrderItemInput,
 } from "@/app/actions/purchase"
 import { formatCurrency, errorMessage } from "@/lib/utils"
 import { PurchaseOrderStatus } from "@prisma/client"
-import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
-import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
 
 interface PurchaseClientProps {
     initialData: PurchaseOverviewData
+    initialTab?: "orders" | "vendors" | "receipts"
 }
 
-interface NewPOItemState {
-    id: string
-    productId: string
-    description: string
-    hsnSacCode: string
-    quantity: string
-    unitPrice: string
-    taxPercent: string
-}
-
-export function PurchaseClient({ initialData }: PurchaseClientProps) {
+export function PurchaseClient({ initialData, initialTab }: PurchaseClientProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
-    const [activeTab, setActiveTab] = useState<"orders" | "vendors" | "receipts">("orders")
+    const [activeTab, setActiveTab] = useState<"orders" | "vendors" | "receipts">(initialTab ?? "orders")
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState("")
@@ -102,45 +87,12 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
     const [vendorSearchQuery, setVendorSearchQuery] = useState("")
 
     // Modals
-    const [isCreatePOOpen, setIsCreatePOOpen] = useState(false)
-    const [isCreateVendorOpen, setIsCreateVendorOpen] = useState(false)
     const [isReceiveOpen, setIsReceiveOpen] = useState(false)
     const [isConvertBillOpen, setIsConvertBillOpen] = useState(false)
     const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false)
 
     // Selected items for dialogs
     const [selectedPO, setSelectedPO] = useState<PurchaseOrderRecord | null>(null)
-
-    // Form state: Create Vendor
-    const [vendorDisplayName, setVendorDisplayName] = useState("")
-    const [vendorCompanyName, setVendorCompanyName] = useState("")
-    const [vendorEmail, setVendorEmail] = useState("")
-    const [vendorPhone, setVendorPhone] = useState("")
-    const [vendorGstin, setVendorGstin] = useState("")
-    const [vendorCity, setVendorCity] = useState("")
-    const [vendorState, setVendorState] = useState("")
-    const [vendorCountry, setVendorCountry] = useState("India")
-    const [vendorCountryCode, setVendorCountryCode] = useState("")
-    const [isSubmittingVendor, setIsSubmittingVendor] = useState(false)
-
-    // Form state: Create Purchase Order
-    const [poVendorId, setPoVendorId] = useState("")
-    const [poWarehouseId, setPoWarehouseId] = useState("")
-    const [poDeliveryDate, setPoDeliveryDate] = useState("")
-    const [poNotes, setPoNotes] = useState("")
-    const [poTerms, setPoTerms] = useState("")
-    const [poItems, setPoItems] = useState<NewPOItemState[]>([
-        {
-            id: "item-1",
-            productId: "",
-            description: "",
-            hsnSacCode: "",
-            quantity: "1",
-            unitPrice: "0",
-            taxPercent: "18",
-        },
-    ])
-    const [isSubmittingPO, setIsSubmittingPO] = useState(false)
 
     // Form state: Receive Goods
     const [receiveWarehouseId, setReceiveWarehouseId] = useState("")
@@ -208,216 +160,6 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
         }, 0)
     }, [pendingReceiptOrders])
 
-    // Calculation for Create PO Modal
-    const poCalculations = useMemo(() => {
-        let subtotal = 0
-        let totalTax = 0
-
-        poItems.forEach((item) => {
-            const qty = parseFloat(item.quantity) || 0
-            const price = parseFloat(item.unitPrice) || 0
-            const taxPct = parseFloat(item.taxPercent) || 0
-
-            const lineBase = qty * price
-            const lineTax = lineBase * (taxPct / 100)
-
-            subtotal += lineBase
-            totalTax += lineTax
-        })
-
-        return {
-            subtotal,
-            totalTax,
-            grandTotal: subtotal + totalTax,
-        }
-    }, [poItems])
-
-    // Reset Create PO Form
-    const resetCreatePOForm = () => {
-        setPoVendorId("")
-        setPoWarehouseId(initialData.warehouses[0]?.id || "")
-        setPoDeliveryDate("")
-        setPoNotes("")
-        setPoTerms("")
-        setPoItems([
-            {
-                id: `item-${crypto.randomUUID()}`,
-                productId: "",
-                description: "",
-                hsnSacCode: "",
-                quantity: "1",
-                unitPrice: "0",
-                taxPercent: "18",
-            },
-        ])
-    }
-
-    // Handlers for PO Line Items
-    const handleAddLineItem = () => {
-        setPoItems((prev) => [
-            ...prev,
-            {
-                id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-                productId: "",
-                description: "",
-                hsnSacCode: "",
-                quantity: "1",
-                unitPrice: "0",
-                taxPercent: "18",
-            },
-        ])
-    }
-
-    const handleRemoveLineItem = (id: string) => {
-        if (poItems.length <= 1) {
-            toast.error("Purchase order must contain at least one item")
-            return
-        }
-        setPoItems((prev) => prev.filter((item) => item.id !== id))
-    }
-
-    const handleProductSelect = (index: number, productId: string) => {
-        const product = initialData.products.find((p) => p.id === productId)
-        setPoItems((prev) => {
-            const next = [...prev]
-            if (product) {
-                next[index] = {
-                    ...next[index],
-                    productId: product.id,
-                    description: product.name,
-                    unitPrice: String(product.unitPrice || 0),
-                    hsnSacCode: product.hsnSacCode || "",
-                }
-            } else {
-                next[index] = {
-                    ...next[index],
-                    productId: "",
-                }
-            }
-            return next
-        })
-    }
-
-    const handleItemChange = (index: number, field: keyof NewPOItemState, value: string) => {
-        setPoItems((prev) => {
-            const next = [...prev]
-            next[index] = {
-                ...next[index],
-                [field]: value,
-            }
-            return next
-        })
-    }
-
-    // Submit Create Vendor
-    const handleCreateVendorSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        // The company name alone is enough; the contact person is optional
-        const displayName = vendorDisplayName.trim() || vendorCompanyName.trim()
-        if (!displayName) {
-            toast.error("Enter the supplier's company name or a contact person.")
-            return
-        }
-
-        setIsSubmittingVendor(true)
-        try {
-            const res = unwrap(await createVendor({
-                displayName,
-                companyName: vendorCompanyName.trim() || undefined,
-                email: vendorEmail.trim() || undefined,
-                phone: vendorPhone.trim() || undefined,
-                gstin: vendorGstin.trim() || undefined,
-                city: vendorCity.trim() || undefined,
-                state: vendorState.trim() || undefined,
-                countryCode: vendorCountryCode || undefined,
-            }))
-
-            if (res.success) {
-                toast.success("Supplier created successfully")
-                setIsCreateVendorOpen(false)
-                setVendorDisplayName("")
-                setVendorCompanyName("")
-                setVendorEmail("")
-                setVendorPhone("")
-                setVendorGstin("")
-                setVendorCity("")
-                setVendorState("")
-                startTransition(() => {
-                    router.refresh()
-                })
-            } else {
-                toast.error(res.error)
-            }
-        } catch (err) {
-            toast.error(errorMessage(err) || "Failed to create supplier")
-        } finally {
-            setIsSubmittingVendor(false)
-        }
-    }
-
-    // Submit Create PO
-    const handleCreatePOSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!poVendorId) {
-            toast.error("Please select a vendor / supplier")
-            return
-        }
-
-        // Validate items
-        const formattedItems: PurchaseOrderItemInput[] = []
-        for (let i = 0; i < poItems.length; i++) {
-            const item = poItems[i]
-            if (!item.description.trim()) {
-                toast.error(`Item #${i + 1} must have a description`)
-                return
-            }
-            const qty = parseFloat(item.quantity)
-            if (isNaN(qty) || qty <= 0) {
-                toast.error(`Item #${i + 1} quantity must be greater than 0`)
-                return
-            }
-            const price = parseFloat(item.unitPrice)
-            if (isNaN(price) || price < 0) {
-                toast.error(`Item #${i + 1} price cannot be negative`)
-                return
-            }
-            const taxPct = parseFloat(item.taxPercent) || 0
-
-            formattedItems.push({
-                productId: item.productId || undefined,
-                description: item.description.trim(),
-                hsnSacCode: item.hsnSacCode.trim() || undefined,
-                quantity: qty,
-                unitPrice: price,
-                taxPercent: taxPct,
-            })
-        }
-
-        setIsSubmittingPO(true)
-        try {
-            const res = unwrap(await createPurchaseOrder({
-                vendorId: poVendorId,
-                warehouseId: poWarehouseId || undefined,
-                expectedDeliveryDate: poDeliveryDate || undefined,
-                notes: poNotes.trim() || undefined,
-                terms: poTerms.trim() || undefined,
-                items: formattedItems,
-            }))
-
-            if (res.success) {
-                toast.success(`Purchase order ${res.order.orderNumber} created successfully`)
-                setIsCreatePOOpen(false)
-                resetCreatePOForm()
-                startTransition(() => {
-                    router.refresh()
-                })
-            }
-        } catch (err) {
-            toast.error(errorMessage(err) || "Failed to create purchase order")
-        } finally {
-            setIsSubmittingPO(false)
-        }
-    }
 
     // Handle Status Change
     const handleStatusTransition = async (orderId: string, newStatus: PurchaseOrderStatus) => {
@@ -563,11 +305,6 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
     }
 
     // Open Create PO for a specific vendor
-    const handleCreatePOForVendor = (vendorId: string) => {
-        resetCreatePOForm()
-        setPoVendorId(vendorId)
-        setIsCreatePOOpen(true)
-    }
 
     // Status Badge Helper
     const renderStatusBadge = (status: PurchaseOrderStatus, isBilled?: boolean) => {
@@ -661,23 +398,17 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                             RFQ Tenders
                         </Button>
                     </Link>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsCreateVendorOpen(true)}
-                    >
-                        <Building2 className="mr-2 h-4 w-4" />
-                        New Supplier
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href="/purchase/vendors/new">
+                            <Building2 className="mr-2 h-4 w-4" />
+                            New Supplier
+                        </Link>
                     </Button>
-                    <Button
-                        size="sm"
-                        onClick={() => {
-                            resetCreatePOForm()
-                            setIsCreatePOOpen(true)
-                        }}
-                    >
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Purchase Order
+                    <Button size="sm" asChild>
+                        <Link href="/purchase/orders/new">
+                            <Plus className="mr-2 h-4 w-4" />
+                            New Purchase Order
+                        </Link>
                     </Button>
                 </div>
             </div>
@@ -852,15 +583,11 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                             ? "Try clearing your search query or status filter to see more orders."
                                             : "Create your first purchase order to initiate vendor procurement."}
                                     </p>
-                                    <Button
-                                        onClick={() => {
-                                            resetCreatePOForm()
-                                            setIsCreatePOOpen(true)
-                                        }}
-                                        size="sm"
-                                    >
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Create Purchase Order
+                                    <Button size="sm" asChild>
+                                        <Link href="/purchase/orders/new">
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Create Purchase Order
+                                        </Link>
                                     </Button>
                                 </div>
                             ) : (
@@ -1198,12 +925,11 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                             className="pl-8"
                                         />
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        onClick={() => setIsCreateVendorOpen(true)}
-                                    >
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Supplier
+                                    <Button size="sm" asChild>
+                                        <Link href="/purchase/vendors/new">
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add Supplier
+                                        </Link>
                                     </Button>
                                 </div>
                             </div>
@@ -1220,12 +946,11 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                             ? "Try changing your search query to find vendors."
                                             : "Add your first supplier or vendor to begin creating purchase orders."}
                                     </p>
-                                    <Button
-                                        onClick={() => setIsCreateVendorOpen(true)}
-                                        size="sm"
-                                    >
-                                        <Plus className="mr-2 h-4 w-4" />
-                                        Add Supplier
+                                    <Button size="sm" asChild>
+                                        <Link href="/purchase/vendors/new">
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add Supplier
+                                        </Link>
                                     </Button>
                                 </div>
                             ) : (
@@ -1301,13 +1026,11 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                                                         </span>
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleCreatePOForVendor(vendor.id)}
-                                                        >
-                                                            <Plus className="mr-1 h-3.5 w-3.5" />
-                                                            Create PO
+                                                        <Button variant="outline" size="sm" asChild>
+                                                            <Link href={`/purchase/orders/new?vendor=${vendor.id}`}>
+                                                                <Plus className="mr-1 h-3.5 w-3.5" />
+                                                                Create PO
+                                                            </Link>
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>
@@ -1321,287 +1044,6 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                 </TabsContent>
             </Tabs>
 
-            {/* Modal 1: Create Purchase Order */}
-            <Dialog open={isCreatePOOpen} onOpenChange={setIsCreatePOOpen}>
-                <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <ShoppingCart className="h-5 w-5 text-primary" />
-                            Create New Purchase Order
-                        </DialogTitle>
-                        <DialogDescription>
-                            Generate a formal procurement order for suppliers with itemized taxes, pricing, and destination warehouse.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleCreatePOSubmit} className="space-y-6">
-                        {/* Header Details */}
-                        <div className="grid gap-4 sm:grid-cols-3">
-                            <div className="space-y-2">
-                                <Label htmlFor="po-vendor">
-                                    Supplier / Vendor <span className="text-red-500">*</span>
-                                </Label>
-                                <Select value={poVendorId} onValueChange={setPoVendorId}>
-                                    <SelectTrigger id="po-vendor" className="w-full min-w-0 [&>span]:truncate">
-                                        <SelectValue placeholder="Select supplier" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {initialData.vendors.map((v) => (
-                                            <SelectItem key={v.id} value={v.id}>
-                                                {v.companyName && v.companyName !== v.displayName ? `${v.companyName} (${v.displayName})` : v.displayName}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="po-warehouse">Destination Warehouse</Label>
-                                <Select value={poWarehouseId} onValueChange={setPoWarehouseId}>
-                                    <SelectTrigger id="po-warehouse" className="w-full min-w-0 [&>span]:truncate">
-                                        <SelectValue placeholder="Select target warehouse" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {initialData.warehouses.map((w) => (
-                                            <SelectItem key={w.id} value={w.id}>
-                                                {w.name} ({w.code})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="po-delivery-date">Expected Delivery Date</Label>
-                                <Input
-                                    id="po-delivery-date"
-                                    type="date"
-                                    value={poDeliveryDate}
-                                    onChange={(e) => setPoDeliveryDate(e.target.value)}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Line Items Section */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h4 className="text-sm font-semibold">Purchase Line Items</h4>
-                                    <p className="text-xs text-muted-foreground">
-                                        Select from existing product catalog or enter custom line items.
-                                    </p>
-                                </div>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleAddLineItem}
-                                >
-                                    <Plus className="mr-1 h-3.5 w-3.5" />
-                                    Add Item
-                                </Button>
-                            </div>
-
-                            <div className="rounded-md border p-3 space-y-3 bg-muted/20">
-                                {poItems.map((item, index) => {
-                                    const qtyNum = parseFloat(item.quantity) || 0
-                                    const priceNum = parseFloat(item.unitPrice) || 0
-                                    const taxPct = parseFloat(item.taxPercent) || 0
-                                    const lineTotal = qtyNum * priceNum * (1 + taxPct / 100)
-
-                                    return (
-                                        <div
-                                            key={item.id}
-                                            className="grid gap-3 p-3 rounded-lg border bg-background sm:grid-cols-12 items-end"
-                                        >
-                                            {/* Catalog selection */}
-                                            <div className="sm:col-span-3 space-y-1">
-                                                <Label className="text-xs">Product Catalog Item</Label>
-                                                <Select
-                                                    value={item.productId || "manual"}
-                                                    onValueChange={(val) =>
-                                                        handleProductSelect(index, val === "manual" ? "" : val)
-                                                    }
-                                                >
-                                                    <SelectTrigger className="h-8 text-xs">
-                                                        <SelectValue placeholder="Catalog product" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="manual">Custom / Manual Item</SelectItem>
-                                                        {initialData.products.map((p) => (
-                                                            <SelectItem key={p.id} value={p.id} className="text-xs">
-                                                                {p.name} {p.sku ? `(${p.sku})` : ""}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            {/* Description */}
-                                            <div className="sm:col-span-3 space-y-1">
-                                                <Label className="text-xs">
-                                                    Description <span className="text-red-500">*</span>
-                                                </Label>
-                                                <Input
-                                                    className="h-8 text-xs"
-                                                    placeholder="Item name or description"
-                                                    value={item.description}
-                                                    onChange={(e) =>
-                                                        handleItemChange(index, "description", e.target.value)
-                                                    }
-                                                    required
-                                                />
-                                            </div>
-
-                                            {/* Quantity */}
-                                            <div className="sm:col-span-1 space-y-1">
-                                                <Label className="text-xs">Qty</Label>
-                                                <Input
-                                                    type="number"
-                                                    step="any"
-                                                    min="1"
-                                                    className="h-8 text-xs"
-                                                    value={item.quantity}
-                                                    onChange={(e) =>
-                                                        handleItemChange(index, "quantity", e.target.value)
-                                                    }
-                                                    required
-                                                />
-                                            </div>
-
-                                            {/* Unit Price */}
-                                            <div className="sm:col-span-2 space-y-1">
-                                                <Label className="text-xs">Unit Price</Label>
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    className="h-8 text-xs"
-                                                    value={item.unitPrice}
-                                                    onChange={(e) =>
-                                                        handleItemChange(index, "unitPrice", e.target.value)
-                                                    }
-                                                    required
-                                                />
-                                            </div>
-
-                                            {/* Tax % */}
-                                            <div className="sm:col-span-1 space-y-1">
-                                                <Label className="text-xs">Tax %</Label>
-                                                <Select
-                                                    value={item.taxPercent}
-                                                    onValueChange={(val) =>
-                                                        handleItemChange(index, "taxPercent", val)
-                                                    }
-                                                >
-                                                    <SelectTrigger className="h-8 text-xs">
-                                                        <SelectValue />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="0">0%</SelectItem>
-                                                        <SelectItem value="5">5%</SelectItem>
-                                                        <SelectItem value="12">12%</SelectItem>
-                                                        <SelectItem value="18">18%</SelectItem>
-                                                        <SelectItem value="28">28%</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            {/* Line Total & Remove */}
-                                            <div className="sm:col-span-2 flex items-center justify-between gap-2">
-                                                <div className="text-right flex-1">
-                                                    <span className="text-xs text-muted-foreground block">Total</span>
-                                                    <span className="text-xs font-semibold">
-                                                        {formatCurrency(lineTotal)}
-                                                    </span>
-                                                </div>
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-red-500 hover:text-red-700"
-                                                    onClick={() => handleRemoveLineItem(item.id)}
-                                                    disabled={poItems.length <= 1}
-                                                 aria-label="Delete">
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-
-                            {/* Summary calculation breakdown */}
-                            <div className="flex flex-col sm:flex-row justify-end pt-2">
-                                <div className="w-full sm:w-72 space-y-1.5 rounded-lg border p-3 bg-muted/30">
-                                    <div className="flex justify-between text-xs text-muted-foreground">
-                                        <span>Subtotal:</span>
-                                        <span>{formatCurrency(poCalculations.subtotal)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-xs text-muted-foreground">
-                                        <span>Estimated Tax:</span>
-                                        <span>{formatCurrency(poCalculations.totalTax)}</span>
-                                    </div>
-                                    <div className="border-t border-border pt-1 flex justify-between font-semibold text-sm">
-                                        <span>Grand Total:</span>
-                                        <span className="text-primary">
-                                            {formatCurrency(poCalculations.grandTotal)}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Notes and Terms */}
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="po-notes">Delivery & Shipping Notes</Label>
-                                <Textarea
-                                    id="po-notes"
-                                    placeholder="Enter instructions for delivery or freight handling..."
-                                    value={poNotes}
-                                    onChange={(e) => setPoNotes(e.target.value)}
-                                    rows={2}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="po-terms">Payment Terms & Remarks</Label>
-                                <Textarea
-                                    id="po-terms"
-                                    placeholder="Enter payment conditions, warranty remarks, etc..."
-                                    value={poTerms}
-                                    onChange={(e) => setPoTerms(e.target.value)}
-                                    rows={2}
-                                />
-                            </div>
-                        </div>
-
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsCreatePOOpen(false)}
-                                disabled={isSubmittingPO}
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={isSubmittingPO}>
-                                {isSubmittingPO ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Creating PO...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Check className="mr-2 h-4 w-4" />
-                                        Save Purchase Order
-                                    </>
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
 
             {/* Modal 2: Receive Goods Intake */}
             <Dialog open={isReceiveOpen} onOpenChange={setIsReceiveOpen}>
@@ -1817,161 +1259,6 @@ export function PurchaseClient({ initialData }: PurchaseClientProps) {
                 </DialogContent>
             </Dialog>
 
-            {/* Modal 4: Create Vendor / Supplier */}
-            <Dialog open={isCreateVendorOpen} onOpenChange={setIsCreateVendorOpen}>
-                <DialogContent className="max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Building2 className="h-5 w-5 text-primary" />
-                            Add New Supplier
-                        </DialogTitle>
-                        <DialogDescription>
-                            Register a new vendor in the procurement directory for purchasing and invoice settlement.
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleCreateVendorSubmit} className="space-y-4">
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            <div className="space-y-1 sm:col-span-2">
-                                <Label htmlFor="vendor-comp">Company / Business Name <span className="text-red-500">*</span></Label>
-                                <Input
-                                    id="vendor-comp"
-                                    placeholder="Enter company or trade name"
-                                    value={vendorCompanyName}
-                                    onChange={(e) => setVendorCompanyName(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1 sm:col-span-2">
-                                <Label htmlFor="vendor-disp">
-                                    Primary Contact / Representative (optional)
-                                </Label>
-                                <Input
-                                    id="vendor-disp"
-                                    placeholder="Enter contact person full name"
-                                    value={vendorDisplayName}
-                                    onChange={(e) => setVendorDisplayName(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="vendor-email">Email Address</Label>
-                                <Input
-                                    id="vendor-email"
-                                    type="email"
-                                    placeholder="supplier@business.com"
-                                    value={vendorEmail}
-                                    onChange={(e) => setVendorEmail(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="vendor-phone">Phone Number</Label>
-                                <Input
-                                    id="vendor-phone"
-                                    placeholder="Enter phone number with country code"
-                                    value={vendorPhone}
-                                    onChange={(e) => setVendorPhone(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1 sm:col-span-2">
-                                <Label htmlFor="vendor-gstin">GSTIN / Tax ID</Label>
-                                <Input
-                                    id="vendor-gstin"
-                                    placeholder="Enter GSTIN or business registration identifier"
-                                    value={vendorGstin}
-                                    onChange={(e) => setVendorGstin(e.target.value)}
-                                />
-                            </div>
-
-                            <div className="space-y-1 sm:col-span-2">
-                                <Label htmlFor="vendor-country">Country</Label>
-                                <AutoSuggestInput
-                                    id="vendor-country"
-                                    value={vendorCountry}
-                                    onChange={(e) => setVendorCountry(e.target.value)}
-                                    options={searchCountries(vendorCountry).map((c) => ({
-                                        label: c.name,
-                                        value: c.name,
-                                        subLabel: c.code,
-                                        icon: c.flag,
-                                    }))}
-                                    onSelectOption={(opt) => {
-                                        setVendorCountry(opt.value)
-                                        if (opt.subLabel) setVendorCountryCode(opt.subLabel)
-                                    }}
-                                    placeholder="Start typing country..."
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="vendor-state">State / Region</Label>
-                                <AutoSuggestInput
-                                    id="vendor-state"
-                                    value={vendorState}
-                                    onChange={(e) => setVendorState(e.target.value)}
-                                    options={searchStates(vendorState, vendorCountry).map((s) => ({
-                                        label: s.name,
-                                        value: s.name,
-                                        subLabel: s.code,
-                                    }))}
-                                    onSelectOption={(opt) => setVendorState(opt.value)}
-                                    placeholder="Start typing state..."
-                                />
-                            </div>
-
-                            <div className="space-y-1">
-                                <Label htmlFor="vendor-city">City</Label>
-                                <AutoSuggestInput
-                                    id="vendor-city"
-                                    value={vendorCity}
-                                    onChange={(e) => setVendorCity(e.target.value)}
-                                    options={searchCities(vendorCity, vendorState, vendorCountry).map((c) => ({
-                                        label: c.name,
-                                        value: c.name,
-                                        subLabel: `${c.stateName} • ${c.pincode}`,
-                                    }))}
-                                    onSelectOption={(opt) => {
-                                        setVendorCity(opt.value)
-                                        if (opt.subLabel) {
-                                            const parts = opt.subLabel.split(" • ")
-                                            if (parts[0] && !vendorState) {
-                                                setVendorState(parts[0].trim())
-                                            }
-                                        }
-                                    }}
-                                    placeholder="Start typing city..."
-                                />
-                            </div>
-                        </div>
-
-                        <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setIsCreateVendorOpen(false)}
-                                disabled={isSubmittingVendor}
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={isSubmittingVendor}>
-                                {isSubmittingVendor ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                        Saving...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Check className="mr-2 h-4 w-4" />
-                                        Register Supplier
-                                    </>
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
 
             {/* Modal 5: View PO Details */}
             <Dialog open={isViewDetailsOpen} onOpenChange={setIsViewDetailsOpen}>
