@@ -1,5 +1,6 @@
 "use server"
 
+import { actionErrorMessage } from "@/lib/safe-action"
 import { isOwnStorageUrl } from "@/lib/storage"
 import { patchTenantSettings } from "@/lib/tenant-settings-lock"
 import type { InvoiceStatus as DbInvoiceStatus, InvoiceType, Prisma } from "@prisma/client"
@@ -16,8 +17,8 @@ import { formatCurrency, errorMessage } from "@/lib/utils"
 import { cleanTaxRate, getTenantTaxContext, invoiceItemTaxColumns, supplyTypeFor } from "@/lib/tenant-tax"
 import { recordContactTransaction } from "@/lib/contact-ledger"
 import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
-import { postToLedger } from "@/lib/ledger"
-import { postInvoiceStock } from "@/lib/stock"
+import { postToLedger, syncLedgerIn } from "@/lib/ledger"
+import { postInvoiceStock, syncInvoiceStock } from "@/lib/stock"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { planLimitError } from "@/lib/plan-limits"
 import { logTenantAudit } from "@/lib/tenant-audit"
@@ -378,7 +379,7 @@ export async function createInvoice(
       if (limit) return { id: null, error: limit }
     }
 
-    const createWithNumber = (invoiceNumber: string) => prisma.invoice.create({
+    const createWithNumber = (tx: Prisma.TransactionClient, invoiceNumber: string) => tx.invoice.create({
       data: {
         tenantId,
         contactId: payload.contact_id,
@@ -417,34 +418,37 @@ export async function createInvoice(
       },
     })
 
+    // One transaction: the invoice, its lines, the customer's statement entry, the journal and
+    // the stock movements are saved together, or not at all (nothing half-saved to repair).
+    const isLive = !isProforma && payload.status !== "DRAFT" && !!payload.contact_id
+    const persist = (invoiceNumber: string) => prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      const created = await createWithNumber(tx, invoiceNumber)
+      if (isLive) {
+        await recordContactTransaction(tenantId, {
+          contactId: payload.contact_id!,
+          type: "INVOICE",
+          amount: summary.grandTotal,
+          referenceId: created.id,
+          description: `Invoice ${created.invoiceNumber} created`,
+          date: new Date(payload.invoice_date || Date.now()),
+        }, tx)
+      }
+      await syncLedgerIn(tx, tenantId, { kind: "invoice", id: created.id })
+      await syncInvoiceStock(tenantId, { invoiceId: created.id }, tx)
+      return created
+    }, { timeout: 30_000 })
+
     // Two people saving at once can be given the same next number: take the following one.
     // A number the user typed is never changed; they're told it's taken.
     let invoice: Awaited<ReturnType<typeof createWithNumber>> | null = null
     for (let attempt = 0; !invoice; attempt++) {
       try {
-        invoice = await createWithNumber(payload.invoice_number)
+        invoice = await persist(payload.invoice_number)
       } catch (err) {
         if ((err as { code?: unknown }).code !== "P2002") throw err
         if (numberWasGiven) return { id: null, error: `Invoice number ${payload.invoice_number} is already used. Choose another number.` }
         if (attempt >= 4) throw err
         payload = { ...payload, invoice_number: await nextInvoiceNumber(tenantId, isProforma ? "PROFORMA" : "TAX_INVOICE") }
-      }
-    }
-
-    // ─── LEDGER INTEGRATION ───
-    // If invoice is created as non-draft and is an official Tax Invoice (not proforma)
-    if (!isProforma && payload.status !== "DRAFT" && payload.contact_id) {
-      try {
-        await recordContactTransaction(tenantId, {
-          contactId: payload.contact_id,
-          type: "INVOICE",
-          amount: summary.grandTotal,
-          referenceId: invoice.id,
-          description: `Invoice ${payload.invoice_number} created`,
-          date: new Date(payload.invoice_date || Date.now()),
-        })
-      } catch (ledgerError) {
-        await reportCaught(ledgerError, "createInvoice: customer balance entry", { tenantId, invoiceId: invoice.id })
       }
     }
 
@@ -455,14 +459,10 @@ export async function createInvoice(
       invoiceNumber: invoice.invoiceNumber,
     }, invoice.id)
 
-    await postToLedger(tenantId, { kind: "invoice", id: invoice.id })
-    await postInvoiceStock(tenantId, { invoiceId: invoice.id })
-
     revalidatePath("/sales/invoices")
     return { id: invoice.id, error: null }
   } catch (error) {
-    console.error("createInvoice error:", errorMessage(error))
-    return { id: null, error: errorMessage(error) || "Failed to create invoice" }
+    return { id: null, error: await actionErrorMessage(error, "The invoice couldn't be saved. Nothing was changed; please try again.") }
   }
 }
 
@@ -536,7 +536,8 @@ export async function updateInvoice(
       await assertCreditLimit(tenantId, payload.contact_id, summary.grandTotal - already)
     }
 
-    // Atomic update of header and line items
+    // One transaction: header, lines, the customer's statement entry, the journal and the stock
+    // movements change together, or not at all.
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // 1. Delete existing line items
       await tx.invoiceItem.deleteMany({
@@ -579,37 +580,19 @@ export async function updateInvoice(
           },
         },
       })
-    })
 
-    // ─── LEDGER INTEGRATION ───
-    // The invoice's customer can't change here, so post against the stored contact,
-    // not the contact_id sent by the form.
-    const stored = await prisma.invoice.findFirst({
-      where: { id: payload.id, tenantId },
-      select: { contactId: true },
-    })
-    const contactId = stored?.contactId
-
-    if (!isProforma && payload.status !== "DRAFT" && contactId) {
-      try {
+      // ─── Customer statement ───
+      // The invoice's customer can't change here, so post against the stored contact,
+      // not the contact_id sent by the form.
+      const contactId = before.contactId
+      if (!isProforma && payload.status !== "DRAFT" && contactId) {
         const newTotal = summary.grandTotal
-        const entry = await prisma.ledgerEntry.findFirst({
-          where: { referenceId: payload.id, tenantId },
-        })
-
+        const entry = await tx.ledgerEntry.findFirst({ where: { referenceId: payload.id, tenantId } })
         if (entry) {
           const delta = newTotal - Number(entry.amount)
           if (delta !== 0) {
-            await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-              await tx.contact.update({
-                where: { id: entry.contactId, tenantId },
-                data: { balance: { increment: delta } },
-              })
-              await tx.ledgerEntry.update({
-                where: { id: entry.id },
-                data: { amount: newTotal },
-              })
-            })
+            await tx.contact.update({ where: { id: entry.contactId, tenantId }, data: { balance: { increment: delta } } })
+            await tx.ledgerEntry.update({ where: { id: entry.id }, data: { amount: newTotal } })
           }
         } else {
           await recordContactTransaction(tenantId, {
@@ -619,24 +602,21 @@ export async function updateInvoice(
             referenceId: payload.id,
             description: `Invoice ${payload.invoice_number} updated`,
             date: new Date(payload.invoice_date || Date.now()),
-          })
+          }, tx)
         }
-      } catch (ledgerError) {
-        await reportCaught(ledgerError, "updateInvoice: customer balance entry", { tenantId, invoiceId: payload.id })
       }
-    }
 
-    await postToLedger(tenantId, { kind: "invoice", id: payload.id })
-    await postInvoiceStock(tenantId, { invoiceId: payload.id })
+      await syncLedgerIn(tx, tenantId, { kind: "invoice", id: payload.id })
+      await syncInvoiceStock(tenantId, { invoiceId: payload.id }, tx)
+    }, { timeout: 30_000 })
 
     revalidatePath("/sales/invoices")
     revalidatePath(`/sales/invoices/${payload.id}`)
     revalidatePath(`/sales/invoices/${payload.id}/edit`)
     return { error: null }
   } catch (error) {
-    console.error("updateInvoice error:", errorMessage(error))
     if ((error as { code?: unknown }).code === "P2002") return { error: `Invoice number ${payload.invoice_number} is already used. Choose another number.` }
-    return { error: errorMessage(error) || "Failed to update invoice" }
+    return { error: await actionErrorMessage(error, "The invoice couldn't be saved. Nothing was changed; please try again.") }
   }
 }
 
@@ -673,20 +653,19 @@ export async function convertProformaToInvoice(
     const conversionNote = `[Converted from Proforma ${proforma.invoiceNumber} on ${new Date().toISOString().slice(0, 10)}]`
     const updatedNotes = proforma.notes ? `${proforma.notes}\n${conversionNote}` : conversionNote
 
-    await prisma.invoice.update({
-      where: { id: proforma.id },
-      data: {
-        invoiceNumber: newInvoiceNumber,
-        type: "TAX_INVOICE",
-        status: "SENT",
-        billTo: updatedBillTo,
-        notes: updatedNotes,
-      },
-    })
-
-    // Record in Customer Ledger
-    if (proforma.contactId) {
-      try {
+    // One transaction: the conversion, the customer's statement entry, the journal and the stock
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.invoice.update({
+        where: { id: proforma.id, tenantId },
+        data: {
+          invoiceNumber: newInvoiceNumber,
+          type: "TAX_INVOICE",
+          status: "SENT",
+          billTo: updatedBillTo,
+          notes: updatedNotes,
+        },
+      })
+      if (proforma.contactId) {
         await recordContactTransaction(tenantId, {
           contactId: proforma.contactId,
           type: "INVOICE",
@@ -694,21 +673,18 @@ export async function convertProformaToInvoice(
           referenceId: proforma.id,
           description: `Tax Invoice ${newInvoiceNumber} (Converted from ${proforma.invoiceNumber})`,
           date: new Date(),
-        })
-      } catch (ledgerErr) {
-        await reportCaught(ledgerErr, "proforma converted: customer ledger entry", { tenantId })
+        }, tx)
       }
-    }
-
-    await postToLedger(tenantId, { kind: "invoice", id: proformaId })
-    await postInvoiceStock(tenantId, { invoiceId: proformaId })
+      await syncLedgerIn(tx, tenantId, { kind: "invoice", id: proformaId })
+      await syncInvoiceStock(tenantId, { invoiceId: proformaId }, tx)
+    }, { timeout: 30_000 })
 
     revalidatePath("/sales/invoices")
     revalidatePath(`/sales/invoices/${proformaId}`)
     return { success: true, newInvoiceNumber }
   } catch (error) {
-    console.error("convertProformaToInvoice error:", errorMessage(error))
-    return { success: false, error: errorMessage(error) || "Failed to convert proforma invoice" }
+    if ((error as { code?: unknown }).code === "P2002") return { success: false, error: "That invoice number was just taken. Please try again." }
+    return { success: false, error: await actionErrorMessage(error, "The proforma couldn't be converted. Nothing was changed; please try again.") }
   }
 }
 
@@ -737,18 +713,17 @@ export async function deleteInvoice(id: string): Promise<{ error: string | null 
       await tx.invoiceItem.deleteMany({ where: { invoiceId: id } })
       await tx.payment.deleteMany({ where: { invoiceId: id, tenantId } })
       await tx.invoice.delete({ where: { id, tenantId } })
-    })
-
-    await postToLedger(tenantId, { kind: "invoice", id })
-    for (const paymentId of paymentIds) await postToLedger(tenantId, { kind: "payment", id: paymentId })
-    await postInvoiceStock(tenantId, { invoiceNumber: owned.invoiceNumber })
+      // Journals voided and goods put back in the same transaction
+      await syncLedgerIn(tx, tenantId, { kind: "invoice", id })
+      for (const paymentId of paymentIds) await syncLedgerIn(tx, tenantId, { kind: "payment", id: paymentId })
+      await syncInvoiceStock(tenantId, { invoiceNumber: owned.invoiceNumber }, tx)
+    }, { timeout: 30_000 })
     await logTenantAudit(tenantId, "INVOICE_DELETED", { target: { type: "INVOICE", id }, metadata: { invoiceNumber: owned.invoiceNumber, paymentsRemoved: paymentIds.length } })
 
     revalidatePath("/sales/invoices")
     return { error: null }
   } catch (error) {
-    console.error("deleteInvoice error:", errorMessage(error))
-    return { error: errorMessage(error) || "Failed to delete invoice" }
+    return { error: await actionErrorMessage(error, "The invoice couldn't be deleted. Nothing was changed; please try again.") }
   }
 }
 

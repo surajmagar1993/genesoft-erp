@@ -498,13 +498,19 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
     }
 }
 
+/**
+ * Rebuilds one document's journal(s) inside the caller's transaction, so the
+ * document and its journal are saved (or rolled back) together. Throws on failure.
+ */
+export async function syncLedgerIn(tx: Tx, tenantId: string, src: LedgerSource): Promise<void> {
+    for (const { sourceType, sourceId, draft } of await draftFor(tx, tenantId, src)) {
+        await replaceSourceJournal(tx, tenantId, sourceType, sourceId, draft)
+    }
+}
+
 /** Rebuilds one document's journal(s) to match the document, in one transaction. */
 export async function syncLedger(tenantId: string, src: LedgerSource): Promise<void> {
-    await prisma.$transaction(async (tx: Tx) => {
-        for (const { sourceType, sourceId, draft } of await draftFor(tx, tenantId, src)) {
-            await replaceSourceJournal(tx, tenantId, sourceType, sourceId, draft)
-        }
-    }, { timeout: 30_000 })
+    await prisma.$transaction(async (tx: Tx) => syncLedgerIn(tx, tenantId, src), { timeout: 30_000 })
 }
 
 /**

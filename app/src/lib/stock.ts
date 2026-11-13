@@ -71,9 +71,9 @@ const LIVE_INVOICE = ["SENT", "VIEWED", "PARTIALLY_PAID", "PAID", "OVERDUE"]
  * (referenceNo) and a "Sale" reason, so sales made on the former POS terminal (recorded the same way)
  * are never counted twice. Pass the number explicitly for a deleted invoice.
  */
-export async function syncInvoiceStock(tenantId: string, ref: { invoiceId?: string; invoiceNumber?: string }): Promise<void> {
+export async function syncInvoiceStock(tenantId: string, ref: { invoiceId?: string; invoiceNumber?: string }, db: Db = prisma): Promise<void> {
     const inv = ref.invoiceId
-        ? await prisma.invoice.findFirst({
+        ? await db.invoice.findFirst({
               where: { id: ref.invoiceId, tenantId },
               select: { invoiceNumber: true, status: true, type: true, items: { select: { productId: true, quantity: true } } },
           })
@@ -89,7 +89,7 @@ export async function syncInvoiceStock(tenantId: string, ref: { invoiceId?: stri
         }
     }
 
-    const moves: { productId: string; warehouseId: string; type: string; quantity: unknown }[] = await prisma.stockMovement.findMany({
+    const moves: { productId: string; warehouseId: string; type: string; quantity: unknown }[] = await db.stockMovement.findMany({
         where: { tenantId, referenceNo: number, reason: { startsWith: "Sale" } },
         select: { productId: true, warehouseId: true, type: true, quantity: true },
         orderBy: { createdAt: "asc" },
@@ -105,22 +105,22 @@ export async function syncInvoiceStock(tenantId: string, ref: { invoiceId?: stri
     for (const productId of new Set([...target.keys(), ...current.keys()])) {
         const diff = Math.round(((target.get(productId) || 0) - (current.get(productId) || 0)) * 100) / 100
         if (diff > 0) toDeduct.push({ productId, quantity: diff })
-        else if (diff < 0) await restoreStock(tenantId, productId, -diff, number, lastWarehouse.get(productId) ?? null)
+        else if (diff < 0) await restoreStock(db, tenantId, productId, -diff, number, lastWarehouse.get(productId) ?? null)
     }
-    if (toDeduct.length) await deductStockForSale(prisma, tenantId, toDeduct, number)
+    if (toDeduct.length) await deductStockForSale(db, tenantId, toDeduct, number)
 }
 
 /** Puts goods back (sale cancelled, deleted or reduced) with an IN movement. */
-async function restoreStock(tenantId: string, productId: string, qty: number, reference: string, warehouseId: string | null) {
-    await prisma.product.updateMany({ where: { id: productId, tenantId }, data: { stockQty: { increment: qty } } })
-    const warehouse = warehouseId ?? (await defaultWarehouseId(prisma, tenantId))
+async function restoreStock(db: Db, tenantId: string, productId: string, qty: number, reference: string, warehouseId: string | null) {
+    await db.product.updateMany({ where: { id: productId, tenantId }, data: { stockQty: { increment: qty } } })
+    const warehouse = warehouseId ?? (await defaultWarehouseId(db, tenantId))
     if (!warehouse) return
-    const stock = await prisma.warehouseStock.findFirst({ where: { tenantId, warehouseId: warehouse, productId } })
+    const stock = await db.warehouseStock.findFirst({ where: { tenantId, warehouseId: warehouse, productId } })
     const previousQty = stock ? Number(stock.quantity) : 0
     const newQty = previousQty + qty
-    if (stock) await prisma.warehouseStock.update({ where: { id: stock.id }, data: { quantity: newQty } })
-    else await prisma.warehouseStock.create({ data: { tenantId, warehouseId: warehouse, productId, quantity: newQty } })
-    await prisma.stockMovement.create({
+    if (stock) await db.warehouseStock.update({ where: { id: stock.id }, data: { quantity: newQty } })
+    else await db.warehouseStock.create({ data: { tenantId, warehouseId: warehouse, productId, quantity: newQty } })
+    await db.stockMovement.create({
         data: { tenantId, productId, warehouseId: warehouse, type: "IN", quantity: qty, previousQty, newQty, reason: `Sale reversal ${reference}`, referenceNo: reference, performedBy: "Sales" },
     })
 }

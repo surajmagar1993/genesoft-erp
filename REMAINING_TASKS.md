@@ -192,7 +192,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 
 **Still open from the review:**
 - [x] `app/review_indexes_migration.sql` run on the live database 2026-11-13 (17 indexes, all valid).
-- [ ] Creating or editing an invoice still runs as separate steps (document, customer balance, ledger, stock); failures are reported to System Logs and "Rebuild ledger" repairs the ledger. Making it one transaction means ledger/stock code must accept a transaction (larger refactor).
+- [x] Creating, editing, converting (proforma) and deleting an invoice is one transaction (2026-11-13): document, customer statement, journal (`syncLedgerIn`) and stock (`syncInvoiceStock(…, tx)`) are saved together or not at all (`invoice-atomic.int.test.ts`). Other documents (payments, bills, credit notes…) still post their journal after saving via `postToLedger`.
 - [ ] Large create/edit forms are still pop-ups in HR, Purchase, Projects, Inventory, RFQ, Recurring invoices (rule: full pages). Data loss on outside clicks is fixed; moving them to pages is a larger UI job.
 - [ ] Other number series (orders, quotes, bills, credit notes…) still use max+1; invoices retry on a clash. A counter table would fix all (needs a database change).
 - [ ] Exchange rate isn't stored on each document (matters only for foreign-currency documents).

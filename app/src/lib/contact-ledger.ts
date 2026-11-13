@@ -22,12 +22,17 @@ export interface RecordTransactionPayload {
  * Records a financial transaction in the ledger and updates the contact's running balance.
  * Normalizes the amount to the tenant's base currency for balance tracking.
  */
-export async function recordContactTransaction(tenantId: string, payload: RecordTransactionPayload) {
+/**
+ * Adds an entry to a customer's or supplier's statement and moves their
+ * balance. Pass `db` to run inside the caller's transaction (the document and
+ * its statement entry are then saved together); otherwise it opens its own.
+ */
+export async function recordContactTransaction(tenantId: string, payload: RecordTransactionPayload, db?: Prisma.TransactionClient) {
   const { contactId, type, amount, referenceId, description, date } = payload
 
   const transactionAmount = new Prisma.Decimal(amount)
 
-  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+  const run = async (tx: Prisma.TransactionClient) => {
     // 1. Fetch Tenant and Contact to get base currency and current balance
     const tenant = await tx.tenant.findUnique({
       where: { id: tenantId },
@@ -78,5 +83,6 @@ export async function recordContactTransaction(tenantId: string, payload: Record
     })
 
     return entry
-  })
+  }
+  return db ? run(db) : await prisma.$transaction(run)
 }
