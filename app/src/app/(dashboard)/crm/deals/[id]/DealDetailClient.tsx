@@ -283,7 +283,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
                 <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Expected Close</p>
                 <p className="text-xl font-bold mt-1">
                   {deal.expected_close
-                    ? new Date(deal.expected_close).toLocaleDateString(appLocale, {
+                    ? new Date(deal.expected_close).toLocaleDateString(appLocale, { timeZone: "UTC", 
                         day: "2-digit",
                         month: "short",
                         year: "numeric"
@@ -343,7 +343,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
                       <p className="text-xs text-muted-foreground">Expected Target Date</p>
                       <p className="font-medium mt-0.5">
                         {deal.expected_close
-                          ? new Date(deal.expected_close).toLocaleDateString(appLocale, {
+                          ? new Date(deal.expected_close).toLocaleDateString(appLocale, { timeZone: "UTC", 
                               day: "2-digit",
                               month: "short",
                               year: "numeric"

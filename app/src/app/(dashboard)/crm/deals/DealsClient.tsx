@@ -261,7 +261,7 @@ export default function DealsClient({ initialDeals, total }: Props) {
                                             <TableCell>
                                                 <div className="flex items-center text-sm text-muted-foreground">
                                                     <Calendar className="mr-2 h-3.5 w-3.5" />
-                                                    {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString() : "—"}
+                                                    {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString(undefined, { timeZone: "UTC" }) : "—"}
                                                 </div>
                                             </TableCell>
                                             <TableCell onClick={(e) => e.stopPropagation()}><DealActions deal={deal} /></TableCell>
@@ -306,7 +306,7 @@ export default function DealsClient({ initialDeals, total }: Props) {
                                                     <span className="font-bold text-sm text-primary">{formatCurrency(deal.value)}</span>
                                                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                                                         <Calendar className="h-3 w-3" />
-                                                        {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "—"}
+                                                        {deal.expected_close ? new Date(deal.expected_close).toLocaleDateString(undefined, { timeZone: "UTC",  month: "short", day: "numeric" }) : "—"}
                                                     </div>
                                                 </div>
                                                 <div className="w-full bg-secondary h-1.5 rounded-full mt-3 overflow-hidden">

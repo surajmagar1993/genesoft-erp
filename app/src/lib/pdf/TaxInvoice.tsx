@@ -356,7 +356,7 @@ function fmt(n: number | null | undefined): string {
 
 function fmtDate(d: string | null | undefined, locale = "en-IN"): string {
   if (!d) return "—"
-  return new Date(d).toLocaleDateString(locale, {
+  return new Date(d).toLocaleDateString(locale, { timeZone: "UTC", 
     day: "2-digit", month: "short", year: "numeric",
   })
 }

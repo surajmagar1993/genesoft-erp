@@ -468,7 +468,7 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                             {deal.expected_close
-                              ? new Date(deal.expected_close).toLocaleDateString(appLocale, {
+                              ? new Date(deal.expected_close).toLocaleDateString(appLocale, { timeZone: "UTC", 
                                   day: "2-digit",
                                   month: "short",
                                   year: "numeric"

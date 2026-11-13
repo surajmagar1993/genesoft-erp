@@ -635,7 +635,7 @@ export default function ExpensesClient({
                                                     )}
                                                 </td>
                                                 <td className="py-3.5 px-4 text-muted-foreground text-xs whitespace-nowrap">
-                                                    {new Date(exp.expenseDate).toLocaleDateString(appLocale, {
+                                                    {new Date(exp.expenseDate).toLocaleDateString(appLocale, { timeZone: "UTC", 
                                                         day: "2-digit",
                                                         month: "short",
                                                         year: "numeric",
@@ -822,7 +822,7 @@ export default function ExpensesClient({
                                                     {je.entryNumber}
                                                 </td>
                                                 <td className="py-3.5 px-4 text-muted-foreground text-xs whitespace-nowrap">
-                                                    {new Date(je.date).toLocaleDateString(appLocale, {
+                                                    {new Date(je.date).toLocaleDateString(appLocale, { timeZone: "UTC", 
                                                         day: "2-digit",
                                                         month: "short",
                                                         year: "numeric",
@@ -967,7 +967,7 @@ export default function ExpensesClient({
                                                     accountLedgerLines.map((line, idx) => (
                                                         <tr key={idx} className="hover:bg-muted/20">
                                                             <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
-                                                                {new Date(line.date).toLocaleDateString(appLocale, {
+                                                                {new Date(line.date).toLocaleDateString(appLocale, { timeZone: "UTC", 
                                                                     day: "2-digit",
                                                                     month: "short",
                                                                     year: "numeric",
@@ -1056,7 +1056,7 @@ export default function ExpensesClient({
                                                     <div className="font-semibold text-foreground">{claim.title}</div>
                                                     <div className="text-muted-foreground mt-0.5">
                                                         Claimed by {claim.employeeName || "Employee"} •{" "}
-                                                        {new Date(claim.expenseDate).toLocaleDateString()}
+                                                        {new Date(claim.expenseDate).toLocaleDateString(undefined, { timeZone: "UTC" })}
                                                     </div>
                                                 </div>
                                                 <div className="text-right">
@@ -1614,7 +1614,7 @@ export default function ExpensesClient({
                                 <div>
                                     <span className="text-muted-foreground block">Voucher Date</span>
                                     <span className="font-medium text-foreground">
-                                        {new Date(selectedExpense.expenseDate).toLocaleDateString()}
+                                        {new Date(selectedExpense.expenseDate).toLocaleDateString(undefined, { timeZone: "UTC" })}
                                     </span>
                                 </div>
                                 <div>
@@ -1709,7 +1709,7 @@ export default function ExpensesClient({
                         <div className="space-y-3 py-2 text-xs">
                             <div className="flex items-center justify-between text-muted-foreground">
                                 <span>
-                                    Date: {new Date(selectedJournal.date).toLocaleDateString()}
+                                    Date: {new Date(selectedJournal.date).toLocaleDateString(undefined, { timeZone: "UTC" })}
                                 </span>
                                 <span>Source: {selectedJournal.sourceType} {selectedJournal.reference ? `(${selectedJournal.reference})` : ""}</span>
                             </div>

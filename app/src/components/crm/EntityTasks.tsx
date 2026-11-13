@@ -132,7 +132,7 @@ export default function EntityTasks({ entityId, entityType, initialTasks }: Prop
                                       <div className="flex items-center gap-2 mt-1">
                                           <Calendar className="h-3 w-3 text-muted-foreground" />
                                           <span className="text-xs text-muted-foreground truncate">
-                                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No Date"}
+                                              {task.due_date ? new Date(task.due_date).toLocaleDateString(undefined, { timeZone: "UTC" }) : "No Date"}
                                           </span>
                                       </div>
                                   </div>

@@ -350,7 +350,7 @@ export default function TasksClient({ initialTasks, total }: Props) {
                                         <TableCell>
                                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                                 <Calendar className="h-3 w-3" />
-                                                {task.due_date ? new Date(task.due_date).toLocaleDateString() : "No Date"}
+                                                {task.due_date ? new Date(task.due_date).toLocaleDateString(undefined, { timeZone: "UTC" }) : "No Date"}
                                             </div>
                                         </TableCell>
                                         <TableCell className="pr-6">
