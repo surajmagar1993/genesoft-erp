@@ -22,7 +22,7 @@ export interface ProfitAndLoss {
 
 type Dated = { date: Date; amount: number }
 type Num = { toString(): string } | number | string
-type BillRow = { subtotal: Num; discount: Num | null; currencyCode: string | null; billDate: Date; items: { lineTotal: Num; taxAmount: Num; product: { type: string } | null }[] }
+type BillRow = { subtotal: Num; discount: Num | null; currencyCode: string | null; exchangeRate: Num | null; billDate: Date; items: { lineTotal: Num; taxAmount: Num; product: { type: string } | null }[] }
 type PayrollRow = { id: string; totalGross: Num; periodYear: number; periodMonth: number; payslips: { totalGross: Num; unpaidLeaveDeduction: Num | null }[] }
 
 const round2 = (n: number) => Math.round(n * 100) / 100
@@ -39,22 +39,26 @@ async function loadLines(tenantId: string, start: Date, end: Date) {
     const tenant = await prisma.tenant.findUnique({ where: { id: tenantId }, select: { currencyCode: true } })
     if (!tenant) throw new Error("Tenant not found")
     const base = tenant.currencyCode
-    const toBase = async (amount: number, currency: string | null | undefined) =>
-        !currency || currency === base ? amount : (await convertAmount(amount, currency, base)).toNumber()
+    // The rate fixed on the document when it was posted (same as the ledger); the live rate only for one without
+    const toBase = async (amount: number, currency: string | null | undefined, lockedRate?: unknown) => {
+        if (!currency || currency === base) return amount
+        const rate = lockedRate === null || lockedRate === undefined ? NaN : Number(lockedRate)
+        return Number.isFinite(rate) && rate > 0 ? amount * rate : (await convertAmount(amount, currency, base)).toNumber()
+    }
 
     const [invoices, creditNotes, bills, expenses, payrollRuns] = await Promise.all([
         prisma.invoice.findMany({
             where: { tenantId, type: { in: ["TAX_INVOICE", "DEBIT_NOTE", "CREDIT_NOTE"] }, status: { in: LIVE_INVOICE as never }, invoiceDate: { gte: start, lte: end } },
-            select: { type: true, total: true, taxAmount: true, currencyCode: true, invoiceDate: true },
+            select: { type: true, total: true, taxAmount: true, currencyCode: true, exchangeRate: true, invoiceDate: true },
         }),
         prisma.creditNote.findMany({
             where: { tenantId, status: { in: LIVE_CREDIT_NOTE as never }, issueDate: { gte: start, lte: end } },
-            select: { subtotal: true, currencyCode: true, issueDate: true },
+            select: { subtotal: true, currencyCode: true, exchangeRate: true, issueDate: true },
         }),
         prisma.bill.findMany({
             where: { tenantId, status: { in: LIVE_BILL as never }, billDate: { gte: start, lte: end } },
             select: {
-                subtotal: true, discount: true, currencyCode: true, billDate: true,
+                subtotal: true, discount: true, currencyCode: true, exchangeRate: true, billDate: true,
                 items: { select: { lineTotal: true, taxAmount: true, product: { select: { type: true } } } },
             },
         }),
@@ -71,17 +75,17 @@ async function loadLines(tenantId: string, start: Date, end: Date) {
     const sales: Dated[] = []
     const credits: Dated[] = []
     for (const inv of invoices) {
-        const net = await toBase(Number(inv.total) - Number(inv.taxAmount), inv.currencyCode)
+        const net = await toBase(Number(inv.total) - Number(inv.taxAmount), inv.currencyCode, inv.exchangeRate)
         if (inv.type === "CREDIT_NOTE") credits.push({ date: inv.invoiceDate, amount: Math.abs(net) })
         else sales.push({ date: inv.invoiceDate, amount: net })
     }
-    for (const cn of creditNotes) credits.push({ date: cn.issueDate, amount: await toBase(Number(cn.subtotal), cn.currencyCode) })
+    for (const cn of creditNotes) credits.push({ date: cn.issueDate, amount: await toBase(Number(cn.subtotal), cn.currencyCode, cn.exchangeRate) })
 
     const cogs: Dated[] = []
     const billCosts: Dated[] = []
     for (const bill of bills as BillRow[]) {
         // Bill net of discount, before tax, split by its product vs. other lines
-        const net = await toBase(Number(bill.subtotal) - Number(bill.discount || 0), bill.currencyCode)
+        const net = await toBase(Number(bill.subtotal) - Number(bill.discount || 0), bill.currencyCode, bill.exchangeRate)
         const lines = bill.items.map((i: BillRow["items"][number]) => ({ amount: Math.max(0, Number(i.lineTotal) - Number(i.taxAmount)), stock: i.product?.type === "PRODUCT" }))
         const lineSum = lines.reduce((s, l) => s + l.amount, 0)
         const stockShare = lineSum > 0 ? lines.filter((l) => l.stock).reduce((s, l) => s + l.amount, 0) / lineSum : 0

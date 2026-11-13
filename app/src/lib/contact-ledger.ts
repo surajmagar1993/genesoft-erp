@@ -53,7 +53,7 @@ export async function recordContactTransaction(tenantId: string, payload: Record
     let amountInBaseCurrency = transactionAmount
 
     if (currencyCode !== baseCurrency) {
-      amountInBaseCurrency = await convertAmount(transactionAmount, currencyCode, baseCurrency)
+      amountInBaseCurrency = await convertAmount(transactionAmount, currencyCode, baseCurrency, tx)
     }
 
     // Move the balance first and read back the result, so two entries saved at the

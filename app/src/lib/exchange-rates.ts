@@ -1,20 +1,23 @@
 import { prisma } from "./prisma"
 import { Prisma } from "@prisma/client"
 
+type Db = Prisma.TransactionClient | typeof prisma
+
 const CACHE_DURATION_HOURS = 6
 
 /**
  * Fetches the latest exchange rate from Frankfurter API (Free, no API key).
  * Standardizes everything through a cache to avoid hitting rate limits.
  */
-export async function getExchangeRate(fromCurrency: string, toCurrency: string): Promise<number> {
+/** `db`: the caller's transaction, when it has one (the rate cache is read and written through it). */
+export async function getExchangeRate(fromCurrency: string, toCurrency: string, db: Db = prisma): Promise<number> {
   if (fromCurrency === toCurrency) return 1
 
   const now = new Date()
   const cacheThreshold = new Date(now.getTime() - CACHE_DURATION_HOURS * 60 * 60 * 1000)
 
   // 1. Check Cache
-  const cached = await prisma.exchangeRateCache.findUnique({
+  const cached = await db.exchangeRateCache.findUnique({
     where: {
       fromCurrency_toCurrency: {
         fromCurrency,
@@ -43,7 +46,7 @@ export async function getExchangeRate(fromCurrency: string, toCurrency: string):
     }
 
     // 3. Update Cache
-    await prisma.exchangeRateCache.upsert({
+    await db.exchangeRateCache.upsert({
       where: {
         fromCurrency_toCurrency: {
           fromCurrency,
@@ -80,9 +83,10 @@ export async function getExchangeRate(fromCurrency: string, toCurrency: string):
 export async function convertAmount(
   amount: number | Prisma.Decimal,
   fromCurrency: string,
-  toCurrency: string
+  toCurrency: string,
+  db: Db = prisma
 ): Promise<Prisma.Decimal> {
-  const rate = await getExchangeRate(fromCurrency, toCurrency)
+  const rate = await getExchangeRate(fromCurrency, toCurrency, db)
   const decimalAmount = new Prisma.Decimal(amount)
   return decimalAmount.mul(new Prisma.Decimal(rate))
 }

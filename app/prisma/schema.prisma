@@ -553,6 +553,8 @@ model Invoice {
   total        Decimal @default(0) @db.Decimal(15, 2)
   totalInWords String? @map("total_in_words")
   currencyCode String  @default("INR") @map("currency_code")
+  /// Rate to the business's currency, fixed when the document is first posted (ledger.ts lockedRate)
+  exchangeRate Decimal? @map("exchange_rate") @db.Decimal(20, 10)
 
   // Tax Summary & Exemption
   taxSummary              Json?   @map("tax_summary") // HSN/SAC breakup table
@@ -863,6 +865,8 @@ model Payment {
   reference     String?
   notes         String?
   currencyCode  String        @default("INR") @map("currency_code")
+  /// Rate to the business's currency, fixed when the document is first posted (ledger.ts lockedRate)
+  exchangeRate Decimal? @map("exchange_rate") @db.Decimal(20, 10)
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -920,6 +924,8 @@ model Bill {
   discount     Decimal @default(0) @db.Decimal(15, 2)
   total        Decimal @default(0) @db.Decimal(15, 2)
   currencyCode String  @default("INR") @map("currency_code")
+  /// Rate to the business's currency, fixed when the document is first posted (ledger.ts lockedRate)
+  exchangeRate Decimal? @map("exchange_rate") @db.Decimal(20, 10)
 
   // Meta
   notes     String?
@@ -1885,6 +1891,8 @@ model CreditNote {
   allocatedAmount  Decimal          @default(0) @map("allocated_amount") @db.Decimal(15, 2)
   remainingBalance Decimal          @default(0) @map("remaining_balance") @db.Decimal(15, 2)
   currencyCode     String           @default("INR") @map("currency_code")
+  /// Rate to the business's currency, fixed when the document is first posted (ledger.ts lockedRate)
+  exchangeRate Decimal? @map("exchange_rate") @db.Decimal(20, 10)
   notes            String?
   terms            String?
   createdAt        DateTime         @default(now()) @map("created_at")

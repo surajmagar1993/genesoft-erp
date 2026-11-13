@@ -128,7 +128,30 @@ export interface DraftJournal {
     narration: string
     /** Currency the amounts are in; converted to base currency when different */
     currencyCode: string
+    /** Rate to base currency locked on the document (lockedRate); the live rate only when missing */
+    exchangeRate?: number | null
     lines: DraftLine[]
+}
+
+type RatedModel = "invoice" | "creditNote" | "payment" | "bill"
+
+/**
+ * The document's exchange rate to the business's currency, fixed the first
+ * time it is posted (right after it is saved) and stored on the document, so
+ * rebuilding the ledger later uses the same rate instead of today's.
+ */
+async function lockedRate(tx: Tx, tenantId: string, model: RatedModel, id: string, currency: string | null | undefined, base: string, stored: unknown): Promise<number> {
+    if (!currency || currency === base) return 1
+    const saved = stored === null || stored === undefined ? NaN : Number(stored)
+    if (Number.isFinite(saved) && saved > 0) return saved
+    const rate = (await convertAmount(1_000_000, currency, base, tx)).toNumber() / 1_000_000
+    const where = { id, tenantId }
+    const data = { exchangeRate: rate }
+    if (model === "invoice") await tx.invoice.updateMany({ where, data })
+    else if (model === "creditNote") await tx.creditNote.updateMany({ where, data })
+    else if (model === "payment") await tx.payment.updateMany({ where, data })
+    else await tx.bill.updateMany({ where, data })
+    return rate
 }
 
 const cents = (n: number) => Math.round(n * 100)
@@ -174,7 +197,11 @@ export async function replaceSourceJournal(
     // Resolve and convert the draft into balanced lines (in cents, so it balances exactly)
     let lines: ResolvedLine[] = []
     if (draft) {
-        const rate = draft.currencyCode && draft.currencyCode !== base ? (await convertAmount(1_000_000, draft.currencyCode, base)).toNumber() / 1_000_000 : 1
+        const rate = !draft.currencyCode || draft.currencyCode === base
+            ? 1
+            : draft.exchangeRate && draft.exchangeRate > 0
+                ? draft.exchangeRate
+                : (await convertAmount(1_000_000, draft.currencyCode, base, tx)).toNumber() / 1_000_000
         const merged = new Map<string, ResolvedLine>()
         for (const l of draft.lines) {
             const debit = cents((l.debit || 0) * rate)
@@ -300,7 +327,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
             const inv = await tx.invoice.findFirst({
                 where: { id: src.id, tenantId },
                 select: {
-                    invoiceNumber: true, type: true, status: true, invoiceDate: true, total: true, taxAmount: true, currencyCode: true, contactId: true,
+                    invoiceNumber: true, type: true, status: true, invoiceDate: true, total: true, taxAmount: true, currencyCode: true, exchangeRate: true, contactId: true,
                     items: { select: { cgstAmount: true, sgstAmount: true, igstAmount: true } },
                 },
             })
@@ -324,7 +351,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
             return [{
                 sourceType: "INVOICE",
                 sourceId: src.id,
-                draft: { date: inv.invoiceDate, reference: inv.invoiceNumber, narration: `${isCredit ? "Credit note" : "Invoice"} ${inv.invoiceNumber}`, currencyCode: inv.currencyCode, lines },
+                draft: { date: inv.invoiceDate, reference: inv.invoiceNumber, narration: `${isCredit ? "Credit note" : "Invoice"} ${inv.invoiceNumber}`, currencyCode: inv.currencyCode, exchangeRate: await lockedRate(tx, tenantId, "invoice", src.id, inv.currencyCode, tenant.currencyCode, inv.exchangeRate), lines },
             }]
         }
 
@@ -332,7 +359,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
             const cn = await tx.creditNote.findFirst({
                 where: { id: src.id, tenantId },
                 select: {
-                    creditNoteNumber: true, status: true, issueDate: true, subtotal: true, taxAmount: true, total: true, currencyCode: true, contactId: true,
+                    creditNoteNumber: true, status: true, issueDate: true, subtotal: true, taxAmount: true, total: true, currencyCode: true, exchangeRate: true, contactId: true,
                     invoice: { select: { items: { select: { igstAmount: true } } } },
                 },
             })
@@ -356,6 +383,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
                     reference: cn.creditNoteNumber,
                     narration: `Credit note ${cn.creditNoteNumber}`,
                     currencyCode: cn.currencyCode,
+                    exchangeRate: await lockedRate(tx, tenantId, "creditNote", src.id, cn.currencyCode, tenant.currencyCode, cn.exchangeRate),
                     lines: [{ role: "SALES_RETURNS", debit: total - tax, contactId: cn.contactId }, ...taxLines, { role: "AR", credit: total, contactId: cn.contactId }],
                 },
             }]
@@ -364,7 +392,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
         case "creditNoteRefund": {
             const r = await tx.creditNoteRefund.findFirst({
                 where: { id: src.id, tenantId },
-                select: { amount: true, refundDate: true, paymentMethod: true, creditNote: { select: { creditNoteNumber: true, contactId: true, currencyCode: true, status: true } } },
+                select: { amount: true, refundDate: true, paymentMethod: true, creditNote: { select: { id: true, creditNoteNumber: true, contactId: true, currencyCode: true, exchangeRate: true, status: true } } },
             })
             const sourceId = `credit-note-refund:${src.id}`
             if (!r || r.creditNote.status === "VOID") return [{ sourceType: "PAYMENT", sourceId, draft: null }]
@@ -377,6 +405,8 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
                     reference: r.creditNote.creditNoteNumber,
                     narration: `Refund on credit note ${r.creditNote.creditNoteNumber}`,
                     currencyCode: r.creditNote.currencyCode,
+                    // A refund goes out at the credit note's rate
+                    exchangeRate: await lockedRate(tx, tenantId, "creditNote", r.creditNote.id, r.creditNote.currencyCode, tenant.currencyCode, r.creditNote.exchangeRate),
                     lines: [{ role: "AR", debit: n(r.amount), contactId: r.creditNote.contactId }, { role: cash, credit: n(r.amount) }],
                 },
             }]
@@ -385,7 +415,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
         case "payment": {
             const p = await tx.payment.findFirst({
                 where: { id: src.id, tenantId },
-                select: { amount: true, type: true, paymentDate: true, paymentMethod: true, reference: true, currencyCode: true, contactId: true, invoice: { select: { invoiceNumber: true } }, bill: { select: { billNumber: true } } },
+                select: { amount: true, type: true, paymentDate: true, paymentMethod: true, reference: true, currencyCode: true, exchangeRate: true, contactId: true, invoice: { select: { invoiceNumber: true } }, bill: { select: { billNumber: true } } },
             })
             if (!p || p.reference?.startsWith(CREDIT_APPLICATION_PREFIX)) return [{ sourceType: "PAYMENT", sourceId: src.id, draft: null }]
             const cash = p.paymentMethod === "CASH" ? "CASH" : "BANK"
@@ -400,6 +430,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
                     reference: doc || "Payment",
                     narration: `${inbound ? "Payment received" : "Payment made"}${doc ? ` for ${doc}` : ""} (${p.paymentMethod})`,
                     currencyCode: p.currencyCode,
+                    exchangeRate: await lockedRate(tx, tenantId, "payment", src.id, p.currencyCode, tenant.currencyCode, p.exchangeRate),
                     lines: inbound
                         ? [{ role: cash, debit: amount }, { role: "AR", credit: amount, contactId: p.contactId }]
                         : [{ role: "AP", debit: amount, contactId: p.contactId }, { role: cash, credit: amount }],
@@ -411,7 +442,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
             const bill = await tx.bill.findFirst({
                 where: { id: src.id, tenantId },
                 select: {
-                    billNumber: true, status: true, billDate: true, subtotal: true, discount: true, taxAmount: true, total: true, currencyCode: true, contactId: true,
+                    billNumber: true, status: true, billDate: true, subtotal: true, discount: true, taxAmount: true, total: true, currencyCode: true, exchangeRate: true, contactId: true,
                     items: { select: { lineTotal: true, taxAmount: true, product: { select: { type: true } } } },
                 },
             })
@@ -430,6 +461,7 @@ async function draftFor(tx: Tx, tenantId: string, src: LedgerSource): Promise<{ 
                     reference: bill.billNumber,
                     narration: `Supplier bill ${bill.billNumber}`,
                     currencyCode: bill.currencyCode,
+                    exchangeRate: await lockedRate(tx, tenantId, "bill", src.id, bill.currencyCode, tenant.currencyCode, bill.exchangeRate),
                     lines: [
                         { role: "COGS", debit: net * stockShare, contactId: bill.contactId },
                         { role: "PURCHASES", debit: net * (1 - stockShare), contactId: bill.contactId },
