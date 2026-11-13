@@ -9,7 +9,7 @@ import { documentTotals } from "@/lib/document-totals"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { isUuid } from "@/lib/utils"
 import type { Prisma } from "@prisma/client"
-import { nextSequence } from "@/lib/sequence"
+import { nextSequence, peekSequence } from "@/lib/sequence"
 import { buildInvoiceLines, contactPlaceOfSupply } from "@/lib/invoice-lines"
 import { nextInvoiceNumber } from "@/lib/invoice-number"
 import { planLimitError } from "@/lib/plan-limits"
@@ -318,5 +318,5 @@ export async function convertOrderToInvoice(orderId: string): Promise<{ invoiceI
 /** The next sales order number (SO-2026-0001…) for the new-order form. */
 export async function getNextOrderNumber(): Promise<string> {
   const tenantId = await getTenantId(MODULE)
-  return nextSequence(prisma, "salesOrder", tenantId, `SO-${new Date().getFullYear()}-`)
+  return peekSequence(prisma, "salesOrder", tenantId, `SO-${new Date().getFullYear()}-`)
 }

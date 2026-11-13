@@ -8,7 +8,7 @@ import { documentTotals } from "@/lib/document-totals"
 import { assertTenantRefs } from "@/lib/tenant-refs"
 import { isUuid } from "@/lib/utils"
 import type { Prisma } from "@prisma/client"
-import { nextSequence } from "@/lib/sequence"
+import { peekSequence } from "@/lib/sequence"
 
 /** Documents are always in the business's own currency (never a browser-sent or "INR" default). */
 async function tenantCurrency(tenantId: string): Promise<string> {
@@ -195,5 +195,5 @@ export async function deleteQuote(id: string): Promise<{ error: string | null }>
 /** The next quote number (QT-2026-0001…) for the new-quote form. */
 export async function getNextQuoteNumber(): Promise<string> {
   const tenantId = await getTenantId(MODULE)
-  return nextSequence(prisma, "quote", tenantId, `QT-${new Date().getFullYear()}-`)
+  return peekSequence(prisma, "quote", tenantId, `QT-${new Date().getFullYear()}-`)
 }

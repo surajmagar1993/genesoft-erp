@@ -127,6 +127,7 @@ model Tenant {
   workflowRules         WorkflowRule[]
   workflowExecutions    WorkflowExecution[]
   companies             Company[]
+  documentCounters      DocumentCounter[]
 
   @@map("tenants")
 }
@@ -3981,4 +3982,17 @@ model SiteLead {
 
   @@index([status, createdAt(sort: Desc)], map: "idx_site_leads_status")
   @@map("site_leads")
+}
+
+/// Next number per business, series and prefix (src/lib/sequence.ts nextSequence)
+model DocumentCounter {
+  tenantId  String   @map("tenant_id") @db.Uuid
+  name      String
+  prefix    String
+  lastValue Int      @map("last_value")
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([tenantId, name, prefix])
+  @@map("document_counters")
 }

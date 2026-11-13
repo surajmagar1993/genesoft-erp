@@ -194,7 +194,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 - [x] `app/review_indexes_migration.sql` run on the live database 2026-11-13 (17 indexes, all valid).
 - [x] Creating, editing, converting (proforma) and deleting an invoice is one transaction (2026-11-13): document, customer statement, journal (`syncLedgerIn`) and stock (`syncInvoiceStock(…, tx)`) are saved together or not at all (`invoice-atomic.int.test.ts`). Other documents (payments, bills, credit notes…) still post their journal after saving via `postToLedger`.
 - [x] Large create/edit forms are full pages (2026-11-13): /hr/employees/new and /[id]/edit, /purchase/orders/new, /purchase/vendors/new, /purchase/rfq/new, /projects/new, /inventory/warehouses/new and /[id]/edit, /sales/invoices/recurring/new and /[id]/edit. Quick actions (attendance, leave, receive goods, bids, tasks, time, stock moves…) stay as pop-ups.
-- [ ] Other number series (orders, quotes, bills, credit notes…) still use max+1; invoices retry on a clash. A counter table would fix all (needs a database change).
+- [x] Number series use a counter table (`document_counters`, `app/document_counters_migration.sql`, 2026-11-13): `nextSequence` locks and moves a per-business counter (never below the highest existing number); form previews use `peekSequence`. Invoices keep max+1 with a retry on a clash, since the number can be edited.
 - [ ] Exchange rate isn't stored on each document (matters only for foreign-currency documents).
 - [ ] Rate limits on /join and the customer portal beyond the per-customer ticket limits; portal links never expire (product decision).
 - [ ] A separate production database with backups; migration history (needs the owner's Supabase account).
