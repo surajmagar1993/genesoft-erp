@@ -1,6 +1,6 @@
 # 🛡️ Deployment Compliance Audit Report — Genesoft ERP & CRM
 
-**Audit Date**: 2026-09-10  
+**Audit Date**: 2026-09-10 (refreshed 2026-11-13)  
 **Repository Branch**: `main`  
 **Framework**: Next.js 16 (App Router) + TypeScript Strict + Tailwind CSS + Prisma 7  
 **Database**: Supabase PostgreSQL (Port 5432 Direct Connection)  
@@ -33,13 +33,14 @@ All critical build blockers, dynamic route database leaks during static analysis
 - **Build Command**: `npm run build` (executed via root workspace delegation)
 - **Compile Engine**: Turbopack
 - **Prisma Client**: v7.4.2 generated to `app/node_modules/@prisma/client`
-- **Result**: Exit code `0`, zero TypeScript errors. ESLint is not part of the build and still reports ~1,090 errors (mostly `no-explicit-any`) as of 2026-10-13.
+- **Result**: Exit code `0`, zero TypeScript errors. ESLint is not part of the build. As of 2026-11-13 the app source has 0 lint errors (warnings remain); old files in `app/scripts/` still fail. GitHub Actions CI (`.github/workflows/ci.yml`) runs type check, lint, tests and build on every push to `main`.
 
 ### 3.2 Dynamic Route Packaging
 All API endpoints and server-rendered pages accessing the database or request cookies enforce `export const dynamic = "force-dynamic"` to guarantee zero compile-time database dependency:
 - `/api/invoices/[id]/pdf` — ✅ PDF generator force-dynamic
 - `/api/webhooks/razorpay` — ✅ Webhook handler force-dynamic
-- `/api/webhooks/stripe` — ✅ Webhook handler force-dynamic
+- `/api/cron/workflows` — ✅ Daily job (`CRON_SECRET`), force-dynamic
+- Stripe and PayPal webhooks were removed on 2026-11-13 (Razorpay only).
 - `/admin/*` — ✅ Super Admin Command Center and sub-routes dynamic
 
 ---
@@ -60,7 +61,11 @@ Ensure the following environment variables are securely configured in your deplo
 | `RAZORPAY_WEBHOOK_SECRET` | Server | For billing | Verifies `/api/webhooks/razorpay`; the webhook fails closed without it. |
 | `ENCRYPTION_KEY` | Server | Recommended | Encrypts tenant-stored credentials at rest. Keep it stable; rotating it makes stored secrets unreadable. |
 
-`SUPABASE_SERVICE_ROLE_KEY` is not used by the code and does not need to be set.
+| `SUPABASE_SERVICE_ROLE_KEY` | Server | For uploads/admin | Storage uploads (logos, website media, CVs), Super Admin create-tenant login and 2FA reset. Server only. |
+| `CRON_SECRET` | Server | Recommended | Protects the daily job; without it the job refuses to run. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | Client/Server | Optional | Spam check on website forms and sign-up. |
+
+The full list is in `app/README.md` → Environment Setup.
 
 ---
 
@@ -70,7 +75,9 @@ Ensure the following environment variables are securely configured in your deplo
 - **Super Admin Protection**: `ensureSuperAdmin()` server-side guard blocks unauthorized access to `/admin/*` routes.
 - **Audit Logging**: `AdminAuditLog` model tracks platform actions (`TENANT_CREATED`, `TENANT_SUSPENDED`, `SECURITY_POLICY_UPDATE`, `SECURITY_IP_BLOCK`).
 - **Secret Isolation**: `.env*` files are gitignored. `app/temp.env` and `app/temp.env.local` were committed earlier with real credentials and are being removed; the credentials in them should be rotated because they remain in git history.
-- **Security headers**: `next.config.ts` sets HSTS, `nosniff`, a referrer policy, a permissions policy and `X-Frame-Options: SAMEORIGIN` (except `/forms/*`, which is embeddable).
+- **Security headers**: `next.config.ts` sets HSTS, `nosniff`, a referrer policy, a permissions policy and `X-Frame-Options: SAMEORIGIN` (except `/forms/*`, which is embeddable), plus a Content-Security-Policy (2026-11-13).
+- **Sign-in security (enforced 2026-11-13)**: two-factor (TOTP, `/two-factor`), idle timeout, login lockout and per-user/per-IP rate limits in the request proxy; policy in Admin → Security.
+- **Region**: functions run in `bom1` (Mumbai), next to the database.
 
 ---
 
@@ -88,8 +95,8 @@ Ensure the following environment variables are securely configured in your deplo
 git clone <repo-url>
 cd CRM
 
-# 2. Install dependencies
-npm install
+# 2. Install dependencies (from app/, using app/package-lock.json)
+cd app && npm install --workspaces=false && cd ..
 
 # 3. Build application
 npm run build
@@ -100,4 +107,4 @@ PORT=3000 npm start
 
 ---
 
-*Audit conducted and certified on 2026-09-10.*
+*Audit conducted on 2026-09-10; refreshed 2026-11-13. Go-live steps: `GO_LIVE_CHECKLIST.md`.*

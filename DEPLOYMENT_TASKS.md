@@ -4,6 +4,8 @@ This task list adapts the Genesoft ERP project for standard Node.js hosting plat
 
 > [!NOTE]
 > **Status**: Fully Compliant & Verified — All build, root workspace delegation, and deployment tasks completed as of 2026-09-10.
+>
+> **2026-11-13:** this list is historical. Current deployment: Vercel project `genesoftdev` (root directory `app`, region `bom1`), CI in GitHub Actions; environment variables in `app/README.md`; go-live steps in `GO_LIVE_CHECKLIST.md`. Install dependencies from `app/` with `npm install --workspaces=false`.
 
 ## ✅ Resolved This Session
 
@@ -13,7 +15,7 @@ This task list adapts the Genesoft ERP project for standard Node.js hosting plat
 - [x] **Prisma 7 Deprecated Preview Flag Removed**: Removed `previewFeatures = ["driverAdapters"]` — `prisma validate` passes with zero warnings.
 - [x] **Orphaned Root Code Cleaned**: Removed empty legacy `src/` at repository root.
 - [x] **Tenant Management Lifecycle Built**: Added `/admin/tenants/new` and `/admin/tenants/[id]` — verified dynamic build passing.
-- [x] **Platform Security & Governance Built**: Added `/admin/security` with 2FA, rate limits, firewall IP blocklist, and audit feed.
+- [x] **Platform Security & Governance Built**: Added `/admin/security` with 2FA, rate limits, firewall IP blocklist, and audit feed (policy enforced since 2026-11-13).
 
 ---
 
@@ -57,4 +59,4 @@ This task list adapts the Genesoft ERP project for standard Node.js hosting plat
 | TypeScript error on admin metrics | `health.metrics.tenants` possibly `undefined` | Use `health.metrics?.tenants ?? 0` |
 
 ---
-*Created on: 2026-04-07 | Updated: 2026-04-08*
+*Created on: 2026-04-07 | Updated: 2026-11-13*

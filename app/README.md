@@ -8,7 +8,7 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 
 ### 🏢 SaaS Super Admin Command Center
 - **Tenant Management Lifecycle**: Complete CRUD for platform tenants (`/admin/tenants`), 360° tenant profile dashboards (`/admin/tenants/[id]`), manual business onboarding (`/admin/tenants/new`), trial extension (+7d), plan switching, and automatic Chart of Accounts (39 accounts) provisioning.
-- **Platform Security & Governance (`/admin/security`)**: Super Admin screen for 2FA, session timeout, rate-limit and IP blocklist policies, plus the security audit log. *These policies are stored but not yet enforced anywhere in the request path.*
+- **Platform Security & Governance (`/admin/security`)**: Super Admin screen for the sign-in policy (two-factor, idle timeout, login lockout, rate limit) and IP blocklist, plus the security audit log. Enforced since 2026-11-13: the request proxy applies rate limits, the idle timeout and two-factor (`/two-factor`), and the `login` action locks out repeated failures. Users set up 2FA in Settings → Account; the Super Admin resets a lost one in Admin → Users.
 - **Platform Intelligence Hub**: Real-time KPI cards (tenants, users, MRR, tickets) with trend indicators and glassmorphism styling.
 - **Interactive Charts**: Tenant Growth (line chart) and Global Presence (pie chart) powered by `recharts`.
 - **Database Health Monitor**: Real-time latency and total platform record counts.
@@ -38,17 +38,15 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 - **Multi-Currency Support**: Dynamic currency formatting ($, €, ₹, AED) and exchange rate-aware ledger balances.
 - **Invoice PDF Export**: Server-rendered PDF generation for Tax Invoices with HSN/SAC breakdown.
 
-### 💬 WhatsApp Business API Hub (`/crm/whatsapp`)
-- **Meta Cloud API v20.0**: Native WhatsApp messaging engine with webhook handshake and event ingestion (`/api/webhooks/whatsapp`).
-- **Triple Dispatch Modes**: Cloud API (official Meta gateway), Direct Link (`wa.me` deep links for WhatsApp Web/App), and Simulation.
-- **7 Statutory Templates**: Tax Invoices, Payment Receipts, Overdue Dunning, Sales Orders, Support Tickets, Welcome Onboarding, and Custom Messages with dynamic merge tags.
-- **1-Click Invoice Dispatch**: Direct WhatsApp modal dispatch from the invoice action toolbar (`/sales/invoices/[id]`).
+### 🧭 Customer Portal
+- **Customer Self-Service Portal (`/portal/[token]`)**: Client portal for viewing and downloading invoices, checking transaction history, and submitting support tickets without consuming user seats. Customers can't pay online from it.
 
-### 🛒 Retail POS & Customer Portal
-- **Walk-in / POS Terminal (`/sales/pos`)**: Fast-checkout register with product search, category filters, barcode wedge scanning, customer creation, split tender (Cash/Card/UPI), and instant thermal receipt printing.
-- **Customer Self-Service Portal (`/portal/[token]`)**: Client portal for viewing and downloading invoices, checking transaction history, and submitting support tickets without consuming user seats. Online payment from the portal is switched off until it is wired to a real gateway checkout.
+### ⏸ Switched off (code and data kept)
+- **CRM Emails, WhatsApp, Web Forms and Finance → Bank Reconciliation** are hidden for every business behind `NEXT_PUBLIC_ENABLE_PARKED_MODULES` (`PARKED_ROUTES` in `src/lib/features.ts`).
+- **Government-filing modules** are hidden behind `NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`; the engines below only prepare figures and files and aren't connected to any government system.
+- The POS Terminal was removed completely on 2026-11-12. Stripe and PayPal were removed on 2026-11-13: Razorpay is the only payment gateway.
 
-### 🌍 Multi-Country Statutory Tax Engines
+### 🌍 Multi-Country Statutory Tax Engines (hidden; see above)
 - **India**: GST Returns GSTR-1 & GSTR-3B with Table 4 ITC balancing, E-Way Bill Rule 138 with distance calculators and NIC JSON, TDS & TCS with 206AA penalty and Form 26Q.
 - **UAE**: VAT (5%) Federal Decree-Law No. (8), 15-digit TRN, Form VAT201 7-Emirates supply apportionment, Article 48 RCM, and FTA FAF audit file exporter.
 - **Saudi Arabia (KSA)**: VAT (15%), ZATCA Fatoora Phase 1 & 2 UBL 2.1 XML, UTF-8 TLV Base64 QR code, bilingual invoices, and Zakat base calculator.
@@ -71,12 +69,14 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 | Layer | Technology |
 |---|---|
 | **Framework** | Next.js 16 (App Router) with Turbopack |
-| **Database** | Supabase (PostgreSQL) with Row Level Security |
+| **Database** | Supabase (PostgreSQL); tenant isolation in code (Prisma bypasses RLS) |
 | **ORM** | Prisma 7 (with `@prisma/adapter-pg`) |
 | **Auth** | Supabase Auth (`@supabase/ssr`) |
 | **Styling** | Tailwind CSS & shadcn/ui |
 | **Charts** | Recharts (v3) |
-| **PDF** | Custom server-side PDF rendering |
+| **PDF** | @react-pdf/renderer |
+| **Email** | Resend |
+| **Payments** | Razorpay (plan billing only) |
 | **Types** | TypeScript Strict |
 
 ---
@@ -85,7 +85,8 @@ Genesoft is a modern, multi-tenant SaaS ERP and CRM platform built with Next.js 
 
 ### 1. Install Dependencies
 ```bash
-npm install
+# from app/ — Vercel builds app/ with app/package-lock.json; the root lockfile is stale
+npm install --workspaces=false
 ```
 
 ### 2. Environment Setup
@@ -100,18 +101,20 @@ Create `.env.local` in `app/` (never commit it). Variables the code reads:
 | `NEXT_PUBLIC_SITE_URL` | Yes | Base URL for password-reset links. |
 | `RESEND_API_KEY`, `RESEND_DOMAIN` | For email | Transactional email; sender domain must be verified in Resend. |
 | `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` | For SaaS billing | Plan checkout and the `/api/webhooks/razorpay` signature check. |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Optional | Platform Stripe billing for regions whose Admin → Pricing gateway is STRIPE. Stripe prices are created and kept in sync automatically (lookup keys `genesoft_<plan>_<cycle>_<currency>`); no price ids to configure. |
+| `SUPABASE_SERVICE_ROLE_KEY` | For uploads & admin | Server-only uploads to Supabase Storage (`src/lib/storage.ts`: tenant logos, website media, CVs), Super Admin create-tenant login and 2FA reset. Never expose it to the browser. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Optional | Cloudflare Turnstile spam check on website forms and sign-up. Off until both are set. |
+| `NEXT_PUBLIC_ALLOW_INDEXING` | No | Overrides search-engine indexing (by default only genesoftinfotech.com is indexed; test copies send noindex). |
+| `NEXT_PUBLIC_ENABLE_PARKED_MODULES` | No | `true` brings back CRM Emails, WhatsApp, Web Forms and Bank Reconciliation. |
 | `CRON_SECRET` | Recommended | Protects the daily job at `/api/cron/workflows` (scheduled in `vercel.json`): overdue-invoice / bill-due workflow rules, due recurring invoices and IMAP inbox sync. Vercel sends it automatically; without it the job refuses to run. |
 | `MARKETING_UNSUBSCRIBE_SECRET` | Optional | Signs the unsubscribe links in marketing emails (Admin → Marketing Emails). Falls back to `ENCRYPTION_KEY`, then `CRON_SECRET`. Changing whichever one is used breaks the links in emails already sent, so set this once and keep it. |
-| `ERROR_ALERT_EMAIL` | Optional | Where new-error alerts go (default: the platform email, hello@). Every server error is also kept in Admin → System Logs. |
+| `ERROR_ALERT_EMAIL` | Optional | Where new-error alerts go (default: the platform email, info@genesoftinfotech.com). Every server error is also kept in Admin → System Logs. |
 | `SYSTEM_LOG_RETENTION_DAYS` | Optional | How long System Logs are kept (default 30); the daily job deletes older ones. |
-| `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Optional | Platform-wide Meta webhook verify token (tenants also get their own). |
+| `WHATSAPP_WEBHOOK_VERIFY_TOKEN` | Optional | Platform-wide Meta webhook verify token (tenants also get their own). Only used while WhatsApp is switched back on. |
 | `ENCRYPTION_KEY` | Recommended | Encrypts stored tenant credentials (gateway keys, WhatsApp tokens, SMTP passwords). Any long random string, e.g. `openssl rand -base64 32`. Changing it makes stored secrets unreadable. |
 | `PLATFORM_GSTIN` | Optional | Genesoft's own GSTIN, printed on platform subscription receipts. Unset = no tax ID printed. `PLATFORM_LEGAL_NAME`, `PLATFORM_EMAIL`, `PLATFORM_PHONE` override the defaults in `src/lib/constants/platform.ts`. |
 | `COMPANY_NAME`, `COMPANY_ADDRESS`, `COMPANY_GSTIN`, `COMPANY_STATE` | No | Last-resort seller details for single-company installs. Leave unset on the SaaS: each tenant's own Settings are used, and nothing is invented when they're empty. |
 | `NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES` | No | `true` shows the government-filing modules (GST returns, TDS, e-way, VAT 201, ZATCA returns, MTD, BAS, 1099). Leave unset until they're connected to the official APIs. |
 | `ENABLE_DEMO_SEED` | No | `true` fills empty modules with sample data. Leave unset in production. |
-| `COMPANY_NAME`, `COMPANY_GSTIN`, `COMPANY_STATE`, `COMPANY_ADDRESS` | Optional | Fallback supplier details on invoices. |
 
 > [!IMPORTANT]
 > Never run `prisma db push` or `prisma migrate dev` against the shared database: the live schema has drifted from `schema.prisma` and Prisma would drop data. Schema changes are applied with reviewed SQL files in `app/*.sql`.
@@ -126,7 +129,15 @@ npx prisma generate
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to access the application.
+Open [http://localhost:3000](http://localhost:3000) to access the application. Note: local dev uses the shared database.
+
+### 5. Tests
+```bash
+npm test                  # unit tests (src/**/*.test.ts)
+npm run test:integration  # whole flows against in-memory Postgres (PGlite), never the shared DB
+npm run test:all          # both
+```
+GitHub Actions (`.github/workflows/ci.yml`) runs type check, lint, tests and build on every push and pull request to `main`.
 
 ---
 
@@ -135,25 +146,32 @@ Open [http://localhost:3000](http://localhost:3000) to access the application.
 ```
 CRM/
 ├── package.json         # Root workspace delegation
-├── DEPLOYMENT_AUDIT.md  # Production compliance audit report
+├── CLAUDE.md            # Current rules (security, data path, billing, website)
+├── REMAINING_TASKS.md   # Open items
+├── GO_LIVE_CHECKLIST.md # Domain switch & go-live steps
 ├── app/
 │   ├── src/
 │   │   ├── app/
-│   │   │   ├── (auth)/          # Login, Register, Password Reset
+│   │   │   ├── (marketing)/     # Public website genesoftinfotech.com (ERP pages under /erp)
+│   │   │   ├── (auth)/          # Login, Register, Password Reset, /two-factor
 │   │   │   ├── (dashboard)/
 │   │   │   │   ├── crm/         # CRM module (leads, contacts, deals)
 │   │   │   │   ├── sales/       # Sales module (quotes, invoices, orders, products)
 │   │   │   │   ├── inventory/   # Inventory & warehouse management
-│   │   │   │   └── finance/     # Finance module (bills, accounts, reports)
+│   │   │   │   ├── finance/     # Finance module (bills, accounts, ledger, reports)
+│   │   │   │   ├── hr/ purchase/ projects/ manufacturing/ …
+│   │   │   │   └── settings/    # Workspace settings, Team & Access, Data & Account
 │   │   │   ├── admin/           # SaaS Super Admin Command Center
 │   │   │   │   ├── dashboard/   # Intelligence telemetry hub
 │   │   │   │   ├── tenants/     # Tenant lifecycle CRUD & 360 profiles
 │   │   │   │   ├── security/    # Security policy & firewall control
-│   │   │   │   └── support/     # Support ticket orchestration
+│   │   │   │   ├── support/     # Support ticket orchestration
+│   │   │   │   └── website/ pricing/ users/ audit/ …
 │   │   │   ├── actions/         # Server Actions (tenant-scoped)
 │   │   │   └── api/             # Force-dynamic API routes (webhooks, PDF export)
 │   │   ├── components/          # Shared UI components (shadcn/ui)
-│   │   └── lib/                 # Prisma singleton, Supabase SSR, GST engine
+│   │   ├── lib/                 # Shared business logic (ledger, plan-change, tax, security…)
+│   │   └── proxy.ts             # Request proxy (session, 2FA, idle timeout, rate limit)
 │   └── prisma/
 │       └── schema.prisma        # Multi-tenant datamodel definition
 ```
@@ -163,8 +181,9 @@ CRM/
 ## 🔒 Multi-Tenant Architecture
 
 - Every tenant table has a `tenant_id`. Supabase RLS is enabled on all tables, but **the app talks to the database through Prisma, which bypasses RLS**. Tenant isolation therefore lives in the server actions: every query, including updates and deletes by id, must filter by the caller's `tenantId` from `getTenantId()`.
-- Workspace-wide settings and credentials (company profile, payment gateways, SMTP, WhatsApp, workflows, plan checkout) require a workspace admin via `getTenantAdminId()`.
+- Workspace-wide settings and credentials (company profile, SMTP, workflows, plan checkout, team & access) require a workspace admin via `getTenantAdminId()`.
 - `src/proxy.ts` (Next.js 16's replacement for `middleware.ts`) refreshes the Supabase session and guards routes.
+- Module access per member (NONE / VIEW / EDIT / FULL, `src/lib/access.ts`) and plan modules (`getPlanConfig()`) are applied in the tenant context.
 - Super Admin routes (`/admin/*`) require the `SUPER_ADMIN` role via the server-side guard `ensureSuperAdmin()`.
 
 ---

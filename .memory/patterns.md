@@ -6,7 +6,7 @@
 - **Stats Grid**: 4-column responsive grid for module dashboards.
 - **Client Components**: Data-fetching list pages use a `*Client.tsx` component (e.g., `CompaniesClient.tsx`) to keep the page server-rendered.
 - **Currency Formatting**: Always use the global `formatCurrency(amount, code)` helper from `@/lib/utils` for consistent display across the app (replaces hardcoded "INR" or "₹").
-- **Currency Selection**: Currency is determined by the entity (Invoice, Bill, etc.), falling back to the Contact's preferred currency, then "INR" as system default.
+- **Currency Selection**: Currency is determined by the entity (Invoice, Bill, etc.), falling back to the Contact's preferred currency, then the business's own currency. Never assume INR, `en-IN`, 18% or Maharashtra (see `CLAUDE.md` → Countries & tax).
 
 ## Form Placeholder Rules (Enforced — 2026-04-08)
 - **NEVER** put hardcoded example values in form field placeholders.
@@ -37,7 +37,7 @@
 - **Multi-tenancy**: Use `tenantId` in all queries, including updates/deletes by id. Prisma bypasses Supabase RLS, so this filter is the only isolation.
 - **Server Actions**: All CRUD operations use Next.js Server Actions.
   - Pattern: `getAll()`, `getById(id)`, `create(data)`, `update(id, data)`, `deleteById(id)`
-- **Supabase Client**: Use `createClient()` from `src/lib/supabase/server.ts` in server actions.
+- **Supabase Client**: Only for Auth (`supabase.auth.*`). Never query tables with `supabase.from(...)` (guarded by `data-path.test.ts`); screens that want snake_case rows use `toRow`/`toRows` from `src/lib/pg-row.ts`.
 - **Prisma Client**: Use the singleton from `src/lib/prisma.ts` (uses `@prisma/adapter-pg`).
 - **TypeScript Interfaces**: Defined at the top of each actions file.
   - Optional fields use `?` — keep strict only for required DB `NOT NULL` fields.
@@ -53,15 +53,25 @@
 
 ## Bulk Data Patterns
 - **CSV Processing**: Use `papaparse` for client-side parsing/generation.
-- **Batch Operations**: Server actions for `import` should use `supabase.from().insert([])` with arrays for single-trip batching.
+- **Batch Operations**: Server actions for `import` use Prisma `createMany` (tenant-scoped, after `assertWithinLimit`).
 - **UI Integration**: `Import` (file input) and `Export` (generate & download) buttons standardized in module list headers.
 
 ## Git & Deployment Patterns
-- **Branch**: Single `main` branch (MVP stage).
+- **Branch**: Single `main` branch (MVP stage). A push to `main` deploys to Vercel production (`genesoftdev`) and runs GitHub Actions CI.
 - **Remote**: `https://github.com/surajmagar1993/genesoft-erp.git`
 - **Secrets**: Never commit them — `.env` and `.env.*` are gitignored (`app/temp.env*` slipped in once and must be rotated). Tenant credentials stored in the DB go through `sealSecret()`/`openSecret()`.
 - **DATABASE_URL**: Supabase cloud endpoint (pooler 6543 on Vercel); `DIRECT_URL` (5432) for Prisma tooling. Never `db push`/`migrate dev` against the shared DB.
-- **Vercel Env**: Use `env_vercel.txt` (Desktop) to import vars into Vercel dashboard.
+- **Vercel Env**: Managed in the Vercel project (`vercel env`); the list of variables is in `app/README.md`.
 - **Commit Style**: `feat:`, `fix:`, `chore:` prefixes with descriptive body.
 
 ---
+
+## Patterns added Oct–Nov 2026 (summary; full rules in `CLAUDE.md`)
+- **Role helpers + module**: every action file declares `const MODULE = "<module>"` and calls `getTenantId(MODULE)` / `getTenantWriterId` / `getTenantManagerId` / `getTenantAdminId`.
+- **Referenced ids**: `assertTenantRefs(tenantId, {...})` before writing; ids from URLs checked with `isUuid()` / `isRecordId()` (cuid tables).
+- **Errors to the user**: `safeAction()` wrapper; plain `throw new Error("…")` is shown as written, everything else is reported to System Logs. Side-step failures use `reportCaught()`.
+- **Ledger**: any change to invoices, credit notes, refunds, payments, bills or payroll calls `postToLedger(tenantId, { kind, id })`.
+- **Tenant settings**: change only via `patchTenantSettings` / `lockTenantSettings` / `updateTeam`; the browser gets `settingsForScreens` keys only.
+- **Plan limits**: `assertWithinLimit(tenantId, kind)` before creating users, contacts, invoices, warehouses.
+- **Confirmations**: the shared in-app confirm dialog, never `window.confirm()`; placeholders are instructions (lint blocks both).
+- **Tests**: unit `*.test.ts`, whole flows `*.int.test.ts` on PGlite; add one when a money or data flow changes.

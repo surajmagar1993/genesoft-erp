@@ -2,7 +2,16 @@
 
 **Project:** Multi-Platform SaaS ERP & CRM
 **Company:** Genesoft Infotech
-**Date:** 2026-09-12 | **Status:** P1 Complete + P2 Growth (~98% Complete: Multi-Country Tax Engines, Retail POS, Customer Portal, WhatsApp Business API, SaaS Subscription Lifecycle Live)
+**Date:** 2026-09-12 (original design) · **Reviewed:** 2026-11-13 | **Status:** testing on genesoftdev.vercel.app, not live yet
+
+> **How the built system differs from this design (2026-11-13).** This is the original design; the code went a different way in places. Where they disagree, `CLAUDE.md` (Security Rules) describes the code as it is:
+> - **No tRPC.** Data goes through Next.js Server Actions and a few route handlers.
+> - **Tenant isolation is in code, not RLS.** The app reaches the database only through Prisma, which bypasses RLS; every query filters by the caller's `tenantId`, with role helpers and per-member module access. RLS stays on as a backstop for direct Supabase access.
+> - **`src/proxy.ts`** (Next.js 16) replaces `middleware.ts`; it also applies two-factor, the idle timeout and rate limits.
+> - **Payments:** Razorpay only, for plan billing (Stripe/PayPal removed 2026-11-13). Customers can't pay invoices online.
+> - **Modules taken out:** POS removed; CRM Emails, WhatsApp, Web Forms and Bank Reconciliation switched off; government-filing modules hidden.
+> - **Platforms:** web only so far; the mobile app is planned via a REST API (`GO_LIVE_CHECKLIST.md` §5).
+> - **Website:** the company site genesoftinfotech.com is in the same app (`(marketing)`, ERP under `/erp`), with its own theme tokens.
 
 ---
 
@@ -178,6 +187,8 @@ User Login (email/password, Google, magic link)
 | **Layer 1** | Pages (redirect to /login) | Next.js Middleware |
 | **Layer 2** | API calls (return 401) | tRPC Context |
 | **Layer 3** | Data (tenant isolation) | Supabase RLS |
+
+> **As built (2026-11-13):** Layer 1 = `src/proxy.ts` (session, two-factor, idle timeout, rate limit, `APP_AREAS`); Layer 2 = server actions with `getTenantId/WriterId/ManagerId/AdminId(MODULE)` and `ensureSuperAdmin()`; Layer 3 = `tenantId` in every Prisma query plus `assertTenantRefs`. RLS is on but bypassed by Prisma.
 
 **Last Updated:** 2026-03-31 | **Active Block:** SaaS Platform Layer & Super Admin
 
@@ -395,7 +406,7 @@ pricing_plans
 ├── tier (FREE, BASIC, PRO, ENTERPRISE)
 ├── amount (Decimal)
 ├── currency (INR, USD, AED, SAR)
-├── gateway (RAZORPAY, STRIPE)
+├── gateway (RAZORPAY; STRIPE removed 2026-11-13)
 └── is_active
 
 system_logs
@@ -450,12 +461,12 @@ support_messages
 
 | Category | Key Modules |
 |---|---|
-| **CRM Extended** | Email Integration, Web Forms |
-| **Retail Extended** | Customer Portal, Walk-in/POS |
+| **CRM Extended** | Email Integration, Web Forms (both switched off 2026-11-12) |
+| **Retail Extended** | Customer Portal (POS removed 2026-11-12) |
 | **Sales Extended** | Credit Notes, Price Lists |
 | **Purchase** | Vendors, POs, Bills, Purchase Receipts |
 | **Inventory** | Stock Management, Barcodes, Adjustments |
-| **Finance Extended** | General Ledger, Bank Reconciliation, Expenses |
+| **Finance Extended** | General Ledger, Bank Reconciliation (switched off), Expenses |
 | **Tax (UAE)** | VAT 5%, TRN |
 | **Tax (KSA)** | VAT 15%, ZATCA E-Invoicing, QR Code |
 | **Tax (India)** | TDS, E-Way Bill, GSTR Data |
@@ -463,7 +474,7 @@ support_messages
 | **HR** | Employee Directory, Attendance, Leave |
 | **Projects** | Projects, Tasks, Time Tracking |
 | **Rental** | Assets, Agreements, Rental Invoicing |
-| **Integrations** | WhatsApp, Stripe/PayPal |
+| **Integrations** | WhatsApp (switched off); Stripe/PayPal removed — Razorpay only |
 
 ### 🟢 P3 — Scale (Month 7+) — ~38 modules
 
@@ -583,11 +594,11 @@ genesoft-erp/
 ## 10. Assumptions
 
 1. Small team (1-3 developers) building and maintaining
-2. Tenants isolated via Row-Level Security (single database)
+2. Tenants isolated in application code (Prisma + `tenantId`), single database; RLS as a backstop
 3. Shared URL login (app.yourdomain.com) — no per-tenant subdomains initially
 4. Mobile apps are secondary to desktop/web usage
 5. Pure SaaS — no on-premise deployment option
-6. Razorpay for payment processing (Stripe/PayPal added in P2)
+6. Razorpay for payment processing (Stripe/PayPal were added in P2, then removed 2026-11-13)
 7. India is the first target market, UAE/KSA in P2
 8. Invoice format based on existing Genesoft INV-262 template
 
@@ -600,9 +611,10 @@ genesoft-erp/
 | Supabase free tier limits hit | Service degradation | Monitor usage, upgrade to Pro ($25/mo) when needed |
 | Vercel serverless cold starts | Slow first request | Edge runtime for critical routes |
 | Complex tax rules across countries | Incorrect tax calc | Isolated tax-engine package with unit tests |
-| Multi-tenant data leak | Security breach | RLS + middleware double-check + audit logs |
+| Multi-tenant data leak | Security breach | `tenantId` on every query + `assertTenantRefs` + role/module checks + tenant & admin audit logs |
+| No database backups (free plan) | Data loss | Separate production DB with backups before go-live |
 | Scope creep (128 modules) | Delayed launch | Strict P1-first approach, launch with MVP |
 
 ---
 
-*Document Version: 1.6 | Last Updated: 2026-04-07*
+*Document Version: 1.7 | Last Updated: 2026-11-13*

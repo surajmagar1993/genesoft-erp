@@ -264,7 +264,7 @@ Every save is recorded in **Admin Audit**. Pages have **Draft → Preview → Pu
 3. Add genesoftinfotech.com and www to the Vercel project.
 4. In GoDaddy DNS (owner login needed), point the site records to Vercel. **Keep the email (MX) records unchanged**, so info@ and hello@ keep working.
 5. Add the Resend DNS records for sending from genesoftinfotech.com.
-6. Update `NEXT_PUBLIC_SITE_URL`, the Supabase auth redirect URLs, and the Razorpay/Stripe webhook addresses to the new domain.
+6. Update `NEXT_PUBLIC_SITE_URL`, the Supabase auth redirect URLs, and the Razorpay webhook address (Stripe was removed 2026-11-13) to the new domain.
 7. **Turn on auto-renew** for the domain (it expires 5 Dec 2026).
 8. Keep the old GoDaddy site files as a backup for 30 days.
 

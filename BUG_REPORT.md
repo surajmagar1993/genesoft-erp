@@ -1,5 +1,7 @@
 # GenesoftERP — Module-by-module bug report
 
+> **Status 2026-11-13:** every item below is fixed (see Fix log). Kept as a record. Since then the POS Terminal was removed and CRM Emails, WhatsApp, Web Forms and Bank Reconciliation were switched off, so findings about those no longer apply. Current open work: `REMAINING_TASKS.md` → "Open items".
+
 **Date:** 14 October 2026 · **Code reviewed:** `main` at `e3a78f2` (includes the general-ledger and P&L work, not yet pushed) · **Environment:** production build run locally against the live Supabase database (read-only checks), plus a throwaway in-memory test database for anything that writes.
 
 This report lists the bugs found. **Fix status** is tracked in the next section.

@@ -111,6 +111,44 @@
 
 ## [2026-10-13] Security Hardening & Honest Feature Labels
 - **Context**: A full code review found cross-tenant writes (Prisma bypasses RLS), unsigned/forgeable webhooks, plaintext stored credentials, and modules that looked finished but were simulated.
-- **Decision**: Scope every by-id query to `tenantId` and verify referenced ids; admin-only settings via `getTenantAdminId()`; verify Razorpay/PayPal/WhatsApp webhook signatures and fail closed; encrypt tenant credentials with `ENCRYPTION_KEY` (`secret-box.ts`); gate demo seeders behind `ENABLE_DEMO_SEED`; rename `middleware.ts` → `proxy.ts` for Next.js 16; label e-way bills as drafts and mark workflows, mailbox sync and live checkout as not yet available.
+- **Decision**: Scope every by-id query to `tenantId` and verify referenced ids; admin-only settings via `getTenantAdminId()`; verify Razorpay/PayPal/WhatsApp webhook signatures and fail closed (PayPal and Stripe later removed, 2026-11-13); encrypt tenant credentials with `ENCRYPTION_KEY` (`secret-box.ts`); gate demo seeders behind `ENABLE_DEMO_SEED`; rename `middleware.ts` → `proxy.ts` for Next.js 16; label e-way bills as drafts and mark workflows, mailbox sync and live checkout as not yet available.
 - **Rationale**: The application layer is the only tenant boundary, and statutory documents must not look government-issued when they are not.
-- **Status**: ✅ Implemented and build-verified; `app/harden_profiles_rls.sql` written but not yet applied.
+- **Status**: ✅ Implemented and build-verified; `app/harden_profiles_rls.sql` applied on the live DB later (2026-10).
+
+---
+
+## [2026-10-14] General Ledger as the Source of Truth for Accounts
+- **Context**: Reports read `accounts.balance` and documents never posted journals, so trial balance and P&L disagreed.
+- **Decision**: `postToLedger(tenantId, { kind, id })` (`src/lib/ledger.ts`) rebuilds each document's journal from its current state (old one voided), idempotent and never throws; reports read POSTED journal lines; `accounts.balance` is only a cache; "Rebuild ledger" re-posts everything.
+- **Status**: ✅ Live. Existing workspaces need one "Rebuild ledger".
+
+---
+
+## [2026-10-15] One Data Path (Prisma) and Per-Member Module Access
+- **Context**: Mixed `supabase.from()` and Prisma queries drifted in column names and skipped tenant checks; businesses couldn't invite staff or limit what they see.
+- **Decision**: All table access through Prisma (`toRow`/`fromRow` for snake_case screens; guard test). Team access per member and module (NONE/VIEW/EDIT/FULL) in `tenants.settings.team`, invites as signed links; the Super Admin sees everything but only suspends.
+- **Status**: ✅ Live.
+
+---
+
+## [2026-10-15] Company Website and CMS in the Same App
+- **Decision**: genesoftinfotech.com is the company site (`(marketing)`), the ERP product lives under `/erp`; content edited in Super Admin → Website (`site_*` tables, draft → publish); separate site theme tokens. Plan: `WEBSITE_OVERHAUL_PLAN.md`.
+- **Status**: ✅ Phases 1–2 live; legal pages editable; Turnstile waiting on keys.
+
+---
+
+## [2026-11-12] Switch Off Unfinished Modules, Remove POS
+- **Decision**: CRM Emails, WhatsApp, Web Forms and Bank Reconciliation hidden behind `NEXT_PUBLIC_ENABLE_PARKED_MODULES` (code and data kept); the POS Terminal removed completely. Not advertised while off.
+- **Status**: ✅ Live. Unused `pos_sessions` table still in the DB.
+
+---
+
+## [2026-11-13] Razorpay Only; Plan Changes Only After Payment
+- **Decision**: Stripe and PayPal removed; Razorpay for every region. Plan changes applied only by `applyPlanChange` after the gateway confirms (locked, idempotent); Super Admin plan grants are recorded as `compedByPlatform` with ₹0 receipts; unpaid plans fall to Free after a 3-day grace.
+- **Status**: ✅ Live.
+
+---
+
+## [2026-11-13] Enforce Sign-in Security
+- **Decision**: The Admin → Security policy is enforced: TOTP two-factor at `/two-factor` (required for admins only when `enforce2FA` is on), idle timeout via a signed cookie, login lockout (15 min) and per-user/per-IP rate limits in the proxy (in memory per instance).
+- **Status**: ✅ Live (2767d06). Default policy: 30-minute idle timeout, 2FA not enforced.

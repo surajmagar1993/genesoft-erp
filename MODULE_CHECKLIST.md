@@ -1,5 +1,7 @@
 # 📋 ERP & CRM Module Checklist (MVP Status)
 
+> **Last Updated:** 2026-11-13. ✅ = built. ⏸ = switched off for businesses (`NEXT_PUBLIC_ENABLE_PARKED_MODULES`), ❌ = removed. Government-filing modules are hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`) and aren't connected to any government system. Current rules: `CLAUDE.md`; pending work: `REMAINING_TASKS.md`.
+
 ### 🔴 P1: Core Business Operations — ✅ COMPLETE
 
 #### 🤝 CRM (High Priority)
@@ -73,8 +75,8 @@
 - [x] **Deals / Opportunities** 🔴 — Sales pipeline, interactive stage progression stepper, auto-calibrated probabilities, weighted forecast, linked tasks & communications, quote generator (`/crm/deals/[id]`) ✅ **(2026-09-14)**
 - [x] **Tasks & Activities** 🔴 — Follow-ups, calls, meetings, reminders ✅
 - [x] **Notes & Communication Log** 🔴 — Track all interactions per contact, lead & deal ✅
-- [x] **Email Integration** 🟡 — Send/receive emails within CRM, templates ✅
-- [x] **Web Forms / Lead Capture** 🟡 — Embeddable forms for website ✅ (2026-09-12)
+- [x] **Email Integration** 🟡 — Send/receive emails within CRM, templates ✅ — ⏸ switched off 2026-11-12
+- [x] **Web Forms / Lead Capture** 🟡 — Embeddable forms for website ✅ (2026-09-12) — ⏸ switched off 2026-11-12
 
 ---
 
@@ -86,7 +88,7 @@
 - [x] **Customer Credit Limit** 🔴
 - [x] **Customer Ledger / Statement** 🔴 ✅
 - [x] **Customer Portal** 🟡 ✅ (`/portal/[token]`) **(2026-09-12)**
-- [x] **Walk-in / POS Sales** 🟡 ✅ (`/sales/pos`) **(2026-09-12)**
+- [x] ~~**Walk-in / POS Sales**~~ — ❌ removed 2026-11-12 (past sales stay as invoices)
 
 ---
 
@@ -132,7 +134,7 @@
 - [x] **Multi-Currency Support** 🔴 ✅
 - [x] **Financial Reports** 🔴 ✅
 - [x] **General Ledger** 🟡 ✅ (`/finance/expenses`)
-- [x] **Bank Reconciliation** 🟡 ✅ (`/finance/bank-reconciliation`)
+- [x] **Bank Reconciliation** 🟡 ✅ (`/finance/bank-reconciliation`) — ⏸ switched off 2026-11-12
 - [x] **Expense Management** 🟡 ✅ (`/finance/expenses`)
 - [x] **Budgeting** 🟢 — Departmental/cost-center budget planning, fiscal year targets, line-item expense caps, dynamic GL actuals aggregation, variance analysis (favorable vs unfavorable), spend threshold watchdog, and CSV reporting (`/finance/budgets`, `/app/actions/finance/budgets.ts`) ✅ **(2026-09-17)** (ALL FINANCE & ACCOUNTING COMPLETE 📊)
 
@@ -280,7 +282,7 @@
 - [x] **Multi-Region Cloud Mesh & Edge Telemetry** 🟡 — Live jurisdiction tenant distribution, distributed cloud edge clusters (`BOM1`, `DXB1`, `RUH1`, `IAD1`, `LHR1`, `SYD1`), latency metrics, and statutory tax engines (`/admin/regions`) ✅ **(2026-09-15)**
 - [x] **Workflow Automation** 🟢 — Visual trigger-condition-action business rule studio across Sales, CRM, Inventory, Finance, HR, and Support, with prebuilt enterprise automation recipes, audit execution logging, active/pause toggles, and live rule simulator (`/settings/workflows`, `/app/actions/settings/workflows.ts`, `workflow_rules` & `workflow_executions` tables) ✅ **(2026-09-18)**
 - [ ] **API Access** 🟢
-- [x] **Webhooks** 🟢 ✅ (WhatsApp `/api/webhooks/whatsapp`, Stripe, Razorpay) **(2026-09-12)**
+- [x] **Webhooks** 🟢 ✅ (Razorpay `/api/webhooks/razorpay`; WhatsApp `/api/webhooks/whatsapp` while the module is off) — Stripe removed 2026-11-13
 - [ ] **White Labeling** 🟢
 
 ---
@@ -294,7 +296,7 @@
 - [x] **Live Support Chat**: Real-time tenant support ✅
 - [x] **Tenant Management CRUD** (`/admin/tenants`, `/admin/tenants/[id]`, `/admin/tenants/new`) ✅ **(2026-09-10)**
 - [x] **Support Ticket Orchestration** from Command Center (`/admin/support`, `/admin/support/[id]`) with fixed routing ✅ **(2026-09-15)**
-- [x] **Platform Security & Governance** (`/admin/security`) — Rate limiting, IP firewall, 2FA enforcement, audit feed ✅ **(2026-09-10)**
+- [x] **Platform Security & Governance** (`/admin/security`) — Rate limiting, IP firewall, 2FA, idle timeout, login lockout, audit feed ✅ **(2026-09-10; enforced 2026-11-13)**
 - [x] **Plan Upgrade & Downgrade Engine**: Real-time proration math (used days, unused credit, net payable), scheduled downgrades at cycle end, and audit logging ✅ **(2026-09-12)**
 - [x] **Platform Subscriptions & MRR Ledger** (`/admin/subscriptions`): Live revenue metrics (MRR/ARR), plan tier distributions, tenant trial expiration tracking, and issued B2B invoice ledger ✅ **(2026-09-15)**
 - [x] **Platform Subscription Invoicing & Printable Slips**: Automated B2B tax receipts (`SAAS-INV-YYYY-XXXX`), regional tax splits (IN 18%, GB 20%, AE 5%, SA 15%, AU 10%, US 0%), and instant printable HTML receipt modal ✅ **(2026-09-12)**
@@ -304,7 +306,7 @@
 
 ## 🧩 Integrations (Future)
 
-- [x] **Stripe / PayPal Payment Gateway Suite**: Multi-currency checkout (Stripe Checkout Session, PayPal Orders v2 API), subunit normalization (cents, fils, paise, zero-decimal currencies), multi-tenant credentials settings (`/settings` Payment Gateways tab), test connection ping, customer portal 1-click Pay Online modal (`/portal/[token]`), invoice action toolbar payment link generator (`/sales/invoices/[id]`), and webhook receivers (`/api/webhooks/stripe`, `/api/webhooks/paypal`) with automated ledger settlement ✅ **(2026-09-13)**
+- [x] ~~**Stripe / PayPal Payment Gateway Suite**~~ — ❌ removed 2026-11-13; Razorpay is the only gateway (plan billing). Customers can't pay invoices online.
 - [ ] **Twilio (SMS)** 🟢
 - [ ] **Tally / QuickBooks** 🟢
 - [ ] **Google Workspace** 🟢

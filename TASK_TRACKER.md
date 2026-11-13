@@ -1,6 +1,8 @@
 # ERP & CRM Multi-Platform SaaS — Master Task Tracker
 
-> **Last Updated:** 2026-09-17 (v14) | **Branch:** `main` | **P2 Progress:** 100% COMPLETE ✅ | **P3 in Progress:** Project Management & Invoice Features 100% COMPLETE ✅ | Payroll, Manufacturing, Budgets & RFQ COMPLETE ✅
+> **Last Updated:** 2026-11-13 (v15) — history up to September 2026 is kept below as written; see "October–November 2026" at the end for what changed since, and `REMAINING_TASKS.md` → "Open items" for pending work.
+>
+> **Was (2026-09-17, v14):** **Branch:** `main` | **P2 Progress:** 100% COMPLETE ✅ | **P3 in Progress:** Project Management & Invoice Features 100% COMPLETE ✅ | Payroll, Manufacturing, Budgets & RFQ COMPLETE ✅
 
 ## Brainstorming Phase ✅
 - [x] Define purpose & scale
@@ -135,7 +137,7 @@
 ### Subscription & Billing
 - [x] **SaaS Infrastructure**
     - [x] Subscription Plans (Free, Pro, Enterprise)
-    - [x] Razorpay Integration ✅ (Stripe Deferred for P1)
+    - [x] Razorpay Integration ✅ (the only gateway since 2026-11-13)
     - [x] Multi-tenant Data Isolation (RLS / Middleware)
     - [x] 15-Day PRO Trial Management ✅
     - [x] Live Support Chat System ✅
@@ -144,10 +146,10 @@
 
 ## 🟡 P2 — Growth (Month 4-6)
 
-- [x] CRM: Email Integration (`/crm/emails`) ✅ **(2026-09-12)**
-- [x] CRM: Web Forms / Lead Capture (`/crm/forms`) ✅ **(2026-09-12)**
+- [x] CRM: Email Integration (`/crm/emails`) ✅ **(2026-09-12)** — ⏸ switched off 2026-11-12
+- [x] CRM: Web Forms / Lead Capture (`/crm/forms`) ✅ **(2026-09-12)** — ⏸ switched off 2026-11-12
 - [x] Retail: Customer Portal (`/portal/[token]`, `/api/portal/`) ✅ **(2026-09-12)**
-- [x] Retail: Walk-in / POS Sales (`/sales/pos`, barcode & receipt slip) ✅ **(2026-09-12)**
+- [x] ~~Retail: Walk-in / POS Sales (`/sales/pos`)~~ — ❌ removed 2026-11-12
 - [x] Sales: Credit Notes / Refunds (`/sales/credit-notes`) ✅ **(2026-09-12)**
 - [x] Sales: Price Lists (`/sales/price-lists`) ✅ **(2026-09-12)**
 - [x] Purchase: Vendor / Supplier Management (`/purchase`) ✅ **(2026-09-10)**
@@ -157,16 +159,16 @@
 - [x] Inventory: Stock Management (`/inventory`) ✅ **(2026-09-10)**
 - [x] Inventory: Barcode / QR Code Support (Code 128 / QR generator & scanner modals) ✅ **(2026-09-12)**
 - [x] Inventory: Stock Adjustments & Multi-Depot Transfers ✅ **(2026-09-10)**
-- [x] Finance: General Ledger (`/finance/expenses`) ✅ **(2026-09-12)**
-- [x] Finance: Bank Reconciliation (`/finance/bank-reconciliation`) ✅ **(2026-09-12)**
+- [x] Finance: General Ledger (`/finance/expenses`) ✅ **(2026-09-12)** — rebuilt 2026-10 as `/finance/ledger` (`postToLedger`)
+- [x] Finance: Bank Reconciliation (`/finance/bank-reconciliation`) ✅ **(2026-09-12)** — ⏸ switched off 2026-11-12
 - [x] Finance: Expense Management (`/finance/expenses`) ✅ **(2026-09-12)**
-- [x] Tax (India): TDS & TCS Calculation Engine, Form 26Q/27Q (`/finance/tds`) ✅ **(2026-09-12)**
-- [x] Tax (India): E-Way Bill Integration (NIC/GSTN JSON exporter & distance calculator) (`/sales/eway-bills`) ✅ **(2026-09-12)**
-- [x] Tax (India): GST Returns Data (GSTR-1, GSTR-3B & 2B Reconciliation) (`/finance/gst-returns`) ✅ **(2026-09-12)**
-- [x] Tax (UAE): VAT (5%), TRN Validation, FAF Audit File & VAT 201 Return (`/finance/vat-uae`) ✅ **(2026-09-12)**
-- [x] Tax (KSA): VAT (15%), ZATCA Fatoora Phase 1 & 2 E-Invoicing, TLV QR Code & Zakat (`/finance/vat-ksa`) ✅ **(2026-09-12)**
-- [x] Tax (UK): HMRC MTD VAT 9-Box Return (20%, 5%, 0%), Modulus 97 VRN Validation (`/finance/vat-uk`) ✅ **(2026-09-12)**
-- [x] Tax (Australia): ATO Business Activity Statement (BAS) 10% GST & PAYG (`/finance/tax-australia`) ✅ **(2026-09-12)**
+- [x] Tax (India): TDS & TCS Calculation Engine, Form 26Q/27Q (`/finance/tds`) ✅ **(2026-09-12)** — 🙈 hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`), not connected to government systems
+- [x] Tax (India): E-Way Bill Integration (NIC/GSTN JSON exporter & distance calculator) (`/sales/eway-bills`) ✅ **(2026-09-12)** — 🙈 hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`), not connected to government systems
+- [x] Tax (India): GST Returns Data (GSTR-1, GSTR-3B & 2B Reconciliation) (`/finance/gst-returns`) ✅ **(2026-09-12)** — 🙈 hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`), not connected to government systems
+- [x] Tax (UAE): VAT (5%), TRN Validation, FAF Audit File & VAT 201 Return (`/finance/vat-uae`) ✅ **(2026-09-12)** — 🙈 hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`), not connected to government systems
+- [x] Tax (KSA): VAT (15%), ZATCA Fatoora Phase 1 & 2 E-Invoicing, TLV QR Code & Zakat (`/finance/vat-ksa`) ✅ **(2026-09-12)** — 🙈 hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`), not connected to government systems
+- [x] Tax (UK): HMRC MTD VAT 9-Box Return (20%, 5%, 0%), Modulus 97 VRN Validation (`/finance/vat-uk`) ✅ **(2026-09-12)** — 🙈 hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`), not connected to government systems
+- [x] Tax (Australia): ATO Business Activity Statement (BAS) 10% GST & PAYG (`/finance/tax-australia`) ✅ **(2026-09-12)** — 🙈 hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`), not connected to government systems
 - [x] Invoice Features: Terms & Conditions ✅ **(2026-09-12)**
 - [x] Invoice Features: Authorized Signature ✅ **(2026-09-12)**
 - [x] Invoice Features: Declaration / Notes ✅ **(2026-09-12)**
@@ -188,8 +190,8 @@
 - [x] SaaS: Support Ticket management from Command Center (`/admin/support`, `/admin/support/[id]`) ✅
 - [x] SaaS: Plan Upgrade/Downgrade (automated billing webhook sync, proration engine, `/settings`) ✅ **(2026-09-12)**
 - [x] SaaS: Invoice Generation (platform B2B invoices `SAAS-INV-YYYY-XXXX`, printable receipts) ✅ **(2026-09-12)**
-- [x] Integrations: WhatsApp Business API (`/crm/whatsapp`, `/api/webhooks/whatsapp`, invoice dispatch) ✅ **(2026-09-12)**
-- [x] Integrations: Stripe & PayPal Multi-Currency Payment Gateway Suite (`/settings`, `/portal/[token]`, `/api/webhooks/stripe`, `/api/webhooks/paypal`, `/sales/invoices/[id]`) ✅ **(2026-09-13)**
+- [x] Integrations: WhatsApp Business API (`/crm/whatsapp`, `/api/webhooks/whatsapp`, invoice dispatch) ✅ **(2026-09-12)** — ⏸ switched off 2026-11-12
+- [x] ~~Integrations: Stripe & PayPal Multi-Currency Payment Gateway Suite~~ — ❌ removed 2026-11-13 (Razorpay only) (`/settings`, `/portal/[token]`, `/api/webhooks/stripe`, `/api/webhooks/paypal`, `/sales/invoices/[id]`) ✅ **(2026-09-13)**
 - [x] Tax: Tax Exemptions Suite (SEZ, Export, Govt, NGO, Reseller zero-rated supply, certificates, line items, statutory notes) ✅ **(2026-09-14)**
 - [x] Inventory: Inventory Reports Studio (Asset Cost Basis vs Retail Market Value, Turnover & Velocity analysis, Multi-Depot distribution matrix, CSV & print exports `/inventory?tab=reports`) ✅ **(2026-09-14)**
 
@@ -204,7 +206,7 @@
 - [x] Finance: Budgeting (`/finance/budgets`, `/app/actions/finance/budgets.ts`) ✅ **(2026-09-17)** (ALL FINANCE & ACCOUNTING COMPLETE 📊)
 - [x] Tax (UAE): VAT Return Data, Reverse Charge (`/finance/vat-uae`) ✅ **(2026-09-12)**
 - [x] Tax (KSA): Zakat Calculation (`/finance/vat-ksa`) ✅ **(2026-09-12)**
-- [x] Tax (USA): Sales Tax Setup, 1099, Multi-State (`/finance/tax-us`, `/app/actions/finance/us-tax.ts`, `/lib/us-tax-engine.ts`) ✅ **(2026-09-18)** (ALL USA TAX COMPLETE 🇺🇸)
+- [x] Tax (USA): Sales Tax Setup, 1099, Multi-State (`/finance/tax-us`, `/app/actions/finance/us-tax.ts`, `/lib/us-tax-engine.ts`) ✅ **(2026-09-18)** (ALL USA TAX COMPLETE 🇺🇸) — 🙈 hidden (`NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`), not connected to government systems
 - [ ] Tax (Global): Withholding Tax
 - [x] Invoice Features: Delivery Challan (`/sales/delivery-challans`, `/app/actions/sales/delivery-challan.ts`) ✅ **(2026-09-14)**
 - [x] Invoice Features: Multi-Template Support (`/sales/invoices/templates`, `/sales/invoices/[id]`) ✅ **(2026-09-17)** (ALL INVOICE FEATURES COMPLETE 📄)
@@ -220,3 +222,23 @@
 - [ ] Admin: White Labeling
 - [ ] SaaS: Usage-Based Billing
 - [ ] Integrations: Twilio, Tally/QuickBooks, Google/M365, Zapier/Make, Shopify/WooCommerce
+
+---
+
+## October–November 2026 (hardening and launch prep)
+Details in `git log`, `BUG_REPORT.md` and `REMAINING_TASKS.md`.
+- [x] Security: tenant isolation in code (IDOR fixes), roles (VIEWER/USER/MANAGER/ADMIN), webhooks fail closed, encrypted tenant secrets, `src/proxy.ts`, demo seeding off **(2026-10-13)**
+- [x] Workflows engine + daily cron, real plan checkout (Razorpay), live pricing from Admin → Pricing **(2026-10-13)**
+- [x] No invented data; multi-country basic tax; filing modules hidden **(2026-10-14)**
+- [x] Marketing emails with signed unsubscribe; Settings → Data & Account (export, close workspace), Super Admin purge **(2026-10-14)**
+- [x] Built-in error monitoring (System Logs + email alerts) **(2026-10-14)**
+- [x] General ledger (`postToLedger`), trial balance, balance sheet, P&L fixed **(2026-10-14)**
+- [x] Full module audit (`BUG_REPORT.md`): all critical/high/medium/low items fixed **(2026-10-15)**
+- [x] One data path (Prisma only), per-member module access (Team & Access), invite links, plan limits & modules edited in Admin → Pricing **(2026-10-15)**
+- [x] Company website genesoftinfotech.com with Super Admin CMS, legal pages, SEO, careers, IT rentals quote form **(2026-10-15 →)**
+- [x] Emails, WhatsApp, Web Forms and Bank Reconciliation switched off; POS removed **(2026-11-12)**
+- [x] Razorpay only (Stripe/PayPal removed); invite links shared by the admin; project-review fixes (money input checks, row locks, plan credit, grace period) **(2026-11-13)**
+- [x] Accessibility, confirm dialog, CSP, dashboard on real figures, page finder (Ctrl K), database indexes **(2026-11-13)**
+- [x] GitHub Actions CI (type check, lint, tests, build) **(2026-11-13)**
+- [x] Sign-in security enforced: two-factor, idle timeout, login lockout, rate limits **(2026-11-13)**
+- [ ] Open: see `REMAINING_TASKS.md` → "Open items"

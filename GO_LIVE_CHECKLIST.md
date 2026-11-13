@@ -10,12 +10,14 @@ domain: links come from `NEXT_PUBLIC_SITE_URL` (`src/lib/app-url.ts`).
 - [ ] `NEXT_PUBLIC_SITE_URL` = the new https URL (all environments).
 - [ ] Supabase → Auth: `site_url` and redirect URLs (templates in `app/email-templates/supabase/`, see `_README.md`; push with `supabase config push`).
 - [ ] Razorpay webhook URL → `<site>/api/webhooks/razorpay` (event `order.paid`).
-- [ ] Stripe webhook URL → `<site>/api/webhooks/stripe`.
-- [ ] WhatsApp (Meta) webhook URL → `<site>/api/webhooks/whatsapp`.
-- [ ] Each tenant's PayPal/Stripe webhook URLs shown in Settings → Payment Gateways.
+- [ ] WhatsApp (Meta) webhook URL → `<site>/api/webhooks/whatsapp` (only if WhatsApp is switched back on).
+- [ ] Cloudflare Turnstile widget: add the final hostname(s); set `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`.
+- [ ] Indexing: only genesoftinfotech.com is indexed (`src/lib/indexing.ts`); check robots/sitemap on the final domain.
 - [ ] Resend: sender domain is already `genesoftinfotech.com` (`RESEND_DOMAIN`). Keep it verified.
 
 ## 2. Leaving Vercel (single platform)
+- [ ] Functions run in `bom1` (Mumbai, next to the database); pick a nearby region elsewhere.
+- [ ] Rate limits are kept in memory per instance (`src/lib/rate-limit.ts`); fine on one server, per-instance on many.
 - [ ] Daily job: `app/vercel.json` cron is Vercel-only. Elsewhere, call `GET <site>/api/cron/workflows`
       once a day with header `Authorization: Bearer $CRON_SECRET`.
 - [ ] Copy every env var (see `app/README.md`). Keep `ENCRYPTION_KEY` **identical** or stored secrets become unreadable.
@@ -25,9 +27,16 @@ domain: links come from `NEXT_PUBLIC_SITE_URL` (`src/lib/app-url.ts`).
 ## 3. Before real customers
 - [ ] Rotate the credentials that were committed in old git history (`temp.env*`): Supabase DB password,
       Resend key, Razorpay keys/webhook secret.
-- [ ] Switch Razorpay/Stripe from test to live keys.
+- [ ] Switch Razorpay from test to live keys (Razorpay is the only gateway; turn on international cards in the Razorpay account).
 - [ ] `PLATFORM_GSTIN` set so subscription receipts show Genesoft's GSTIN.
 - [ ] Domain renewal for genesoftinfotech.com (auto-renew was off; expiry 2026-12-05).
+- [ ] Supabase backups / a separate production database (free plan: no backups, PITR off).
+- [ ] Legal review of the website legal pages; fill the `[OWNER: …]` notes in IT Rental Terms. Terms/Privacy/DPA still mention WhatsApp and customers' own email servers (switched off).
+- [ ] Welcome email: one live test from hello@genesoftinfotech.com.
+- [ ] Admin → Security: decide whether to enforce 2FA for admins (`enforce2FA`); the 30-minute idle timeout is already on for everyone.
+- [ ] Decide on the thin modules (Manufacturing, Batch & serial, Performance & training, Recruitment, RFQ, Budgets, Report builder): beta label, switch off, or keep.
+- [ ] Existing test workspaces: Finance → General Ledger → "Rebuild ledger" once.
+- [ ] Optional: drop the unused `pos_sessions` table.
 
 ## 4. Countries & tax (what's live)
 - Signup countries: India, UAE, Saudi Arabia, UK, US, Australia, plus **Other** (business sets its tax name/rates in Settings).

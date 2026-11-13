@@ -178,6 +178,8 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 
 **Also done 2026-11-13 (second pass):** all browser `confirm()` pop-ups replaced by one in-app confirm dialog; all example placeholders replaced by instructions (lint now blocks both); app text below 12 px raised; Content-Security-Policy; GitHub Actions CI (type check, lint, tests, build); form pop-ups no longer close on a stray click and scroll when tall; keyboard access for clickable rows, filter chips and wide tables; every icon button named; chart summaries; notifications open what they're about; fixed "(INR)" removed from labels; deleting a paid invoice now restores the customer's balance (one transaction); the customer invoice PDF and the plan file with personal emails are no longer published (kept locally, ignored; still in old git history).
 
+**Sign-in security (2026-11-13, live):** verified on a local build (setup by QR key, sign-in asks for the code, app and session APIs blocked until verified). Not yet re-checked on genesoftdev itself.
+
 **Still open from the review:**
 - [x] `app/review_indexes_migration.sql` run on the live database 2026-11-13 (17 indexes, all valid).
 - [ ] Creating or editing an invoice still runs as separate steps (document, customer balance, ledger, stock); failures are reported to System Logs and "Rebuild ledger" repairs the ledger. Making it one transaction means ledger/stock code must accept a transaction (larger refactor).
@@ -193,7 +195,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 - The POS Terminal (`/sales/pos`) is removed completely: pages, server actions, the POS session model and the "Point of Sale" plan switch. Past POS sales remain as ordinary invoices.
 - Plan features and the ERP page no longer mention any of these.
 - [ ] Left over: the unused `pos_sessions` table is still in the live database; Terms, Privacy and DPA still say customers may connect WhatsApp or their own email server (owner / legal review); the WhatsApp webhook address still answers; web form CAPTCHA and CRM email open tracking (under "Product gaps") only matter if the modules come back.
-- [ ] Check in a browser, signed in on genesoftdev: the menu, Super Admin → Pricing & Plans → Limits & modules, and the invoice page.
+- [x] Checked in a browser, signed in on genesoftdev (2026-11-12): the menu, Super Admin → Pricing & Plans → Limits & modules, and the invoice page.
 
 **Check next:** sign in on genesoftdev (Fixo test business) and look at Settings → Billing, Finance → Bills and Super Admin → Subscriptions; these were changed on 2026-11-12 and verified by tests and build only.
 
@@ -206,12 +208,12 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 
 **Needs a key or account from the owner:**
 - [ ] Live payments (deferred until go-live by the owner): Razorpay live keys, with international cards switched on in the Razorpay account (every region now pays through Razorpay).
-- [ ] `SUPABASE_SERVICE_ROLE_KEY`: needed for super admin "create tenant" to make a login.
+- [x] `SUPABASE_SERVICE_ROLE_KEY` is set on Vercel (Production + Preview, since 2026-10-15): uploads, super admin "create tenant" login and 2FA reset.
 - [ ] `PLATFORM_GSTIN` for Genesoft's own subscription receipts.
 - [ ] Legal review of Privacy, Terms and Refund pages.
 
 **Product gaps:**
-- [x] Enforce platform 2FA, session timeout, login lockout and rate limits (done 2026-11-13).
+- [x] Enforce platform 2FA, session timeout, login lockout and rate limits (done 2026-11-13, pushed and live; CI passed). Default policy: 30-minute idle timeout for everyone, 2FA not required. Decide before go-live whether to turn on "require 2FA for admins".
 - [ ] Customer portal online payment of invoices (would be through Razorpay).
 - [ ] Workflow "update status" actions; CRM email open tracking; web form CAPTCHA.
 - [ ] REST API (`/api/v1`) for the planned mobile app; then integrations (Tally/QuickBooks, Shopify/WooCommerce, Zapier, Google Workspace, Microsoft 365, Twilio SMS), white-labelling, withholding tax.
