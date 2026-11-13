@@ -54,3 +54,7 @@ next-env.d.ts
 # Local env scratch files (contain secrets — never commit)
 temp.env
 temp.env.*
+
+# Playwright
+/playwright-report/
+/test-results/

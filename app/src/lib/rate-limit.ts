@@ -29,3 +29,12 @@ function prune(now: number, windowMs: number) {
 export function resetRateLimits() {
     windows.clear()
 }
+
+/**
+ * A signed-in person's allowance is this many times the policy's limit: every
+ * page makes several background calls (notifications, tax setup…) that count,
+ * so quick navigation would otherwise trip it. Signed-out traffic (forms,
+ * sign-in, public APIs) keeps the policy's own limit; sign-in attempts also
+ * have their own lockout (login-lockout.ts).
+ */
+export const SIGNED_IN_RATE_MULTIPLIER = 5

@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { DEFAULT_SECURITY_POLICY, clientIp, type PlatformGate } from '@/lib/platform-security'
 import { IDLE_COOKIE, IDLE_COOKIE_OPTIONS, idleRemainingMs, idleTimeoutEnabled, makeIdleCookie, readIdleCookie } from '@/lib/idle-session'
-import { hitRateLimit } from '@/lib/rate-limit'
+import { hitRateLimit, SIGNED_IN_RATE_MULTIPLIER } from '@/lib/rate-limit'
 import { APP_AREAS } from '@/lib/app-areas'
 import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute, PARKED_MODULES_ENABLED, isParkedRoute } from '@/lib/features'
 
@@ -66,7 +66,7 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
     const isApi = pathname.startsWith('/api/')
     if ((isWrite || isApi) && !pathname.startsWith('/api/webhooks/') && !pathname.startsWith('/api/cron/')) {
         const ip = clientIp(request.headers) ?? 'unknown'
-        const own = hitRateLimit(user ? `u:${user.id}` : `ip:${ip}`, policy.rateLimitPerMin)
+        const own = hitRateLimit(user ? `u:${user.id}` : `ip:${ip}`, user ? policy.rateLimitPerMin * SIGNED_IN_RATE_MULTIPLIER : policy.rateLimitPerMin)
         const wide = hitRateLimit(`ipall:${ip}`, policy.rateLimitPerMin * 10)
         if (own.limited || wide.limited) {
             return new NextResponse('Too many requests. Please wait a moment and try again.', {

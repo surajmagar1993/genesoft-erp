@@ -1,5 +1,6 @@
 # Checks every push and pull request to main: types, lint, unit + integration
-# tests (in-memory PGlite database, no secrets) and a production build.
+# tests (in-memory PGlite database, no secrets), a production build and browser tests
+# of the public pages (Playwright, against that build).
 # Uses no repository secrets and never touches the shared database.
 name: CI
 
@@ -46,5 +47,39 @@ jobs:
       - name: Tests (unit and integration)
         run: npm run test:all
 
+      # The browser tests run the built app against a throwaway in-memory database
+      # (e2e/ci-db.mjs) and a placeholder sign-in address: every visitor is signed out.
+      - name: Start test database
+        run: |
+          node e2e/ci-db.mjs 55432 > ci-db.log 2>&1 &
+          for i in $(seq 1 60); do grep -q "ready" ci-db.log && break; sleep 1; done
+          cat ci-db.log
+
       - name: Build
         run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+          NEXT_PUBLIC_SITE_URL: http://localhost:3100
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:55432/postgres?sslmode=disable
+          PG_POOL_MAX: "1"
+
+      - name: Browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Browser tests (public pages, desktop and phone)
+        run: npx playwright test e2e/public.spec.ts
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+          NEXT_PUBLIC_SITE_URL: http://localhost:3100
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:55432/postgres?sslmode=disable
+          PG_POOL_MAX: "1"
+
+      - name: Browser test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: app/playwright-report
+          retention-days: 7
