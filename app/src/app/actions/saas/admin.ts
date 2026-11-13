@@ -521,7 +521,7 @@ async function _createTenant(data: {
                 skipDuplicates: true
             })
         } catch (seedErr) {
-            console.error("Failed to seed default accounts for tenant:", tenant.id, seedErr)
+            await reportCaught(seedErr, "new tenant: default chart of accounts", { tenantId: tenant.id })
         }
     }
 

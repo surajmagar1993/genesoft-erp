@@ -1,5 +1,6 @@
 "use server"
 
+import { reportCaught } from "@/lib/error-reporting"
 import { getTenantDefaults } from "@/lib/tenant-defaults"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
@@ -653,7 +654,7 @@ async function _convertPOToBill(data: string | {
             date: result.billDate,
         })
     } catch (err) {
-        console.error("Supplier ledger entry failed for PO bill:", err)
+        await reportCaught(err, "PO bill: supplier ledger entry", { tenantId })
     }
 
     revalidatePath("/purchase")

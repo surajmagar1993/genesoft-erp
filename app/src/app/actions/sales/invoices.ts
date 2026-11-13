@@ -669,7 +669,7 @@ export async function convertProformaToInvoice(
       convertedAt: new Date().toISOString(),
     }
 
-    const conversionNote = `[Converted from Proforma ${proforma.invoiceNumber} on ${new Date().toLocaleDateString("en-IN")}]`
+    const conversionNote = `[Converted from Proforma ${proforma.invoiceNumber} on ${new Date().toISOString().slice(0, 10)}]`
     const updatedNotes = proforma.notes ? `${proforma.notes}\n${conversionNote}` : conversionNote
 
     await prisma.invoice.update({
@@ -695,7 +695,7 @@ export async function convertProformaToInvoice(
           date: new Date(),
         })
       } catch (ledgerErr) {
-        console.error("Ledger recording on proforma conversion error:", ledgerErr)
+        await reportCaught(ledgerErr, "proforma converted: customer ledger entry", { tenantId })
       }
     }
 

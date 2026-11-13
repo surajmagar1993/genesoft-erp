@@ -260,7 +260,7 @@ async function _createBill(data: BillData) {
             date: data.billDate
         })
     } catch (ledgerError) {
-        console.error("Ledger recording failed during bill creation:", ledgerError)
+        await reportCaught(ledgerError, "bill created: supplier ledger entry", { tenantId })
     }
   }
 
@@ -365,7 +365,7 @@ async function _updateBill(id: string, data: Partial<BillData>) {
             })
         }
     } catch (ledgerError) {
-        console.error("Ledger update failed for bill:", ledgerError)
+        await reportCaught(ledgerError, "bill updated: supplier ledger entry", { tenantId })
     }
   }
 }
@@ -402,7 +402,7 @@ export async function deleteBill(id: string): Promise<{ error: string | null }> 
             })
         }
     } catch (ledgerError) {
-        console.error("Ledger cleanup failed for bill:", ledgerError)
+        await reportCaught(ledgerError, "bill deleted: supplier ledger cleanup", { tenantId })
     }
 
     await postToLedger(tenantId, { kind: "bill", id })

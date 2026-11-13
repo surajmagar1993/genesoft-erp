@@ -979,7 +979,7 @@ export async function createJournalEntry(data: CreateJournalEntryInput): Promise
         // Strict double-entry balance check (within 2 decimal cents)
         if (Math.abs(totalDebit - totalCredit) > 0.01) {
             return {
-                error: `Unbalanced entry! Total Debits (₹${totalDebit.toFixed(2)}) must exactly equal Total Credits (₹${totalCredit.toFixed(2)}). Difference: ₹${Math.abs(totalDebit - totalCredit).toFixed(2)}`,
+                error: `Debits (${totalDebit.toFixed(2)}) and credits (${totalCredit.toFixed(2)}) must be equal. Difference: ${Math.abs(totalDebit - totalCredit).toFixed(2)}`,
             }
         }
 

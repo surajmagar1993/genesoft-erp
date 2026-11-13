@@ -1,5 +1,6 @@
 "use server"
 
+import { reportCaught } from "@/lib/error-reporting"
 import { assertPlanFeature } from "@/lib/plan-limits"
 import type { Prisma } from "@prisma/client"
 import { nextSequence } from "@/lib/sequence"
@@ -1146,7 +1147,7 @@ async function _convertAgreementToInvoice(agreementId: string) {
     try {
         await recordContactTransaction(tenantId, { contactId: agreement.contactId, type: "INVOICE", amount: built.total, currencyCode: built.currencyCode, referenceId: newInvoice.id, description: `Invoice ${invoiceNumber} (rental ${agreement.agreementNumber})`, date: newInvoice.invoiceDate })
     } catch (err) {
-        console.error("Customer ledger entry failed for rental invoice:", err)
+        await reportCaught(err, "rental invoice: customer ledger entry", { tenantId })
     }
 
     revalidatePath("/sales/rental")

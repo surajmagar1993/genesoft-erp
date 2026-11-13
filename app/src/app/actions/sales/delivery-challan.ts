@@ -1,5 +1,6 @@
 "use server"
 
+import { reportCaught } from "@/lib/error-reporting"
 import { toActionResult } from "@/lib/action-result"
 import { assertWithinLimit } from "@/lib/plan-limits"
 import { nextSequence } from "@/lib/sequence"
@@ -555,7 +556,7 @@ async function _convertChallanToInvoice(challanId: string) {
         try {
             await recordContactTransaction(tenantId, { contactId: challan.contactId!, type: "INVOICE", amount: built.total, currencyCode: built.currencyCode, referenceId: res.invoice.id, description: `Invoice ${invoiceNumber} (challan ${challan.challanNumber})`, date: res.invoice.invoiceDate })
         } catch (err) {
-            console.error("Customer ledger entry failed for challan invoice:", err)
+            await reportCaught(err, "challan invoice: customer ledger entry", { tenantId })
         }
         revalidatePath("/sales/delivery-challans")
         revalidatePath("/sales/invoices")

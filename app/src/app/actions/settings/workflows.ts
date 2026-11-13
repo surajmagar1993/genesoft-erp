@@ -3,7 +3,7 @@
 import { maskSecret, openSecret, sealSecret } from "@/lib/secret-box"
 import { prisma } from "@/lib/prisma"
 import { nextSequence } from "@/lib/sequence"
-import { getTenantAdminId, getTenantId } from "@/lib/get-tenant-id"
+import { getTenantAdminId, getTenantId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { revalidatePath } from "next/cache"
 import type {
     TriggerEventType,
@@ -307,7 +307,8 @@ export async function runWorkflowSimulator(
 }> {
     const startTime = Date.now()
     try {
-        const tenantId = await getTenantId()
+        // It saves a (simulated) run to the history, so viewers can't trigger it
+        const tenantId = await getTenantWriterId()
 
         const workflow = await prisma.workflowRule.findUnique({
             where: { id: workflowId, tenantId }
@@ -396,19 +397,19 @@ export async function runWorkflowSimulator(
             let summary = ""
             switch (act.actionType) {
                 case "SEND_NOTIFICATION":
-                    summary = `Dispatched in-app notice to [${act.params.recipientRole || "ADMIN"}]: "${act.params.message || "Alert"}"`
+                    summary = `Would notify [${act.params.recipientRole || "ADMIN"}] in the app: "${act.params.message || "Alert"}"`
                     break
                 case "SEND_EMAIL":
-                    summary = `Dispatched email: "${act.params.emailSubject || "Workflow Notification"}"`
+                    summary = `Would send an email: "${act.params.emailSubject || "Workflow Notification"}"`
                     break
                 case "CREATE_TASK":
-                    summary = `Generated task: "${act.params.taskTitle || "Workflow Task"}" (Priority: ${act.params.taskPriority || "MEDIUM"}, Due in ${act.params.taskDueDays || 1}d)`
+                    summary = `Would create a task: "${act.params.taskTitle || "Workflow Task"}" (Priority: ${act.params.taskPriority || "MEDIUM"}, Due in ${act.params.taskDueDays || 1}d)`
                     break
                 case "CALL_WEBHOOK":
                     summary = act.params.webhookUrl ? `Would POST to ${act.params.webhookUrl}` : "No webhook URL set"
                     break
                 case "UPDATE_STATUS":
-                    summary = `Target entity status transitioned to [${act.params.newStatus || "PROCESSED"}]`
+                    summary = `Would change the status to [${act.params.newStatus || "PROCESSED"}] (simulation only)`
                     break
             }
             executedActions.push({
