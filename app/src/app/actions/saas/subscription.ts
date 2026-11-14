@@ -13,6 +13,7 @@ import {
     compileSaaSSubscriptionInvoice,
     SaaSPlatformInvoice,
     ProrationQuote,
+    getRegionalPricing,
 } from "@/lib/saas-subscription-engine"
 import { errorMessage } from "@/lib/utils";
 import type { Prisma } from "@prisma/client"
@@ -153,7 +154,8 @@ export async function getTenantSubscriptionDetails(targetTenantId?: string): Pro
         trialDaysRemaining: trialDays,
         trialEndsAt: tenant.trialEndsAt ? tenant.trialEndsAt.toISOString() : null,
         billingCycle,
-        currency: tenant.currencyCode || "INR",
+        // The currency plans are charged in (a currency without its own region pays USD)
+        currency: getRegionalPricing(tenant.currencyCode).currency,
         renewalDate,
         scheduledDowngrade: subMeta.scheduledDowngrade || null,
         invoices,

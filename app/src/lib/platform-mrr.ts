@@ -32,7 +32,7 @@ export async function calculatePlatformMrr(tenants: TenantForMrr[]): Promise<{
         const plan = (t.plan || "FREE") as PlanTier
         if (!t.isActive || t.isTrial || plan === "FREE") continue
 
-        const currency = (t.currencyCode || "INR").toUpperCase()
+        const currency = (t.currencyCode || "").toUpperCase()
         let pricing = pricingCache.get(currency)
         if (!pricing) {
             pricing = await getEffectivePricing(currency)

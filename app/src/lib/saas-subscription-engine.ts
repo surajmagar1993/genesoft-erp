@@ -303,11 +303,15 @@ export const REGIONAL_PRICING_CATALOG: Record<string, RegionalPricing> = {
 }
 
 /**
- * Normalizes input currency code to available catalog keys, defaulting to INR.
+ * Plan prices for a business's currency. The regions in Admin → Pricing
+ * (INR, USD, GBP, AED, SAR, AUD) pay in their own currency; every other
+ * currency (or none) pays the USD prices. Never falls back to India.
  */
+/** Tax on Genesoft's plan invoices, by charged currency (prices include it) */
+export const PLAN_TAX_PERCENT: Record<string, number> = { INR: 18, GBP: 20, AED: 5, SAR: 15, AUD: 10, USD: 0 }
+
 export function getRegionalPricing(currencyCode?: string | null): RegionalPricing {
-    const code = (currencyCode || "INR").toUpperCase()
-    return REGIONAL_PRICING_CATALOG[code] || REGIONAL_PRICING_CATALOG.INR
+    return REGIONAL_PRICING_CATALOG[(currencyCode || "").toUpperCase()] || REGIONAL_PRICING_CATALOG.USD
 }
 
 /**
@@ -486,7 +490,7 @@ export function compileSaaSSubscriptionInvoice(params: {
         tenantName,
         plan,
         billingCycle,
-        currency = "INR",
+        currency,
         paymentMethod = "Razorpay / Card",
         transactionRef,
         pricing,
@@ -496,13 +500,8 @@ export function compileSaaSSubscriptionInvoice(params: {
     const catalog = pricing ?? getRegionalPricing(currency)
     const grossAmount = amountPaid ?? (billingCycle === "ANNUAL" ? catalog.annual[plan] : catalog.monthly[plan])
 
-    // Regional tax split: e.g. 18% GST for India, 20% VAT for UK, 5% UAE, 15% KSA
-    let taxRate = 18.0
-    if (currency === "GBP") taxRate = 20.0
-    if (currency === "AED") taxRate = 5.0
-    if (currency === "SAR") taxRate = 15.0
-    if (currency === "AUD") taxRate = 10.0
-    if (currency === "USD") taxRate = 0.0
+    // Tax by the currency actually charged (a currency without its own region pays USD, 0%)
+    const taxRate = PLAN_TAX_PERCENT[catalog.currency] ?? 0
 
     // Price is inclusive of tax
     const subtotal = Math.round((grossAmount / (1 + taxRate / 100)) * 100) / 100

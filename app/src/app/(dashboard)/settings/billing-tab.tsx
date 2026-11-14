@@ -48,7 +48,10 @@ import { createPlanCheckout, verifyRazorpayPayment } from "@/app/actions/saas/ra
 import type { EffectivePricing } from "@/lib/plan-pricing"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { errorMessage } from "@/lib/utils";
+import { errorMessage, formatCurrency } from "@/lib/utils";
+
+// Invoice dates as stored (UTC), the same on the server and in every browser
+const docDate = (d: string) => new Date(d).toLocaleDateString("en-GB", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" })
 
 /** The parts of the workspace record this tab reads */
 type BillingWorkspace = {
@@ -80,7 +83,7 @@ declare global {
 export default function BillingTab({ settings, pricing, planFeatures }: BillingTabProps) {
     const router = useRouter()
     const currentPlan: PlanTier = (settings?.plan as PlanTier) || "FREE"
-    const currency = settings?.currency_code || settings?.currencyCode || "INR"
+    const currency = settings?.currency_code || settings?.currencyCode || null
     const catalog = useMemo(() => pricing ?? getRegionalPricing(currency), [pricing, currency])
 
     // Subscription metadata from tenant settings
@@ -525,12 +528,10 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-xs text-muted-foreground">
-                                            {new Date(inv.periodStart).toLocaleDateString()} &rarr;{" "}
-                                            {new Date(inv.periodEnd).toLocaleDateString()}
+                                            {docDate(inv.periodStart)} &rarr; {docDate(inv.periodEnd)}
                                         </TableCell>
                                         <TableCell className="text-xs font-bold font-mono">
-                                            {catalog.symbol}
-                                            {inv.totalAmount.toFixed(2)}
+                                            {formatCurrency(inv.totalAmount, inv.currency)}
                                         </TableCell>
                                         <TableCell>
                                             <Badge
@@ -767,8 +768,7 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                                             {PLAN_TIERS[selectedInvoice.tier].name} ({selectedInvoice.billingCycle})
                                         </div>
                                         <div className="text-muted-foreground">
-                                            {new Date(selectedInvoice.periodStart).toLocaleDateString()} &rarr;{" "}
-                                            {new Date(selectedInvoice.periodEnd).toLocaleDateString()}
+                                            {docDate(selectedInvoice.periodStart)} &rarr; {docDate(selectedInvoice.periodEnd)}
                                         </div>
                                     </div>
                                 </div>
@@ -777,19 +777,19 @@ export default function BillingTab({ settings, pricing, planFeatures }: BillingT
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Taxable Subtotal:</span>
                                         <span className="font-mono font-semibold">
-                                            {catalog.symbol}{selectedInvoice.subtotal.toFixed(2)}
+                                            {formatCurrency(selectedInvoice.subtotal, selectedInvoice.currency)}
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-muted-foreground">Tax ({selectedInvoice.taxPercent}%):</span>
                                         <span className="font-mono font-semibold">
-                                            {catalog.symbol}{selectedInvoice.taxAmount.toFixed(2)}
+                                            {formatCurrency(selectedInvoice.taxAmount, selectedInvoice.currency)}
                                         </span>
                                     </div>
                                     <div className="flex justify-between text-sm font-bold border-t pt-2">
                                         <span>Total Amount:</span>
                                         <span className="font-mono text-primary text-base">
-                                            {catalog.symbol}{selectedInvoice.totalAmount.toFixed(2)}
+                                            {formatCurrency(selectedInvoice.totalAmount, selectedInvoice.currency)}
                                         </span>
                                     </div>
                                 </div>
