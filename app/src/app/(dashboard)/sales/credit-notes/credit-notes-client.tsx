@@ -55,6 +55,9 @@ import {
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
 
+// Document dates are stored as UTC midnight: format in UTC so server and browser agree (no hydration mismatch)
+const docDate = (d: string | Date, year = true) => new Date(d).toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", ...(year ? { year: "numeric" } : {}) })
+
 interface CreditNotesClientProps {
     initialData: CreditNotesOverviewData
 }
@@ -559,7 +562,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                     <div className="flex flex-col">
                                                         <span>{cn.creditNoteNumber}</span>
                                                         <span className="text-xs text-muted-foreground">
-                                                            {format(new Date(cn.issueDate), "dd MMM yyyy")}
+                                                            {docDate(cn.issueDate)}
                                                         </span>
                                                     </div>
                                                 </TableCell>
@@ -679,7 +682,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                                     {cn.creditNoteNumber}
                                                 </TableCell>
                                                 <TableCell className="text-xs text-muted-foreground">
-                                                    {format(new Date(cn.issueDate), "dd MMM yyyy")}
+                                                    {docDate(cn.issueDate)}
                                                 </TableCell>
                                                 <TableCell>
                                                     {getReasonBadge(cn.reason)}
@@ -756,7 +759,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                         data.refunds.map(r => (
                                             <TableRow key={r.id} className="hover:bg-muted/40">
                                                 <TableCell className="text-xs font-medium">
-                                                    {format(new Date(r.refundDate), "dd MMM yyyy")}
+                                                    {docDate(r.refundDate)}
                                                 </TableCell>
                                                 <TableCell className="font-mono text-xs font-semibold">
                                                     {r.creditNoteNumber}

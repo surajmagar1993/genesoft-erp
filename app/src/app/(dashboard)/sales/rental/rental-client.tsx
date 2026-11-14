@@ -47,6 +47,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { format } from "date-fns"
+import { LocalDateTime } from "@/components/local-date-time"
 import { toast } from "sonner"
 import {
     RentalOverviewData,
@@ -68,6 +69,9 @@ import {
 } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
+
+// Document dates are stored as UTC midnight: format in UTC so server and browser agree (no hydration mismatch)
+const docDate = (d: string | Date, year = true) => new Date(d).toLocaleDateString("en-GB", { timeZone: "UTC", day: "2-digit", month: "short", ...(year ? { year: "numeric" } : {}) })
 
 interface RentalClientProps {
     initialData: RentalOverviewData
@@ -688,7 +692,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                     <div className="flex flex-col">
                                                         <span>{ag.agreementNumber}</span>
                                                         <span className="text-xs text-muted-foreground">
-                                                            {format(new Date(ag.createdAt), "dd MMM yyyy")}
+                                                            <LocalDateTime value={ag.createdAt} dateOnly />
                                                         </span>
                                                     </div>
                                                 </TableCell>
@@ -712,7 +716,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                 </TableCell>
                                                 <TableCell>
                                                     <div className="flex flex-col text-xs">
-                                                        <span>{format(new Date(ag.startDate), "dd MMM")} → {format(new Date(ag.endDate), "dd MMM yyyy")}</span>
+                                                        <span>{docDate(ag.startDate, false)} → {docDate(ag.endDate)}</span>
                                                         <span className="text-muted-foreground">
                                                             {Math.ceil((new Date(ag.endDate).getTime() - new Date(ag.startDate).getTime()) / (1000 * 60 * 60 * 24))} Days ({ag.billingCycle.toLowerCase()})
                                                         </span>
@@ -954,7 +958,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                                     {getStatusBadge(ag.status)}
                                                 </div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    {format(new Date(ag.startDate), "dd MMM yyyy")} → {format(new Date(ag.endDate), "dd MMM yyyy")}
+                                                    {docDate(ag.startDate)} → {docDate(ag.endDate)}
                                                 </div>
                                             </div>
 
@@ -1030,7 +1034,7 @@ export function RentalClient({ initialData }: RentalClientProps) {
                                         data.returns.map(r => (
                                             <TableRow key={r.id} className="hover:bg-muted/40">
                                                 <TableCell className="text-xs font-medium">
-                                                    {format(new Date(r.returnDate), "dd MMM yyyy")}
+                                                    {docDate(r.returnDate)}
                                                 </TableCell>
                                                 <TableCell className="font-mono text-xs font-semibold">
                                                     {r.agreementNumber}
