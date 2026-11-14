@@ -307,8 +307,8 @@ export const REGIONAL_PRICING_CATALOG: Record<string, RegionalPricing> = {
  * (INR, USD, GBP, AED, SAR, AUD) pay in their own currency; every other
  * currency (or none) pays the USD prices. Never falls back to India.
  */
-/** Tax on Genesoft's plan invoices, by charged currency (prices include it) */
-export const PLAN_TAX_PERCENT: Record<string, number> = { INR: 18, GBP: 20, AED: 5, SAR: 15, AUD: 10, USD: 0 }
+/** Tax on Genesoft's plan invoices (prices include it): Indian GST only; every other country 0% (owner decision, 14 Nov 2026) */
+export const PLAN_TAX_PERCENT: Record<string, number> = { INR: 18 }
 
 export function getRegionalPricing(currencyCode?: string | null): RegionalPricing {
     return REGIONAL_PRICING_CATALOG[(currencyCode || "").toUpperCase()] || REGIONAL_PRICING_CATALOG.USD
@@ -500,7 +500,7 @@ export function compileSaaSSubscriptionInvoice(params: {
     const catalog = pricing ?? getRegionalPricing(currency)
     const grossAmount = amountPaid ?? (billingCycle === "ANNUAL" ? catalog.annual[plan] : catalog.monthly[plan])
 
-    // Tax by the currency actually charged (a currency without its own region pays USD, 0%)
+    // Tax by the currency actually charged: only India (INR) pays GST
     const taxRate = PLAN_TAX_PERCENT[catalog.currency] ?? 0
 
     // Price is inclusive of tax
