@@ -1,8 +1,9 @@
 import { getPnlReport, getMonthlyRevenue, getCashFlowSummary, getTopRevenueContacts } from "@/app/actions/finance/reports"
+import { getTenantSettings } from "@/app/actions/settings/tenant"
 import ReportsClient from "./ReportsClient"
 
 export const metadata = {
-  title: "Financial Reports | Genesoft ERP",
+  title: "Reports | Genesoft ERP",
   description: "Profit & Loss, Revenue Trends, and Cash Flow Analysis for your business.",
 }
 
@@ -30,11 +31,12 @@ export default async function ReportsPage({ searchParams }: Props) {
 
   const { start, end } = getDateRange(selectedYear, selectedQuarter)
 
-  const [pnl, monthly, cashFlow, topContacts] = await Promise.all([
+  const [pnl, monthly, cashFlow, topContacts, settings] = await Promise.all([
     getPnlReport(start, end),
     getMonthlyRevenue(selectedYear),
     getCashFlowSummary(start, end),
-    getTopRevenueContacts(5),
+    getTopRevenueContacts(start, end, 5),
+    getTenantSettings(),
   ])
 
   return (
@@ -46,6 +48,8 @@ export default async function ReportsPage({ searchParams }: Props) {
         topContacts={topContacts}
         selectedYear={selectedYear}
         selectedQuarter={selectedQuarter}
+        countryCode={settings?.country_code || ""}
+        multiJurisdiction={!!settings?.settings?.enable_multijurisdiction}
       />
     </div>
   )

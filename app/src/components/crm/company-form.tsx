@@ -12,6 +12,7 @@ import { toast } from "sonner"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { createCompany, updateCompany } from "@/app/actions/crm/companies"
+import { findCities, findStates } from "@/app/actions/geo"
 import { errorMessage } from "@/lib/utils";
 
 export interface CompanyFormData {
@@ -259,6 +260,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                         id="state"
                                         value={form.state}
                                         onChange={(e) => update("state", e.target.value)}
+                                        loadOptions={(q) => findStates(q, form.country || "")}
                                         options={searchStates(form.state, form.country).map((s) => ({
                                             label: s.name,
                                             value: s.name,
@@ -275,6 +277,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                         id="city"
                                         value={form.city}
                                         onChange={(e) => update("city", e.target.value)}
+                                        loadOptions={(q) => findCities(q, form.state || "", form.country || "")}
                                         options={searchCities(form.city, form.state, form.country).map((c) => ({
                                             label: c.name,
                                             value: c.name,

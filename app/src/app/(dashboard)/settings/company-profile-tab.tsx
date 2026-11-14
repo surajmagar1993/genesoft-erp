@@ -14,6 +14,8 @@ import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { updateTenantSettings, uploadTenantLogo, removeTenantLogo, TenantSettings, TenantAddress } from "@/app/actions/settings/tenant"
 import { unwrap } from "@/lib/action-result"
+import { findCities, findStates } from "@/app/actions/geo"
+import { placeForPin } from "@/lib/pin-fill"
 import { errorMessage } from "@/lib/utils";
 
 interface CompanyProfileTabProps {
@@ -323,6 +325,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                             id="companyState"
                                             value={address.state || ""}
                                             onChange={(e) => setAddress((prev) => ({ ...prev, state: e.target.value }))}
+                                            loadOptions={(q) => findStates(q, address.country || "")}
                                             options={searchStates(address.state || "", address.country).map((s) => ({
                                                 label: s.name,
                                                 value: s.name,
@@ -339,6 +342,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                             id="companyCity"
                                             value={address.city || ""}
                                             onChange={(e) => setAddress((prev) => ({ ...prev, city: e.target.value }))}
+                                            loadOptions={(q) => findCities(q, address.state || "", address.country || "")}
                                             options={searchCities(address.city || "", address.state, address.country).map((c) => ({
                                                 label: c.name,
                                                 value: c.name,
@@ -363,7 +367,14 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                     <Input
                                         id="postalCode"
                                         value={address.postalCode}
-                                        onChange={(e) => setAddress((prev) => ({ ...prev, postalCode: e.target.value }))}
+                                        onChange={(e) => {
+                                            const pin = e.target.value
+                                            setAddress((prev) => ({ ...prev, postalCode: pin }))
+                                            // A full Indian PIN fills empty City and State
+                                            void placeForPin(pin, address.country || "").then((place) => {
+                                                if (place) setAddress((prev) => ({ ...prev, city: prev.city || place.city, state: prev.state || place.state }))
+                                            })
+                                        }}
                                         placeholder="Enter postal or PIN code"
                                     />
                                 </div>

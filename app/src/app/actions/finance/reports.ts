@@ -1,5 +1,7 @@
 "use server"
 
+import { roundMoney } from "@/lib/gst-engine"
+
 import { getTenantId } from "@/lib/get-tenant-id"
 import { convertAmount } from "@/lib/exchange-rates"
 import { prisma } from "@/lib/prisma"
@@ -180,7 +182,8 @@ export async function getCashFlowSummary(
    Top Revenue Contacts
 ───────────────────────────────────────── */
 
-export async function getTopRevenueContacts(limit = 5): Promise<TopRevenueContact[]> {
+/** Customers by sales before tax (before credit notes) on invoices dated in the period. */
+export async function getTopRevenueContacts(startDate: string, endDate: string, limit = 5): Promise<TopRevenueContact[]> {
   const tenantId = await getTenantId(MODULE)
 
   // Fetch Tenant Base Currency
@@ -192,7 +195,7 @@ export async function getTopRevenueContacts(limit = 5): Promise<TopRevenueContac
   const baseCurrency = tenant.currencyCode
 
   const invoices = (await prisma.invoice.findMany({
-    where: { tenantId, status: { in: ["SENT", "PARTIALLY_PAID", "PAID"] } },
+    where: { tenantId, status: { in: ["SENT", "PARTIALLY_PAID", "PAID"] }, invoiceDate: { gte: new Date(startDate), lte: new Date(`${endDate}T23:59:59.999Z`) } },
     select: { contactId: true, subtotal: true, total: true, currencyCode: true, contact: { select: { displayName: true } } },
   })).map((i) => ({ contact_id: i.contactId, subtotal: Number(i.subtotal), total: Number(i.total), currency_code: i.currencyCode, contacts: { display_name: i.contact.displayName } }))
 
@@ -215,5 +218,5 @@ export async function getTopRevenueContacts(limit = 5): Promise<TopRevenueContac
   return Array.from(contactMap.values())
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, limit)
-    .map(c => ({ ...c, revenue: parseFloat(c.revenue.toFixed(2)) }))
+    .map(c => ({ ...c, revenue: roundMoney(c.revenue) }))
 }

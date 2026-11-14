@@ -79,6 +79,7 @@ import {
 import { COMPANY } from "@/lib/constants/company"
 import { generateQrCodeDataUrl } from "@/lib/barcode/qrcode"
 import { RequireRole } from "@/components/auth/role-context"
+import { findCities } from "@/app/actions/geo"
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(amount)
@@ -787,6 +788,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                               placeholder="Enter dispatch city"
                               value={genForm.fromPlace}
                               onChange={(e) => setGenForm({ ...genForm, fromPlace: e.target.value })}
+                              loadOptions={(q) => findCities(q, "", "IN")}
                               options={searchCities(genForm.fromPlace).map((c) => ({
                                 label: c.name,
                                 value: c.name,
@@ -845,6 +847,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                               placeholder="Enter destination city"
                               value={genForm.toPlace}
                               onChange={(e) => setGenForm({ ...genForm, toPlace: e.target.value })}
+                              loadOptions={(q) => findCities(q, "", "IN")}
                               options={searchCities(genForm.toPlace).map((c) => ({
                                 label: c.name,
                                 value: c.name,
@@ -1374,6 +1377,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                 placeholder="Enter current city"
                 value={updateFromPlace}
                 onChange={(e) => setUpdateFromPlace(e.target.value)}
+                loadOptions={(q) => findCities(q, "", "IN")}
                 options={searchCities(updateFromPlace).map((c) => ({
                   label: c.name,
                   value: c.name,

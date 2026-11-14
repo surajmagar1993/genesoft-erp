@@ -18,6 +18,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { findCities, findStates } from "@/app/actions/geo"
 
 const NONE = "__none__"
 
@@ -176,6 +177,7 @@ export function EmployeeForm({
                                 placeholder="Enter state or province"
                                 value={f.state}
                                 onChange={(e) => set({ state: e.target.value })}
+                                loadOptions={(q) => findStates(q, f.country || "")}
                                 options={searchStates(f.state, f.country).map((s) => ({ label: s.name, value: s.name, subLabel: s.code }))}
                                 onSelectOption={(opt) => set({ state: opt.value })}
                             />
@@ -187,6 +189,7 @@ export function EmployeeForm({
                                 placeholder="Enter city"
                                 value={f.city}
                                 onChange={(e) => set({ city: e.target.value })}
+                                loadOptions={(q) => findCities(q, f.state || "", f.country || "")}
                                 options={searchCities(f.city, f.state, f.country).map((c) => ({ label: c.name, value: c.name, subLabel: `${c.stateName} • ${c.pincode}` }))}
                                 onSelectOption={(opt) => {
                                     const stateName = opt.subLabel?.split(" • ")[0]?.trim()

@@ -4046,3 +4046,44 @@ model DocumentCounter {
   @@id([tenantId, name, prefix])
   @@map("document_counters")
 }
+
+// ──────────────────────────────────────────────────────────────────────────
+// Reference data for address forms (not business data, so no tenantId).
+// Loaded by scripts/import-geo.mts from public sources; read by
+// src/app/actions/geo.ts. Empty tables fall back to the small built-in list.
+// ──────────────────────────────────────────────────────────────────────────
+
+/// States, provinces and regions of every country (countries-states-cities database, ODbL-1.0)
+model GeoState {
+  id          Int    @id @default(autoincrement())
+  countryCode String @map("country_code") @db.Char(2)
+  code        String @default("")
+  name        String
+
+  @@unique([countryCode, name])
+  @@map("geo_states")
+}
+
+/// Cities and towns of every country (countries-states-cities database, ODbL-1.0)
+model GeoCity {
+  id          Int    @id @default(autoincrement())
+  countryCode String @map("country_code") @db.Char(2)
+  stateName   String @default("") @map("state_name")
+  name        String
+
+  @@index([countryCode, name])
+  @@map("geo_cities")
+}
+
+/// Indian PIN codes, one row per post office (India Post "All India Pincode Directory", data.gov.in)
+model GeoPostalCode {
+  id          Int    @id @default(autoincrement())
+  countryCode String @default("IN") @map("country_code") @db.Char(2)
+  postalCode  String @map("postal_code")
+  placeName   String @map("place_name")
+  district    String @default("")
+  stateName   String @default("") @map("state_name")
+
+  @@index([countryCode, postalCode])
+  @@map("geo_postal_codes")
+}

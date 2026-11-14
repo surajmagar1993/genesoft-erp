@@ -1291,7 +1291,7 @@ export const COUNTRIES: CountryData[] = [
   {
     "name": "Saint Helena, Ascension and Tristan da Cunha",
     "code": "SH",
-    "dialCode": "+2",
+    "dialCode": "+290",
     "flag": "🇸🇭",
     "currency": "GBP"
   },
@@ -1648,7 +1648,7 @@ export const COUNTRIES: CountryData[] = [
   {
     "name": "United States Minor Outlying Islands",
     "code": "UM",
-    "dialCode": "+268",
+    "dialCode": "+1",
     "flag": "🇺🇲",
     "currency": "USD"
   },
@@ -1683,7 +1683,7 @@ export const COUNTRIES: CountryData[] = [
   {
     "name": "Vatican City",
     "code": "VA",
-    "dialCode": "+3",
+    "dialCode": "+39",
     "flag": "🇻🇦",
     "currency": "EUR"
   },
@@ -1711,7 +1711,7 @@ export const COUNTRIES: CountryData[] = [
   {
     "name": "Western Sahara",
     "code": "EH",
-    "dialCode": "+2",
+    "dialCode": "+212",
     "flag": "🇪🇭",
     "currency": "DZD"
   },

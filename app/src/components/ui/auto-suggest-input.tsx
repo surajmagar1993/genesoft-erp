@@ -17,6 +17,8 @@ export interface AutoSuggestInputProps
   onSelectOption: (option: AutoSuggestOption) => void
   wrapperClassName?: string
   showOnEmptyFocus?: boolean
+  /** Fetches suggestions as the person types (e.g. from the server); when it returns some they replace `options` */
+  loadOptions?: (query: string) => Promise<AutoSuggestOption[]>
 }
 
 export function AutoSuggestInput({
@@ -28,10 +30,33 @@ export function AutoSuggestInput({
   className,
   wrapperClassName,
   showOnEmptyFocus = true,
+  loadOptions,
   ...props
 }: AutoSuggestInputProps) {
   const [isOpen, setIsOpen] = React.useState(false)
   const wrapperRef = React.useRef<HTMLDivElement>(null)
+  const [loaded, setLoaded] = React.useState<{ query: string; options: AutoSuggestOption[] } | null>(null)
+  const query = String(value ?? "")
+
+  // Forms pass a new function each render; keep the latest without re-running the fetch for it
+  const loadRef = React.useRef(loadOptions)
+  React.useEffect(() => { loadRef.current = loadOptions })
+  const canLoad = !!loadOptions
+
+  // Ask loadOptions once typing pauses; a reply for an older query is ignored
+  React.useEffect(() => {
+    const load = loadRef.current
+    if (!canLoad || !load || !isOpen) return
+    let cancelled = false
+    const timer = setTimeout(() => {
+      load(query)
+        .then((opts) => { if (!cancelled) setLoaded({ query, options: opts }) })
+        .catch(() => { if (!cancelled) setLoaded({ query, options: [] }) })
+    }, 250)
+    return () => { cancelled = true; clearTimeout(timer) }
+  }, [canLoad, query, isOpen])
+
+  const shown = loaded && loaded.query === query && loaded.options.length > 0 ? loaded.options : options
 
   // Handle outside click
   React.useEffect(() => {
@@ -44,7 +69,7 @@ export function AutoSuggestInput({
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  const hasOptions = options.length > 0
+  const hasOptions = shown.length > 0
 
   return (
     <div ref={wrapperRef} className={cn("relative w-full", wrapperClassName)}>
@@ -67,7 +92,7 @@ export function AutoSuggestInput({
 
       {isOpen && hasOptions && (
         <div className="absolute z-50 left-0 right-0 mt-1 max-h-56 overflow-auto rounded-md border border-border/80 bg-popover/95 p-1 shadow-lg backdrop-blur-sm animate-in fade-in-0 zoom-in-95">
-          {options.map((opt, idx) => (
+          {shown.map((opt, idx) => (
             <button
               key={`${opt.value}-${idx}`}
               type="button"

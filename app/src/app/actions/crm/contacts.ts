@@ -9,6 +9,8 @@ import { getTenantDefaults } from "@/lib/tenant-defaults"
 import { errorMessage } from "@/lib/utils";
 import type { Prisma } from "@prisma/client"
 import type { AddressJson } from "@/lib/json-types"
+import { phoneProblem, postcodeProblem } from "@/lib/phone"
+import { COUNTRIES } from "@/lib/constants/countries"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -180,11 +182,21 @@ export async function getContactById(id: string): Promise<Contact | null> {
   }
 }
 
+/** Phone length and postcode format (src/lib/phone.ts); the form runs the same checks first. */
+function contactInputProblem(formData: Partial<Omit<Contact, "id" | "created_at" | "tenant_id">>): string | null {
+  const address = (formData.billing_address ?? {}) as AddressJson & { zip?: string; country?: string }
+  const countryName = String(address.country ?? "").trim().toLowerCase()
+  const country = COUNTRIES.find((c) => c.name.toLowerCase() === countryName)?.code || formData.country_code || ""
+  return phoneProblem(formData.phone) || phoneProblem(formData.mobile) || postcodeProblem(address.zip ?? address.pincode ?? address.postalCode, country)
+}
+
 export async function createContact(
   formData: Omit<Contact, "id" | "created_at" | "tenant_id">
 ): Promise<{ error: string | null; id?: string }> {
   try {
     const tenantId = await getTenantWriterId(MODULE)
+    const inputProblem = contactInputProblem(formData)
+    if (inputProblem) return { error: inputProblem }
 
     // Determine safe displayName
     let displayName = (formData.display_name || "").trim()
@@ -266,6 +278,8 @@ export async function updateContact(
 ): Promise<{ error: string | null }> {
   try {
     const tenantId = await getTenantWriterId(MODULE)
+    const inputProblem = contactInputProblem(formData)
+    if (inputProblem) return { error: inputProblem }
 
     let displayName = formData.display_name?.trim()
     if (displayName === "") {

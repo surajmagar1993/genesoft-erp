@@ -16,9 +16,13 @@ import { createContact, updateContact } from "@/app/actions/crm/contacts"
 import { TAX_EXEMPTION_REASONS } from "@/lib/gst-engine"
 import { Switch } from "@/components/ui/switch"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
+import { DialCodeSelect } from "@/components/dial-code-select"
+import { phoneProblem, postcodeProblem } from "@/lib/phone"
+import { placeForPin } from "@/lib/pin-fill"
 import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "sonner"
+import { findCities, findStates } from "@/app/actions/geo"
 import { errorMessage } from "@/lib/utils";
 
 export interface ContactFormData {
@@ -155,6 +159,18 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
             computedDisplayName = form.displayName.trim() || form.email.trim() || "New Contact"
         }
 
+        // Same checks as the server (src/lib/phone.ts), so mistakes show before saving
+        const phone = form.phone ? `${form.phoneDialCode} ${form.phone}`.trim() : null
+        const mobile = form.mobile ? `${form.mobileDialCode} ${form.mobile}`.trim() : null
+        const billingCountryCode = COUNTRIES.find((c) => c.name.toLowerCase() === form.billingCountry.trim().toLowerCase())?.code || form.countryCode
+        const problem = phoneProblem(phone) || phoneProblem(mobile) || postcodeProblem(form.billingZip, billingCountryCode)
+        if (problem) {
+            setSaveError(problem)
+            toast.error(problem)
+            setIsSubmitting(false)
+            return
+        }
+
         const payload = {
             display_name: computedDisplayName,
             type: form.type,
@@ -162,8 +178,8 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
             last_name: form.type === "INDIVIDUAL" ? (form.lastName || null) : null,
             company_name: form.type === "COMPANY" ? (form.companyName || null) : null,
             email: form.email ? form.email.trim() : null,
-            phone: form.phone ? `${form.phoneDialCode} ${form.phone}`.trim() : null,
-            mobile: form.mobile ? `${form.mobileDialCode} ${form.mobile}`.trim() : null,
+            phone,
+            mobile,
             website: form.website || null,
             customer_group: form.customerGroup || "retail",
             // Blank → the server uses the business's own country and currency
@@ -351,18 +367,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                 <div className="space-y-2">
                                     <Label htmlFor="phone">Phone</Label>
                                     <div className="flex gap-2">
-                                        <Select value={form.phoneDialCode} onValueChange={(v) => update("phoneDialCode", v)}>
-                                            <SelectTrigger className="w-[100px] shrink-0">
-                                                <SelectValue placeholder="Code" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {COUNTRIES.map((c) => (
-                                                    <SelectItem key={`phone-${c.code}`} value={c.dialCode}>
-                                                        {c.flag} {c.dialCode}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <DialCodeSelect value={form.phoneDialCode} onChange={(v) => update("phoneDialCode", v)} homeCountry={form.countryCode} label="Phone country code" />
                                         <Input
                                             id="phone"
                                             value={form.phone}
@@ -374,18 +379,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                 <div className="space-y-2">
                                     <Label htmlFor="mobile">Mobile (Optional)</Label>
                                     <div className="flex gap-2">
-                                        <Select value={form.mobileDialCode} onValueChange={(v) => update("mobileDialCode", v)}>
-                                            <SelectTrigger className="w-[100px] shrink-0">
-                                                <SelectValue placeholder="Code" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {COUNTRIES.map((c) => (
-                                                    <SelectItem key={`mobile-${c.code}`} value={c.dialCode}>
-                                                        {c.flag} {c.dialCode}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <DialCodeSelect value={form.mobileDialCode} onChange={(v) => update("mobileDialCode", v)} homeCountry={form.countryCode} label="Mobile country code" />
                                         <Input
                                             id="mobile"
                                             value={form.mobile}
@@ -577,6 +571,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                         id="billingState"
                                         value={form.billingState}
                                         onChange={(e) => update("billingState", e.target.value)}
+                                        loadOptions={(q) => findStates(q, form.billingCountry || "")}
                                         options={searchStates(form.billingState, form.billingCountry).map((s) => ({
                                             label: s.name,
                                             value: s.name,
@@ -593,6 +588,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                         id="billingCity"
                                         value={form.billingCity}
                                         onChange={(e) => update("billingCity", e.target.value)}
+                                        loadOptions={(q) => findCities(q, form.billingState || "", form.billingCountry || "")}
                                         options={searchCities(form.billingCity, form.billingState, form.billingCountry).map((city) => ({
                                             label: city.name,
                                             value: city.name,
@@ -619,7 +615,15 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                     <Input
                                         id="billingZip"
                                         value={form.billingZip}
-                                        onChange={(e) => update("billingZip", e.target.value)}
+                                        onChange={(e) => {
+                                            const pin = e.target.value
+                                            update("billingZip", pin)
+                                            // A full Indian PIN fills empty City and State
+                                            void placeForPin(pin, form.billingCountry || form.countryCode).then((place) => {
+                                                if (!place) return
+                                                setForm((prev) => ({ ...prev, billingCity: prev.billingCity || place.city, billingState: prev.billingState || place.state }))
+                                            })
+                                        }}
                                         placeholder="Enter ZIP or postal code"
                                     />
                                 </div>

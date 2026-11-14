@@ -66,6 +66,7 @@ import {
   exportForm26QSummary,
 } from "@/app/actions/finance/tds"
 import { RequireRole } from "@/components/auth/role-context"
+import { findCities, findStates } from "@/app/actions/geo"
 
 interface TdsClientProps {
   initialData: TdsOverviewData
@@ -1135,6 +1136,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       placeholder="Maharashtra"
                       value={profileState}
                       onChange={(e) => setProfileState(e.target.value)}
+                      loadOptions={(q) => findStates(q, "IN")}
                       options={searchStates(profileState, "India").map((s) => ({
                         label: s.name,
                         value: s.name,
@@ -1151,6 +1153,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       placeholder="Enter city"
                       value={profileCity}
                       onChange={(e) => setProfileCity(e.target.value)}
+                      loadOptions={(q) => findCities(q, profileState || "", "IN")}
                       options={searchCities(profileCity, profileState, "India").map((c) => ({
                         label: c.name,
                         value: c.name,

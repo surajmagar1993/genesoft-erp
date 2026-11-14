@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { findCities, findStates } from "@/app/actions/geo"
 
 /** Add or edit a warehouse (full page; warehouses are listed on /inventory?tab=warehouses). */
 export function WarehouseForm({ warehouses, warehouse }: { warehouses: WarehouseItem[]; warehouse?: WarehouseItem }) {
@@ -119,6 +120,7 @@ export function WarehouseForm({ warehouses, warehouse }: { warehouses: Warehouse
                                 placeholder="Start typing a state"
                                 value={f.state}
                                 onChange={(e) => set({ state: e.target.value })}
+                                loadOptions={(q) => findStates(q, f.country || "")}
                                 options={searchStates(f.state, f.country).map((s) => ({ label: s.name, value: s.name, subLabel: s.code }))}
                                 onSelectOption={(opt) => set({ state: opt.value })}
                             />
@@ -130,6 +132,7 @@ export function WarehouseForm({ warehouses, warehouse }: { warehouses: Warehouse
                                 placeholder="Start typing a city"
                                 value={f.city}
                                 onChange={(e) => set({ city: e.target.value })}
+                                loadOptions={(q) => findCities(q, f.state || "", f.country || "")}
                                 options={searchCities(f.city, f.state, f.country).map((c) => ({ label: c.name, value: c.name, subLabel: `${c.stateName} • ${c.pincode}` }))}
                                 onSelectOption={(opt) => {
                                     const stateName = opt.subLabel?.split(" • ")[0]?.trim()
