@@ -3,6 +3,7 @@ import { getContactById } from "@/app/actions/crm/contacts"
 import { getCustomerLedger } from "@/app/actions/crm/ledger"
 import { getTasks } from "@/app/actions/crm/tasks"
 import { getCommunicationLogs } from "@/app/actions/crm/communications"
+import { getPortalStatus } from "@/app/actions/crm/portal-actions"
 import ContactDetailClient from "./ContactDetailClient"
 import { notFound } from "next/navigation"
 
@@ -11,11 +12,12 @@ export const dynamic = "force-dynamic"
 export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   if (!isUuid(id)) notFound()
-  const [contact, ledger, tasks, logs] = await Promise.all([
+  const [contact, ledger, tasks, logs, portal] = await Promise.all([
     getContactById(id),
     getCustomerLedger(id),
     getTasks(1, 50, { contact_id: id }),
     getCommunicationLogs(1, 50, { contact_id: id }),
+    getPortalStatus(id),
   ])
 
   if (!contact) notFound()
@@ -26,6 +28,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
       ledger={ledger}
       initialTasks={tasks.data}
       initialLogs={logs.data}
+      portal={portal}
     />
   )
 }

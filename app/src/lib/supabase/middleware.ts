@@ -4,7 +4,7 @@ import { DEFAULT_SECURITY_POLICY, clientIp, type PlatformGate } from '@/lib/plat
 import { IDLE_COOKIE, IDLE_COOKIE_OPTIONS, idleRemainingMs, idleTimeoutEnabled, makeIdleCookie, readIdleCookie } from '@/lib/idle-session'
 import { hitRateLimit, SIGNED_IN_RATE_MULTIPLIER } from '@/lib/rate-limit'
 import { APP_AREAS } from '@/lib/app-areas'
-import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute, PARKED_MODULES_ENABLED, isParkedRoute } from '@/lib/features'
+import { COMPLIANCE_MODULES_ENABLED, isComplianceRoute, PARKED_MODULES_ENABLED, isParkedRoute, parkedFallback } from '@/lib/features'
 
 export async function updateSession(request: NextRequest, gate?: PlatformGate) {
     let supabaseResponse = NextResponse.next({
@@ -203,10 +203,10 @@ export async function updateSession(request: NextRequest, gate?: PlatformGate) {
         return NextResponse.redirect(url)
     }
 
-    // Emails, WhatsApp, Web Forms and Bank Reconciliation are switched off
+    // Switched-off modules (src/lib/features.ts) send visitors to the nearest page that's on
     if (!PARKED_MODULES_ENABLED && isParkedRoute(request.nextUrl.pathname)) {
         const url = request.nextUrl.clone()
-        url.pathname = request.nextUrl.pathname.startsWith('/finance/') ? '/finance/reports' : '/crm/contacts'
+        url.pathname = parkedFallback(request.nextUrl.pathname)
         url.search = ''
         return NextResponse.redirect(url)
     }

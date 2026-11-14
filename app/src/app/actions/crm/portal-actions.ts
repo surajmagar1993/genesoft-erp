@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getTenantId, getTenantManagerId, getTenantWriterId } from "@/lib/get-tenant-id"
 import { randomBytes } from "crypto"
+import { isPortalLinkExpired, portalLinkExpiresAt } from "@/lib/portal-link"
 
 /** Module access checked by the tenant helpers (src/lib/access.ts) */
 const MODULE = "crm" as const
@@ -11,74 +12,82 @@ const MODULE = "crm" as const
 // Portal Access Management (Tenant-Side)
 // ────────────────────────────────────────────
 
-export async function togglePortalAccess(contactId: string) {
+/** What the contact page shows about a customer's portal link */
+export interface PortalStatus {
+  portalEnabled: boolean
+  portalToken: string | null
+  /** ISO time the current link stops working (30 days after it was issued) */
+  expiresAt: string | null
+  expired: boolean
+  portalLastAccess: string | null
+}
+
+function toStatus(c: { portalEnabled: boolean; portalToken: string | null; portalTokenIssuedAt: Date | null; portalLastAccess: Date | null }): PortalStatus {
+  return {
+    portalEnabled: c.portalEnabled,
+    portalToken: c.portalToken,
+    expiresAt: portalLinkExpiresAt(c.portalTokenIssuedAt)?.toISOString() ?? null,
+    expired: !!c.portalToken && isPortalLinkExpired(c.portalTokenIssuedAt),
+    portalLastAccess: c.portalLastAccess?.toISOString() ?? null,
+  }
+}
+
+const STATUS_FIELDS = { portalEnabled: true, portalToken: true, portalTokenIssuedAt: true, portalLastAccess: true } as const
+
+/** Turn a customer's portal on or off. Turning it on reuses a link that still works, or issues a new one. */
+export async function togglePortalAccess(contactId: string): Promise<{ success: boolean; error?: string; status?: PortalStatus }> {
   const tenantId = await getTenantManagerId(MODULE)
 
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, tenantId },
-    select: { portalEnabled: true, portalToken: true },
+    select: STATUS_FIELDS,
   })
 
   if (!contact) {
     return { success: false, error: "Contact not found" }
   }
 
-  const newEnabled = !contact.portalEnabled
+  const enable = !contact.portalEnabled
+  const needsNewLink = enable && (!contact.portalToken || isPortalLinkExpired(contact.portalTokenIssuedAt))
 
-  // Generate token on first enable
-  const portalToken =
-    newEnabled && !contact.portalToken
-      ? randomBytes(32).toString("hex")
-      : contact.portalToken
-
-  await prisma.contact.update({
+  const updated = await prisma.contact.update({
     where: { id: contactId },
-    data: { portalEnabled: newEnabled, portalToken },
+    data: {
+      portalEnabled: enable,
+      ...(needsNewLink ? { portalToken: randomBytes(32).toString("hex"), portalTokenIssuedAt: new Date() } : {}),
+    },
+    select: STATUS_FIELDS,
   })
 
-  return { success: true, portalEnabled: newEnabled, portalToken }
+  return { success: true, status: toStatus(updated) }
 }
 
-export async function regeneratePortalToken(contactId: string) {
+/** Issue a new link (valid 30 days); the old one stops working at once. */
+export async function regeneratePortalToken(contactId: string): Promise<{ success: boolean; error?: string; status?: PortalStatus }> {
   const tenantId = await getTenantManagerId(MODULE)
 
-  const contact = await prisma.contact.findFirst({
+  const { count } = await prisma.contact.updateMany({
     where: { id: contactId, tenantId },
+    data: { portalToken: randomBytes(32).toString("hex"), portalTokenIssuedAt: new Date(), portalEnabled: true },
   })
 
-  if (!contact) {
+  if (count === 0) {
     return { success: false, error: "Contact not found" }
   }
 
-  const portalToken = randomBytes(32).toString("hex")
-
-  await prisma.contact.update({
-    where: { id: contactId },
-    data: { portalToken, portalEnabled: true },
-  })
-
-  return { success: true, portalToken }
+  const updated = await prisma.contact.findFirst({ where: { id: contactId, tenantId }, select: STATUS_FIELDS })
+  return { success: true, status: updated ? toStatus(updated) : undefined }
 }
 
-export async function getPortalStatus(contactId: string) {
+export async function getPortalStatus(contactId: string): Promise<PortalStatus | null> {
   const tenantId = await getTenantId(MODULE)
 
   const contact = await prisma.contact.findFirst({
     where: { id: contactId, tenantId },
-    select: {
-      portalEnabled: true,
-      portalToken: true,
-      portalLastAccess: true,
-    },
+    select: STATUS_FIELDS,
   })
 
-  if (!contact) return null
-
-  return {
-    portalEnabled: contact.portalEnabled,
-    portalToken: contact.portalToken,
-    portalLastAccess: contact.portalLastAccess?.toISOString() ?? null,
-  }
+  return contact ? toStatus(contact) : null
 }
 
 // ────────────────────────────────────────────

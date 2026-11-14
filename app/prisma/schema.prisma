@@ -227,6 +227,8 @@ model Contact {
   portalEnabled    Boolean   @default(false) @map("portal_enabled")
   portalToken      String?   @unique @map("portal_token")
   portalLastAccess DateTime? @map("portal_last_access")
+  /// When the current portal link was issued; it works for 30 days (src/lib/portal-link.ts)
+  portalTokenIssuedAt DateTime? @map("portal_token_issued_at") @db.Timestamptz(6)
 
   // Meta
   tags      Json     @default("[]")

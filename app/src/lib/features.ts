@@ -24,21 +24,56 @@ export function isComplianceRoute(pathname: string): boolean {
 }
 
 /**
- * Switched-off modules: CRM Emails, WhatsApp and Web Forms, and Finance →
- * Bank Reconciliation. They are out of the menu, their pages redirect, public
- * form links answer "not found" and the daily inbox sync is skipped. The code
- * and saved data stay; set NEXT_PUBLIC_ENABLE_PARKED_MODULES=true to bring
- * them back.
+ * Switched-off modules: CRM Emails, WhatsApp and Web Forms, Finance → Bank
+ * Reconciliation (2026-11-12), and the thin modules (2026-11-14, owner's
+ * decision before launch): Manufacturing, Inventory → Batch & serial,
+ * HR → Performance & training and Recruitment, Purchase → RFQ, Finance →
+ * Budgets and the Report builder. They are out of the menu and the links that
+ * lead to them, their pages redirect, their plan/team-access entries are
+ * hidden, public form links answer "not found" and the daily inbox sync is
+ * skipped. The code and saved data stay; set NEXT_PUBLIC_ENABLE_PARKED_MODULES=true
+ * to bring them back.
  */
 export const PARKED_MODULES_ENABLED = process.env.NEXT_PUBLIC_ENABLE_PARKED_MODULES === "true"
 
-export const PARKED_ROUTES = [
-    "/crm/emails",
-    "/crm/whatsapp",
-    "/crm/forms",
-    "/finance/bank-reconciliation",
+/** Each switched-off page and where a visitor to it is sent instead */
+const PARKED: { route: string; fallback: string }[] = [
+    { route: "/crm/emails", fallback: "/crm/contacts" },
+    { route: "/crm/whatsapp", fallback: "/crm/contacts" },
+    { route: "/crm/forms", fallback: "/crm/contacts" },
+    { route: "/finance/bank-reconciliation", fallback: "/finance/reports" },
+    { route: "/manufacturing", fallback: "/inventory" },
+    { route: "/hr/performance", fallback: "/hr" },
+    { route: "/hr/recruitment", fallback: "/hr" },
+    { route: "/purchase/rfq", fallback: "/purchase" },
+    { route: "/finance/budgets", fallback: "/finance/reports" },
+    { route: "/reports/builder", fallback: "/reports" },
 ]
 
+export const PARKED_ROUTES = PARKED.map((p) => p.route)
+
+/** Whole access modules that are switched off (hidden in Team & Access and plan settings; access is NONE) */
+export const PARKED_MODULE_KEYS: readonly string[] = ["manufacturing", "reports"]
+
+/** Inventory tab that is switched off with them */
+export const PARKED_INVENTORY_TAB = "batch-serial"
+
+function parkedEntry(pathname: string) {
+    return PARKED.find((p) => pathname === p.route || pathname.startsWith(`${p.route}/`))
+}
+
 export function isParkedRoute(pathname: string): boolean {
-    return PARKED_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
+    return parkedEntry(pathname) !== undefined
+}
+
+/** Where to send someone who opens a switched-off page */
+export function parkedFallback(pathname: string): string {
+    return parkedEntry(pathname)?.fallback ?? "/dashboard"
+}
+
+/** A module key that is switched off (false whenever PARKED_MODULES_ENABLED is on) */
+export function isParkedModule(key: string): boolean {
+    // Read when called (not only at load) so tests of the switched-off code can turn it on
+    const enabled = PARKED_MODULES_ENABLED || process.env.NEXT_PUBLIC_ENABLE_PARKED_MODULES === "true"
+    return !enabled && PARKED_MODULE_KEYS.includes(key)
 }

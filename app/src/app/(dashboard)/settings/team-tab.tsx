@@ -24,6 +24,7 @@ import {
     type TeamRole,
 } from "@/app/actions/settings/team"
 import { ACCESS_LEVELS, MODULES, summarizeAccess, uniformAccess, type AccessLevel, type ModuleAccess } from "@/lib/access"
+import { isParkedModule } from "@/lib/features"
 
 const ROLE_HELP: Record<TeamRole, string> = {
     ADMIN: "Everything, including team, workspace settings and credentials",
@@ -46,7 +47,7 @@ function AccessMatrix({ value, onChange, disabled, planModules }: { value: Modul
                 ))}
             </div>
             <div className="rounded-lg border divide-y">
-                {MODULES.map((m) => {
+                {MODULES.filter((m) => !isParkedModule(m.key)).map((m) => {
                     // Not on the workspace's plan: nobody can use it, whatever is set here
                     const notInPlan = planModules[m.key] === false
                     return (

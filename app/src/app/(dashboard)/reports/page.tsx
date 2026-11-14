@@ -21,6 +21,7 @@ import { PageHeader } from "@/components/ui/page-header"
 import { RevenueChart, LeadsChart } from "@/components/dashboard/charts"
 import { formatCurrency, getCurrencySymbol } from "@/lib/utils"
 import { LocalDateTime } from "@/components/local-date-time"
+import { PARKED_MODULES_ENABLED } from "@/lib/features"
 
 interface Stat {
     title: string
@@ -74,7 +75,7 @@ export default async function DashboardPage() {
         ...(stats.showCrm ? [{ label: "New contact", icon: Users, href: "/crm/contacts/new" }, { label: "Leads", icon: UserPlus, href: "/crm/leads" }] : []),
         ...(stats.showMoney ? [{ label: "Customers who owe", icon: HandCoins, href: "/finance/receivable" }] : []),
         ...(canInventory ? [{ label: "Stock levels", icon: Package, href: "/inventory" }] : []),
-        { label: "Report builder", icon: FileSpreadsheet, href: "/reports/builder" },
+        ...(PARKED_MODULES_ENABLED ? [{ label: "Report builder", icon: FileSpreadsheet, href: "/reports/builder" }] : []),
     ]
 
     return (

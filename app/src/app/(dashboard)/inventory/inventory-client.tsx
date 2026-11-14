@@ -78,6 +78,7 @@ import { BatchSerialTab } from "@/components/inventory/batch-serial-tab"
 import { formatCurrency, errorMessage } from "@/lib/utils"
 import { StockMovementType } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
+import { PARKED_INVENTORY_TAB, PARKED_MODULES_ENABLED } from "@/lib/features"
 
 type InventoryTab = "stocks" | "warehouses" | "movements" | "alerts" | "barcodes" | "reports" | "batch-serial"
 
@@ -91,7 +92,10 @@ interface InventoryClientProps {
 export function InventoryClient({ initialData, initialReportsData, initialBatchSerialData, initialTab }: InventoryClientProps) {
     const router = useRouter()
     const [, startTransition] = useTransition()
-    const [activeTab, setActiveTab] = useState<InventoryTab>((initialTab as InventoryTab) || "stocks")
+    // ?tab=batch-serial falls back to stock levels while Batch & serial is switched off
+    const [activeTab, setActiveTab] = useState<InventoryTab>(
+        initialTab && !(initialTab === PARKED_INVENTORY_TAB && !PARKED_MODULES_ENABLED) ? (initialTab as InventoryTab) : "stocks"
+    )
 
     const [batchSerialData, setBatchSerialData] = useState<BatchSerialOverviewData>(initialBatchSerialData || {
         telemetry: {
@@ -635,13 +639,15 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                             {initialData.products.length}
                         </Badge>
                     </TabsTrigger>
-                    <TabsTrigger value="batch-serial" className="gap-2">
-                        <QrIcon className="h-4 w-4 text-purple-500" />
-                        Batch &amp; Serial
-                        <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0 bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
-                            {batchSerialData.telemetry.totalBatches}
-                        </Badge>
-                    </TabsTrigger>
+                    {PARKED_MODULES_ENABLED && (
+                        <TabsTrigger value="batch-serial" className="gap-2">
+                            <QrIcon className="h-4 w-4 text-purple-500" />
+                            Batch &amp; Serial
+                            <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0 bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300">
+                                {batchSerialData.telemetry.totalBatches}
+                            </Badge>
+                        </TabsTrigger>
+                    )}
                     <TabsTrigger value="barcodes" className="gap-2">
                         <BarcodeIcon className="h-4 w-4 text-indigo-500" />
                         Barcodes &amp; Labels
@@ -1900,16 +1906,18 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
                 </TabsContent>
 
                 {/* TAB 7: Batch & Serial Number Tracking */}
-                <TabsContent value="batch-serial" className="space-y-4">
-                    <BatchSerialTab
-                        data={batchSerialData}
-                        onRefresh={() => {
-                            startTransition(() => {
-                                router.refresh()
-                            })
-                        }}
-                    />
-                </TabsContent>
+                {PARKED_MODULES_ENABLED && (
+                    <TabsContent value="batch-serial" className="space-y-4">
+                        <BatchSerialTab
+                            data={batchSerialData}
+                            onRefresh={() => {
+                                startTransition(() => {
+                                    router.refresh()
+                                })
+                            }}
+                        />
+                    </TabsContent>
+                )}
             </Tabs>
 
             {/* MODAL 1: Adjust Stock Dialog */}

@@ -1,6 +1,7 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { isPortalLinkExpired } from "@/lib/portal-link"
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import type {
   PortalProfile,
@@ -34,8 +35,8 @@ async function resolveContact(token: string) {
     },
   })
 
-  // A suspended or closed business's portal is off too
-  if (!contact || !contact.portalEnabled || !contact.tenant.isActive) {
+  // A suspended or closed business's portal is off too, and links expire after 30 days
+  if (!contact || !contact.portalEnabled || !contact.tenant.isActive || isPortalLinkExpired(contact.portalTokenIssuedAt)) {
     return null
   }
 

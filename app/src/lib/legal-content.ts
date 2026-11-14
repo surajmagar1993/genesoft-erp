@@ -57,7 +57,7 @@ You can cancel anytime; your plan stays active until the end of the period you'v
 
 **Marketing emails.** We send product news, tips and offers only if you've opted in, for example with the checkbox at sign-up. You can withdraw that consent anytime with the unsubscribe link in any marketing email, in **Settings → Email preferences**, or by emailing {email}. Withdrawing consent doesn't affect your account or service emails.
 
-**Messages you send from Genesoft ERP.** If you use the Service to email or WhatsApp your own customers, you're responsible for having their permission and for following anti-spam and messaging laws (and WhatsApp's policies) that apply to you.
+**Messages you send from Genesoft ERP.** If you use the Service to email your own customers (for example invoices and quotes), you're responsible for having their permission and for following the anti-spam and messaging laws that apply to you.
 
 ## Acceptable use {#acceptable-use}
 Don't use the Service to:
@@ -71,7 +71,7 @@ Don't use the Service to:
 Genesoft ERP calculates GST, VAT or sales tax from the rates and details you enter, and gives you a tax summary for any period. It isn't tax or legal advice. You're responsible for checking your figures and filing returns with your tax authority, or asking your accountant to. Direct filing with government systems isn't part of the Service yet.
 
 ## Third-party services {#third-parties}
-Some features rely on services you connect, such as Razorpay, WhatsApp or your own email server. Their terms apply to your use of them, and we're not responsible for their availability or actions.
+Some features rely on outside services, such as Razorpay for payments or a web address you set a workflow to call. Their terms apply to your use of them, and we're not responsible for their availability or actions.
 
 ## Availability and changes {#availability}
 We work to keep the Service available and reliable, but we can't promise it will never be interrupted. We may need to pause it for maintenance or updates, and we'll try to give notice for planned work. We may add, change or remove features; if we remove something important to paying customers, we'll tell you in advance.
@@ -144,7 +144,6 @@ We don't sell personal data. We share it only with providers that help us run ou
 - **Resend:** sending emails.
 - **Cloudflare (Turnstile):** the spam check on our website forms and sign-up page. It looks at technical signals such as your IP address and browser to tell people from bots, and doesn't use advertising cookies.
 - **Razorpay**: taking payments.
-- **Meta (WhatsApp)** and your own email provider: only if you connect them to send messages from your workspace.
 
 We may also share data if the law requires it, to protect people's safety, or as part of a merger or sale of our business (with the same protections).
 
@@ -157,7 +156,7 @@ We keep your account and workspace data while your account is open. When you clo
 ## How we protect it {#security}
 - All connections use HTTPS.
 - Each company's records are kept separate, and every user has a role that limits what they can see and change.
-- Passwords and keys you save for payment gateways, email and WhatsApp are stored encrypted.
+- Secret keys you save in your workspace (such as a workflow's webhook secret) are stored encrypted.
 - CVs sent with job applications are kept in private storage.
 - We log sign-ins and important admin actions.
 
@@ -266,7 +265,7 @@ This Data Processing Agreement ("DPA") is part of our [Terms of Service](/terms)
 For Customer Data you are the controller (or data fiduciary) and {legalName} ("we") is your processor. You don't need to sign anything: this DPA applies automatically while you use the service.
 
 ## We only act on your instructions {#instructions}
-We process Customer Data only to provide Genesoft ERP to you, as set out in the Terms and in what you do in your workspace (for example sending an invoice by email or WhatsApp). We don't sell Customer Data or use it for advertising. If the law requires us to process it in another way, we'll tell you first unless the law forbids it.
+We process Customer Data only to provide Genesoft ERP to you, as set out in the Terms and in what you do in your workspace (for example sending an invoice by email). We don't sell Customer Data or use it for advertising. If the law requires us to process it in another way, we'll tell you first unless the law forbids it.
 
 ## What data and why {#details}
 - **People:** your customers, suppliers, leads, employees and team members.
@@ -291,7 +290,7 @@ We protect Customer Data with measures that include:
 ## Subprocessors {#subprocessors}
 You agree that we may use these providers to run the service. Each is bound by a contract that protects the data:
 {subprocessorTable}
-If you connect your own WhatsApp Business account or email server, those are your providers, not ours. We'll update this list before adding a new subprocessor; if you object for a good reason, you can close your workspace.
+If you set a workflow to send data to a web address of your own, that service is your provider, not ours. We'll update this list before adding a new subprocessor; if you object for a good reason, you can close your workspace.
 
 ## International transfers {#transfers}
 Your workspace data is stored in India. Some subprocessors may process data in other countries; when they do, we rely on their contractual safeguards (such as standard contractual clauses) to protect it.

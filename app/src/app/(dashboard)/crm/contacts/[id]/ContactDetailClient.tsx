@@ -17,6 +17,8 @@ import type { Task } from "@/app/actions/crm/tasks"
 import type { CommunicationLog } from "@/app/actions/crm/communications"
 import EntityTasks from "@/components/crm/EntityTasks"
 import EntityCommunications from "@/components/crm/EntityCommunications"
+import { CustomerPortalCard } from "@/components/crm/customer-portal-card"
+import type { PortalStatus } from "@/app/actions/crm/portal-actions"
 
 import { formatCurrency } from "@/lib/utils"
 
@@ -34,9 +36,11 @@ interface Props {
   ledger: CustomerLedgerData
   initialTasks: Task[]
   initialLogs: CommunicationLog[]
+  /** Customer portal link status; null if it couldn't be read */
+  portal: PortalStatus | null
 }
 
-export default function ContactDetailClient({ contact, ledger, initialTasks, initialLogs }: Props) {
+export default function ContactDetailClient({ contact, ledger, initialTasks, initialLogs, portal }: Props) {
   const router = useRouter()
   const { entries, summary } = ledger
 
@@ -395,6 +399,8 @@ export default function ContactDetailClient({ contact, ledger, initialTasks, ini
               )}
             </CardContent>
           </Card>
+
+          <CustomerPortalCard contactId={contact.id} initial={portal} />
         </div>
       </div>
     </div>

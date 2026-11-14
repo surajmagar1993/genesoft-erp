@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { prisma } from "@/lib/prisma"
 import { convertPOToBill } from "@/app/actions/purchase"
 import { createCreditNote } from "@/app/actions/sales/credit-notes"
@@ -8,6 +8,11 @@ import { runCustomReportQuery } from "@/app/actions/reports/builder"
 import { DATASET_DEFINITIONS } from "@/types/report-builder"
 import { actAs, createCustomer, createTestTenant } from "./helpers"
 import { unwrap } from "@/lib/action-result"
+
+// Some of these flows are in modules that are switched off for businesses (src/lib/features.ts);
+// their code stays, so it is tested with the switch on.
+beforeAll(() => { vi.stubEnv("NEXT_PUBLIC_ENABLE_PARKED_MODULES", "true") })
+afterAll(() => { vi.unstubAllEnvs() })
 
 const uid = () => Math.random().toString(36).slice(2, 8)
 const warehouse = (tenantId: string, isDefault = true) =>

@@ -20,6 +20,7 @@ import {
     type PlanConfig,
 } from "@/lib/plan-config-shared"
 import { toast } from "sonner"
+import { isParkedModule } from "@/lib/features"
 
 /** Form state: limits as text ("" = unlimited), features as one line each. */
 type Draft = Record<string, { limits: Record<LimitKind, string>; modules: Record<string, boolean>; features: string }>
@@ -132,7 +133,7 @@ export function PlanSettingsEditor({ config }: { config: PlanConfig }) {
                         ))}
 
                         <div className="bg-muted/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Modules</div>
-                        {PLAN_MODULES.map((m) => (
+                        {PLAN_MODULES.filter((m) => !isParkedModule(m.key)).map((m) => (
                             <div key={m.key} className={`${GRID} px-4 py-1.5`}>
                                 <div className="text-sm">{m.label}</div>
                                 {PLAN_ORDER.map((t) => (

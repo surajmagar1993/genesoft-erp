@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { mapPrismaInvoiceToDB } from "@/lib/invoice-mapper"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
+import { isPortalLinkExpired } from "@/lib/portal-link"
 
 export const dynamic = "force-dynamic"
 
@@ -30,10 +31,10 @@ export async function GET(
   // Resolve contact from token
   const contact = await prisma.contact.findUnique({
     where: { portalToken: token },
-    select: { id: true, portalEnabled: true, tenantId: true, tenant: { select: { isActive: true } } },
+    select: { id: true, portalEnabled: true, portalTokenIssuedAt: true, tenantId: true, tenant: { select: { isActive: true } } },
   })
 
-  if (!contact || !contact.portalEnabled || !contact.tenant.isActive) {
+  if (!contact || !contact.portalEnabled || !contact.tenant.isActive || isPortalLinkExpired(contact.portalTokenIssuedAt)) {
     return NextResponse.json(
       { error: "Invalid or disabled portal access" },
       { status: 403 }

@@ -74,6 +74,7 @@ import {
 } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
+import { PARKED_MODULES_ENABLED } from "@/lib/features"
 
 interface HRClientProps {
     initialData: HROverviewData
@@ -514,17 +515,19 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                             Employee Portal
                         </Link>
                     </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        asChild
-                        className="bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border-indigo-500/20"
-                    >
-                        <Link href="/hr/performance">
-                            <Award className="mr-2 h-4 w-4" />
-                            Performance & Training
-                        </Link>
-                    </Button>
+                    {PARKED_MODULES_ENABLED && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                            className="bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border-indigo-500/20"
+                        >
+                            <Link href="/hr/performance">
+                                <Award className="mr-2 h-4 w-4" />
+                                Performance & Training
+                            </Link>
+                        </Button>
+                    )}
                     <Button
                         variant="outline"
                         size="sm"

@@ -33,9 +33,9 @@ export const metadata = pageMeta({
 const FEATURES = [
     { icon: Users, title: "CRM", text: "Leads, deals, contacts and companies, with tasks and notes in one timeline." },
     { icon: FileText, title: "Quotes to invoices", text: "Quotes, sales orders, delivery challans, invoices, credit notes and recurring billing." },
-    { icon: Boxes, title: "Inventory & purchasing", text: "Multiple warehouses, stock transfers, batches and serials, purchase orders and vendor bills." },
+    { icon: Boxes, title: "Inventory & purchasing", text: "Multiple warehouses, stock transfers, purchase orders and vendor bills." },
     { icon: Landmark, title: "Accounting", text: "Chart of accounts, expenses, payments, receivables and payables." },
-    { icon: UserRoundCheck, title: "HR & payroll", text: "Employees, attendance, leave, payslips, appraisals and an employee self-service portal." },
+    { icon: UserRoundCheck, title: "HR & payroll", text: "Employees, attendance, leave, payslips and an employee self-service portal." },
     { icon: FolderKanban, title: "Projects", text: "Tasks on a board, milestones, team members and billable timesheets." },
     { icon: Workflow, title: "Automation", text: "Rules that create tasks, send emails or call webhooks when invoices, leads or stock change." },
 ]

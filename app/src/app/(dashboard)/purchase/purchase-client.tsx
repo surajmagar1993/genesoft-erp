@@ -70,6 +70,7 @@ import { formatCurrency, errorMessage } from "@/lib/utils"
 import { PurchaseOrderStatus } from "@prisma/client"
 import { RequireRole } from "@/components/auth/role-context"
 import { unwrap } from "@/lib/action-result"
+import { PARKED_MODULES_ENABLED } from "@/lib/features"
 
 interface PurchaseClientProps {
     initialData: PurchaseOverviewData
@@ -388,16 +389,18 @@ export function PurchaseClient({ initialData, initialTab }: PurchaseClientProps)
                         <RefreshCw className={`mr-2 h-4 w-4 ${isPending ? "animate-spin" : ""}`} />
                         Refresh
                     </Button>
-                    <Link href="/purchase/rfq">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="border-primary/30 text-primary hover:bg-primary/10"
-                        >
-                            <FileText className="mr-2 h-4 w-4" />
-                            RFQ Tenders
-                        </Button>
-                    </Link>
+                    {PARKED_MODULES_ENABLED && (
+                        <Link href="/purchase/rfq">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="border-primary/30 text-primary hover:bg-primary/10"
+                            >
+                                <FileText className="mr-2 h-4 w-4" />
+                                RFQ Tenders
+                            </Button>
+                        </Link>
+                    )}
                     <Button variant="outline" size="sm" asChild>
                         <Link href="/purchase/vendors/new">
                             <Building2 className="mr-2 h-4 w-4" />
@@ -524,12 +527,14 @@ export function PurchaseClient({ initialData, initialTab }: PurchaseClientProps)
                             </Badge>
                         </TabsTrigger>
                     </TabsList>
-                    <Link href="/purchase/rfq">
-                        <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary gap-1.5">
-                            <FileText className="h-3.5 w-3.5 text-primary" />
-                            Multi-Vendor RFQ Tenders Studio ➔
-                        </Button>
-                    </Link>
+                    {PARKED_MODULES_ENABLED && (
+                        <Link href="/purchase/rfq">
+                            <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary gap-1.5">
+                                <FileText className="h-3.5 w-3.5 text-primary" />
+                                Multi-Vendor RFQ Tenders Studio ➔
+                            </Button>
+                        </Link>
+                    )}
                 </div>
 
                 {/* Tab 1: Purchase Orders */}

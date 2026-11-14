@@ -176,12 +176,11 @@ export const PLAN_TIERS: Record<PlanTier, PlanTierDefinition> = {
         name: "Enterprise Custom",
         badge: "Unlimited Scale",
         tagline: "For larger teams and multi-site operations",
-        description: "Unlimited users and warehouses, rentals and manufacturing.",
+        description: "Unlimited users and warehouses, and rentals.",
         features: [
             "Everything in Professional Suite",
             "Unlimited users and warehouses",
             "Rental and asset tracking",
-            "Manufacturing (BOM and work orders)",
             "Workflow webhooks",
             "Dedicated account contact and priority support",
         ],

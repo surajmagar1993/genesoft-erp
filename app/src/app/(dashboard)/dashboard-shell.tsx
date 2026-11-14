@@ -232,7 +232,7 @@ function visibleNavigation({ access, accessLoaded, planModules, countryCode, mul
         if (!COMPLIANCE_MODULES_ENABLED) {
             group = { ...group, items: group.items.filter((item) => !isComplianceRoute(item.href)) }
         }
-        // Emails, WhatsApp, Web Forms and Bank Reconciliation are switched off
+        // Switched-off modules (src/lib/features.ts)
         if (!PARKED_MODULES_ENABLED) {
             group = { ...group, items: group.items.filter((item) => !isParkedRoute(item.href)) }
         }

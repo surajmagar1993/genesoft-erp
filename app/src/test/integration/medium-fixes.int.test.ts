@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { prisma } from "@/lib/prisma"
 import { getPortalProfile } from "@/app/actions/portal/portal"
 import { createWebForm, submitPublicForm } from "@/app/actions/crm/forms"
@@ -12,6 +12,11 @@ import { createQuote } from "@/app/actions/sales/quotes"
 import { actAs, addUser, createCustomer, createTestTenant } from "./helpers"
 import { unwrap } from "@/lib/action-result"
 
+// Some of these flows are in modules that are switched off for businesses (src/lib/features.ts);
+// their code stays, so it is tested with the switch on.
+beforeAll(() => { vi.stubEnv("NEXT_PUBLIC_ENABLE_PARKED_MODULES", "true") })
+afterAll(() => { vi.unstubAllEnvs() })
+
 const uid = () => Math.random().toString(36).slice(2, 8)
 
 describe("M16 portal and web forms of suspended businesses", () => {
@@ -19,7 +24,7 @@ describe("M16 portal and web forms of suspended businesses", () => {
         const { tenant, user } = await createTestTenant()
         actAs(user)
         const token = `tok-${uid()}${uid()}`
-        await prisma.contact.create({ data: { tenantId: tenant.id, displayName: "Portal User", portalToken: token, portalEnabled: true } as never })
+        await prisma.contact.create({ data: { tenantId: tenant.id, displayName: "Portal User", portalToken: token, portalEnabled: true, portalTokenIssuedAt: new Date() } as never })
         expect(await getPortalProfile(token)).toBeTruthy()
 
         const form = await createWebForm({ title: "Contact us", type: "CONTACT" as never, fields: [{ id: "f1", name: "email", label: "Email", type: "email", required: true }] as never })

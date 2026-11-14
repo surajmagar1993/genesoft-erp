@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server"
 import { readClosure } from "@/lib/workspace-closure"
 import { prisma } from "@/lib/prisma"
 import { redirect } from "next/navigation"
+import { isParkedModule } from "@/lib/features"
 import { MODULES, atLeast, levelFor, resolveAccess, type AccessLevel, type ModuleAccess, type ModuleKey } from "@/lib/access"
 import { getPlanConfig, planName, lowestPlanWith, type PlanConfig } from "@/lib/plan-config"
 import { effectivePlan } from "@/lib/plan-limits"
@@ -98,6 +99,8 @@ const getTenantContext = cache(async (): Promise<TenantContext> => {
   const access = resolveAccess(role, savedAccess)
   const planBlocked = MODULES.map((m) => m.key).filter((k) => planModules[k] === false)
   for (const k of planBlocked) access[k] = "NONE"
+  // Switched-off modules (Manufacturing, Report builder) are closed to everyone too
+  for (const m of MODULES) if (isParkedModule(m.key)) access[m.key] = "NONE"
 
   return { tenantId: profile.tenantId, role, access, planModules, planBlocked, planConfig }
 })
