@@ -1,7 +1,7 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-11-13 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
+> **Last Updated:** 2026-11-14 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
 >
 > The ✅ entries below were written in September 2026 when each module was first built. Several overstate what shipped: the government-filing modules (GST returns, e-way bills, TDS, UAE VAT 201, KSA ZATCA phase 2, UK MTD, Australia BAS) only prepare figures and files, aren't connected to any government system, and are hidden behind `NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`; "official/NIC-compliant/statutory" means "follows the published format", not certified. Stripe/PayPal invoice checkout and portal online payment aren't live. See "Known Gaps" and "Open items".
 
@@ -141,8 +141,8 @@ These are marked done above but are simulated or not enforced. The UI now says s
 - [x] **Recurring invoices**: due profiles run in the daily cron (2026-10-13).
 - [x] **Tests**: unit tests (`npm test`) plus integration tests of whole flows against a throwaway PGlite database (`npm run test:integration`: sign-up, invoice → payment → ledger, Razorpay plan checkout, export/close/purge) (2026-10-14). Left: browser (UI) tests.
 - [x] **Password reset**: the reset email linked to a page that didn't exist; added `/auth/confirm` + `/reset-password` and branded Supabase emails (2026-10-13).
-- [ ] **Lint**: 1021 errors, 983 of them `no-explicit-any`; the rest are React Compiler advisories (`set-state-in-effect`, `purity`).
-- [ ] **Dependencies**: non-breaking `npm audit fix` applied in `app/` (48 → 22). The rest are inside the Prisma 7.4 CLI and dev-only shadcn / eslint-config-next and need major upgrades.
+- [x] **Lint**: 0 errors (was 1,021; fixed 2026-11-12). 25 warnings left.
+- [x] **Dependencies**: production 0 known vulnerabilities; updates arrive as Dependabot pull requests (2026-11-13). See "Engineering" under Open items.
 
 ---
 
@@ -204,7 +204,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 - CRM Emails, WhatsApp and Web Forms and Finance → Bank Reconciliation are switched off for every business: out of the menu, their pages redirect, public form links (`/forms/…`, `/api/forms/*/submit`) answer "not found", the invoice WhatsApp button is hidden and the daily inbox sync is skipped. Code and saved data are kept; `NEXT_PUBLIC_ENABLE_PARKED_MODULES=true` brings them back (`src/lib/features.ts`). Sending an invoice by email still works.
 - The POS Terminal (`/sales/pos`) is removed completely: pages, server actions, the POS session model and the "Point of Sale" plan switch. Past POS sales remain as ordinary invoices.
 - Plan features and the ERP page no longer mention any of these.
-- [ ] Left over: the unused `pos_sessions` table is still in the live database; Terms, Privacy and DPA still say customers may connect WhatsApp or their own email server (owner / legal review); the WhatsApp webhook address still answers; web form CAPTCHA and CRM email open tracking (under "Product gaps") only matter if the modules come back.
+- [ ] Left over (the unused `pos_sessions` table was dropped by migration `2_drop_legacy_tables` on 2026-11-13): Terms, Privacy and DPA still say customers may connect WhatsApp or their own email server (owner / legal review); the WhatsApp webhook address still answers; web form CAPTCHA and CRM email open tracking (under "Product gaps") only matter if the modules come back.
 - [x] Checked in a browser, signed in on genesoftdev (2026-11-12): the menu, Super Admin → Pricing & Plans → Limits & modules, and the invoice page.
 
 **Check next:** sign in on genesoftdev (Fixo test business) and look at Settings → Billing, Finance → Bills and Super Admin → Subscriptions; these were changed on 2026-11-12 and verified by tests and build only.
@@ -244,4 +244,7 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [ ] Fixo test business (hydration error #418 on `/settings` no longer appears on genesoftdev, checked 2026-11-12): billing shows a renewal date in the past (old free-upgrade data) and it has no bills, so the bills list fix is verified by tests only.
 - [x] `npm audit` from `app/` is correct again: the root workspace and its stale lockfile were removed (2026-11-13).
 - [x] Root `package-lock.json` removed; the root `package.json` only forwards `build`/`start` to `app/` (2026-11-13).
+- [x] Dependabot updates merged 2026-11-14 (#1 #2 #4 #5 #6 #7 #9: GitHub Actions 7, 20 production packages incl. @supabase/ssr 0.12 and React 19.3, dev tools, ESLint 10, vitest 5, lucide-react 1.71). CI green, production deploy Ready, all 43 browser tests pass on genesoftdev.
+- [ ] TypeScript 7 (Dependabot #8, kept open on purpose): type check, build and tests pass; only lint fails because typescript-eslint doesn't support TypeScript 7 yet (typescript-eslint#10940). Merge once a typescript-eslint release with support is on main and #8's CI is green.
+- [ ] Error alerts go to and come from errorserp@genesoftinfotech.com (2026-11-13): the owner creates that mailbox.
 
