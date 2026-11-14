@@ -1,4 +1,6 @@
 import { PLATFORM } from "@/lib/constants/platform"
+import { appUrl } from "@/lib/app-url"
+import { formatCurrency } from "@/lib/utils"
 
 /**
  * SAAS SUBSCRIPTION LIFECYCLE & PRORATION ENGINE
@@ -542,108 +544,97 @@ function esc(value: unknown): string {
     return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!)
 }
 
+/** Printable invoice/receipt Genesoft gives a business for its plan (Settings → Billing, Super Admin). */
 export function formatSaaSInvoiceReceiptHtml(invoice: SaaSPlatformInvoice): string {
-    const catalog = getRegionalPricing(invoice.currency)
     const planDef = PLAN_TIERS[invoice.tier]
+    const money = (n: number) => esc(formatCurrency(Number(n) || 0, invoice.currency))
+    const day = (d: string) => esc(new Date(d).toLocaleDateString("en-GB", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" }))
+    const cycle = invoice.billingCycle === "ANNUAL" ? "Yearly" : "Monthly"
+    const paid = invoice.status === "PAID"
+    const address = [PLATFORM.address.line1, PLATFORM.address.line2, PLATFORM.address.country].map(esc).join("<br>")
 
-    return `
-<!DOCTYPE html>
-<html>
+    return `<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <title>Subscription Tax Invoice - ${esc(invoice.invoiceNumber)}</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 24px; color: #0f172a; background: #fff; }
-        .invoice-card { max-width: 680px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #2563eb; padding-bottom: 20px; }
-        .brand h1 { margin: 0; font-size: 22px; color: #1e293b; }
-        .brand p { margin: 4px 0 0 0; color: #64748b; font-size: 12px; }
-        .badge { background: #dcfce7; color: #15803d; padding: 4px 12px; border-radius: 9999px; font-weight: 700; font-size: 12px; }
-        .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 24px 0; font-size: 13px; }
-        .meta-box h3 { margin: 0 0 6px 0; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.05em; }
-        table { width: 100%; border-collapse: collapse; margin: 24px 0; }
-        th { text-align: left; padding: 10px 12px; background: #f8fafc; font-size: 12px; text-transform: uppercase; color: #475569; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
-        .totals-table { width: 280px; margin-left: auto; margin-top: 12px; }
-        .totals-table td { padding: 6px 0; border: none; font-size: 13px; }
-        .grand-total { font-size: 16px; font-weight: 800; color: #1e40af; border-top: 2px solid #e2e8f0; padding-top: 8px !important; }
-        .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
-        @media print { body { padding: 0; } .invoice-card { border: none; box-shadow: none; padding: 0; } }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice ${esc(invoice.invoiceNumber)}</title>
+<style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; background: #F4F4F5; color: #1C1917; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.5; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .card { max-width: 720px; margin: 0 auto; background: #fff; border: 1px solid #E4E4E7; border-radius: 12px; overflow: hidden; }
+    .top { background: #2B2A29; padding: 22px 32px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .top img { display: block; width: 180px; height: auto; }
+    .top .doc { color: #fff; text-align: right; }
+    .top .doc .kind { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #D6D3D1; }
+    .top .doc .no { font-size: 18px; font-weight: 800; margin-top: 2px; }
+    .body { padding: 28px 32px 32px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .05em; }
+    .paid { background: #DCFCE7; color: #166534; }
+    .pending { background: #FEF3C7; color: #92400E; }
+    .parties { display: flex; justify-content: space-between; gap: 24px; margin: 20px 0 24px; }
+    .label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #6B6560; margin: 0 0 6px; font-weight: 700; }
+    .muted { color: #6B6560; }
+    .facts { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid #E4E4E7; border-radius: 8px; margin-bottom: 24px; }
+    .facts div { flex: 1 1 140px; padding: 10px 14px; border-right: 1px solid #E4E4E7; }
+    .facts div:last-child { border-right: 0; }
+    .facts b { display: block; font-size: 13px; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #6B6560; padding: 10px 12px; background: #FAFAF9; border-bottom: 1px solid #E4E4E7; }
+    td { padding: 12px; border-bottom: 1px solid #E4E4E7; vertical-align: top; }
+    .r { text-align: right; }
+    .totals { width: 300px; margin: 16px 0 0 auto; }
+    .totals td { border: 0; padding: 5px 0; }
+    .grand td { border-top: 2px solid #1C1917; padding-top: 10px; font-size: 16px; font-weight: 800; }
+    .pay { margin-top: 24px; padding: 12px 16px; background: #FAFAF9; border: 1px solid #E4E4E7; border-radius: 8px; color: #44403C; }
+    .foot { padding: 16px 32px; border-top: 1px solid #E7E5E4; font-size: 11px; color: #6B6560; text-align: center; }
+    @media (max-width: 560px) { body { padding: 0; } .parties { flex-direction: column; } .totals { width: 100%; } .top { flex-direction: column; align-items: flex-start; } .top .doc { text-align: left; } }
+    @media print { body { padding: 0; background: #fff; } .card { border: 0; border-radius: 0; } }
+</style>
 </head>
 <body>
-    <div class="invoice-card">
-        <div class="header">
-            <div class="brand">
-                <h1>${PLATFORM.productName}</h1>
-                <p>${PLATFORM.legalName} &bull; Platform Subscriptions</p>
-                <p>${PLATFORM.gstin ? `GSTIN: ${PLATFORM.gstin} &bull; ` : ""}${PLATFORM.email}</p>
+<div class="card">
+    <div class="top">
+        <img src="${esc(`${appUrl()}/email/genesoft-logo.png`)}" width="180" alt="${esc(PLATFORM.brandName)}">
+        <div class="doc"><div class="kind">${paid ? "Invoice &amp; receipt" : "Invoice"}</div><div class="no">${esc(invoice.invoiceNumber)}</div></div>
+    </div>
+    <div class="body">
+        <span class="badge ${paid ? "paid" : "pending"}">${paid ? "PAID" : "PAYMENT DUE"}</span>
+        <div class="parties">
+            <div>
+                <p class="label">From</p>
+                <strong>${esc(PLATFORM.legalName)}</strong><br>
+                <span class="muted">${address}<br>${PLATFORM.gstin ? `GSTIN: ${esc(PLATFORM.gstin)}<br>` : ""}${esc(PLATFORM.email)}</span>
             </div>
-            <div style="text-align: right;">
-                <span class="badge">PAID RECEIPT</span>
-                <div style="font-size: 16px; font-weight: 800; margin-top: 8px;">${esc(invoice.invoiceNumber)}</div>
-                <div style="font-size: 12px; color: #64748b;">${new Date(invoice.issueDate).toLocaleDateString("en-IN", { dateStyle: "medium" })}</div>
-            </div>
-        </div>
-
-        <div class="meta-grid">
-            <div class="meta-box">
-                <h3>Billed To (Tenant Account)</h3>
+            <div class="r">
+                <p class="label">Billed to</p>
                 <strong>${esc(invoice.tenantName)}</strong>
-                <p style="margin: 2px 0 0 0; color: #64748b;">Tenant UUID: ${esc(invoice.tenantId)}</p>
-            </div>
-            <div class="meta-box" style="text-align: right;">
-                <h3>Subscription Coverage</h3>
-                <strong>${esc(planDef.name)} (${esc(invoice.billingCycle)})</strong>
-                <p style="margin: 2px 0 0 0; color: #64748b;">
-                    ${new Date(invoice.periodStart).toLocaleDateString()} to ${new Date(invoice.periodEnd).toLocaleDateString()}
-                </p>
             </div>
         </div>
-
+        <div class="facts">
+            <div><span class="muted">Date</span><b>${day(invoice.issueDate)}</b></div>
+            <div><span class="muted">Plan</span><b>${esc(planDef.name)}</b></div>
+            <div><span class="muted">Billing</span><b>${cycle}</b></div>
+            <div><span class="muted">Period</span><b>${day(invoice.periodStart)} – ${day(invoice.periodEnd)}</b></div>
+        </div>
         <table>
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th>Cycle</th>
-                    <th style="text-align: right;">Amount (${esc(invoice.currency)})</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Description</th><th class="r">Amount</th></tr></thead>
             <tbody>
                 <tr>
-                    <td>
-                        <strong>${esc(planDef.name)} Plan License</strong>
-                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${esc(planDef.tagline)}</div>
-                    </td>
-                    <td>${esc(invoice.billingCycle)}</td>
-                    <td style="text-align: right; font-weight: 600;">${catalog.symbol}${invoice.subtotal.toFixed(2)}</td>
+                    <td><strong>${esc(PLATFORM.productName)} – ${esc(planDef.name)} plan</strong><div class="muted">${cycle} subscription, ${day(invoice.periodStart)} to ${day(invoice.periodEnd)}</div></td>
+                    <td class="r"><strong>${money(invoice.subtotal)}</strong></td>
                 </tr>
             </tbody>
         </table>
-
-        <table class="totals-table">
-            <tr>
-                <td style="color: #64748b;">Taxable Subtotal:</td>
-                <td style="text-align: right; font-weight: 600;">${catalog.symbol}${invoice.subtotal.toFixed(2)}</td>
-            </tr>
-            <tr>
-                <td style="color: #64748b;">Tax (${Number(invoice.taxPercent)}%):</td>
-                <td style="text-align: right; font-weight: 600;">${catalog.symbol}${invoice.taxAmount.toFixed(2)}</td>
-            </tr>
-            <tr>
-                <td class="grand-total">Total Paid:</td>
-                <td class="grand-total" style="text-align: right;">${catalog.symbol}${invoice.totalAmount.toFixed(2)}</td>
-            </tr>
+        <table class="totals">
+            <tr><td class="muted">Subtotal</td><td class="r">${money(invoice.subtotal)}</td></tr>
+            <tr><td class="muted">Tax (${esc(Number(invoice.taxPercent))}%)</td><td class="r">${money(invoice.taxAmount)}</td></tr>
+            <tr class="grand"><td>${paid ? "Total paid" : "Total due"}</td><td class="r">${money(invoice.totalAmount)}</td></tr>
         </table>
-
-        <div style="margin-top: 24px; padding: 12px 16px; background: #f8fafc; border-radius: 8px; font-size: 12px; color: #475569;">
-            <strong>Payment Method:</strong> ${esc(invoice.paymentMethod)} &bull; <strong>Reference:</strong> ${esc(invoice.transactionRef || "N/A")}
-        </div>
-
-        <div class="footer">
-            Thank you for building your organization with ${PLATFORM.productName}. For billing inquiries, contact ${PLATFORM.email}.
-        </div>
+        <div class="pay"><strong>Payment:</strong> ${esc(invoice.paymentMethod || "—")}${invoice.transactionRef ? ` &middot; <strong>Reference:</strong> ${esc(invoice.transactionRef)}` : ""}</div>
     </div>
+    <div class="foot">Thank you for using ${esc(PLATFORM.productName)}. Questions about this invoice? Write to ${esc(PLATFORM.email)}.</div>
+</div>
 </body>
 </html>
 `

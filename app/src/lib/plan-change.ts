@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { lockTenantSettings } from "@/lib/tenant-settings-lock"
 import { getEffectivePricing, type EffectivePricing } from "@/lib/plan-pricing"
 import { BILLING_SYSTEM, logTenantAudit } from "@/lib/tenant-audit"
+import { sendPlanReceiptEmail } from "@/lib/plan-receipt-email"
 import {
     calculateSubscriptionProration,
     compileSaaSSubscriptionInvoice,
@@ -190,6 +191,9 @@ export async function applyPlanChange(
             .create({ data: { adminId: params.actor.id, adminEmail: params.actor.email, action, targetId: tenantId, targetType: "TENANT_SUBSCRIPTION", metadata } })
             .catch((err: unknown) => console.error("applyPlanChange: Super Admin audit failed", err))
     }
+
+    // Only a real payment gets an emailed invoice (not a free change or a scheduled downgrade)
+    if (invoice && params.paymentRef && (params.amountPaid ?? 0) > 0) await sendPlanReceiptEmail(tenantId, invoice)
 
     return { alreadyApplied: false, invoice, quote }
 }
