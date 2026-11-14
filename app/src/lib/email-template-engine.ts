@@ -56,6 +56,8 @@ export function wrapEmailHtml(params: {
     previewText?: string
     companyName?: string
     actionButton?: { label: string; url: string }
+    /** Replaces the help/address footer. Trusted HTML built by the caller (marketing: unsubscribe links) */
+    footerHtml?: string
 }): string {
     // Everything except the body is plain text that may come from a business or a customer
     // (a subject built from a company name or a ticket title): it is escaped here, so it can
@@ -75,7 +77,7 @@ export function wrapEmailHtml(params: {
 
     const buttonSnippet = actionButton
         ? `
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 28px 0;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 28px 0; width: auto;">
             <tr>
                 <td align="center" bgcolor="#EF7F1A" style="border-radius: 8px; background-color: #EF7F1A;">
                     <a href="${actionButton.url}" target="_blank" style="font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-weight: 700; color: #1C1917; text-decoration: none; display: inline-block; padding: 12px 24px; border-radius: 8px; background-color: #EF7F1A; letter-spacing: 0.02em;">
@@ -136,14 +138,59 @@ export function wrapEmailHtml(params: {
         <!-- Footer -->
         <tr>
             <td style="padding: 20px 32px; border-top: 1px solid #E7E5E4; color: #6B6560; font-size: 12px; line-height: 1.6;">
-                Need help? Reply to this email or write to <a href="mailto:${escapeHtml(PLATFORM.welcomeEmail)}">${escapeHtml(PLATFORM.welcomeEmail)}</a>.<br>
+                ${params.footerHtml ?? `Need help? Reply to this email or write to <a href="mailto:${escapeHtml(PLATFORM.welcomeEmail)}">${escapeHtml(PLATFORM.welcomeEmail)}</a>.<br>
                 ${footerAddress}<br>
-                <a href="${escapeHtml(PLATFORM.website)}">${escapeHtml(PLATFORM.website.replace(/^https?:\/\//, ""))}</a>
+                <a href="${escapeHtml(PLATFORM.website)}">${escapeHtml(PLATFORM.website.replace(/^https?:\/\//, ""))}</a>`}
             </td>
         </tr>
     </table>
 </body>
 </html>`
+}
+
+/**
+ * Layout for emails a business sends to its own customers (invoices): their
+ * logo or name on top, no Genesoft branding. Title, names and footer are plain
+ * text (escaped here); bodyContent is HTML the caller built with escaped values.
+ */
+export function wrapBusinessEmailHtml(params: {
+    businessName: string
+    /** Only a logo in our own storage (the caller checks isOwnStorageUrl) */
+    logoUrl?: string | null
+    title: string
+    bodyContent: string
+    footerText?: string
+}): string {
+    const name = escapeHtml(params.businessName)
+    const title = escapeHtml(params.title)
+    const brand = params.logoUrl
+        ? `<img src="${escapeHtml(params.logoUrl)}" alt="${name}" style="display:block;max-height:56px;max-width:220px;border:0">`
+        : `<span style="font-size:18px;font-weight:700;color:#1C1917">${name}</span>`
+    return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="color-scheme" content="light only"><title>${title}</title></head>
+<body style="margin:0;padding:24px 12px;background-color:#F4F4F5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1C1917">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#FFFFFF;border-radius:12px;border:1px solid #E4E4E7;overflow:hidden">
+<tr><td style="padding:24px 32px;border-bottom:3px solid #1C1917">${brand}</td></tr>
+<tr><td style="padding:32px;font-size:15px;line-height:1.6">
+<h1 style="margin:0 0 16px;font-size:20px;line-height:1.3;color:#1C1917">${title}</h1>
+${params.bodyContent}
+</td></tr>
+${params.footerText ? `<tr><td style="padding:20px 32px;border-top:1px solid #E7E5E4;font-size:12px;line-height:1.6;color:#6B6560">${escapeHtml(params.footerText)}</td></tr>` : ""}
+</table>
+</td></tr></table>
+</body></html>`
+}
+
+/** Label/value rows in the email table style (values escaped). */
+export function emailDetailsTable(rows: [string, string][], highlightLast = false): string {
+    return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:20px 0;border:1px solid #E4E4E7;border-radius:8px">
+${rows.map(([k, v], i) => {
+        const last = i === rows.length - 1
+        const value = highlightLast && last ? "font-size:16px;font-weight:800;color:#1C1917" : "font-weight:600;color:#1C1917"
+        return `<tr><td style="padding:10px 14px;${last ? "" : "border-bottom:1px solid #E4E4E7;"}color:#6B6560;width:40%;font-size:13px;vertical-align:top">${escapeHtml(k)}</td><td style="padding:10px 14px;${last ? "" : "border-bottom:1px solid #E4E4E7;"}font-size:13px;white-space:pre-wrap;${value}">${escapeHtml(v)}</td></tr>`
+    }).join("\n")}
+</table>`
 }
 
 // ---------------------------------------------------------------------------

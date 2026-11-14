@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { PLATFORM } from "@/lib/constants/platform"
 import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token"
 import { unsubscribeWithToken } from "@/app/actions/unsubscribe"
+import { isMarketingTopic, topicLabel } from "@/lib/marketing-topics"
 
 export const dynamic = "force-dynamic"
 
@@ -16,9 +17,10 @@ export const metadata = {
 export default async function UnsubscribePage({
     searchParams,
 }: {
-    searchParams: Promise<{ t?: string; status?: string }>
+    searchParams: Promise<{ t?: string; status?: string; topic?: string }>
 }) {
-    const { t, status } = await searchParams
+    const { t, status, topic: rawTopic } = await searchParams
+    const topic = isMarketingTopic(rawTopic) ? rawTopic : null
     // Unsubscribing needs a click: email security scanners open links, and must not unsubscribe people.
     const valid = !!verifyUnsubscribeToken(t)
 
@@ -37,7 +39,9 @@ export default async function UnsubscribePage({
         title = "You're unsubscribed"
         body = (
             <>
-                We won&apos;t send you marketing emails any more. Changed your mind? Turn them back on in{" "}
+                {topic
+                    ? <>We won&apos;t send you {topicLabel(topic).toLowerCase()} emails any more. Other kinds you chose still come.</>
+                    : <>We won&apos;t send you marketing emails any more.</>} Changed your mind? Turn them back on in{" "}
                 <Link href="/settings?tab=account" className="text-s-orange-text underline">Settings → Email preferences</Link>.
             </>
         )
@@ -67,9 +71,16 @@ export default async function UnsubscribePage({
                 <h1 className="text-balance text-3xl font-bold tracking-tight text-s-ink">{title}</h1>
                 <p className="mt-4 text-s-text">{body}</p>
                 {showButton && (
-                    <form action={unsubscribeWithToken} className="mt-8">
+                    <form action={unsubscribeWithToken} className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                         <input type="hidden" name="t" value={t} />
-                        <Button type="submit" size="lg">Unsubscribe</Button>
+                        {topic && (
+                            <Button type="submit" name="scope" value={topic} size="lg">
+                                Stop {topicLabel(topic).toLowerCase()} only
+                            </Button>
+                        )}
+                        <Button type="submit" name="scope" value="all" size="lg" variant={topic ? "outline" : "default"}>
+                            Unsubscribe from all
+                        </Button>
                     </form>
                 )}
             </div>

@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto"
 import { headers } from "next/headers"
 import { Resend } from "resend"
+import { emailDetailsTable, wrapEmailHtml } from "@/lib/email-template-engine"
 import { prisma } from "@/lib/prisma"
 import { PLATFORM } from "@/lib/constants/platform"
 import { clientIp } from "@/lib/platform-security"
@@ -89,9 +90,11 @@ async function deliver(
         replyTo: v.email,
         subject,
         text: `${allRows.map(([k, val]) => `${k}: ${val}`).join("\n")}\n\n${body}\n\nAlso in Super Admin → Website → Leads.`,
-        html: `<table cellpadding="4" style="border-collapse:collapse;font-family:sans-serif;font-size:14px">${allRows
-            .map(([k, val]) => `<tr><td style="color:#6B6762;vertical-align:top"><strong>${escapeHtml(k)}</strong></td><td style="white-space:pre-wrap">${escapeHtml(val)}</td></tr>`)
-            .join("")}</table><p style="white-space:pre-wrap;font-family:sans-serif;font-size:14px">${escapeHtml(body)}</p><p style="font-family:sans-serif;font-size:12px;color:#6B6762">Also in Super Admin → Website → Leads.</p>`,
+        html: wrapEmailHtml({
+            title: subject,
+            bodyContent: `${emailDetailsTable(allRows)}<div style="font-size:14px;line-height:1.6;white-space:pre-wrap">${escapeHtml(body)}</div>`,
+            footerHtml: "Reply to this email to answer them. Also saved in Super Admin &rarr; Website &rarr; Leads.",
+        }),
     })
     // The lead is safe in the inbox either way; only log the email failure
     if (error) console.error(`Website form saved as lead ${saved.id} but the email failed:`, error.message)

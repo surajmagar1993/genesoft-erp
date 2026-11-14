@@ -9,6 +9,7 @@ import { getTenantAdminId, getTenantId, getTenantManagerId, getTenantWriterId } 
 import { fireWorkflowEvent } from "@/lib/workflow-engine"
 import { revalidatePath } from "next/cache"
 import { Resend } from "resend"
+import { emailDetailsTable, wrapBusinessEmailHtml } from "@/lib/email-template-engine"
 import { renderInvoicePdf } from "@/lib/pdf/renderInvoicePdf"
 import { COMPANY } from "@/lib/constants/company"
 import { computeInvoiceGstSummary, invoiceDiscountFraction } from "@/lib/gst-engine"
@@ -776,29 +777,16 @@ export async function sendInvoiceEmail(
     to: [recipientEmail],
     ...(replyTo ? { replyTo } : {}),
     subject: `${documentLabel} ${invoice.invoice_number} from ${supplierName}`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: auto; color: #0f172a;">
-        ${logo ? `<img src="${esc(logo)}" alt="${esc(supplierName)}" style="display:block;max-height:64px;max-width:240px;margin:0 0 16px;border:0">` : ""}
-        <h2 style="color: #0f172a;">${esc(documentLabel)} ${esc(invoice.invoice_number)}</h2>
-        <p>Dear ${esc(invoice.customer_name)},</p>
-        <p>Please find your ${esc(documentLabel.toLowerCase())} attached to this email.</p>
-        <table style="width:100%; border-collapse:collapse; margin: 20px 0; font-size:14px;">
-          <tr>
-            <td style="padding:8px; border:1px solid #e2e8f0; color:#64748b;">Invoice Number</td>
-            <td style="padding:8px; border:1px solid #e2e8f0; font-weight:600;">${esc(invoice.invoice_number)}</td>
-          </tr>
-          <tr>
-            <td style="padding:8px; border:1px solid #e2e8f0; color:#64748b;">Invoice Date</td>
-            <td style="padding:8px; border:1px solid #e2e8f0;">${issued}</td>
-          </tr>
-          <tr>
-            <td style="padding:8px; border:1px solid #e2e8f0; color:#64748b;">Grand Total</td>
-            <td style="padding:8px; border:1px solid #e2e8f0; font-weight:700; color:#0f172a;">${esc(grandTotal)}</td>
-          </tr>
-        </table>
-        <p style="color:#64748b; font-size:13px;">${replyTo ? "If you have any questions, just reply to this email." : `If you have any questions, please contact ${esc(supplierName)}.`}</p>
-        <p>Regards,<br/><strong>${esc(supplierName)}</strong></p>
-      </div>`,
+    html: wrapBusinessEmailHtml({
+      businessName: supplierName,
+      logoUrl: logo,
+      title: `${documentLabel} ${invoice.invoice_number}`,
+      bodyContent: `<p style="margin:0 0 12px">Dear ${esc(invoice.customer_name)},</p>
+<p style="margin:0 0 12px">Please find your ${esc(documentLabel.toLowerCase())} attached to this email.</p>
+${emailDetailsTable([[`${documentLabel} number`, String(invoice.invoice_number ?? "")], ["Date", issued], ["Total", grandTotal]], true)}
+<p style="margin:0 0 20px;font-size:13px;color:#6B6560">${replyTo ? "If you have any questions, just reply to this email." : `If you have any questions, please contact ${esc(supplierName)}.`}</p>
+<p style="margin:0">Regards,<br><strong>${esc(supplierName)}</strong></p>`,
+    }),
     attachments: [
       {
         filename: `${documentLabel.replace(/\s+/g, "_")}-${invoice.invoice_number}.pdf`,

@@ -1,19 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyUnsubscribeToken } from "@/lib/unsubscribe-token"
 import { optOutOfMarketing } from "@/lib/marketing-email"
+import { isMarketingTopic } from "@/lib/marketing-topics"
 
 export const dynamic = "force-dynamic"
 
 /**
  * RFC 8058 one-click unsubscribe, called by mail providers (Gmail, Yahoo…)
  * from the List-Unsubscribe header with body "List-Unsubscribe=One-Click".
- * Authorised by the signed token; no login.
+ * Authorised by the signed token; no login. Stops the email's topic only
+ * (the "list" the header belongs to); without a topic (older emails), all of them.
  */
 export async function POST(request: NextRequest) {
     const userId = verifyUnsubscribeToken(request.nextUrl.searchParams.get("t"))
     if (!userId) return NextResponse.json({ error: "Invalid unsubscribe link" }, { status: 400 })
     try {
-        await optOutOfMarketing(userId, "one-click")
+        const topic = request.nextUrl.searchParams.get("topic")
+        await optOutOfMarketing(userId, "one-click", isMarketingTopic(topic) ? topic : undefined)
         return NextResponse.json({ unsubscribed: true })
     } catch (err) {
         console.error("one-click unsubscribe failed:", err)

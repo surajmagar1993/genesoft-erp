@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 vi.mock("@/lib/prisma", () => ({ prisma: {} }))
 
 import { createUnsubscribeToken, verifyUnsubscribeToken, canSignUnsubscribeTokens } from "@/lib/unsubscribe-token"
-import { renderMarketingEmail } from "@/lib/marketing-email"
+import { renderMarketingEmail, textToHtml } from "@/lib/marketing-email"
 
 const USER = "3f2b8c1e-4d5a-4b6c-8d7e-9f0a1b2c3d4e"
 
@@ -53,10 +53,11 @@ describe("renderMarketingEmail", () => {
     const recipient = { id: USER, email: "person@example.test", name: "Asha Rao" }
 
     it("adds unsubscribe links, address and merge tags", () => {
-        const m = renderMarketingEmail({ subject: "News for {{first_name}}", body: "Hi {{first_name}},\n\nSee https://example.test/new." }, recipient)
+        const m = renderMarketingEmail({ subject: "News for {{first_name}}", body: "Hi {{first_name}},\n\nSee https://example.test/new.", topic: "tips" }, recipient)
         expect(m.subject).toBe("News for Asha")
         expect(m.unsubscribe).toMatch(/^https:\/\/app\.example\.test\/unsubscribe\?t=/)
-        expect(m.oneClick).toMatch(/^https:\/\/app\.example\.test\/api\/unsubscribe\?t=/)
+        expect(m.oneClick).toMatch(/^https:\/\/app\.example\.test\/api\/unsubscribe\?t=.+&topic=tips$/)
+        expect(m.html).toContain("tips and guides emails")
         expect(m.html).toContain("Hi Asha,")
         expect(m.html).toContain('href="https://example.test/new"')
         expect(m.html).toContain("Unsubscribe")
@@ -65,8 +66,16 @@ describe("renderMarketingEmail", () => {
     })
 
     it("escapes HTML in the message and falls back when there is no name", () => {
-        const m = renderMarketingEmail({ subject: "Hello", body: "Hi {{first_name}} <script>alert(1)</script>" }, { ...recipient, name: "" })
+        const m = renderMarketingEmail({ subject: "Hello", body: "Hi {{first_name}} <script>alert(1)</script>", topic: "news" }, { ...recipient, name: "" })
         expect(m.html).toContain("Hi there &lt;script&gt;")
         expect(m.html).not.toContain("<script>")
+    })
+
+    it("formats headings, bullets and bold, still escaped", () => {
+        const html = textToHtml("## New <b>\nText **bold**\n\n- one\n- **two**")
+        expect(html).toContain("<h2")
+        expect(html).toContain("New &lt;b&gt;")
+        expect(html).toContain("<strong>bold</strong>")
+        expect(html).toMatch(/<ul[^>]*><li[^>]*>one<\/li><li[^>]*><strong>two<\/strong><\/li><\/ul>/)
     })
 })

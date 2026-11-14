@@ -3,6 +3,7 @@ import { openSecret } from "@/lib/secret-box"
 import { createHmac } from "node:crypto"
 import { after } from "next/server"
 import { Resend } from "resend"
+import { wrapEmailHtml } from "@/lib/email-template-engine"
 import { prisma } from "@/lib/prisma"
 import { checkWebhookTarget } from "@/lib/smtp-guard"
 import type { TriggerEventType, WorkflowAction, WorkflowCondition } from "@/types/workflows"
@@ -107,7 +108,12 @@ async function runAction(
                 from: `Genesoft Workflows <workflows@${domain}>`,
                 to,
                 subject,
-                html: `<div style="font-family: sans-serif; white-space: pre-wrap;">${escapeHtml(body)}</div>`,
+                html: wrapEmailHtml({
+                    title: subject,
+                    bodyContent: `<div style="font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(body)}</div>`,
+                    footerHtml: `Sent by the &ldquo;${escapeHtml(ruleName)}&rdquo; workflow in your Genesoft ERP workspace.`,
+                }),
+                text: body,
             })
             if (error) return { actionType: action.actionType, summary: `Email failed: ${error.message}`, success: false }
             return { actionType: action.actionType, summary: `Emailed ${to.length} recipient(s): "${subject}"`, success: true }
