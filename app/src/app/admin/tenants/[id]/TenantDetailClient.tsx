@@ -46,6 +46,7 @@ import { errorMessage } from "@/lib/utils";
 import type { getTenantById } from "@/app/actions/saas/admin"
 import type { SaaSPlatformInvoice } from "@/lib/saas-subscription-engine"
 import { trialActive } from "@/lib/trial"
+import { confirmAction } from "@/components/confirm-dialog"
 
 type TenantDetail = NonNullable<Awaited<ReturnType<typeof getTenantById>>>
 /** A stored platform receipt: current fields (SaaSPlatformInvoice) or older names */
@@ -148,6 +149,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
     }
 
     const handleToggleStatus = async () => {
+        if (tenant.isActive && !(await confirmAction({ title: `Suspend ${tenant.name}?`, description: "Everyone in this business is signed out and can't sign in until you activate it again. Their data is kept.", confirmLabel: "Suspend", destructive: true }))) return
         try {
             setIsLoading(true)
             unwrap(await toggleTenantStatus(tenant.id, !tenant.isActive))

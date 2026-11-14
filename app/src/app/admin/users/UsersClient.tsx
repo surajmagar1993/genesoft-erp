@@ -66,6 +66,7 @@ export function UsersClient({
     }
 
     const handleToggleStatus = async (user: PlatformTeamMember) => {
+        if (user.isActive && !(await confirmAction({ title: `Suspend ${user.fullName || user.email}?`, description: "They are signed out and can't sign in until you activate the account again.", confirmLabel: "Suspend", destructive: true }))) return
         try {
             setIsLoading(true)
             unwrap(await toggleUserStatus(user.id, !user.isActive))
