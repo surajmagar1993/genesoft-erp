@@ -143,7 +143,7 @@ export default async function AdminDashboardPage() {
                                                 {tenant.plan}
                                             </Badge>
                                             <span className="text-xs text-muted-foreground uppercase tracking-widest font-black">
-                                                {tenant.isTrial ? "Trial" : "Paid"}
+                                                {tenant.trialEnded ? "Trial ended" : tenant.isTrial ? "Trial" : tenant.plan === "FREE" ? "Free" : tenant.comped ? "Given free" : "Paid"}
                                             </span>
                                         </div>
                                     </div>

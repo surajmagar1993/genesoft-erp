@@ -15,6 +15,7 @@ import { PRICING_REGIONS } from "@/lib/pricing-regions"
 import { PLAN_CONFIG_ACTION, PLAN_ORDER, getPlanConfig, normalizePlanConfig, planName, type PlanConfig } from "@/lib/plan-config"
 import { getRegionalPricing, type SaaSPlatformInvoice } from "@/lib/saas-subscription-engine"
 import { calculatePlatformMrr } from "@/lib/platform-mrr"
+import { trialActive } from "@/lib/trial"
 import { sendSystemEmail } from "@/lib/system-email"
 import { adaptTaxAccounts } from "@/lib/default-accounts"
 import { resolveTaxRegime } from "@/lib/tax-jurisdiction"
@@ -102,7 +103,8 @@ export async function getPlatformStats() {
         prisma.tenant.count({
             where: {
                 isTrial: true,
-                isActive: true
+                isActive: true,
+                trialEndsAt: { gt: new Date() }
             }
         }),
         prisma.supportTicket.count({
@@ -116,7 +118,9 @@ export async function getPlatformStats() {
                 name: true,
                 plan: true,
                 createdAt: true,
-                isTrial: true
+                isTrial: true,
+                trialEndsAt: true,
+                settings: true
             },
             orderBy: {
                 createdAt: "desc"
@@ -147,7 +151,9 @@ export async function getPlatformStats() {
             name: t.name,
             plan: t.plan,
             createdAt: t.createdAt,
-            isTrial: t.isTrial
+            isTrial: t.isTrial,
+            trialEnded: t.isTrial && !trialActive(t.isTrial, t.trialEndsAt),
+            comped: Boolean((t.settings as { subscription?: { compedByPlatform?: boolean } } | null)?.subscription?.compedByPlatform)
         })),
         revenueEst
     }

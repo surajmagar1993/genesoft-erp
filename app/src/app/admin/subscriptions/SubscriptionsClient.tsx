@@ -31,6 +31,7 @@ import { formatSaaSInvoiceReceiptHtml } from "@/lib/saas-subscription-engine"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { errorMessage } from "@/lib/utils";
+import { trialActive } from "@/lib/trial"
 
 type PlatformSubscriptions = Awaited<ReturnType<typeof getPlatformSubscriptions>>
 
@@ -160,9 +161,9 @@ export function SubscriptionsClient({ data }: SubscriptionsClientProps) {
                         <div>
                             <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Active Trials</div>
                             <div className="text-xl font-bold mt-1 text-foreground">
-                                {data.tenants.filter(t => t.isTrial).length}
+                                {data.tenants.filter(t => trialActive(t.isTrial, t.trialEndsAt)).length}
                             </div>
-                            <span className="text-xs text-amber-600 font-semibold">Grace Window Active</span>
+                            <span className="text-xs text-amber-600 font-semibold">Not yet ended</span>
                         </div>
                         <div className="h-10 w-10 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
                             <Clock className="h-5 w-5" />

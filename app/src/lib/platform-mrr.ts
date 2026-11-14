@@ -14,7 +14,7 @@ type TenantForMrr = {
 
 /**
  * Monthly recurring revenue across tenants, in INR. Counts only active,
- * non-trial tenants on a paid plan, at the live price for their currency
+ * non-trial tenants on a paid plan (not plans the platform gave free), at the live price for their currency
  * (Admin → Pricing) and billing cycle (annual plans count 1/12 per month).
  */
 export async function calculatePlatformMrr(tenants: TenantForMrr[]): Promise<{
@@ -38,7 +38,9 @@ export async function calculatePlatformMrr(tenants: TenantForMrr[]): Promise<{
             pricing = await getEffectivePricing(currency)
             pricingCache.set(currency, pricing)
         }
-        const cycle = (t.settings as { subscription?: { billingCycle?: string } } | null)?.subscription?.billingCycle
+        const sub = (t.settings as { subscription?: { billingCycle?: string; compedByPlatform?: boolean } } | null)?.subscription
+        if (sub?.compedByPlatform) continue
+        const cycle = sub?.billingCycle
         const monthly = cycle === "ANNUAL" ? pricing.annual[plan] / 12 : pricing.monthly[plan]
         if (!(monthly > 0)) continue
 

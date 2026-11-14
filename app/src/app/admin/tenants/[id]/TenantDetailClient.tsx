@@ -45,6 +45,7 @@ import { inZone } from "@/lib/dates"
 import { errorMessage } from "@/lib/utils";
 import type { getTenantById } from "@/app/actions/saas/admin"
 import type { SaaSPlatformInvoice } from "@/lib/saas-subscription-engine"
+import { trialActive } from "@/lib/trial"
 
 type TenantDetail = NonNullable<Awaited<ReturnType<typeof getTenantById>>>
 /** A stored platform receipt: current fields (SaaSPlatformInvoice) or older names */
@@ -223,7 +224,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                 </Badge>
                                 {tenant.isTrial && (
                                     <span className="text-xs bg-amber-500/10 text-amber-600 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border border-amber-500/20">
-                                        Trial Active
+                                        {trialActive(tenant.isTrial, tenant.trialEndsAt) ? "Trial Active" : "Trial Ended"}
                                     </span>
                                 )}
                             </div>

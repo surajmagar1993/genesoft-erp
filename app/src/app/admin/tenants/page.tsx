@@ -8,6 +8,7 @@ import { TenantActionsDropdown } from "@/components/admin/tenant-actions-dropdow
 import { TenantFilters } from "@/components/admin/tenant-filters"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { trialActive } from "@/lib/trial"
 
 export const dynamic = "force-dynamic"
 
@@ -99,7 +100,7 @@ export default async function TenantsPage(props: {
                                             </Badge>
                                             {tenant.isTrial && (
                                                 <span className="text-xs text-amber-500 font-bold uppercase tracking-widest">
-                                                    Trial Active
+                                                    {trialActive(tenant.isTrial, tenant.trialEndsAt) ? "Trial Active" : "Trial Ended"}
                                                 </span>
                                             )}
                                         </div>
