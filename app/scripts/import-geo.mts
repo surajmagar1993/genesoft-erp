@@ -5,8 +5,11 @@
  *   1. States and cities, every country: countries+states+cities.json from
  *      https://github.com/dr5hn/countries-states-cities-database (json/ folder).
  *      Licence ODbL-1.0: credit "countries-states-cities-database by dr5hn".
- *   2. Indian PIN codes: "All India Pincode Directory" CSV from data.gov.in
- *      (India Post, Government Open Data Licence – India).
+ *   2. Indian PIN codes, either source:
+ *      --geonames: IN.txt inside https://download.geonames.org/export/zip/IN.zip
+ *        (GeoNames, CC BY 4.0: credit "GeoNames"), or
+ *      --pincodes: "All India Pincode Directory" CSV from data.gov.in
+ *        (India Post, Government Open Data Licence – India).
  *
  *   npx tsx --env-file=.env.local scripts/import-geo.mts --world <file.json> --pincodes <file.csv>          (dry run: counts only)
  *   npx tsx --env-file=.env.local scripts/import-geo.mts --world <file.json> --pincodes <file.csv> --write  (replaces the rows)
@@ -16,7 +19,7 @@
  */
 import { readFileSync } from "node:fs"
 import { prisma } from "../src/lib/prisma"
-import { readPinCodes, readWorld } from "../src/lib/geo-import"
+import { readGeoNamesPostal, readPinCodes, readWorld } from "../src/lib/geo-import"
 
 const args = process.argv.slice(2)
 const arg = (name: string) => {
@@ -25,11 +28,12 @@ const arg = (name: string) => {
 }
 const worldFile = arg("--world")
 const pinFile = arg("--pincodes")
+const geoNamesFile = arg("--geonames")
 const write = args.includes("--write")
 const CHUNK = 5000
 
-if (!worldFile && !pinFile) {
-    console.error("Give --world <countries+states+cities.json> and/or --pincodes <pincode.csv>. Add --write to save.")
+if (!worldFile && !pinFile && !geoNamesFile) {
+    console.error("Give --world <countries+states+cities.json> and/or --pincodes <pincode.csv> or --geonames <IN.txt>. Add --write to save.")
     process.exit(1)
 }
 
@@ -47,8 +51,8 @@ async function main() {
         const india = cities.filter((c) => c.countryCode === "IN").length
         console.log(`  India: ${states.filter((s) => s.countryCode === "IN").length} states, ${india.toLocaleString("en")} cities`)
     }
-    if (pinFile) {
-        const pins = readPinCodes(readFileSync(pinFile, "utf8"))
+    if (pinFile || geoNamesFile) {
+        const pins = pinFile ? readPinCodes(readFileSync(pinFile, "utf8")) : readGeoNamesPostal(readFileSync(geoNamesFile!, "utf8"))
         await prisma.$transaction(async (tx) => {
             if (!write) return
             await tx.geoPostalCode.deleteMany({ where: { countryCode: "IN" } })

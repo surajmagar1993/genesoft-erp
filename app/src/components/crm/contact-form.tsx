@@ -19,7 +19,7 @@ import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { DialCodeSelect } from "@/components/dial-code-select"
 import { phoneProblem, postcodeProblem } from "@/lib/phone"
 import { placeForPin } from "@/lib/pin-fill"
-import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
+import { searchCountries } from "@/lib/country-search"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { toast } from "sonner"
 import { findCities, findStates } from "@/app/actions/geo"
@@ -572,11 +572,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                         value={form.billingState}
                                         onChange={(e) => update("billingState", e.target.value)}
                                         loadOptions={(q) => findStates(q, form.billingCountry || "")}
-                                        options={searchStates(form.billingState, form.billingCountry).map((s) => ({
-                                            label: s.name,
-                                            value: s.name,
-                                            subLabel: s.code,
-                                        }))}
+                                        options={[]}
                                         onSelectOption={(opt) => update("billingState", opt.value)}
                                         placeholder="Start typing a state or province"
                                     />
@@ -589,11 +585,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                                         value={form.billingCity}
                                         onChange={(e) => update("billingCity", e.target.value)}
                                         loadOptions={(q) => findCities(q, form.billingState || "", form.billingCountry || "")}
-                                        options={searchCities(form.billingCity, form.billingState, form.billingCountry).map((city) => ({
-                                            label: city.name,
-                                            value: city.name,
-                                            subLabel: `${city.stateName} • ${city.pincode}`,
-                                        }))}
+                                        options={[]}
                                         onSelectOption={(opt) => {
                                             update("billingCity", opt.value)
                                             if (opt.subLabel) {

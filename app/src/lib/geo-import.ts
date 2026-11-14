@@ -1,5 +1,4 @@
 import Papa from "papaparse"
-import { GEO_STATES } from "@/lib/constants/geo-locations"
 
 /** Parsing for scripts/import-geo.mts (kept here so it can be tested). Server/script only. */
 
@@ -43,7 +42,46 @@ export function readWorld(json: string) {
 }
 
 /** India Post's state names are upper case; use the app's spelling where it has one */
-const IN_STATES = new Map(GEO_STATES.filter((s) => s.countryCode === "IN").map((s) => [s.name.toLowerCase(), s.name]))
+/** India's 28 states and 8 union territories, as the app spells them */
+const IN_STATE_NAMES = [
+    "Andhra Pradesh",
+    "Arunachal Pradesh",
+    "Assam",
+    "Bihar",
+    "Chhattisgarh",
+    "Goa",
+    "Gujarat",
+    "Haryana",
+    "Himachal Pradesh",
+    "Jharkhand",
+    "Karnataka",
+    "Kerala",
+    "Madhya Pradesh",
+    "Maharashtra",
+    "Manipur",
+    "Meghalaya",
+    "Mizoram",
+    "Nagaland",
+    "Odisha",
+    "Punjab",
+    "Rajasthan",
+    "Sikkim",
+    "Tamil Nadu",
+    "Telangana",
+    "Tripura",
+    "Uttar Pradesh",
+    "Uttarakhand",
+    "West Bengal",
+    "Andaman and Nicobar Islands",
+    "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu",
+    "Delhi",
+    "Jammu and Kashmir",
+    "Ladakh",
+    "Lakshadweep",
+    "Puducherry",
+]
+const IN_STATES = new Map(IN_STATE_NAMES.map((n) => [n.toLowerCase(), n]))
 
 export function readPinCodes(csv: string) {
     const parsed = Papa.parse<Record<string, string>>(csv, {
@@ -68,3 +106,28 @@ export function readPinCodes(csv: string) {
     return [...rows.values()]
 }
 
+
+/** GeoNames writes some Indian state names differently from the app */
+const GEONAMES_STATE: Record<string, string> = {
+    pondicherry: "Puducherry",
+}
+/** Districts GeoNames still files under Jammu & Kashmir, part of Ladakh since 2019 */
+const LADAKH_DISTRICTS = new Set(["leh", "kargil", "leh ladakh"])
+
+/**
+ * GeoNames postal codes (download.geonames.org/export/zip/IN.zip, CC BY 4.0):
+ * tab-separated country, postal code, place, state, state code, district, …
+ */
+export function readGeoNamesPostal(tsv: string) {
+    const rows = new Map<string, { countryCode: string; postalCode: string; placeName: string; district: string; stateName: string }>()
+    for (const line of tsv.split("\n")) {
+        const [country, postalCode, place, state, , district] = line.split("\t")
+        if (country !== "IN" || !/^[1-9]\d{5}$/.test(postalCode ?? "") || !place?.trim()) continue
+        const plain = (state ?? "").replace(/\s*&\s*/g, " and ").trim()
+        let stateName = GEONAMES_STATE[plain.toLowerCase()] ?? IN_STATES.get(plain.toLowerCase()) ?? plain
+        if (LADAKH_DISTRICTS.has((district ?? "").trim().toLowerCase())) stateName = "Ladakh"
+        const placeName = place.trim()
+        rows.set(`${postalCode}|${placeName.toLowerCase()}`, { countryCode: "IN", postalCode, placeName, district: (district ?? "").trim(), stateName })
+    }
+    return [...rows.values()]
+}

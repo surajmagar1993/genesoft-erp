@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
-import { searchCities, searchStates } from "@/lib/constants/geo-locations"
 import { Label } from "@/components/ui/label"
 import {
   Table,
@@ -1137,11 +1136,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       value={profileState}
                       onChange={(e) => setProfileState(e.target.value)}
                       loadOptions={(q) => findStates(q, "IN")}
-                      options={searchStates(profileState, "India").map((s) => ({
-                        label: s.name,
-                        value: s.name,
-                        subLabel: s.code,
-                      }))}
+                      options={[]}
                       onSelectOption={(opt) => setProfileState(opt.value)}
                       className="text-xs"
                     />
@@ -1154,11 +1149,7 @@ export function TdsClient({ initialData }: TdsClientProps) {
                       value={profileCity}
                       onChange={(e) => setProfileCity(e.target.value)}
                       loadOptions={(q) => findCities(q, profileState || "", "IN")}
-                      options={searchCities(profileCity, profileState, "India").map((c) => ({
-                        label: c.name,
-                        value: c.name,
-                        subLabel: `${c.stateName} • ${c.pincode}`,
-                      }))}
+                      options={[]}
                       onSelectOption={(opt) => {
                         setProfileCity(opt.value)
                         if (opt.subLabel) {

@@ -25,7 +25,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
-import { searchCities } from "@/lib/constants/geo-locations"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -789,11 +788,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                               value={genForm.fromPlace}
                               onChange={(e) => setGenForm({ ...genForm, fromPlace: e.target.value })}
                               loadOptions={(q) => findCities(q, "", "IN")}
-                              options={searchCities(genForm.fromPlace).map((c) => ({
-                                label: c.name,
-                                value: c.name,
-                                subLabel: `${c.stateName} • ${c.pincode}`,
-                              }))}
+                              options={[]}
                               onSelectOption={(opt) => {
                                 const parts = opt.subLabel ? opt.subLabel.split(" • ") : []
                                 const pin = parts[1] ? Number(parts[1]) : genForm.fromPincode
@@ -848,11 +843,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                               value={genForm.toPlace}
                               onChange={(e) => setGenForm({ ...genForm, toPlace: e.target.value })}
                               loadOptions={(q) => findCities(q, "", "IN")}
-                              options={searchCities(genForm.toPlace).map((c) => ({
-                                label: c.name,
-                                value: c.name,
-                                subLabel: `${c.stateName} • ${c.pincode}`,
-                              }))}
+                              options={[]}
                               onSelectOption={(opt) => {
                                 const parts = opt.subLabel ? opt.subLabel.split(" • ") : []
                                 const pin = parts[1] ? Number(parts[1]) : genForm.toPincode
@@ -1378,11 +1369,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                 value={updateFromPlace}
                 onChange={(e) => setUpdateFromPlace(e.target.value)}
                 loadOptions={(q) => findCities(q, "", "IN")}
-                options={searchCities(updateFromPlace).map((c) => ({
-                  label: c.name,
-                  value: c.name,
-                  subLabel: c.stateName ? `${c.stateName}, ${c.countryCode}` : c.countryCode,
-                }))}
+                options={[]}
                 onSelectOption={(opt) => setUpdateFromPlace(opt.value)}
                 required
               />

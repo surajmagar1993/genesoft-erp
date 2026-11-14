@@ -8,7 +8,7 @@ import { toast } from "sonner"
 import { createVendor } from "@/app/actions/purchase"
 import { unwrap } from "@/lib/action-result"
 import { errorMessage } from "@/lib/utils"
-import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
+import { searchCountries } from "@/lib/country-search"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -117,7 +117,7 @@ export function VendorForm() {
                                 value={f.state}
                                 onChange={(e) => set({ state: e.target.value })}
                                 loadOptions={(q) => findStates(q, f.country || "")}
-                                options={searchStates(f.state, f.country).map((s) => ({ label: s.name, value: s.name, subLabel: s.code }))}
+                                options={[]}
                                 onSelectOption={(opt) => set({ state: opt.value })}
                             />
                         </div>
@@ -129,7 +129,7 @@ export function VendorForm() {
                                 value={f.city}
                                 onChange={(e) => set({ city: e.target.value })}
                                 loadOptions={(q) => findCities(q, f.state || "", f.country || "")}
-                                options={searchCities(f.city, f.state, f.country).map((c) => ({ label: c.name, value: c.name, subLabel: `${c.stateName} • ${c.pincode}` }))}
+                                options={[]}
                                 onSelectOption={(opt) => {
                                     const stateName = opt.subLabel?.split(" • ")[0]?.trim()
                                     set({ city: opt.value, ...(stateName && !f.state ? { state: stateName } : {}) })

@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Building2, Mail, Globe, Phone, MapPin, Upload, Trash2, Save, AlertCircle, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { AutoSuggestInput } from "@/components/ui/auto-suggest-input"
-import { searchCountries, searchStates, searchCities } from "@/lib/constants/geo-locations"
+import { searchCountries } from "@/lib/country-search"
 import { updateTenantSettings, uploadTenantLogo, removeTenantLogo, TenantSettings, TenantAddress } from "@/app/actions/settings/tenant"
 import { unwrap } from "@/lib/action-result"
 import { findCities, findStates } from "@/app/actions/geo"
@@ -326,11 +326,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                             value={address.state || ""}
                                             onChange={(e) => setAddress((prev) => ({ ...prev, state: e.target.value }))}
                                             loadOptions={(q) => findStates(q, address.country || "")}
-                                            options={searchStates(address.state || "", address.country).map((s) => ({
-                                                label: s.name,
-                                                value: s.name,
-                                                subLabel: s.code,
-                                            }))}
+                                            options={[]}
                                             onSelectOption={(opt) => setAddress((prev) => ({ ...prev, state: opt.value }))}
                                             placeholder="Type state..."
                                         />
@@ -343,11 +339,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                                             value={address.city || ""}
                                             onChange={(e) => setAddress((prev) => ({ ...prev, city: e.target.value }))}
                                             loadOptions={(q) => findCities(q, address.state || "", address.country || "")}
-                                            options={searchCities(address.city || "", address.state, address.country).map((c) => ({
-                                                label: c.name,
-                                                value: c.name,
-                                                subLabel: `${c.stateName} • ${c.pincode}`,
-                                            }))}
+                                            options={[]}
                                             onSelectOption={(opt) => {
                                                 const parts = opt.subLabel ? opt.subLabel.split(" • ") : []
                                                 setAddress((prev) => ({
