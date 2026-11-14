@@ -20,8 +20,8 @@ describe("legal page text", () => {
         expect(ids("legal:refund-policy")).toContain("money-back")
     })
 
-    it("only the draft-only rental terms still have owner notes", () => {
-        for (const d of LEGAL_DEFS) expect(d.body.includes(OWNER_TODO), d.key).toBe(!!d.draftOnly)
+    it("no built-in legal page has owner notes left (the rental rules were filled in on 2026-11-14)", () => {
+        for (const d of LEGAL_DEFS) expect(d.body.includes(OWNER_TODO), d.key).toBe(false)
     })
 
     it("parses headings, paragraphs, bullets, bold, links and tokens", () => {

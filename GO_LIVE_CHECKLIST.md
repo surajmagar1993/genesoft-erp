@@ -31,7 +31,8 @@ domain: links come from `NEXT_PUBLIC_SITE_URL` (`src/lib/app-url.ts`).
 - [ ] `PLATFORM_GSTIN` set so subscription receipts show Genesoft's GSTIN.
 - [ ] Domain renewal for genesoftinfotech.com (auto-renew was off; expiry 2026-12-05).
 - [ ] Supabase backups / a separate production database (free plan: no backups, PITR off).
-- [ ] Legal review of the website legal pages; fill the `[OWNER: …]` notes in IT Rental Terms. Terms/Privacy/DPA still mention WhatsApp and customers' own email servers (switched off).
+- [ ] Legal review of the website legal pages (IT Rental Terms now have the owner's rules, 2026-11-14; WhatsApp/own-email-server lines removed from Terms, Privacy and DPA).
+- [ ] Publish IT Rental Terms in Super Admin → Website → Pages (draft-only until then: hidden from the footer and sitemap).
 - [ ] Welcome email: one live test from hello@genesoftinfotech.com.
 - [ ] Admin → Security: **turn on "Require 2FA for admins"** (`enforce2FA`) at go-live (owner's decision 2026-11-14; left off while testing because the browser tests sign in with the Fixo admin). Every ADMIN and SUPER_ADMIN then sets up an authenticator app on the next sign-in. The 30-minute idle timeout is already on for everyone.
 - [x] Thin modules (Manufacturing, Batch & serial, Performance & training, Recruitment, RFQ, Budgets, Report builder): switched off for launch (owner's decision 2026-11-14; code and data kept, `NEXT_PUBLIC_ENABLE_PARKED_MODULES`).

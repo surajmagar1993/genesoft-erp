@@ -311,8 +311,10 @@ We'll answer reasonable questions about how we protect Customer Data so you can 
 If this DPA and the Terms of Service conflict about Customer Data, this DPA wins. Our [Privacy Policy](/privacy) covers the personal data we handle for ourselves, such as your account details.`
 
 /**
- * IT Rental Terms: a skeleton. Every "[OWNER: …]" is a rule only the owner
- * can set; the page can't be published while one is left.
+ * IT Rental Terms. The rental rules (minimum period, deposit, payment,
+ * delivery, faults, damage, insurance, late and early returns) are the
+ * owner's, given on 2026-11-14. Draft-only: the page appears once published in
+ * Super Admin → Website → Legal pages. Any "[OWNER: …]" note blocks publishing.
  */
 const RENTAL = `## What these terms cover {#scope}
 These terms apply when you rent IT equipment (such as laptops, desktops, servers, printers or networking equipment) from **{legalName}** ("Genesoft", "we"). Together with the quote or rental agreement we send you, they form our agreement with you.
@@ -321,16 +323,16 @@ These terms apply when you rent IT equipment (such as laptops, desktops, servers
 Ask for a quote on our [IT Rentals](/services/it-rentals) page or by emailing {email}. A quote lists the equipment, rental period and price. A rental starts only after you accept the quote in writing and we confirm the order.
 
 ## Minimum rental period {#minimum-period}
-[OWNER: the shortest period you rent for, e.g. one week or one month, and whether it differs by item.]
+The minimum rental period is **one month**.
 
 ## Security deposit {#deposit}
-[OWNER: whether a deposit is needed, how much (fixed or % of value), how it's paid, and how soon it's returned after the equipment comes back.]
+A security deposit may be needed, depending on the order. If it is, the amount is shown in your quote.
 
 ## Payment {#payment}
-[OWNER: when rent is paid (in advance per month/period?), accepted methods, and what happens if a payment is late.]
+Rent is paid **in advance**, before each rental period starts.
 
 ## Delivery and pick-up {#delivery}
-[OWNER: whether you deliver and collect, in which areas, and whether it costs extra.]
+We deliver the equipment and collect it at the end of the rental, at **no extra charge**.
 
 Check the equipment when it arrives and tell us straight away if anything is missing or not working.
 
@@ -344,19 +346,20 @@ Check the equipment when it arrives and tell us straight away if anything is mis
 The equipment stays ours at all times. You can't sell it, pledge it or use it as security.
 
 ## Faults and support {#faults}
-Tell us as soon as equipment stops working properly. [OWNER: how fast you repair or replace faulty equipment, and whether rent pauses meanwhile.]
+Tell us as soon as equipment stops working properly. Depending on the fault, we repair or replace it within **2 days**.
 
 ## Damage and loss {#damage}
-[OWNER: what the customer pays for damage beyond normal wear and tear, and for lost or stolen equipment (repair cost, replacement value, deposit deduction), and whether a police report is needed for theft.]
+- **Damage** beyond normal wear and tear: you pay the cost of repair.
+- **Loss or theft**: you pay the value of the equipment.
 
 ## Insurance {#insurance}
-[OWNER: whether the customer must insure the equipment while it's with them.]
+You don't need to take out insurance for the equipment.
 
 ## Late returns {#late-returns}
-[OWNER: the charge for each day or period equipment is returned late, and when an unreturned item is treated as lost.]
+If equipment is returned after the rental period ends, **one month's rent** is charged for the late return.
 
 ## Ending a rental early {#ending-early}
-[OWNER: whether the customer can return early, the notice needed, and whether rent for the unused time is refunded.]
+You can return equipment before the rental period ends, but rent already paid for the unused time is **not refunded**.
 
 ## Contact {#contact}
 {legalName}, {address}.
