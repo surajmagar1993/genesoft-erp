@@ -72,18 +72,6 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="company">Company name</Label>
-          <Input
-            id="company"
-            name="company"
-            type="text"
-            placeholder="Enter company name"
-            autoComplete="organization"
-            className="h-10"
-          />
-        </div>
-
         <WorkspaceSlugInput />
 
         <CountrySelect />
@@ -93,21 +81,9 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           <PasswordInput
             id="password"
             name="password"
-            placeholder="Min. 8 characters"
+            placeholder="At least 8 characters"
             required
             minLength={8}
-            autoComplete="new-password"
-            className="h-10"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="confirmPassword">Confirm password</Label>
-          <PasswordInput
-            id="confirmPassword"
-            name="confirmPassword"
-            placeholder="••••••••"
-            required
             autoComplete="new-password"
             className="h-10"
           />

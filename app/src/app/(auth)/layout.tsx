@@ -1,5 +1,6 @@
 import { BrandLogo } from '@/components/brand-logo'
 import Link from 'next/link'
+import { Check } from 'lucide-react'
 
 export default function AuthLayout({
   children,
@@ -16,34 +17,25 @@ export default function AuthLayout({
           </Link>
         </div>
 
-        <div className="space-y-6">
-          <blockquote className="space-y-2">
-            <p className="text-xl font-medium leading-relaxed text-foreground/90">
-              &ldquo;Streamline your operations, supercharge your sales, and
-              scale your business — all from a single platform.&rdquo;
-            </p>
-            <footer className="text-sm text-muted-foreground">
-              Genesoft ERP &amp; CRM Platform
-            </footer>
-          </blockquote>
-
-          <div className="grid grid-cols-3 gap-4 pt-4">
+        <div className="max-w-md space-y-8">
+          <h2 className="text-3xl font-semibold leading-tight tracking-tight">
+            Invoices, customers and accounts for your business, in one place.
+          </h2>
+          <ul className="space-y-4 text-sm">
             {[
-              { label: 'CRM', desc: 'Contacts, Leads & Deals' },
-              { label: 'Sales', desc: 'Quotes, Orders & Invoices' },
-              { label: 'Finance', desc: 'Accounting & Reports' },
+              { title: 'Tax done for your country', text: 'GST in India, VAT in the UAE, Saudi Arabia and the UK, GST in Australia and sales tax in the US, worked out on every invoice.' },
+              { title: 'From quote to payment', text: 'Quotes, orders, invoices, credit notes and payments, posted to your accounts as you go.' },
+              { title: '15-day free trial', text: 'No card needed. Choose a plan when you are ready.' },
             ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-lg border border-border/50 bg-card/40 p-3 space-y-1"
-              >
-                <p className="text-xs font-semibold text-primary">{item.label}</p>
-                <p className="text-xs text-muted-foreground leading-tight">
-                  {item.desc}
-                </p>
-              </div>
+              <li key={item.title} className="flex gap-3">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                <span>
+                  <span className="font-medium text-foreground">{item.title}.</span>{' '}
+                  <span className="text-muted-foreground">{item.text}</span>
+                </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
         <p className="text-xs text-muted-foreground">

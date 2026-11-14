@@ -81,18 +81,18 @@ export async function register(formData: FormData) {
   // Cleaned again on the server: never trust the browser's version
   const slug = cleanWorkspaceSlug(String(formData.get('slug') || ''))
   const password = formData.get('password') as string
-  const confirmPassword = formData.get('confirmPassword') as string
   const requestedPlan = String(formData.get('plan') || '').toUpperCase()
 
   // Business country decides currency, number format and document tax
-  const countryChoice = String(formData.get('country') || 'IN').toUpperCase()
+  // Nothing is preselected on the form: a missing country is an error, never India by default
+  const countryChoice = String(formData.get('country') || '').toUpperCase()
   let countryCode = countryChoice
   let currencyCode = ''
   if (countryChoice === 'OTHER') {
     countryCode = String(formData.get('otherCountry') || '').trim().toUpperCase()
     currencyCode = String(formData.get('otherCurrency') || '').trim().toUpperCase()
     if (!/^[A-Z]{2}$/.test(countryCode) || !/^[A-Z]{3}$/.test(currencyCode)) {
-      redirect('/register?error=Enter+a+2-letter+country+code+and+a+3-letter+currency')
+      redirect('/register?error=Choose+your+country+from+the+list')
     }
   } else if (!(SIGNUP_COUNTRIES as readonly string[]).includes(countryChoice)) {
     redirect('/register?error=Choose+your+business+country')
@@ -104,10 +104,6 @@ export async function register(formData: FormData) {
 
   if (!(await getPlatformGate()).allowSignups) {
     redirect('/register?error=New+signups+are+currently+closed')
-  }
-
-  if (password !== confirmPassword) {
-    redirect('/register?error=Passwords+do+not+match')
   }
 
   if (turnstileEnabled() && !(await verifyTurnstile(String(formData.get('cf-turnstile-response') || ''), clientIp(await headers()), 'signup'))) {

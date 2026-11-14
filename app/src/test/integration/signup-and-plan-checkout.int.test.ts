@@ -29,7 +29,6 @@ function signupForm(fields: Record<string, string>) {
         company: "Sharma Traders",
         slug: `sharma-${crypto.randomUUID().slice(0, 8)}`,
         password: "a-long-password",
-        confirmPassword: "a-long-password",
         country: "IN",
     }
     for (const [k, v] of Object.entries({ ...defaults, ...fields })) fd.set(k, v)
@@ -62,11 +61,19 @@ describe("sign-up", () => {
         expect((signUp?.options as { data: Record<string, unknown> }).data.marketing_opt_in).toBe(true)
     })
 
-    it("rejects a taken workspace URL and mismatched passwords", async () => {
+    it("rejects a taken workspace ID and a missing country (never India by default)", async () => {
         const first = signupForm({})
         await redirectOf(() => register(first))
         expect(await redirectOf(() => register(signupForm({ slug: String(first.get("slug")) })))).toMatch(/already taken/)
-        expect(await redirectOf(() => register(signupForm({ confirmPassword: "different" })))).toMatch(/do not match/)
+        expect(await redirectOf(() => register(signupForm({ country: "" })))).toMatch(/Choose\+your\+business\+country|Choose your business country/)
+    })
+
+    it("signs up a business from another country with that country's currency", async () => {
+        const form = signupForm({ country: "OTHER", otherCountry: "SG", otherCurrency: "SGD" })
+        await redirectOf(() => register(form))
+        const tenant = await prisma.tenant.findFirstOrThrow({ where: { domain: String(form.get("slug")) } })
+        expect(tenant.countryCode).toBe("SG")
+        expect(tenant.currencyCode).toBe("SGD")
     })
 })
 
