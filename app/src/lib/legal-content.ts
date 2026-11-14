@@ -186,6 +186,9 @@ Email: {email}
 
 We'll acknowledge your complaint and respond within the time the law requires. If you're not satisfied, you can complain to the Data Protection Board of India or, in the UK or EU, your local data protection authority.
 
+## Open data we use {#open-data}
+The country, state, city and PIN code suggestions in address fields come from open data: the [countries-states-cities database](https://github.com/dr5hn/countries-states-cities-database) by dr5hn, under the [Open Database License (ODbL 1.0)](https://opendatacommons.org/licenses/odbl/1-0/), and [GeoNames](https://www.geonames.org/), under [Creative Commons Attribution 4.0](https://creativecommons.org/licenses/by/4.0/). They contain no personal data.
+
 ## Changes to this policy {#changes}
 We'll update this page when our practices change and show the new date at the top. If a change is significant, we'll tell account holders by email or in the app before it takes effect. See also our [Terms of Service](/terms) and [Refund & Cancellation Policy](/refund-policy).`
 

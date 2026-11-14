@@ -205,7 +205,7 @@ Done on 2026-11-13 (owner's request; local commits, see git log): **Razorpay is 
 - [x] Phone codes (2026-11-14): 4 wrong calling codes fixed, picker keyed by country, phone/postcode checks in the contact form and server.
 - [x] Address data (2026-11-14): migration `4_geo_reference_data` applied; 5,268 states and 160,144 cities imported (`scripts/import-geo.mts`). State/City fields in 8 forms search them.
 - [x] Indian PIN codes (2026-11-14): data.gov.in wouldn't open, so they came from GeoNames (`IN.zip`, CC BY 4.0; same India Post codes): 19,238 PIN codes, 155,541 post offices; PIN auto-fill works. The old built-in location list (`geo-locations.ts`, 10k lines) was removed.
-- [ ] Credit the open data on a public page (e.g. Privacy): "Place data: countries-states-cities-database by dr5hn (ODbL-1.0) and GeoNames (CC BY 4.0)".
+- [x] Open-data credit (dr5hn ODbL, GeoNames CC BY 4.0) added to the Privacy page, section "Open data we use" (2026-11-14).
 - [x] Sign-up page (2026-11-14): no preselected country, full list for "Other country", workspace ID from the company name, no confirm-password field, real facts in the side panel. Left: Turnstile shows a blank gap until the hostnames are added in Cloudflare.
 - [ ] Require two-factor for admins: turn on at go-live (owner's decision 2026-11-14; `GO_LIVE_CHECKLIST.md`).
 
