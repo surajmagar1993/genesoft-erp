@@ -1,6 +1,7 @@
 import { getInventoryOverview, getInventoryReportsData } from "@/app/actions/inventory"
 import { getBatchSerialOverview } from "@/app/actions/batch-serial"
 import { InventoryClient } from "./inventory-client"
+import { PARKED_MODULES_ENABLED } from "@/lib/features"
 
 export const dynamic = "force-dynamic"
 
@@ -20,7 +21,8 @@ export default async function InventoryPage({
     const [overviewData, reportsData, batchSerialData] = await Promise.all([
         getInventoryOverview(),
         getInventoryReportsData("30d"),
-        getBatchSerialOverview(),
+        // Batch & serial is switched off (src/lib/features.ts): don't load it
+        PARKED_MODULES_ENABLED ? getBatchSerialOverview() : Promise.resolve(undefined),
     ])
 
     return (

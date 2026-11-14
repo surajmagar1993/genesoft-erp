@@ -27,7 +27,7 @@ describe("switched-off modules", () => {
     })
 
     it("send visitors to the nearest page that is on", () => {
-        expect(parkedFallback("/manufacturing")).toBe("/inventory")
+        expect(parkedFallback("/manufacturing")).toBe("/reports")
         expect(parkedFallback("/hr/recruitment")).toBe("/hr")
         expect(parkedFallback("/purchase/rfq/new")).toBe("/purchase")
         expect(parkedFallback("/finance/budgets")).toBe("/finance/reports")

@@ -17,9 +17,9 @@ const PAGES = [
     "/sales/invoices/recurring", "/sales/invoices/recurring/new", "/sales/invoices/templates", "/sales/delivery-challans",
     "/sales/credit-notes", "/sales/rental", "/finance", "/finance/accounts", "/finance/accounts/new", "/finance/ledger",
     "/finance/expenses", "/finance/bills", "/finance/bills/new", "/finance/payments", "/finance/receivable", "/finance/payable",
-    "/finance/reports", "/finance/tax-summary", "/finance/budgets", "/purchase", "/purchase/orders/new", "/purchase/vendors/new",
-    "/purchase/rfq", "/purchase/rfq/new", "/inventory", "/inventory/warehouses/new", "/manufacturing", "/hr", "/hr/employees/new",
-    "/hr/payroll", "/hr/performance", "/hr/recruitment", "/hr/portal", "/projects", "/projects/new", "/reports/builder",
+    "/finance/reports", "/finance/tax-summary", "/purchase", "/purchase/orders/new", "/purchase/vendors/new",
+    "/inventory", "/inventory/warehouses/new", "/hr", "/hr/employees/new",
+    "/hr/payroll", "/hr/portal", "/projects", "/projects/new",
     "/settings", "/settings/notifications", "/settings/workflows", "/support", "/workspace-settings",
 ]
 
@@ -48,4 +48,37 @@ test("every app page opens without errors", async ({ page }) => {
         page.removeAllListeners("response")
     }
     expect(problems).toEqual([])
+})
+
+/** Switched-off modules (src/lib/features.ts): each page sends you on to a page that's on. */
+const SWITCHED_OFF: [string, RegExp][] = [
+    ["/manufacturing", /\/reports$/],
+    ["/finance/budgets", /\/finance\/reports$/],
+    ["/purchase/rfq", /\/purchase$/],
+    ["/purchase/rfq/new", /\/purchase$/],
+    ["/hr/performance", /\/hr$/],
+    ["/hr/recruitment", /\/hr$/],
+    ["/reports/builder", /\/reports$/],
+    ["/crm/whatsapp", /\/crm\/contacts$/],
+]
+
+test("switched-off modules redirect and stay out of the menu", async ({ page }) => {
+    await page.goto("/login")
+    await page.getByLabel("Email address").fill(email!)
+    await page.getByLabel("Password", { exact: true }).fill(password!)
+    await page.getByRole("button", { name: "Sign in" }).click()
+    await expect(page).toHaveURL(/\/(reports|admin)/, { timeout: 30_000 })
+
+    const menu = page.getByRole("navigation", { name: "Main menu" })
+    for (const name of ["Manufacturing", "Budgets & Variance", "Performance & Training", "Report Builder"]) {
+        await expect(menu.getByRole("link", { name, exact: true })).toHaveCount(0)
+    }
+    for (const [path, lands] of SWITCHED_OFF) {
+        await page.goto(path, { waitUntil: "load" })
+        await expect(page, `${path} should redirect`).toHaveURL(lands)
+    }
+    await page.goto("/hr?tab=recruitment")
+    await expect(page.getByRole("tab", { name: /Recruitment/ })).toHaveCount(0)
+    await page.goto("/inventory?tab=batch-serial")
+    await expect(page.getByRole("tab", { name: /Batch/ })).toHaveCount(0)
 })

@@ -88,7 +88,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
     const tabParam = searchParams.get("tab")
     const [isPending, startTransition] = useTransition()
     const [activeTab, setActiveTab] = useState<"employees" | "attendance" | "leaves" | "org" | "payroll" | "recruitment">(
-        tabParam === "payroll" ? "payroll" : tabParam === "recruitment" ? "recruitment" : "employees"
+        tabParam === "payroll" ? "payroll" : tabParam === "recruitment" && PARKED_MODULES_ENABLED ? "recruitment" : "employees"
     )
 
     // Filter states: Employees
@@ -678,15 +678,17 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                                 </Badge>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="recruitment" className="flex items-center gap-2">
-                            <Briefcase className="h-4 w-4 text-blue-600" />
-                            <span>Recruitment</span>
-                            {recruitmentData && recruitmentData.stats.activeJobsCount > 0 && (
-                                <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs bg-blue-500/20 text-blue-700 dark:text-blue-400">
-                                    {recruitmentData.stats.activeJobsCount}
-                                </Badge>
-                            )}
-                        </TabsTrigger>
+                        {PARKED_MODULES_ENABLED && (
+                            <TabsTrigger value="recruitment" className="flex items-center gap-2">
+                                <Briefcase className="h-4 w-4 text-blue-600" />
+                                <span>Recruitment</span>
+                                {recruitmentData && recruitmentData.stats.activeJobsCount > 0 && (
+                                    <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs bg-blue-500/20 text-blue-700 dark:text-blue-400">
+                                        {recruitmentData.stats.activeJobsCount}
+                                    </Badge>
+                                )}
+                            </TabsTrigger>
+                        )}
                     </TabsList>
                 </div>
 
@@ -1283,15 +1285,17 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                 </TabsContent>
 
                 {/* Tab 6: Recruitment & Applicant Tracking (ATS) */}
-                <TabsContent value="recruitment" className="space-y-4">
-                    {recruitmentData ? (
-                        <RecruitmentClient initialData={recruitmentData} />
-                    ) : (
-                        <div className="p-8 text-center text-muted-foreground text-xs">
-                            No recruitment data available.
-                        </div>
-                    )}
-                </TabsContent>
+                {PARKED_MODULES_ENABLED && (
+                    <TabsContent value="recruitment" className="space-y-4">
+                        {recruitmentData ? (
+                            <RecruitmentClient initialData={recruitmentData} />
+                        ) : (
+                            <div className="p-8 text-center text-muted-foreground text-xs">
+                                No recruitment data available.
+                            </div>
+                        )}
+                    </TabsContent>
+                )}
             </Tabs>
 
 

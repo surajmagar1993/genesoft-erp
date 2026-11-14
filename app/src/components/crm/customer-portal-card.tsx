@@ -7,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { confirmAction } from "@/components/confirm-dialog"
+import { LocalDateTime } from "@/components/local-date-time"
 import { regeneratePortalToken, togglePortalAccess, type PortalStatus } from "@/app/actions/crm/portal-actions"
+import type { ActionResult } from "@/lib/action-result"
 import { PORTAL_LINK_DAYS } from "@/lib/portal-link"
 
 const noopSubscribe = () => () => {}
 
-const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" })
 
 /**
  * Customer portal on a contact's page: turn the customer's self-service
@@ -30,18 +31,18 @@ export function CustomerPortalCard({ contactId, initial }: { contactId: string; 
     const on = !!status?.portalEnabled
     const usable = on && !!status?.portalToken && !status.expired
 
-    function run(action: () => Promise<{ success: boolean; error?: string; status?: PortalStatus }>, done: string) {
+    function run(action: () => Promise<ActionResult<PortalStatus>>, done: string) {
         startTransition(async () => {
             try {
                 const res = await action()
                 if (!res.success) {
-                    toast.error(res.error || "Couldn't change the portal")
+                    toast.error(res.error)
                     return
                 }
-                if (res.status) setStatus(res.status)
+                setStatus(res.data)
                 toast.success(done)
             } catch {
-                toast.error("Only people with Full access to CRM can change a customer's portal.")
+                toast.error("Couldn't reach the server. Check your connection and try again.")
             }
         })
     }
@@ -90,13 +91,13 @@ export function CustomerPortalCard({ contactId, initial }: { contactId: string; 
                 {on && status?.expiresAt && (
                     <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">{status.expired ? "Expired" : "Link works until"}</span>
-                        <span className="text-sm font-medium">{DATE.format(new Date(status.expiresAt))}</span>
+                        <span className="text-sm font-medium"><LocalDateTime value={status.expiresAt} dateOnly /></span>
                     </div>
                 )}
                 {status?.portalLastAccess && (
                     <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Last visit</span>
-                        <span className="text-sm">{DATE.format(new Date(status.portalLastAccess))}</span>
+                        <span className="text-sm"><LocalDateTime value={status.portalLastAccess} dateOnly /></span>
                     </div>
                 )}
                 {usable && link && (

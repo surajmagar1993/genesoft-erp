@@ -42,7 +42,7 @@ const PARKED: { route: string; fallback: string }[] = [
     { route: "/crm/whatsapp", fallback: "/crm/contacts" },
     { route: "/crm/forms", fallback: "/crm/contacts" },
     { route: "/finance/bank-reconciliation", fallback: "/finance/reports" },
-    { route: "/manufacturing", fallback: "/inventory" },
+    { route: "/manufacturing", fallback: "/reports" },
     { route: "/hr/performance", fallback: "/hr" },
     { route: "/hr/recruitment", fallback: "/hr" },
     { route: "/purchase/rfq", fallback: "/purchase" },
@@ -68,7 +68,7 @@ export function isParkedRoute(pathname: string): boolean {
 
 /** Where to send someone who opens a switched-off page */
 export function parkedFallback(pathname: string): string {
-    return parkedEntry(pathname)?.fallback ?? "/dashboard"
+    return parkedEntry(pathname)?.fallback ?? "/reports"
 }
 
 /** A module key that is switched off (false whenever PARKED_MODULES_ENABLED is on) */
