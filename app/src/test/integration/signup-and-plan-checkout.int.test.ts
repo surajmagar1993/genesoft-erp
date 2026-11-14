@@ -68,6 +68,15 @@ describe("sign-up", () => {
         expect(await redirectOf(() => register(signupForm({ country: "" })))).toMatch(/Choose\+your\+business\+country|Choose your business country/)
     })
 
+    it("sends an email that already has an account to sign in, without a second business", async () => {
+        const first = signupForm({})
+        await redirectOf(() => register(first))
+        const before = await prisma.tenant.count()
+        const again = await redirectOf(() => register(signupForm({ email: String(first.get("email")).toUpperCase() })))
+        expect(decodeURIComponent(again)).toMatch(/^\/login\?message=This email already has an account/)
+        expect(await prisma.tenant.count()).toBe(before)
+    })
+
     it("signs up a business from another country with that country's currency", async () => {
         const form = signupForm({ country: "OTHER", otherCountry: "SG", otherCurrency: "SGD" })
         await redirectOf(() => register(form))

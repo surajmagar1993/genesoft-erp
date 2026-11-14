@@ -16,6 +16,9 @@ import { LOGIN_LOCK_MINUTES, clearLoginFailures, loginLocked, recordLoginFailure
 import { IDLE_COOKIE, IDLE_COOKIE_OPTIONS, makeIdleCookie } from '@/lib/idle-session'
 import { TURNSTILE_FAILED, turnstileEnabled, verifyTurnstile } from '@/lib/turnstile'
 import { SIGNUP_COUNTRIES, getTaxJurisdiction } from '@/lib/tax-jurisdiction'
+import { reportCaught } from '@/lib/error-reporting'
+
+const ALREADY_REGISTERED = 'This email already has an account. Sign in, or use "Forgot password?". If you never confirmed it, check your inbox for the confirmation email.'
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -123,6 +126,11 @@ export async function register(formData: FormData) {
     redirect('/register?error=Workspace+URL+is+already+taken')
   }
 
+  // An email that already has an account (confirmed or not) signs in instead of creating a second business
+  if (await prisma.user.findFirst({ where: { email: { equals: email.trim(), mode: 'insensitive' } }, select: { id: true } })) {
+    redirect(`/login?message=${encodeURIComponent(ALREADY_REGISTERED)}`)
+  }
+
   // 2. Sign up user in Supabase
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
@@ -181,10 +189,13 @@ export async function register(formData: FormData) {
       })
     })
   } catch (dbError) {
-    console.error('Database sync error during registration:', dbError)
-    // NOTE: Ideally we would roll back the Supabase user here, 
-    // but typically email confirmation prevents them from logging in anyway.
-    redirect('/register?error=Application+setup+failed.+Please+contact+support.')
+    // The same email signing up again before confirming gets its existing user back from Supabase
+    if ((dbError as { code?: string })?.code === 'P2002') {
+      redirect(`/login?message=${encodeURIComponent(ALREADY_REGISTERED)}`)
+    }
+    // Nothing was saved (one transaction); the unconfirmed Supabase user can sign up again
+    await reportCaught(dbError, 'register: creating the business', { slug, country: countryCode })
+    redirect('/register?error=We+couldn%27t+set+up+your+workspace.+Please+try+again+or+contact+support.')
   }
 
   // Email confirmation off: the account is already active, so welcome them now
