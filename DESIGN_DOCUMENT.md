@@ -2,7 +2,7 @@
 
 **Project:** Multi-Platform SaaS ERP & CRM
 **Company:** Genesoft Infotech
-**Date:** 2026-09-12 (original design) · **Reviewed:** 2026-11-13 | **Status:** testing on genesoftdev.vercel.app, not live yet
+**Date:** 2026-09-12 (original design) · **Reviewed:** 2026-11-16 | **Status:** testing on genesoftdev.vercel.app, not live yet
 
 > **How the built system differs from this design (2026-11-13).** This is the original design; the code went a different way in places. Where they disagree, `CLAUDE.md` (Security Rules) describes the code as it is:
 > - **No tRPC.** Data goes through Next.js Server Actions and a few route handlers.
@@ -587,7 +587,10 @@ genesoft-erp/
 | **i18n** | English first, framework-ready for Hindi, Arabic, etc. |
 | **Multi-Currency** | Full multi-currency support (INR, USD, AED, SAR) implemented |
 | **PDF Export** | All reports & invoices exportable as PDF |
-| **Responsive** | Desktop-first, mobile-optimized |
+| **Responsive** | Desktop-first, mobile-optimized; every page checked at 390, 768, 1024 and 1366 px (nothing runs off the screen) |
+| **Light/dark** | Follows the user's device setting in the app and on the website; no toggle, nothing stored |
+| **Modals** | Native `<dialog>` with `showModal()` (`components/ui/dialog.tsx`); CSS entry/exit animations; no hand-made `fixed inset-0` overlays |
+| **Tabs** | One row that scrolls sideways when it doesn't fit (`tabs-scroll`); never wrapped or forced into a grid |
 
 ---
 

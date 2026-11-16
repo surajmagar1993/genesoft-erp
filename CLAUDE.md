@@ -1,4 +1,4 @@
-> **Last Updated:** 2026-11-14 | **Status:** testing on genesoftdev.vercel.app, not live yet | Open work: `REMAINING_TASKS.md` → "Open items"
+> **Last Updated:** 2026-11-16 | **Status:** testing on genesoftdev.vercel.app, not live yet | Open work: `REMAINING_TASKS.md` → "Open items"
 
 ## 🎯 Project Overview
 Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Prisma, and Supabase.

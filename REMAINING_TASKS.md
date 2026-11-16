@@ -1,7 +1,7 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-11-14 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
+> **Last Updated:** 2026-11-16 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
 >
 > The ✅ entries below were written in September 2026 when each module was first built. Several overstate what shipped: the government-filing modules (GST returns, e-way bills, TDS, UAE VAT 201, KSA ZATCA phase 2, UK MTD, Australia BAS) only prepare figures and files, aren't connected to any government system, and are hidden behind `NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`; "official/NIC-compliant/statutory" means "follows the published format", not certified. Stripe/PayPal invoice checkout and portal online payment aren't live. See "Known Gaps" and "Open items".
 
@@ -256,4 +256,9 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [x] Dependabot updates merged 2026-11-14 (#1 #2 #4 #5 #6 #7 #9: GitHub Actions 7, 20 production packages incl. @supabase/ssr 0.12 and React 19.3, dev tools, ESLint 10, vitest 5, lucide-react 1.71). CI green, production deploy Ready, all 43 browser tests pass on genesoftdev.
 - [ ] TypeScript 7 (Dependabot #8, kept open on purpose): type check, build and tests pass; only lint fails because typescript-eslint doesn't support TypeScript 7 yet (typescript-eslint#10940). Merge once a typescript-eslint release with support is on main and #8's CI is green.
 - [ ] Error alerts go to and come from errorserp@genesoftinfotech.com (2026-11-13): the owner creates that mailbox.
+- [x] Dependabot #10 (lucide-react 1.72, papaparse), #11 (@types/node 26) and #12 (shadcn 4.23) merged 2026-11-16. The login-lockout integration test that failed now and then (a failure in the same millisecond as the reset) is fixed.
+- [x] Modals on the native `<dialog>` element (2026-11-16): Dialog, AlertDialog and Sheet use `showModal()` with CSS open/close animations; the 10 hand-made overlays and the website's phone menu use them; dropdowns portal into the open dialog and toasts sit in the top layer.
+- [x] Tab bars (2026-11-16): one row that scrolls sideways when the tabs don't fit (Inventory's tabs spilled over the page on phones); 18 grid/wrap overrides removed. Header rows, a table and card grids on 13 pages no longer run off phone/tablet screens. All 56 pages checked at 390, 768, 1024 and 1366 px.
+- [x] Light/dark follows the user's device in the app and on the website (owner's decision 2026-11-16): theme toggles removed, old saved choices cleared, Privacy and Cookie Policy updated. The website theme script no longer triggers React's "script tag" warning, and the website keeps the right theme after in-app navigation.
+- [ ] Super Admin pages weren't in the 2026-11-16 phone-width check (signed in as a business only): check them at phone width.
 

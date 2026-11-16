@@ -1,6 +1,6 @@
 # ERP & CRM Multi-Platform SaaS — Master Task Tracker
 
-> **Last Updated:** 2026-11-13 (v15) — history up to September 2026 is kept below as written; see "October–November 2026" at the end for what changed since, and `REMAINING_TASKS.md` → "Open items" for pending work.
+> **Last Updated:** 2026-11-16 (v16) — history up to September 2026 is kept below as written; see "October–November 2026" at the end for what changed since, and `REMAINING_TASKS.md` → "Open items" for pending work.
 >
 > **Was (2026-09-17, v14):** **Branch:** `main` | **P2 Progress:** 100% COMPLETE ✅ | **P3 in Progress:** Project Management & Invoice Features 100% COMPLETE ✅ | Payroll, Manufacturing, Budgets & RFQ COMPLETE ✅
 
@@ -241,4 +241,6 @@ Details in `git log`, `BUG_REPORT.md` and `REMAINING_TASKS.md`.
 - [x] Accessibility, confirm dialog, CSP, dashboard on real figures, page finder (Ctrl K), database indexes **(2026-11-13)**
 - [x] GitHub Actions CI (type check, lint, tests, build) **(2026-11-13)**
 - [x] Sign-in security enforced: two-factor, idle timeout, login lockout, rate limits **(2026-11-13)**
+- [x] Marketing email kinds and audience targeting, branded emails and plan invoices, plan currency (six regions, USD for the rest) and India-only plan tax **(2026-11-14)**
+- [x] Native `<dialog>` modals with CSS animations; tab bars that scroll instead of wrapping; phone/tablet layout fixes on 13 pages; light/dark follows the device (toggles removed) **(2026-11-16)**
 - [ ] Open: see `REMAINING_TASKS.md` → "Open items"

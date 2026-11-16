@@ -74,4 +74,7 @@
 - **Tenant settings**: change only via `patchTenantSettings` / `lockTenantSettings` / `updateTeam`; the browser gets `settingsForScreens` keys only.
 - **Plan limits**: `assertWithinLimit(tenantId, kind)` before creating users, contacts, invoices, warehouses.
 - **Confirmations**: the shared in-app confirm dialog, never `window.confirm()`; placeholders are instructions (lint blocks both).
+- **Modals**: `Dialog` / `AlertDialog` / `Sheet` from `components/ui` (native `<dialog>` + `showModal()`, CSS animations); never a hand-made `fixed inset-0` overlay.
+- **Tabs and rows**: a `TabsList` scrolls sideways, never `grid grid-cols-N` or `flex-wrap`; rows of buttons use `flex-wrap` so nothing runs off a phone screen.
+- **Light/dark**: follows the device in the app and on the website; no toggle, never call `setTheme`.
 - **Tests**: unit `*.test.ts`, whole flows `*.int.test.ts` on PGlite; add one when a money or data flow changes.

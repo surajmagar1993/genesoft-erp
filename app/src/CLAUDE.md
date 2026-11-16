@@ -1,4 +1,4 @@
-> **Last Updated:** 2026-10-14 | Current rules: root `CLAUDE.md` → Security Rules | Open work: `REMAINING_TASKS.md` → "Open items"
+> **Last Updated:** 2026-11-16 | Current rules: root `CLAUDE.md` → Security Rules | Open work: `REMAINING_TASKS.md` → "Open items"
 
 ## 📦 Scope
 Application source code including components, hooks, actions, and utilities.
@@ -12,6 +12,8 @@ Application source code including components, hooks, actions, and utilities.
   - `admin/email-templates.ts`: System transactional email templates and live dispatch.
   - `finance/*.ts`: Regional tax return actions (GST, TDS, UAE VAT, KSA ZATCA, UK VAT, Australia BAS).
 - `components/`: UI components using shadcn/ui.
+  - `ui/dialog.tsx`: native `<dialog>` modals (Dialog/AlertDialog/Sheet share `ModalSurface`); menus portal into the open dialog via `useDialogLayer`.
+  - `ui/tabs.tsx`: tab bars scroll sideways (`tabs-scroll` in globals.css) and keep the selected tab in view.
   - `inventory/barcode-scanner-modal.tsx`: Web Audio API beep & camera/wedge scanner.
   - `inventory/barcode-generator-modal.tsx`: Code 128 / QR printable label sheet studio.
   - `notifications-dropdown.tsx`: Interactive notification UI.

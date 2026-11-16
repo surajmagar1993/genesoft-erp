@@ -152,3 +152,7 @@
 ## [2026-11-13] Enforce Sign-in Security
 - **Decision**: The Admin → Security policy is enforced: TOTP two-factor at `/two-factor` (required for admins only when `enforce2FA` is on), idle timeout via a signed cookie, login lockout (15 min) and per-user/per-IP rate limits in the proxy (in memory per instance).
 - **Status**: ✅ Live (2767d06). Default policy: 30-minute idle timeout, 2FA not enforced.
+
+## [2026-11-16] Light/dark follows the device; native dialogs
+- **Decision**: The owner asked for the theme to be automatic: the app and the website follow the user's device light/dark setting, with no toggle and nothing stored. Modals moved to the native `<dialog>` element (top layer, inert page, Esc, focus return) with CSS animations instead of Radix overlays.
+- **Status**: ✅ Pushed 2026-11-16 (see git log). Cookie Policy and Privacy updated to match.

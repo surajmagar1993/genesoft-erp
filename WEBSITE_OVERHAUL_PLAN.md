@@ -24,7 +24,7 @@ Replace the old company website on **genesoftinfotech.com** (static HTML on GoDa
 | 4 | Content | Use **real** clients, portfolio, testimonials and numbers. The owner will supply them (see §14). Nothing invented or placeholder goes live. |
 | 5 | IT Rentals | **"Ask for a quote"** only, no public prices. |
 | 6 | Careers | No openings now. Page shows "no current openings, send us your CV", and admins can **add job posts later**. |
-| 7 | Theme | **Light or dark following the visitor's device setting**, with a manual toggle. |
+| 7 | Theme | **Light or dark following the visitor's device setting.** Was "with a manual toggle"; the toggle was removed on 2026-11-16 (owner's decision): device setting only, nothing stored. |
 | 8 | Content editing | **Super Admin → Website** (confirmed 15 Oct). |
 | 9 | Storage / database | **Supabase Storage** for images and CVs; new `site_` tables OK (SQL shown before running). |
 | 10 | Colours | **Orange + charcoal from the logo** (#EF7F1A, #2B2A29) on warm neutrals, one accent everywhere, ERP section included (see design map). |
@@ -157,7 +157,7 @@ Content is written from facts only. Anything not yet supplied stays hidden; ther
 ## 6. Design
 
 - **Theme:**
-  - The site follows the visitor's device light/dark setting, with a toggle in the header that is remembered in the browser.
+  - The site follows the visitor's device light/dark setting automatically (no toggle since 2026-11-16; nothing remembered in the browser).
   - The marketing pages are currently forced light; that will change.
   - Every colour is a theme variable, so both modes are designed rather than just inverted.
 - **Logo:**
@@ -273,7 +273,7 @@ Every save is recorded in **Admin Audit**. Pages have **Draft → Preview → Pu
 | Phase | What | Needs from owner |
 |-------|------|------------------|
 | **0. Plan** (this file) | Agree the plan, answer §14 | Answers |
-| **1. Foundations** | Theme (system + toggle), design tokens, header/footer/menu, new addresses and redirects, ERP moved to `/erp` | Colour choice |
+| **1. Foundations** | Theme (system; toggle removed 2026-11-16), design tokens, header/footer/menu, new addresses and redirects, ERP moved to `/erp` | Colour choice |
 | **2. Content storage** | `site_` tables (SQL reviewed first), storage buckets, Super Admin → Website screens | **Approval for the database change** and storage choice |
 | **3. Pages** | Home, Services (4), IT Rentals with quote form, Portfolio, About, Careers, Contact | Real content (§14) |
 | **4. Leads and email** | Leads inbox, quote form, email routing (info@/hello@), welcome email, Turnstile | Email inbox details |
