@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import "./shadcn-tailwind.css";
 
 /* .light opts a subtree (the public website) out of dark mode */
 @custom-variant dark (&:is(.dark *):not(.light, .light *));
