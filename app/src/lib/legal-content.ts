@@ -172,7 +172,7 @@ You can ask us to:
 Email {email} to use any of these rights. If your request is about business data a company stores about you in its workspace (for example, you're one of its customers), we'll pass it to that company, which decides.
 
 ## Cookies {#cookies}
-We use only the cookies needed to keep you signed in and to remember basic preferences, such as light or dark mode. We don't use advertising or cross-site tracking cookies. The [Cookie Policy](/cookie-policy) lists each one.
+We use only the cookies needed to keep you signed in and to remember basic preferences, such as whether the side menu is open. We don't use advertising or cross-site tracking cookies. The [Cookie Policy](/cookie-policy) lists each one.
 
 ## Children {#children}
 Our website and Genesoft ERP are for people aged 18 and over. We don't knowingly collect data from children.
@@ -386,7 +386,7 @@ export const LEGAL_DEFS: LegalDef[] = [
         title: "Privacy Policy",
         label: "Privacy Policy",
         metaDescription: "How Genesoft Infotech collects, uses and protects personal data on its website and in Genesoft ERP, including enquiries, job applications and marketing email consent.",
-        builtInUpdated: "15 October 2026",
+        builtInUpdated: "16 November 2026",
         summary:
             "**In short:** we collect what we need to answer your enquiries, run Genesoft ERP and bill you. Your business data belongs to you. We don't sell personal data. We send marketing emails only if you opt in, and you can stop them anytime.",
         body: PRIVACY,
@@ -419,8 +419,8 @@ export const LEGAL_DEFS: LegalDef[] = [
         title: "Cookie Policy",
         label: "Cookie Policy",
         metaDescription: "The few cookies Genesoft Infotech uses to keep you signed in and remember your settings. No advertising or tracking cookies.",
-        builtInUpdated: "15 October 2026",
-        summary: "**In short:** we use a sign-in cookie and a few small settings (side menu and light/dark mode). No advertising or tracking cookies.",
+        builtInUpdated: "16 November 2026",
+        summary: "**In short:** we use a sign-in cookie and a small setting (whether the side menu is open). No advertising or tracking cookies.",
         body: COOKIES,
     },
     {
@@ -466,13 +466,6 @@ export const COOKIE_ITEMS = [
         kind: "Cookie",
         purpose: "Remembers whether you keep the app's side menu open or closed.",
         lasts: "7 days",
-        needed: "Preference",
-    },
-    {
-        name: "theme",
-        kind: "Browser storage (not sent to us)",
-        purpose: "Remembers light or dark mode in the app.",
-        lasts: "Until you clear your browser data",
         needed: "Preference",
     },
 ]

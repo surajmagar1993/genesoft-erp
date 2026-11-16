@@ -35,8 +35,6 @@ import {
     FileMinus,
     ChevronDown,
     Search,
-    Moon,
-    Sun,
     CheckSquare,
     CreditCard,
     Landmark,
@@ -77,7 +75,6 @@ import {
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -86,7 +83,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useTheme } from "next-themes"
 import { NotificationsDropdown } from '@/components/notifications-dropdown'
 import Script from "next/script"
 import { getTaxJurisdiction, isTaxRouteApplicable } from "@/lib/tax-jurisdiction"
@@ -413,7 +409,6 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
 }
 
 function TopBar({ pages }: { pages: { group: string; name: string; href: string }[] }) {
-    const { theme, setTheme } = useTheme()
     const router = useRouter()
     const [finderOpen, setFinderOpen] = useState(false)
     // Ctrl+K / ⌘K opens the page finder anywhere in the app
@@ -469,18 +464,6 @@ function TopBar({ pages }: { pages: { group: string; name: string; href: string 
             </CommandDialog>
 
             <div className="ml-auto flex items-center gap-2">
-                {/* Theme Toggle */}
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9"
-                    aria-label="Switch between light and dark mode"
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                >
-                    <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                </Button>
-
                 {/* Notifications */}
                 <NotificationsDropdown />
 

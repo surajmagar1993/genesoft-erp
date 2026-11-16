@@ -21,8 +21,6 @@ import {
     Terminal,
     Settings,
     ChevronDown,
-    Moon,
-    Sun,
     Bell,
     ShieldCheck,
     Globe,
@@ -60,7 +58,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useTheme } from "next-themes"
 import { UserProfileEmail } from "@/components/auth/user-profile-email"
 
 const adminNavigation = [
@@ -224,7 +221,6 @@ function AdminSidebar() {
 }
 
 function AdminTopBar() {
-    const { theme, setTheme } = useTheme()
 
     return (
         <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-sm sticky top-0 z-50">
@@ -251,17 +247,6 @@ function AdminTopBar() {
                     </Link>
                 </Button>
 
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 text-muted-foreground hover:text-primary transition-colors"
-                    aria-label="Switch between light and dark mode"
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                >
-                    <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                    <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                </Button>
-                
                 <Button variant="ghost" size="icon" className="h-9 w-9 relative text-muted-foreground hover:text-primary transition-colors" aria-label="Notifications">
                     <Bell className="h-4 w-4" />
                     <span className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-primary" />

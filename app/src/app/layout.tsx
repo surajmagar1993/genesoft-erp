@@ -56,10 +56,13 @@ export default function RootLayout({
           shadow="0 0 12px #10b981,0 0 6px #10b981"
           zIndex={99999}
         />
+        {/* Light/dark follows the user's device setting; there is no toggle. Nothing calls setTheme, so
+            nothing is stored; the new key ignores choices saved by the old toggle under "theme". */}
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="system"
           enableSystem
+          storageKey="app-theme"
           disableTransitionOnChange
         >
           <TooltipProvider>
