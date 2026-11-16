@@ -243,4 +243,5 @@ Details in `git log`, `BUG_REPORT.md` and `REMAINING_TASKS.md`.
 - [x] Sign-in security enforced: two-factor, idle timeout, login lockout, rate limits **(2026-11-13)**
 - [x] Marketing email kinds and audience targeting, branded emails and plan invoices, plan currency (six regions, USD for the rest) and India-only plan tax **(2026-11-14)**
 - [x] Native `<dialog>` modals with CSS animations; tab bars that scroll instead of wrapping; phone/tablet layout fixes on 13 pages; light/dark follows the device (toggles removed) **(2026-11-16)**
+- [x] Domain renewed to 2027-12-05; Dependabot alerts cleared (shadcn CLI removed, minimatch override); Super Admin pages fit phone/tablet; penetration test and database fix (no direct table writes through Supabase's REST API, migration 6) **(2026-11-16)**
 - [ ] Open: see `REMAINING_TASKS.md` → "Open items"

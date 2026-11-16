@@ -77,4 +77,5 @@
 - **Modals**: `Dialog` / `AlertDialog` / `Sheet` from `components/ui` (native `<dialog>` + `showModal()`, CSS animations); never a hand-made `fixed inset-0` overlay.
 - **Tabs and rows**: a `TabsList` scrolls sideways, never `grid grid-cols-N` or `flex-wrap`; rows of buttons use `flex-wrap` so nothing runs off a phone screen.
 - **Light/dark**: follows the device in the app and on the website; no toggle, never call `setTheme`.
+- **Database grants**: never `GRANT` tables to `anon`/`authenticated`; the browser never queries tables (only `SELECT` on `profiles` and `support_messages`, under RLS).
 - **Tests**: unit `*.test.ts`, whole flows `*.int.test.ts` on PGlite; add one when a money or data flow changes.

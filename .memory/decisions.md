@@ -156,3 +156,8 @@
 ## [2026-11-16] Light/dark follows the device; native dialogs
 - **Decision**: The owner asked for the theme to be automatic: the app and the website follow the user's device light/dark setting, with no toggle and nothing stored. Modals moved to the native `<dialog>` element (top layer, inert page, Esc, focus return) with CSS animations instead of Radix overlays.
 - **Status**: ✅ Pushed 2026-11-16 (see git log). Cookie Policy and Privacy updated to match.
+
+## [2026-11-16] No direct table access for signed-in users
+- **Decision**: A penetration test found that any signed-in member could insert, update and delete their own business's rows through Supabase's REST API with their login token, skipping the app's role/module checks, ledger, plan limits and audit. The app only uses Prisma, so `anon`/`authenticated` lost all table, sequence and function rights (migration `6_no_direct_table_access`), keeping `SELECT` on `profiles` (proxy role check) and `support_messages` (Realtime chat), both still under RLS.
+- **Status**: ✅ Applied to the shared database 2026-11-16; attacks re-run and refused; pages and all tests pass.
+
