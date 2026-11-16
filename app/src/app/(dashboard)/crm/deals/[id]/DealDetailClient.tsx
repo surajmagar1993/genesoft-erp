@@ -304,7 +304,7 @@ export default function DealDetailClient({ deal: initialDeal, contact, company, 
         {/* Left Column: Tabs */}
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 max-w-[420px] bg-muted/50 border shadow-sm">
+            <TabsList className="w-full max-w-[420px] bg-muted/50 border shadow-sm">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="tasks">Tasks & Activities</TabsTrigger>
               <TabsTrigger value="communications">Communications</TabsTrigger>

@@ -248,7 +248,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                     <AlertDescription>{saveError}</AlertDescription>
                 </Alert>
             )}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => router.push("/crm/contacts")} aria-label="Back">
                         <ArrowLeft className="h-4 w-4" />
@@ -264,7 +264,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <Button variant="outline" onClick={() => router.push("/crm/contacts")} disabled={isSubmitting}>
                         <X className="h-4 w-4 mr-2" />
                         Cancel
@@ -279,7 +279,7 @@ export function ContactForm({ initialData, mode }: ContactFormProps) {
             <Card>
                 <CardContent className="p-6">
                     <Tabs defaultValue="basic" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4 mb-6">
+                        <TabsList className="w-full mb-6">
                             <TabsTrigger value="basic">Basic Info</TabsTrigger>
                             <TabsTrigger value="tax">Tax & Compliance</TabsTrigger>
                             <TabsTrigger value="address">Address</TabsTrigger>

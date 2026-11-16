@@ -307,7 +307,7 @@ export default function PriceListsClient({
                         Manage wholesale rate cards, VIP enterprise pricing, and volume break discounts across customer tiers.
                     </p>
                 </div>
-                <div className="flex items-center gap-2.5">
+                <div className="flex flex-wrap items-center gap-2.5">
                     <Button
                         variant="outline"
                         onClick={() => setIsAssignCustomerOpen(true)}
@@ -467,7 +467,7 @@ export default function PriceListsClient({
                         </div>
                     </div>
 
-                    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                    <div className="rounded-xl border bg-card shadow-sm overflow-x-auto">
                         <table className="w-full text-sm text-left">
                             <thead className="bg-muted/40 text-muted-foreground font-medium border-b text-xs uppercase tracking-wider">
                                 <tr>

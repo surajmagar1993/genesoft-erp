@@ -435,7 +435,7 @@ export function UsTaxClient({ initialData }: Props) {
 
       {/* ── Main Tabbed Interface ── */}
       <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)}>
-        <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:inline-flex lg:grid-cols-5">
+        <TabsList className="w-full lg:w-auto">
           <TabsTrigger value="nexus_states" className="gap-2 text-xs">
             <Landmark className="h-3.5 w-3.5" /> State Nexus & Rates ({filteredStates.length})
           </TabsTrigger>

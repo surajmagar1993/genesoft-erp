@@ -502,7 +502,7 @@ export function PurchaseClient({ initialData, initialTab }: PurchaseClientProps)
                 className="space-y-4"
             >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <TabsList className="grid w-full grid-cols-3 sm:w-auto">
+                    <TabsList className="w-full sm:w-auto">
                         <TabsTrigger value="orders" className="flex items-center gap-2">
                             <ShoppingCart className="h-4 w-4" />
                             <span>Purchase Orders</span>
@@ -541,14 +541,14 @@ export function PurchaseClient({ initialData, initialTab }: PurchaseClientProps)
                 <TabsContent value="orders" className="space-y-4">
                     <Card>
                         <CardHeader className="pb-3">
-                            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                                 <div>
                                     <CardTitle>Procurement Orders</CardTitle>
                                     <CardDescription>
                                         Monitor purchase orders from draft authorization through goods intake and bill settlement.
                                     </CardDescription>
                                 </div>
-                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                                     <div className="relative w-full sm:w-64">
                                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                         <Input

@@ -115,7 +115,7 @@ export default function LeadDetailClient({ lead, initialTasks, initialLogs }: Pr
         {/* Left Column: Main Tabs */}
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 max-w-[520px] bg-muted/50 border shadow-sm">
+            <TabsList className="w-full max-w-[520px] bg-muted/50 border shadow-sm">
               <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Overview</TabsTrigger>
               <TabsTrigger value="notes" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Notes</TabsTrigger>
               <TabsTrigger value="tasks" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Tasks & Activity</TabsTrigger>

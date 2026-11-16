@@ -143,7 +143,7 @@ export default function ContactDetailClient({ contact, ledger, initialTasks, ini
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="ledger" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 max-w-[520px] bg-muted/50 border shadow-sm">
+            <TabsList className="w-full max-w-[520px] bg-muted/50 border shadow-sm">
               <TabsTrigger value="ledger" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Ledger</TabsTrigger>
               <TabsTrigger value="overview" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Details</TabsTrigger>
               <TabsTrigger value="notes" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Notes</TabsTrigger>

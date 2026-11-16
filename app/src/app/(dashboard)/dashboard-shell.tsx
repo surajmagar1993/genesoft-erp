@@ -585,7 +585,8 @@ export function DashboardShell({
                         multiJurisdiction,
                     }).flatMap((g) => g.items.map((i) => ({ group: g.label, name: i.name, href: i.href })))}
                 />
-                <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-6 w-full">
+                {/* *:w-full: a page wrapper centred with mx-auto would otherwise shrink to its content's width in this column and run off a phone screen */}
+                <div className="flex-1 flex flex-col min-w-0 overflow-y-auto overflow-x-hidden p-3 sm:p-4 md:p-6 w-full *:w-full">
                     {bannerMessage && (
                         <div role="status" className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-300 text-sm font-medium flex items-start justify-between gap-3 shadow-sm animate-in fade-in">
                             <div className="flex items-start gap-2 min-w-0">

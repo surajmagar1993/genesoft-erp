@@ -166,7 +166,7 @@ export function LedgerClient({
             </div>
 
             <Tabs defaultValue="balance-sheet" className="space-y-4">
-                <TabsList className="flex-wrap h-auto">
+                <TabsList className="h-auto">
                     <TabsTrigger value="balance-sheet">Balance Sheet</TabsTrigger>
                     <TabsTrigger value="trial-balance">Trial Balance</TabsTrigger>
                     <TabsTrigger value="account">Account Ledger</TabsTrigger>

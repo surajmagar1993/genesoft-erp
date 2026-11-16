@@ -630,7 +630,7 @@ export function RecruitmentClient({ initialData }: RecruitmentClientProps) {
 
             {/* Main Tabs Navigation */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full">
-                <TabsList className="grid grid-cols-3 max-w-md">
+                <TabsList className="max-w-md">
                     <TabsTrigger value="pipeline" className="gap-1.5 text-xs sm:text-sm">
                         <Users className="h-4 w-4" />
                         Candidate Pipeline

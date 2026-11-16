@@ -719,8 +719,8 @@ export function ProjectsClient({ initialData }: ProjectsClientProps) {
                 {/* TAB 1: KANBAN BOARD */}
                 {/* ========================================================================= */}
                 <TabsContent value="kanban" className="space-y-4">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-card p-3 rounded-lg border">
-                        <div className="flex items-center gap-2 flex-1 w-full sm:w-auto">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 bg-card p-3 rounded-lg border">
+                        <div className="flex flex-wrap items-center gap-2 flex-1 w-full sm:w-auto">
                             <div className="relative w-full sm:w-72">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input

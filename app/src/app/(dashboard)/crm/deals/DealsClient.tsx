@@ -149,12 +149,12 @@ export default function DealsClient({ initialDeals, total }: Props) {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Deals</h1>
                     <p className="text-muted-foreground mt-1">Track your sales pipeline and revenue</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <div className="flex gap-1 rounded-md border p-0.5 bg-background">
                         <Button variant={viewMode === "table" ? "secondary" : "ghost"} size="sm" className="h-8 px-2" onClick={() => { setViewMode("table"); updateUrl({ view: "table" }) }}>
                             <List className="h-4 w-4 mr-1.5" /> Table

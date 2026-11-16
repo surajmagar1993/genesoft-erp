@@ -376,7 +376,7 @@ export function ManufacturingClient({ initialData }: { initialData: Manufacturin
 
             {/* Sub Tabs */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="space-y-4">
-                <TabsList className="grid grid-cols-3 sm:flex sm:w-auto h-auto p-1 gap-1 border bg-muted/40">
+                <TabsList className="sm:w-auto h-auto p-1 gap-1 border bg-muted/40">
                     <TabsTrigger value="orders" className="text-xs py-1.5 px-3">
                         <Wrench className="h-3.5 w-3.5 mr-1.5" />
                         Work Orders ({initialData.workOrders.length})

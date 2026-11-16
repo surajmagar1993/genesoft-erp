@@ -427,7 +427,7 @@ export function BudgetsClient({ initialData }: BudgetsClientProps) {
 
             {/* Navigation Tabs */}
             <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="space-y-4">
-                <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full max-w-2xl">
+                <TabsList className="w-full max-w-2xl">
                     <TabsTrigger value="portfolio" className="gap-2 text-xs sm:text-sm">
                         <Target className="h-4 w-4" />
                         Budget Portfolio

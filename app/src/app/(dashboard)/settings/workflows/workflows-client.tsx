@@ -517,7 +517,7 @@ export function WorkflowsClient({
             </div>
 
             {/* KPI Ribbon */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="border border-border/60 shadow-sm bg-gradient-to-br from-card to-card/80">
                     <CardContent className="p-4 flex items-center justify-between">
                         <div>

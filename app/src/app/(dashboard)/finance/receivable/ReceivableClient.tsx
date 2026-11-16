@@ -61,12 +61,12 @@ export default function ReceivableClient({ summary, debtors }: ReceivableClientP
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Accounts Receivable</h1>
           <p className="text-muted-foreground">Manage and track outstanding customer balances.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" /> Export Report
           </Button>
@@ -81,7 +81,7 @@ export default function ReceivableClient({ summary, debtors }: ReceivableClientP
       </div>
 
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Outstanding</CardTitle>
@@ -137,7 +137,7 @@ export default function ReceivableClient({ summary, debtors }: ReceivableClientP
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-7">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-7">
         {/* Aging Analysis Chart */}
         <Card className="md:col-span-3">
           <CardHeader>

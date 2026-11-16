@@ -278,3 +278,43 @@ dialog[data-ui-dialog][open]:where(:not([data-closing]))::backdrop {
 #toast-layer [data-sonner-toaster] {
   pointer-events: auto;
 }
+
+/*
+ * A tab bar that scrolls sideways when its tabs don't fit (one row, never wrapped), with a fade
+ * at each edge that has more tabs beyond it. The fades follow the scroll position
+ * (scroll-driven animation); browsers without it just show no fade.
+ */
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+@utility tabs-scroll {
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: inline proximity;
+  --fade-size: 2.5rem;
+  scroll-padding-inline: var(--fade-size);
+  mask:
+    linear-gradient(black, black) no-clip subtract,
+    linear-gradient(to right, black, transparent) 0 0 / var(--fade-start) 100% no-repeat no-clip,
+    linear-gradient(to right, transparent, black) 100% 0 / var(--fade-end) 100% no-repeat no-clip;
+  animation: tabs-fade-start linear both, tabs-fade-end linear both;
+  animation-duration: auto; /* scroll-linked: length comes from the scroll range (the shorthand would set 0s) */
+  animation-timeline: scroll(self inline);
+  animation-range: 0 var(--fade-size), calc(100% - var(--fade-size)) 100%;
+  &::-webkit-scrollbar { display: none; }
+  /* Tabs may still grow to fill the bar (flex-1), but never shrink below their label */
+  & > [role="tab"] {
+    flex-shrink: 0;
+    min-width: max-content;
+    scroll-snap-align: start;
+  }
+}
+@keyframes tabs-fade-start { to { --fade-start: var(--fade-size); } }
+@keyframes tabs-fade-end { from { --fade-end: var(--fade-size); } }

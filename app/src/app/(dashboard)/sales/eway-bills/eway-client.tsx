@@ -463,7 +463,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
 
       {/* Main Tabs Workspace */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:w-[650px] h-auto p-1 gap-1">
+        <TabsList className="w-full lg:w-[650px] h-auto p-1 gap-1">
           <TabsTrigger value="registry" className="text-xs font-semibold">
             Registry ({filteredBills.length})
           </TabsTrigger>

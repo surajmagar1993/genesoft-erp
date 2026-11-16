@@ -106,10 +106,10 @@ export default function BillsClient({ bills }: BillsClientProps) {
 
       <Card>
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle>All Bills</CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="relative w-72">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-full sm:w-72">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search bills or vendors..."

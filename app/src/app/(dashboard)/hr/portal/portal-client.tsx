@@ -191,7 +191,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
                     <Sparkles className="h-48 w-48 text-white" />
                 </div>
 
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+                <div className="flex flex-col md:flex-row md:flex-wrap items-start md:items-center justify-between gap-6 relative z-10">
                     <div className="flex items-center gap-4">
                         <div className="h-16 w-16 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white font-bold text-2xl shadow-inner">
                             {employee.displayName.charAt(0)}

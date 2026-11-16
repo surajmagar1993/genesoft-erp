@@ -631,7 +631,7 @@ export function InventoryClient({ initialData, initialReportsData, initialBatchS
 
             {/* Navigation Tabs & Main Views */}
             <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 md:grid-cols-7 max-w-5xl">
+                <TabsList className="w-full max-w-5xl">
                     <TabsTrigger value="stocks" className="gap-2">
                         <Package className="h-4 w-4" />
                         Stock Levels

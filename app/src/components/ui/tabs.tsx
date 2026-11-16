@@ -26,7 +26,7 @@ function Tabs({
 }
 
 const tabsListVariants = cva(
-  "group/tabs-list inline-flex w-fit items-center justify-center rounded-lg p-[3px] text-muted-foreground group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none",
+  "group/tabs-list inline-flex w-fit max-w-full items-center justify-start rounded-lg p-[3px] group-data-[orientation=horizontal]/tabs:tabs-scroll text-muted-foreground group-data-[orientation=horizontal]/tabs:h-9 group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col data-[variant=line]:rounded-none",
   {
     variants: {
       variant: {
@@ -56,12 +56,33 @@ function TabsList({
   )
 }
 
+/** Bring the selected tab into view inside a scrolling tab bar (only the bar scrolls, not the page) */
+function revealTab(tab: HTMLElement | null) {
+  const bar = tab?.parentElement
+  if (!tab || !bar || bar.scrollWidth <= bar.clientWidth) return
+  const t = tab.getBoundingClientRect(), b = bar.getBoundingClientRect()
+  if (t.left < b.left || t.right > b.right) {
+    tab.scrollIntoView({ block: "nearest", inline: "nearest", container: "nearest" } as ScrollIntoViewOptions)
+  }
+}
+
 function TabsTrigger({
   className,
+  onClick,
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+  const ref = React.useRef<HTMLButtonElement>(null)
+  // After any render (e.g. the tab chosen from the URL), keep the selected tab visible
+  React.useEffect(() => {
+    if (ref.current?.dataset.state === "active") revealTab(ref.current)
+  })
   return (
     <TabsPrimitive.Trigger
+      ref={ref}
+      onClick={(e) => {
+        onClick?.(e)
+        revealTab(e.currentTarget)
+      }}
       data-slot="tabs-trigger"
       className={cn(
         "relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap text-foreground/60 transition-all group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start hover:text-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-sm group-data-[variant=line]/tabs-list:data-[state=active]:shadow-none dark:text-muted-foreground dark:hover:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",

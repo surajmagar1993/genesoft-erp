@@ -644,7 +644,7 @@ export function HRClient({ initialData, payrollData, recruitmentData }: HRClient
                 className="space-y-4"
             >
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <TabsList className="grid w-full grid-cols-2 sm:flex sm:w-auto h-auto p-1 gap-1">
+                    <TabsList className="w-full sm:w-auto h-auto p-1 gap-1">
                         <TabsTrigger value="employees" className="flex items-center gap-2">
                             <Users className="h-4 w-4" />
                             <span>Directory</span>

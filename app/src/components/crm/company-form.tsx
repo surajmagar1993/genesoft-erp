@@ -119,7 +119,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                 </Alert>
             )}
 
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-4">
                     <Button variant="ghost" size="icon" onClick={() => router.push("/crm/companies")} aria-label="Back">
                         <ArrowLeft className="h-4 w-4" />
@@ -135,7 +135,7 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <Button variant="outline" onClick={() => router.push("/crm/companies")} disabled={isSubmitting}>
                         <X className="h-4 w-4 mr-2" />
                         Cancel

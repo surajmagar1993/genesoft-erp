@@ -157,12 +157,12 @@ export default function AccountsClient({ initialAccounts }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Chart of Accounts</h1>
           <p className="text-muted-foreground">Manage your financial accounts structure</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {accounts.length === 0 && (
             <RequireRole min="MANAGER"><Button variant="outline" onClick={handleSeed} disabled={seeding}>
               {seeding ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
@@ -212,8 +212,8 @@ export default function AccountsClient({ initialAccounts }: Props) {
                 className="pl-9"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex border rounded-lg overflow-hidden shadow-sm">
+            <div className="flex items-center gap-2 max-w-full min-w-0">
+              <div className="flex border rounded-lg overflow-x-auto shadow-sm max-w-full">
                 {(["all", "ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"] as const).map(type => (
                   <button
                     key={type}

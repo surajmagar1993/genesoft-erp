@@ -432,7 +432,7 @@ export default function ExpensesClient({
                         Track business expenditures, record employee claims, and inspect balanced double-entry Journal Vouchers.
                     </p>
                 </div>
-                <div className="flex items-center gap-2.5">
+                <div className="flex flex-wrap items-center gap-2.5">
                     <Button
                         variant="outline"
                         onClick={() => setIsCreateJournalOpen(true)}

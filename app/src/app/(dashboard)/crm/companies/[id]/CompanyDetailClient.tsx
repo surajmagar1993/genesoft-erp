@@ -202,7 +202,7 @@ export default function CompanyDetailClient({ company, contacts, deals, metrics 
 
       {/* Main Tabs */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-[480px] bg-muted/50 border shadow-sm">
+        <TabsList className="w-full max-w-[480px] bg-muted/50 border shadow-sm">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="contacts">Contacts ({contacts.length})</TabsTrigger>
           <TabsTrigger value="deals">Deals ({deals.length})</TabsTrigger>

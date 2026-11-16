@@ -728,7 +728,7 @@ export function RfqClient({ initialData, initialRfqId }: RfqClientProps) {
 
                                 {/* Sub Tabs */}
                                 <Tabs value={activeDetailTab} onValueChange={setActiveDetailTab} className="mt-4">
-                                    <TabsList className="grid grid-cols-4 w-full h-9 bg-muted/60 p-1">
+                                    <TabsList className="w-full h-9 bg-muted/60 p-1">
                                         <TabsTrigger value="matrix" className="text-xs flex items-center gap-1.5">
                                             <SlidersHorizontal className="w-3.5 h-3.5" /> Bid Matrix
                                         </TabsTrigger>
