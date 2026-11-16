@@ -204,8 +204,8 @@ export default async function AdminDashboardPage() {
                                                 log.level === 'ERROR' || log.level === 'FATAL' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]' : 
                                                 log.level === 'WARN' ? 'bg-amber-500' : 'bg-emerald-500'
                                             }`} />
-                                            <div className="space-y-1">
-                                                <p className="font-mono text-xs leading-tight text-foreground transition-all group-hover:underline">
+                                            <div className="space-y-1 min-w-0">
+                                                <p className="font-mono text-xs leading-tight break-words [overflow-wrap:anywhere] text-foreground transition-all group-hover:underline">
                                                     {log.message}
                                                 </p>
                                                 <div className="flex items-center gap-2 text-xs text-muted-foreground font-bold uppercase tracking-wider">

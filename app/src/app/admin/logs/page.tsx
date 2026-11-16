@@ -23,14 +23,14 @@ export default async function SystemLogsPage() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">System Telemetry</h1>
                     <p className="text-muted-foreground mt-1">
                         Real-time platform-wide infrastructure and application health logs.
                     </p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4">
                     <PruneLogsButton />
                     <div className="flex h-10 items-center justify-center rounded-lg border border-primary/10 bg-muted/20 px-4 text-xs font-bold uppercase tracking-widest gap-2">
                         <Activity className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />

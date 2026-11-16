@@ -205,19 +205,19 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
     return (
         <div className="space-y-6 max-w-6xl mx-auto px-4 pb-12">
             {/* Header / Breadcrumb */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-5">
-                <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between border-b pb-5">
+                <div className="flex items-center gap-4 min-w-0">
                     <Link href="/admin/tenants">
                         <Button variant="ghost" size="icon" className="h-9 w-9 hover:bg-muted" aria-label="Back">
                             <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </Link>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
                         <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center font-bold text-lg text-primary shadow-sm">
                             {tenant.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <h1 className="text-2xl font-bold tracking-tight">{tenant.name}</h1>
                                 <Badge variant={tenant.isActive ? "default" : "destructive"} className="text-xs font-bold">
                                     {tenant.isActive ? "Active" : closure?.status === "PURGED" ? "Data deleted" : closure ? "Closed" : "Suspended"}
@@ -343,7 +343,7 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex items-center gap-2 border-b">
+            <div className="flex items-center gap-2 border-b overflow-x-auto [&>button]:shrink-0 [&>button]:whitespace-nowrap">
                 <button
                     onClick={() => setActiveTab("overview")}
                     className={`pb-3 px-3 text-sm font-semibold border-b-2 transition-colors ${

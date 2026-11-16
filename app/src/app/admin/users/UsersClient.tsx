@@ -142,7 +142,7 @@ export function UsersClient({
                                 className="pl-9 h-9 text-xs bg-background"
                             />
                         </div>
-                        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap items-center gap-2 w-full md:w-auto">
                             <select value={initTenant} onChange={(e) => go({ tenant: e.target.value })} className={selectClass} aria-label="Business">
                                 <option value="">All businesses</option>
                                 {tenantOptions.map((t) => (

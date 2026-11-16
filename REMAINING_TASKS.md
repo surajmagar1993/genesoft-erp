@@ -223,7 +223,7 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 **Deferred until go-live (decided by the owner):**
 - [ ] Rotate the credentials in old git history (repo is public): Supabase DB password, Resend key, Razorpay secrets, super admin password. See `GO_LIVE_CHECKLIST.md`.
 - [ ] Database backups: Supabase free plan has none and pauses idle projects (upgrade to Pro, or a nightly dump).
-- [ ] Renew genesoftinfotech.com (expires 2026-12-05, auto-renew off).
+- [x] Renew genesoftinfotech.com: renewed 2026-11-16, expires 2027-12-05 (checked in the registry).
 
 **Needs a key or account from the owner:**
 - [ ] Live payments (deferred until go-live by the owner): Razorpay live keys, with international cards switched on in the Razorpay account (every region now pays through Razorpay).
@@ -260,5 +260,6 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [x] Modals on the native `<dialog>` element (2026-11-16): Dialog, AlertDialog and Sheet use `showModal()` with CSS open/close animations; the 10 hand-made overlays and the website's phone menu use them; dropdowns portal into the open dialog and toasts sit in the top layer.
 - [x] Tab bars (2026-11-16): one row that scrolls sideways when the tabs don't fit (Inventory's tabs spilled over the page on phones); 18 grid/wrap overrides removed. Header rows, a table and card grids on 13 pages no longer run off phone/tablet screens. All 56 pages checked at 390, 768, 1024 and 1366 px.
 - [x] Light/dark follows the user's device in the app and on the website (owner's decision 2026-11-16): theme toggles removed, old saved choices cleared, Privacy and Cookie Policy updated. The website theme script no longer triggers React's "script tag" warning, and the website keeps the right theme after in-app navigation.
-- [ ] Super Admin pages weren't in the 2026-11-16 phone-width check (signed in as a business only): check them at phone width.
+- [x] Super Admin pages checked 2026-11-16 at 390, 768, 1024 and 1366 px (all 22 pages + a business's page): System Logs, Email Templates, Users, the business page (header, tab buttons) and the dashboard's incident feed no longer run off the screen.
+- [x] Dependabot alerts cleared 2026-11-16: the shadcn CLI was removed (its deepmerge had no fix; the one stylesheet it provided is kept in `src/app/shadcn-tailwind.css`, add components with `npx shadcn@latest add`), and minimatch is overridden to 11.0.8 for typescript-eslint. `npm audit`: 0 vulnerabilities.
 

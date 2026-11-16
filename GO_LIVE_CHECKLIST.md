@@ -29,7 +29,7 @@ domain: links come from `NEXT_PUBLIC_SITE_URL` (`src/lib/app-url.ts`).
       Resend key, Razorpay keys/webhook secret.
 - [ ] Switch Razorpay from test to live keys (Razorpay is the only gateway; turn on international cards in the Razorpay account).
 - [ ] `PLATFORM_GSTIN` set so subscription receipts show Genesoft's GSTIN.
-- [ ] Domain renewal for genesoftinfotech.com (auto-renew was off; expiry 2026-12-05).
+- [x] Domain renewal for genesoftinfotech.com: renewed by the owner 2026-11-16, registry expiry now 2027-12-05 (GoDaddy). Turn auto-renew on, or renew again before then.
 - [ ] Supabase backups / a separate production database (free plan: no backups, PITR off).
 - [ ] Legal review of the website legal pages (IT Rental Terms now have the owner's rules, 2026-11-14; WhatsApp/own-email-server lines removed from Terms, Privacy and DPA).
 - [ ] Publish IT Rental Terms in Super Admin → Website → Pages (draft-only until then: hidden from the footer and sitemap).
