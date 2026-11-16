@@ -24,6 +24,7 @@ import {
   Users,
 } from "lucide-react"
 import { toast } from "sonner"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 interface Props {
   initialData: AustralianBasOverviewResult
@@ -627,9 +628,8 @@ export function AustraliaTaxClient({ initialData }: Props) {
       )}
 
       {/* ── Printable Australian Tax Invoice Modal ───────────────────── */}
-      {isInvoiceModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-3xl rounded-2xl border border-border bg-card shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+        <Dialog open={isInvoiceModalOpen} onOpenChange={(open) => { if (!open) setIsInvoiceModalOpen(false) }}>
+          <DialogContent showCloseButton={false} className="block sm:max-w-3xl rounded-2xl border border-border bg-card shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border pb-3 no-print">
               <span className="font-bold">Compliant Australian Tax Invoice</span>
               <div className="flex items-center gap-2">
@@ -652,7 +652,7 @@ export function AustraliaTaxClient({ initialData }: Props) {
             <div className="printable-content space-y-6 pt-4 text-slate-900 bg-white p-6 rounded-lg">
               <div className="flex justify-between items-start border-b pb-4">
                 <div>
-                  <h2 className="text-xl font-bold">{report.taxpayerLegalName}</h2>
+                  <DialogTitle className="text-xl font-bold">{report.taxpayerLegalName}</DialogTitle>
                   <div className="text-xs text-slate-600">{report.taxpayerAddress}</div>
                   <div className="text-xs font-mono font-bold text-emerald-800 mt-1">
                     ABN: {report.taxpayerAbn}
@@ -720,9 +720,8 @@ export function AustraliaTaxClient({ initialData }: Props) {
                 Total price includes GST. Please pay within 14 days of invoice date.
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        </Dialog>
 
       <style>{`
         @media print {

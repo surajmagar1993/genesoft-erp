@@ -32,6 +32,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { errorMessage } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 interface Props {
   initialData: KsaVatOverviewResult
@@ -1040,14 +1041,14 @@ export function KsaVatClient({ initialData }: Props) {
 
       {/* ── MODAL 1: UBL 2.1 XML Inspector ───────────────────────────── */}
       {isXmlModalOpen && inspectingPayload && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-3xl rounded-2xl border border-border bg-card shadow-2xl flex flex-col max-h-[85vh]">
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setIsXmlModalOpen(false) }}>
+          <DialogContent showCloseButton={false} className="sm:max-w-3xl rounded-2xl border border-border bg-card shadow-2xl flex flex-col max-h-[85vh] p-0 gap-0">
             <div className="flex items-center justify-between border-b border-border p-4">
               <div>
-                <h3 className="font-bold text-foreground flex items-center gap-2">
+                <DialogTitle className="font-bold text-foreground flex items-center gap-2">
                   <FileCode className="h-5 w-5 text-emerald-500" />
                   ZATCA UBL 2.1 E-Invoice XML ({inspectingPayload.invoiceNumber})
-                </h3>
+                </DialogTitle>
                 <span className="text-xs text-muted-foreground font-mono">
                   Type: {inspectingPayload.invoiceType} | ProfileID: reporting:1.0
                 </span>
@@ -1073,14 +1074,14 @@ export function KsaVatClient({ initialData }: Props) {
                 {inspectingPayload.xmlContent}
               </pre>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* ── MODAL 2: Printable Bilingual ZATCA Invoice ───────────────── */}
       {isPrintInvoiceModalOpen && inspectingPayload && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto">
-          <div className="w-full max-w-3xl rounded-2xl border border-border bg-card shadow-2xl p-6 relative">
+        <Dialog open={true} onOpenChange={(open) => { if (!open) setIsPrintInvoiceModalOpen(false) }}>
+          <DialogContent showCloseButton={false} className="block sm:max-w-3xl rounded-2xl border border-border bg-card shadow-2xl p-6">
             <div className="flex items-center justify-between border-b border-border pb-4 no-print">
               <div className="flex items-center gap-2">
                 <Printer className="h-5 w-5 text-emerald-600" />
@@ -1107,7 +1108,7 @@ export function KsaVatClient({ initialData }: Props) {
               {/* Header */}
               <div className="flex justify-between items-start border-b pb-4">
                 <div>
-                  <h2 className="text-xl font-bold">{inspectingPayload.sellerName}</h2>
+                  <DialogTitle className="text-xl font-bold">{inspectingPayload.sellerName}</DialogTitle>
                   <div className="text-xs text-slate-600">Riyadh, Kingdom of Saudi Arabia</div>
                   <div className="text-xs font-mono font-bold text-emerald-800 mt-1">
                     VAT Registration #: {inspectingPayload.sellerVatNumber}
@@ -1191,8 +1192,8 @@ export function KsaVatClient({ initialData }: Props) {
                 This electronic invoice is generated in compliance with the Zakat, Tax and Customs Authority (ZATCA) regulations in the Kingdom of Saudi Arabia.
               </div>
             </div>
-          </div>
-        </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       <style>{`

@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import NextTopLoader from "nextjs-toploader";
 import { Toaster } from "sonner";
+import { ToastLayer } from "@/components/toast-layer";
 
 // No blanket "force-dynamic" here: the public website is built once and refreshed on publish
 // (and hourly); the app and Super Admin layouts set it for themselves.
@@ -65,7 +66,7 @@ export default function RootLayout({
             {children}
           </TooltipProvider>
           {/* Shows every toast() message (success/error) across the app */}
-          <Toaster richColors closeButton position="top-right" theme="system" />
+          <ToastLayer><Toaster richColors closeButton position="top-right" theme="system" /></ToastLayer>
         </ThemeProvider>
       </body>
     </html>

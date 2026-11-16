@@ -10,6 +10,7 @@ import { SiteThemePicker, SiteThemeToggle } from "@/components/marketing/site-th
 import { ServiceIcon } from "@/components/marketing/service-icon"
 import { SERVICES } from "@/lib/site-content"
 import { cn } from "@/lib/utils"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 
 type MenuLink = { href: string; label: string; text?: string }
 
@@ -100,16 +101,6 @@ export function PublicNavbar() {
         setDrawerFor(pathname)
         setDrawer(false)
     }
-    useEffect(() => {
-        if (!drawer) return
-        const onKey = (e: KeyboardEvent) => e.key === "Escape" && setDrawer(false)
-        document.addEventListener("keydown", onKey)
-        document.body.style.overflow = "hidden"
-        return () => {
-            document.removeEventListener("keydown", onKey)
-            document.body.style.overflow = ""
-        }
-    }, [drawer])
 
     return (
         <>
@@ -171,16 +162,22 @@ export function PublicNavbar() {
             </div>
         </header>
 
-            {/* Outside the header: its backdrop blur would trap a fixed drawer inside it */}
-            {drawer && (
-                <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-                    <div className="absolute inset-0 bg-black/40" onClick={() => setDrawer(false)} aria-hidden="true" />
-                    <div className="absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-s-bg">
+            {/* Native modal <dialog> sliding in from the right (ui/sheet.tsx); kept inside #site-root for the site's colours */}
+            <Sheet open={drawer} onOpenChange={setDrawer}>
+                <SheetContent
+                    side="right"
+                    showCloseButton={false}
+                    container={typeof document === "undefined" ? null : document.getElementById("site-root")}
+                    aria-labelledby={undefined}
+                    aria-label="Menu"
+                    className="w-full gap-0 border-s-border bg-s-bg sm:max-w-sm"
+                >
                         <div className="flex h-16 items-center justify-between border-b border-s-border px-4">
                             <BrandLogo className="h-9" />
                             <button
                                 type="button"
                                 aria-label="Close menu"
+                                autoFocus
                                 onClick={() => setDrawer(false)}
                                 className="flex h-11 w-11 items-center justify-center rounded-[10px] border border-s-border bg-s-card text-s-ink"
                             >
@@ -230,9 +227,8 @@ export function PublicNavbar() {
                                 Get a quote
                             </Link>
                         </div>
-                    </div>
-                </div>
-            )}
+                </SheetContent>
+            </Sheet>
         </>
     )
 }

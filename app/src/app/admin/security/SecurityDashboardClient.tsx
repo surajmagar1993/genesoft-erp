@@ -34,6 +34,7 @@ import {
     type getSecurityOverview
 } from "@/app/actions/saas/admin"
 import { errorMessage } from "@/lib/utils";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 interface SecurityDashboardClientProps {
     data: {
@@ -590,14 +591,13 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
             )}
 
             {/* Modal for Adding Blocked IP */}
-            {isAddIpOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-                    <div className="bg-card border border-primary/20 rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4">
+                <Dialog open={isAddIpOpen} onOpenChange={(open) => { if (!open) setIsAddIpOpen(false) }}>
+                    <DialogContent showCloseButton={false} className="block bg-card border border-primary/20 rounded-xl shadow-2xl sm:max-w-md p-6 space-y-4">
                         <div className="flex items-center justify-between border-b pb-3">
-                            <h2 className="text-lg font-bold flex items-center gap-2">
+                            <DialogTitle className="text-lg font-bold flex items-center gap-2">
                                 <Ban className="h-5 w-5 text-destructive" />
                                 Add IP to Firewall Blocklist
-                            </h2>
+                            </DialogTitle>
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
@@ -658,9 +658,8 @@ export function SecurityDashboardClient({ data }: SecurityDashboardClientProps) 
                                 </Button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
+                    </DialogContent>
+                </Dialog>
         </div>
     )
 }

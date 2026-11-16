@@ -46,6 +46,7 @@ import {
     sendInvoiceViaWhatsApp,
     testWhatsAppConnection,
 } from "@/app/actions/crm/whatsapp"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 interface Props {
     initialConfig: WhatsAppConfig
@@ -1096,13 +1097,13 @@ export default function WhatsAppClient({
             {/* MODAL: DISPATCH INVOICE VIA WHATSAPP */}
             {/* ==================================================================== */}
             {dispatchModalOpen && selectedInvoice && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card border border-border/80 rounded-xl max-w-lg w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4">
+                <Dialog open={true} onOpenChange={(open) => { if (!open) setDispatchModalOpen(false) }}>
+                    <DialogContent showCloseButton={false} className="block bg-card border border-border/80 rounded-xl sm:max-w-lg p-6 shadow-2xl space-y-4">
                         <div className="flex items-center justify-between border-b pb-3">
-                            <h2 className="text-base font-bold flex items-center gap-2">
+                            <DialogTitle className="text-base font-bold flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5 text-emerald-600" />
                                 Share Invoice via WhatsApp
-                            </h2>
+                            </DialogTitle>
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -1185,8 +1186,8 @@ export default function WhatsAppClient({
                                 </Button>
                             </div>
                         </div>
-                    </div>
-                </div>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
     )

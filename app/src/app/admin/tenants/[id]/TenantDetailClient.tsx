@@ -47,6 +47,7 @@ import type { getTenantById } from "@/app/actions/saas/admin"
 import type { SaaSPlatformInvoice } from "@/lib/saas-subscription-engine"
 import { trialActive } from "@/lib/trial"
 import { confirmAction } from "@/components/confirm-dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 type TenantDetail = NonNullable<Awaited<ReturnType<typeof getTenantById>>>
 /** A stored platform receipt: current fields (SaaSPlatformInvoice) or older names */
@@ -805,14 +806,13 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
             )}
 
             {/* Modal / Dialog for Editing Tenant Profile */}
-            {isEditOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-                    <div className="bg-card border border-primary/20 rounded-xl shadow-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+                <Dialog open={isEditOpen} onOpenChange={(open) => { if (!open) setIsEditOpen(false) }}>
+                    <DialogContent showCloseButton={false} className="block bg-card border border-primary/20 rounded-xl shadow-2xl sm:max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between border-b pb-3">
-                            <h2 className="text-lg font-bold flex items-center gap-2">
+                            <DialogTitle className="text-lg font-bold flex items-center gap-2">
                                 <Building2 className="h-5 w-5 text-primary" />
                                 Edit Business Profile
-                            </h2>
+                            </DialogTitle>
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
@@ -942,19 +942,17 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                 </Button>
                             </div>
                         </form>
-                    </div>
-                </div>
-            )}
+                    </DialogContent>
+                </Dialog>
 
             {/* Issue Platform Invoice Modal */}
-            {isInvoicingOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card border border-border/80 rounded-xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4">
+                <Dialog open={isInvoicingOpen} onOpenChange={(open) => { if (!open) setIsInvoicingOpen(false) }}>
+                    <DialogContent showCloseButton={false} className="block bg-card border border-border/80 rounded-xl sm:max-w-md p-6 shadow-2xl space-y-4">
                         <div className="flex items-center justify-between border-b pb-3">
-                            <h2 className="text-lg font-bold flex items-center gap-2">
+                            <DialogTitle className="text-lg font-bold flex items-center gap-2">
                                 <Receipt className="h-5 w-5 text-primary" />
                                 Issue Platform Subscription Invoice
-                            </h2>
+                            </DialogTitle>
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
@@ -1022,20 +1020,19 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                 Generate & Record Invoice
                             </Button>
                         </div>
-                    </div>
-                </div>
-            )}
+                    </DialogContent>
+                </Dialog>
 
             {/* View Receipt Slip Modal */}
             {isReceiptOpen && selectedInvoice && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-card border border-border/80 rounded-xl max-w-lg w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 space-y-4">
+                <Dialog open={true} onOpenChange={(open) => { if (!open) setIsReceiptOpen(false) }}>
+                    <DialogContent showCloseButton={false} className="block bg-card border border-border/80 rounded-xl sm:max-w-lg p-6 shadow-2xl space-y-4">
                         <div className="flex items-center justify-between border-b pb-3">
                             <div>
-                                <h2 className="text-lg font-bold flex items-center gap-2">
+                                <DialogTitle className="text-lg font-bold flex items-center gap-2">
                                     <Receipt className="h-5 w-5 text-primary" />
                                     {selectedInvoice.invoiceNumber}
-                                </h2>
+                                </DialogTitle>
                                 <p className="text-xs text-muted-foreground">Official Platform B2B Subscription Slip</p>
                             </div>
                             <Button 
@@ -1094,8 +1091,8 @@ export function TenantDetailClient({ tenant }: { tenant: TenantDetail }) {
                                 Print / Save PDF
                             </Button>
                         </div>
-                    </div>
-                </div>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
     )

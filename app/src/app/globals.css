@@ -202,3 +202,79 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Native <dialog> modals (components/ui/dialog.tsx): fade + scale in/out, backdrop fade.
+ * Entry uses @starting-style. On exit the component sets [data-closing] while the dialog is still
+ * in the top layer, waits for these transitions, then calls close() (works where `overlay` and
+ * discrete `display` transitions don't, i.e. Firefox and Safari).
+ * At rest the transform is `none`, not scale(1): a transform would make the dialog the containing
+ * block for the Select/Popover menus portaled into it and shift them.
+ */
+dialog[data-ui-dialog] {
+  opacity: 0;
+  transition-property: opacity, transform, display, overlay;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+dialog[data-ui-dialog]:modal {
+  overscroll-behavior: contain; /* scrolling inside the dialog doesn't scroll the page */
+}
+dialog[data-ui-dialog]::backdrop {
+  background-color: transparent;
+  overflow: hidden; /* makes ::backdrop a scroll container so overscroll-behavior applies */
+  overscroll-behavior: contain;
+  transition-property: background-color, display, overlay;
+  transition-duration: 0.2s;
+  transition-timing-function: ease-out;
+  transition-behavior: allow-discrete;
+}
+dialog[data-ui-dialog][open]:where(:not([data-closing])) {
+  opacity: 1;
+  transform: none;
+}
+dialog[data-ui-dialog][open]:where(:not([data-closing]))::backdrop {
+  background-color: rgb(0 0 0 / 0.5);
+}
+@starting-style {
+  dialog[data-ui-dialog][open]:where(:not([data-closing])) {
+    opacity: 0;
+  }
+  dialog[data-ui-dialog][open]:where(:not([data-closing]))::backdrop {
+    background-color: transparent;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog[data-ui-dialog="dialog"] { transform: scale(0.95); }
+  dialog[data-ui-dialog="sheet-right"] { transform: translateX(100%); }
+  dialog[data-ui-dialog="sheet-left"] { transform: translateX(-100%); }
+  dialog[data-ui-dialog="sheet-top"] { transform: translateY(-100%); }
+  dialog[data-ui-dialog="sheet-bottom"] { transform: translateY(100%); }
+  dialog[data-ui-dialog^="sheet-"] { transition-duration: 0.3s; }
+  @starting-style {
+    dialog[data-ui-dialog="dialog"][open]:where(:not([data-closing])) { transform: scale(0.95); }
+    dialog[data-ui-dialog="sheet-right"][open]:where(:not([data-closing])) { transform: translateX(100%); }
+    dialog[data-ui-dialog="sheet-left"][open]:where(:not([data-closing])) { transform: translateX(-100%); }
+    dialog[data-ui-dialog="sheet-top"][open]:where(:not([data-closing])) { transform: translateY(-100%); }
+    dialog[data-ui-dialog="sheet-bottom"][open]:where(:not([data-closing])) { transform: translateY(100%); }
+  }
+}
+
+/* Toasts: a top-layer popover (layout.tsx) so they show above an open dialog */
+#toast-layer {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+  pointer-events: none;
+}
+#toast-layer [data-sonner-toaster] {
+  pointer-events: auto;
+}

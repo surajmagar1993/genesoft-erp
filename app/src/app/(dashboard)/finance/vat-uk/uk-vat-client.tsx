@@ -23,6 +23,7 @@ import {
   Percent,
 } from "lucide-react"
 import { toast } from "sonner"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 interface Props {
   initialData: UkVatOverviewResult
@@ -598,9 +599,8 @@ export function UkVatClient({ initialData }: Props) {
       )}
 
       {/* ── Modal: Printable HMRC Return Slip ────────────────────────── */}
-      {isCertificateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-3xl rounded-2xl border border-border bg-card shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+        <Dialog open={isCertificateModalOpen} onOpenChange={(open) => { if (!open) setIsCertificateModalOpen(false) }}>
+          <DialogContent showCloseButton={false} className="block sm:max-w-3xl rounded-2xl border border-border bg-card shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border pb-3 no-print">
               <span className="font-bold">Official HMRC MTD Return Certificate</span>
               <div className="flex items-center gap-2">
@@ -623,7 +623,7 @@ export function UkVatClient({ initialData }: Props) {
             <div className="printable-content space-y-6 pt-4 text-slate-900 bg-white p-6 rounded-lg">
               <div className="flex justify-between items-start border-b pb-4">
                 <div>
-                  <h2 className="text-xl font-bold">{report.taxpayerLegalName}</h2>
+                  <DialogTitle className="text-xl font-bold">{report.taxpayerLegalName}</DialogTitle>
                   <div className="text-xs text-slate-600">{report.taxpayerAddress}</div>
                   <div className="text-xs font-mono font-bold text-blue-900 mt-1">
                     VAT Registration Number: {report.taxpayerVrn}
@@ -659,9 +659,8 @@ export function UkVatClient({ initialData }: Props) {
                 I declare that the information given on this return is true and complete to the best of my knowledge and belief.
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        </Dialog>
 
       <style>{`
         @media print {

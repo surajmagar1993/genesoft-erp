@@ -73,6 +73,7 @@ Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Pri
 
 ## 📝 Design Patterns
 - **Forms**: Dedicated full pages, not modals.
+- **Modals**: `Dialog`, `AlertDialog` and `Sheet` (`src/components/ui/`) are the native `<dialog>` opened with `showModal()` (since 2026-11-16): never build a `fixed inset-0` overlay. They mount only while open (plus the exit animation), close on Esc, and on a backdrop click unless the dialog holds a form field. Animations are CSS in `globals.css` (`dialog[data-ui-dialog]`, `@starting-style`, `[data-closing]` for the exit). Select/Popover/DropdownMenu/Tooltip portal into the open dialog (`useDialogLayer`); toasts sit in a top-layer popover (`ToastLayer`). A dialog that needs the website's colours passes `container` (#site-root).
 - **Tenancy**: Every table MUST have `tenantId`.
 - **Icons**: `lucide-react`.
 - **Placeholders**: Professional instructional text only — NO hardcoded examples.

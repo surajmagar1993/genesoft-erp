@@ -60,17 +60,14 @@ export function ConfirmHost() {
 
     return (
         <AlertDialog open={!!pending} onOpenChange={(open) => !open && close(false)}>
-            <AlertDialogContent onOpenAutoFocus={(e) => {
-                // Cancel first, so Enter never confirms by accident
-                e.preventDefault()
-                ;(e.currentTarget as HTMLElement | null)?.querySelector<HTMLElement>("[data-confirm-cancel]")?.focus()
-            }}>
+            <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>{pending?.title || (destructive ? "Are you sure?" : "Please confirm")}</AlertDialogTitle>
                     {pending?.description && <AlertDialogDescription className="whitespace-pre-line">{pending.description}</AlertDialogDescription>}
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel data-confirm-cancel onClick={() => close(false)}>
+                    {/* autoFocus: Cancel first, so Enter never confirms by accident */}
+                    <AlertDialogCancel autoFocus onClick={() => close(false)}>
                         {pending?.cancelLabel || "Cancel"}
                     </AlertDialogCancel>
                     <AlertDialogAction
