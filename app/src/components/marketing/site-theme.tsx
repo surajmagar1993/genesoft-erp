@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useSyncExternalStore } from "react"
+import { useCallback, useLayoutEffect, useSyncExternalStore } from "react"
 import { Moon, Sun } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { SITE_ROOT_ID, SITE_THEME_KEY } from "@/lib/site-theme-script"
 
 /**
  * The public website's light/dark theme, separate from the app's: it follows
@@ -12,11 +13,8 @@ import { cn } from "@/lib/utils"
  */
 export type SiteThemeChoice = "light" | "dark" | "system"
 
-const KEY = "site-theme"
-const ROOT_ID = "site-root"
-
-/** Runs before the page paints, so there is no flash of the wrong theme. */
-export const SITE_THEME_SCRIPT = `(function(){try{var c=localStorage.getItem("${KEY}");var d=c==="dark"||(c!=="light"&&window.matchMedia("(prefers-color-scheme: dark)").matches);var r=document.getElementById("${ROOT_ID}");if(r){r.classList.remove("light","dark");r.classList.add(d?"dark":"light");}}catch(e){}})();`
+const KEY = SITE_THEME_KEY
+const ROOT_ID = SITE_ROOT_ID
 
 function readChoice(): SiteThemeChoice {
     try {
@@ -59,6 +57,8 @@ const serverSnapshot = () => "system|light"
 
 export function useSiteTheme() {
     const [choice, resolved] = useSyncExternalStore(subscribe, snapshot, serverSnapshot).split("|") as [SiteThemeChoice, "light" | "dark"]
+    // Opened by in-app navigation: the layout's pre-paint script doesn't run, so apply the theme here, before paint
+    useLayoutEffect(() => apply(readChoice()), [])
 
     const pick = useCallback((next: SiteThemeChoice) => {
         try {

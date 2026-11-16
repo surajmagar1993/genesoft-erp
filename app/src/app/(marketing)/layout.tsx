@@ -2,7 +2,7 @@ import { Manrope, Sora } from "next/font/google"
 import { PublicNavbar } from "@/components/marketing/navbar"
 import { PublicFooter } from "@/components/marketing/footer"
 import { WhatsAppButton, PhoneActionBar } from "@/components/marketing/contact-actions"
-import { SITE_THEME_SCRIPT } from "@/components/marketing/site-theme"
+import { SITE_THEME_SCRIPT } from "@/lib/site-theme-script"
 
 // Built once and kept: publishing in Super Admin → Website refreshes it at once
 // (revalidatePath in actions/website.ts); otherwise it is rebuilt at most hourly.
@@ -22,7 +22,9 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             suppressHydrationWarning
             className={`site light ${sora.variable} ${manrope.variable} flex min-h-screen flex-col bg-s-bg font-site text-s-text antialiased`}
         >
-            <script dangerouslySetInnerHTML={{ __html: SITE_THEME_SCRIPT }} />
+            {/* Sets light/dark before first paint on a full page load. Passed as HTML so React never renders a
+                <script> itself (it wouldn't run on in-app navigation; useSiteTheme covers that case). */}
+            <div hidden dangerouslySetInnerHTML={{ __html: `<script>${SITE_THEME_SCRIPT}</script>` }} />
             <PublicNavbar />
             <main className="flex-1">{children}</main>
             <PublicFooter />
