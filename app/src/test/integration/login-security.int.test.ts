@@ -71,6 +71,8 @@ describe("failed-login lockout", () => {
         await recordLoginFailure(who, "198.51.100.2")
         expect(await loginLocked(who, null, 3)).toBe(false)
         await clearLoginFailures(who)
+        // failures count only strictly after the reset; one in the same millisecond would be missed
+        await new Promise((r) => setTimeout(r, 5))
         await recordLoginFailure(who, null)
         await recordLoginFailure(who, null)
         expect(await loginLocked(who, null, 3)).toBe(false) // 2 since the reset
