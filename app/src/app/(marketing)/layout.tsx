@@ -3,6 +3,7 @@ import { PublicNavbar } from "@/components/marketing/navbar"
 import { PublicFooter } from "@/components/marketing/footer"
 import { WhatsAppButton, PhoneActionBar } from "@/components/marketing/contact-actions"
 import { SITE_THEME_SCRIPT } from "@/lib/site-theme-script"
+import { SiteThemeSync } from "@/components/marketing/site-theme"
 
 // Built once and kept: publishing in Super Admin → Website refreshes it at once
 // (revalidatePath in actions/website.ts); otherwise it is rebuilt at most hourly.
@@ -13,7 +14,7 @@ const manrope = Manrope({ subsets: ["latin"], weight: ["400", "500", "600", "700
 
 /**
  * Public website (genesoftinfotech.com). Its own light/dark theme follows the
- * visitor's device (or their toggle), separately from the app's theme.
+ * visitor's device setting automatically (no toggle), separately from the app's theme.
  */
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -22,9 +23,10 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             suppressHydrationWarning
             className={`site light ${sora.variable} ${manrope.variable} flex min-h-screen flex-col bg-s-bg font-site text-s-text antialiased`}
         >
-            {/* Sets light/dark before first paint on a full page load. Passed as HTML so React never renders a
-                <script> itself (it wouldn't run on in-app navigation; useSiteTheme covers that case). */}
+            {/* Sets the device's light/dark before first paint on a full page load. Passed as HTML so React never
+                renders a <script> itself (it wouldn't run on in-app navigation; SiteThemeSync covers that). */}
             <div hidden dangerouslySetInnerHTML={{ __html: `<script>${SITE_THEME_SCRIPT}</script>` }} />
+            <SiteThemeSync />
             <PublicNavbar />
             <main className="flex-1">{children}</main>
             <PublicFooter />

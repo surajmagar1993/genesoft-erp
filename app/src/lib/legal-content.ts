@@ -475,13 +475,6 @@ export const COOKIE_ITEMS = [
         lasts: "Until you clear your browser data",
         needed: "Preference",
     },
-    {
-        name: "site-theme",
-        kind: "Browser storage (not sent to us)",
-        purpose: "Remembers light or dark mode on this website, if you choose one instead of your device setting.",
-        lasts: "Until you clear your browser data",
-        needed: "Preference",
-    },
 ]
 
 /** Providers that process customer data for us. Keep in step with the Privacy Policy. */

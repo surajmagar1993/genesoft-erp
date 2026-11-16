@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react"
 import { ChevronDown, Menu, X } from "lucide-react"
 import { BrandLogo } from "@/components/brand-logo"
 import { SITE_CONTAINER } from "@/components/marketing/container"
-import { SiteThemePicker, SiteThemeToggle } from "@/components/marketing/site-theme"
 import { ServiceIcon } from "@/components/marketing/service-icon"
 import { SERVICES } from "@/lib/site-content"
 import { cn } from "@/lib/utils"
@@ -139,7 +138,6 @@ export function PublicNavbar() {
                 </nav>
 
                 <div className="flex items-center gap-2">
-                    <SiteThemeToggle className="hidden sm:inline-flex" />
                     <Link href="/login" className="hidden px-2.5 text-[15px] font-semibold text-s-ink hover:text-s-orange-text lg:inline">
                         Sign in
                     </Link>
@@ -217,9 +215,6 @@ export function PublicNavbar() {
                             ))}
                         </nav>
                         <div className="flex flex-col gap-2.5 border-t border-s-border p-4">
-                            <div className="flex items-center justify-between text-[15px] text-s-text">
-                                Theme <SiteThemePicker />
-                            </div>
                             <Link href="/login" className="flex h-[50px] items-center justify-center rounded-[10px] border border-s-border-strong font-semibold text-s-ink">
                                 Sign in to Genesoft ERP
                             </Link>
