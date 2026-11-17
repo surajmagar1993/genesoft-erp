@@ -100,13 +100,14 @@ export const emptyContactForm: ContactFormData = {
 }
 
 interface ContactFormProps {
-    initialData?: ContactFormData & { id?: string }
+    // Partial: server pages can't import the defaults from this client file, so they're merged here
+    initialData?: Partial<ContactFormData> & { id?: string }
     mode: "create" | "edit"
 }
 
 export function ContactForm({ initialData, mode }: ContactFormProps) {
     const router = useRouter()
-    const [form, setForm] = useState<ContactFormData>(initialData || emptyContactForm)
+    const [form, setForm] = useState<ContactFormData>({ ...emptyContactForm, ...initialData })
 
     // A new contact starts in the business's own country and currency (once they have loaded);
     // anything already chosen on the form is kept

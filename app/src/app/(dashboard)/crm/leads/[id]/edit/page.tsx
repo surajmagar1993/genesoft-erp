@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { toRow, type PgRow } from "@/lib/pg-row"
 import { isUuid } from "@/lib/utils"
-import { LeadForm, defaultLeadForm, type LeadFormData } from "@/components/crm/lead-form"
+import { LeadForm, type LeadFormData } from "@/components/crm/lead-form"
 import { notFound } from "next/navigation"
 
 export default async function EditLeadPage({ params }: { params: Promise<{ id: string }> }) {
@@ -14,7 +14,6 @@ export default async function EditLeadPage({ params }: { params: Promise<{ id: s
     const data = toRow<PgRow>("Lead", record)
 
     const initialData: LeadFormData = {
-        ...defaultLeadForm,
         id: data.id,
         title: data.title ?? "",
         contactName: data.contact_name ?? "",

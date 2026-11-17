@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { getTenantId } from "@/lib/get-tenant-id"
 import { toRow, type PgRow } from "@/lib/pg-row"
 import { isUuid } from "@/lib/utils"
-import { ContactForm, emptyContactForm } from "@/components/crm/contact-form"
+import { ContactForm } from "@/components/crm/contact-form"
 import { notFound } from "next/navigation"
 
 export default async function EditContactPage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,7 +31,6 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
     const billingAdd = (data.billing_address || {}) as Record<string, string | undefined>
 
     const initialData = {
-        ...emptyContactForm,
         id: data.id,
         type: (data.type ?? "COMPANY") as "INDIVIDUAL" | "COMPANY",
         displayName: data.display_name ?? "",

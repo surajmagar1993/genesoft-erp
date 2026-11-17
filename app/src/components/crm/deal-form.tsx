@@ -42,13 +42,14 @@ const stageProbability: Record<DealStage, number> = {
 }
 
 interface DealFormProps {
-    initialData?: DealFormData
+    // Partial: server pages can't import the defaults from this client file, so they're merged here
+    initialData?: Partial<DealFormData>
     mode: "create" | "edit"
 }
 
 export function DealForm({ initialData, mode }: DealFormProps) {
     const router = useRouter()
-    const [form, setForm] = useState<DealFormData>(initialData || defaultDealForm)
+    const [form, setForm] = useState<DealFormData>({ ...defaultDealForm, ...initialData })
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const update = (field: keyof DealFormData, value: DealFormData[keyof DealFormData]) => {

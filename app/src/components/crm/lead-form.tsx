@@ -39,13 +39,14 @@ export const defaultLeadForm: LeadFormData = {
 }
 
 interface LeadFormProps {
-    initialData?: LeadFormData
+    // Partial: server pages can't import the defaults from this client file, so they're merged here
+    initialData?: Partial<LeadFormData>
     mode: "create" | "edit"
 }
 
 export function LeadForm({ initialData, mode }: LeadFormProps) {
     const router = useRouter()
-    const [form, setForm] = useState<LeadFormData>(initialData || defaultLeadForm)
+    const [form, setForm] = useState<LeadFormData>({ ...defaultLeadForm, ...initialData })
     const [isSubmitting, setIsSubmitting] = useState(false)
 
     const update = (field: keyof LeadFormData, value: LeadFormData[keyof LeadFormData]) => setForm((p) => ({ ...p, [field]: value }))

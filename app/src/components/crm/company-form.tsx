@@ -41,21 +41,22 @@ export const defaultCompanyForm: CompanyFormData = {
     address: "",
     city: "",
     state: "",
-    country: "India",
-    countryCode: "IN",
+    country: "",
+    countryCode: "",
     gstin: "",
     employeeCount: "",
     annualRevenue: "",
 }
 
 interface CompanyFormProps {
-    initialData?: CompanyFormData
+    // Partial: server pages can't import the defaults from this client file, so they're merged here
+    initialData?: Partial<CompanyFormData>
     mode: "create" | "edit"
 }
 
 export function CompanyForm({ initialData, mode }: CompanyFormProps) {
     const router = useRouter()
-    const [form, setForm] = useState<CompanyFormData>(initialData || defaultCompanyForm)
+    const [form, setForm] = useState<CompanyFormData>({ ...defaultCompanyForm, ...initialData })
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [saveError, setSaveError] = useState<string | null>(null)
 
@@ -239,8 +240,15 @@ export function CompanyForm({ initialData, mode }: CompanyFormProps) {
                                     <AutoSuggestInput
                                         id="country"
                                         value={form.country}
-                                        onChange={(e) => update("country", e.target.value)}
-                                        options={searchCountries(form.country).map((c) => ({
+                                        onChange={(e) => {
+                                            // Typed without picking: keep the code only on an exact match ("" = workspace country on save)
+                                            const typed = e.target.value
+                                            const hit = searchCountries(typed)[0]
+                                            const exact = hit && [hit.name, hit.code].some((v) => v.toLowerCase() === typed.trim().toLowerCase())
+                                            update("country", typed)
+                                            update("countryCode", exact ? hit.code : "")
+                                        }}
+                                        options={searchCountries(form.country ?? "").map((c) => ({
                                             label: c.name,
                                             value: c.name,
                                             subLabel: c.code,
