@@ -38,7 +38,7 @@ export default function Error({
                         Try again
                     </Button>
                     <Button variant="outline" asChild>
-                        <Link href="/crm/contacts">Go to dashboard</Link>
+                        <Link href="/reports">Go to dashboard</Link>
                     </Button>
                 </CardContent>
             </Card>

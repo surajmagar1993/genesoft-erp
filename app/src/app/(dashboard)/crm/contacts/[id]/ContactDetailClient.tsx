@@ -279,7 +279,7 @@ export default function ContactDetailClient({ contact, ledger, initialTasks, ini
                       <div className="flex items-center gap-3">
                         <Building2 className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <p className="text-xs text-muted-foreground">GSTIN</p>
+                          <p className="text-xs text-muted-foreground">Tax ID</p>
                           <p className="text-sm font-medium font-mono">{contact.gstin || "—"}</p>
                         </div>
                       </div>
@@ -360,10 +360,12 @@ export default function ContactDetailClient({ contact, ledger, initialTasks, ini
                   {contact.is_active ? "Active" : "Inactive"}
                 </Badge>
               </div>
+              {contact.pan && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">PAN</span>
-                <span className="text-sm font-mono">{contact.pan || "—"}</span>
+                <span className="text-sm font-mono">{contact.pan}</span>
               </div>
+              )}
             </CardContent>
           </Card>
 

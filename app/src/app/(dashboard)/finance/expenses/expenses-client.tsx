@@ -89,7 +89,7 @@ export default function ExpensesClient({
     employees,
 }: ExpensesClientProps) {
     const router = useRouter()
-    const { formatMoney, regime: moneyRegime } = useTaxRegime()
+    const { formatMoney, regime: moneyRegime, rates, defaultRate, taxLabel } = useTaxRegime()
     const appLocale = moneyRegime?.locale
     const [isPending, startTransition] = useTransition()
 
@@ -150,7 +150,7 @@ export default function ExpensesClient({
         vendorName: "",
         employeeId: "",
         amount: "",
-        taxRate: "18",
+        taxRate: "",
         expenseDate: new Date().toISOString().split("T")[0],
         paymentMethod: PaymentMethod.BANK_TRANSFER,
         paymentReference: "",
@@ -159,6 +159,11 @@ export default function ExpensesClient({
         notes: "",
         autoPostJournal: true,
     })
+    // The business's standard rate once its tax setup has loaded
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- fill the default rate once the tax setup arrives
+        if (moneyRegime) setExpForm((f) => (f.taxRate === "" ? { ...f, taxRate: String(defaultRate) } : f))
+    }, [moneyRegime, defaultRate])
 
     // Form State: Journal Entry
     const [jeForm, setJeForm] = useState<{
@@ -1220,18 +1225,17 @@ export default function ExpensesClient({
 
                             <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-foreground">
-                                    GST / Tax Rate (%)
+                                    {taxLabel} Rate (%)
                                 </label>
                                 <select
                                     value={expForm.taxRate}
                                     onChange={(e) => setExpForm({ ...expForm, taxRate: e.target.value })}
                                     className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                                 >
-                                    <option value="0">0% (Nil / Exempt)</option>
-                                    <option value="5">5% GST</option>
-                                    <option value="12">12% GST</option>
-                                    <option value="18">18% GST (Standard)</option>
-                                    <option value="28">28% GST</option>
+                                    {/* The business's own rates; a rate already on the form stays selectable */}
+                                    {[...new Set([...rates, Number(expForm.taxRate)])].sort((x, y) => x - y).map((r) => (
+                                        <option key={r} value={String(r)}>{r}%{r === 0 ? " (Nil / Exempt)" : ` ${taxLabel}`}{r === defaultRate && r > 0 ? " (Standard)" : ""}</option>
+                                    ))}
                                 </select>
                             </div>
 

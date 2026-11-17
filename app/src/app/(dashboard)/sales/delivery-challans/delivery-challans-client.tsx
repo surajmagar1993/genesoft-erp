@@ -71,7 +71,8 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     // Rates come from the business's country and Settings (a line without one uses the default)
-    const { regime } = useTaxRegime()
+    const { regime, taxLabel } = useTaxRegime()
+    const isIndia = regime?.mode === "IN_GST"
     const defaultRate = regime?.defaultRate ?? 0
     const rateOptions = regime?.standardRates?.length ? regime.standardRates : [0, defaultRate]
 
@@ -106,7 +107,6 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
     const [vehicleNumber, setVehicleNumber] = useState("")
     const [lrNumber, setLrNumber] = useState("")
     const [lrDate, setLrDate] = useState("")
-    const [placeOfSupply, ] = useState("27-Maharashtra")
     const [dispatchAddressText, setDispatchAddressText] = useState("")
     const [deliveryAddressText, setDeliveryAddressText] = useState("")
     const [notes, ] = useState("")
@@ -277,7 +277,6 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                     recipientGstin: recipientGstin || undefined,
                     dispatchAddress: { address: dispatchAddressText },
                     deliveryAddress: { address: deliveryAddressText },
-                    placeOfSupply,
                     reason,
                     transportMode,
                     transporterName: transporterName || undefined,
@@ -697,9 +696,9 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                             </div>
 
                             <div className="space-y-1">
-                                <Label className="text-xs font-semibold">Recipient GSTIN (If any)</Label>
+                                <Label className="text-xs font-semibold">Recipient {regime?.taxIdLabel || "tax ID"} (If any)</Label>
                                 <Input
-                                    placeholder="27ABCDE1234F1Z5"
+                                    placeholder="Enter tax number"
                                     value={recipientGstin}
                                     onChange={(e) => setRecipientGstin(e.target.value.toUpperCase())}
                                     className="h-9 text-xs font-mono"
@@ -846,11 +845,11 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                     <TableHeader>
                                         <TableRow className="bg-muted/40 text-xs">
                                             <TableHead className="w-[280px]">Product / Item</TableHead>
-                                            <TableHead className="w-[100px]">HSN/SAC</TableHead>
+                                            <TableHead className="w-[100px]">{isIndia ? "HSN/SAC" : "Item code"}</TableHead>
                                             <TableHead className="w-[90px]">Qty</TableHead>
                                             <TableHead className="w-[80px]">Unit</TableHead>
                                             <TableHead className="w-[120px]">Unit Price</TableHead>
-                                            <TableHead className="w-[90px]">GST Rate %</TableHead>
+                                            <TableHead className="w-[90px]">{taxLabel} Rate %</TableHead>
                                             <TableHead className="w-[120px] text-right">Total</TableHead>
                                             <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
@@ -963,7 +962,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                         <span className="font-semibold text-foreground">{formatCurrency(computedTotals.taxableAmount)}</span>
                                     </div>
                                     <div className="flex justify-between text-muted-foreground">
-                                        <span>Estimated GST (Rule 55):</span>
+                                        <span>Estimated {taxLabel}{isIndia ? " (Rule 55)" : ""}:</span>
                                         <span className="font-semibold text-foreground">{formatCurrency(computedTotals.taxAmount)}</span>
                                     </div>
                                     <div className="flex justify-between pt-1 border-t font-bold text-sm text-foreground">
@@ -1151,7 +1150,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                     <span className="font-bold text-gray-500 uppercase text-xs block">Deliver To (Consignee):</span>
                                     <div className="font-bold text-sm">{selectedChallan.recipientName}</div>
                                     <div className="text-gray-600 mt-0.5">{String(selectedChallan.deliveryAddress?.address || "")}</div>
-                                    <div className="mt-1"><strong>GSTIN:</strong> {selectedChallan.recipientGstin || "Unregistered / Consumer"}</div>
+                                    <div className="mt-1"><strong>{regime?.taxIdLabel || "Tax ID"}:</strong> {selectedChallan.recipientGstin || "Unregistered / Consumer"}</div>
                                     {selectedChallan.recipientPhone && <div><strong>Phone:</strong> {selectedChallan.recipientPhone}</div>}
                                 </div>
                             </div>
@@ -1163,7 +1162,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
                                         <tr className="bg-gray-100 border-b">
                                             <th className="p-2 border-r w-8 text-center">#</th>
                                             <th className="p-2 border-r">Description of Goods</th>
-                                            <th className="p-2 border-r w-20">HSN/SAC</th>
+                                            <th className="p-2 border-r w-20">{isIndia ? "HSN/SAC" : "Item code"}</th>
                                             <th className="p-2 border-r w-16 text-right">Qty</th>
                                             <th className="p-2 border-r w-16">Unit</th>
                                             <th className="p-2 border-r w-24 text-right">Rate</th>

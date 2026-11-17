@@ -344,7 +344,7 @@ export default function BillDetailsClient({ bill }: Props) {
                                     <span>{formatCurrency(Number(bill.subtotal), bill.currency_code)}</span>
                                 </div>
                                 <div className="flex justify-between w-full max-w-[260px] text-sm">
-                                    <span className="text-muted-foreground">Tax (GST):</span>
+                                    <span className="text-muted-foreground">Tax:</span>
                                     <span>{formatCurrency(Number(bill.tax_amount), bill.currency_code)}</span>
                                 </div>
                                 <div className="flex justify-between w-full max-w-[260px] text-base font-medium border-t pt-2">
