@@ -3,6 +3,7 @@ import { getTenantSettings } from "@/app/actions/settings/tenant"
 import { getAnnouncement } from "@/app/actions/announcement"
 import { getCurrentUser } from "@/lib/current-user"
 import { prisma } from "@/lib/prisma"
+import { isOwnStorageUrl } from "@/lib/storage"
 import { DashboardShell } from "./dashboard-shell"
 
 export const dynamic = "force-dynamic"
@@ -32,6 +33,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
                 countryCode: settings?.country_code || "",
                 multiJurisdiction: !!settings?.settings?.enable_multijurisdiction,
                 tenantName: settings?.name || "",
+                // Only a logo uploaded to our own storage (never a typed URL)
+                tenantLogoUrl: settings?.logo_url && isOwnStorageUrl(settings.logo_url, "tenant-logos") ? settings.logo_url : "",
                 announcement,
                 userName: profile?.fullName || "",
                 userEmail: profile?.email || authUser?.email || "",

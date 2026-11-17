@@ -189,6 +189,8 @@ interface AppSidebarProps {
     countryCode: string
     multiJurisdiction: boolean
     tenantName?: string
+    /** The business's uploaded logo ("" = Genesoft mark) */
+    tenantLogoUrl?: string
     /** The platform Super Admin, in their own workspace: show the way back to the console */
     isSuperAdmin?: boolean
     userName: string
@@ -204,6 +206,7 @@ export interface ShellInitial {
     countryCode: string
     multiJurisdiction: boolean
     tenantName: string
+    tenantLogoUrl: string
     announcement: string | null
     userName: string
     userEmail: string
@@ -267,7 +270,7 @@ function visibleNavigation({ access, accessLoaded, planModules, countryCode, mul
         .filter((group) => group.items.length > 0)
 }
 
-function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJurisdiction, tenantName, isSuperAdmin = false, userName, userEmail }: AppSidebarProps) {
+function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJurisdiction, tenantName, tenantLogoUrl, isSuperAdmin = false, userName, userEmail }: AppSidebarProps) {
     const pathname = usePathname()
     const jurisdiction = getTaxJurisdiction(countryCode)
 
@@ -287,13 +290,18 @@ function AppSidebar({ access, accessLoaded, planModules, countryCode, multiJuris
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/reports" className="flex items-center gap-3">
                                 <div className="flex aspect-square size-8 shrink-0 items-center justify-center">
-                                    <Image
-                                        src="/logo-mark.png"
-                                        alt="Genesoft Infotech"
-                                        width={32}
-                                        height={32}
-                                        className="size-8 object-contain"
-                                    />
+                                    {tenantLogoUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element -- tenant's own storage file, any size/ratio
+                                        <img src={tenantLogoUrl} alt={tenantName || "Business logo"} className="size-8 object-contain" />
+                                    ) : (
+                                        <Image
+                                            src="/logo-mark.png"
+                                            alt="Genesoft Infotech"
+                                            width={32}
+                                            height={32}
+                                            className="size-8 object-contain"
+                                        />
+                                    )}
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-semibold text-base">
@@ -554,6 +562,7 @@ export function DashboardShell({
                 countryCode={tenantCountry}
                 multiJurisdiction={multiJurisdiction}
                 tenantName={tenantName}
+                tenantLogoUrl={initial.tenantLogoUrl}
                 isSuperAdmin={role === "SUPER_ADMIN"}
                 userName={initial.userName}
                 userEmail={initial.userEmail}
