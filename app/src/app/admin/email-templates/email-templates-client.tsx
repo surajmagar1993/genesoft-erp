@@ -765,9 +765,12 @@ export function EmailTemplatesClient({ initialData }: Props) {
 
                                             {/* Email content rendering */}
                                             {previewMode === "html" ? (
-                                                <div
-                                                    className="p-1"
-                                                    dangerouslySetInnerHTML={{ __html: liveCompiled.html }}
+                                                // Empty sandbox: template HTML can't run scripts, submit forms or reach the app's cookies.
+                                                <iframe
+                                                    title="Email preview"
+                                                    sandbox=""
+                                                    srcDoc={liveCompiled.html}
+                                                    className="block w-full h-[640px] border-0 bg-white"
                                                 />
                                             ) : (
                                                 <pre className="p-6 text-xs font-mono whitespace-pre-wrap leading-relaxed text-foreground">
