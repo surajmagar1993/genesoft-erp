@@ -1,4 +1,4 @@
-> **Last Updated:** 2026-11-16 | Current rules: root `CLAUDE.md` → Security Rules | Open work: `REMAINING_TASKS.md` → "Open items"
+> **Last Updated:** 2026-11-18 | Current rules: root `CLAUDE.md` → Security Rules | Open work: `REMAINING_TASKS.md` → "Open items"
 
 ## 📦 Scope
 Application source code including components, hooks, actions, and utilities.

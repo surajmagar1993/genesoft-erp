@@ -1,4 +1,4 @@
-> **Last Updated:** 2026-11-16 | **Status:** testing on genesoftdev.vercel.app, not live yet | Open work: `REMAINING_TASKS.md` → "Open items"
+> **Last Updated:** 2026-11-18 | **Status:** testing on genesoftdev.vercel.app, not live yet | Open work: `REMAINING_TASKS.md` → "Open items"
 
 ## 🎯 Project Overview
 Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Prisma, and Supabase.
@@ -72,7 +72,8 @@ Multi-tenant SaaS ERP & CRM built with Next.js 16, TypeScript, Tailwind CSS, Pri
 - **Simulated features** (label them as such in the UI until real): e-way bill numbers are drafts (real ones come from the NIC portal), customers can't pay invoices online (the simulated Stripe/PayPal checkout, pay links and portal payment were removed), workflow "update status" actions only run in the simulator, ERP web forms (`/forms/[code]`, embeddable on customers' sites) have no CAPTCHA yet.
 
 ## 📝 Design Patterns
-- **Forms**: Dedicated full pages, not modals.
+- **Forms**: Dedicated full pages, not modals. A server page never imports plain values (defaults, constants) from a `"use client"` file: on the server they're only client references (empty), so the CRM forms merge their own defaults (`useState({ ...defaultX, ...initialData })`).
+- **Business logo**: the app sidebar shows the business's uploaded logo (`logo_url`, only if `isOwnStorageUrl(…, "tenant-logos")`), else the Genesoft mark.
 - **Light/dark**: the app and the website both follow the user's device setting automatically (since 2026-11-16); there is no toggle and nothing is stored (app: next-themes `defaultTheme="system"`, `storageKey="app-theme"`, never call `setTheme`). Don't add a theme switch back without updating the Cookie Policy table.
 - **Tabs**: a `TabsList` is one row that scrolls sideways when the tabs don't fit (`tabs-scroll` utility in `globals.css`: fading edges, the selected tab scrolled into view). Never give it `grid grid-cols-N` or `flex-wrap`. Page rows of buttons use `flex-wrap`, so nothing runs off a phone screen (the dashboard content area hides sideways overflow, so it would be cut off).
 - **Modals**: `Dialog`, `AlertDialog` and `Sheet` (`src/components/ui/`) are the native `<dialog>` opened with `showModal()` (since 2026-11-16): never build a `fixed inset-0` overlay. They mount only while open (plus the exit animation), close on Esc, and on a backdrop click unless the dialog holds a form field. Animations are CSS in `globals.css` (`dialog[data-ui-dialog]`, `@starting-style`, `[data-closing]` for the exit). Select/Popover/DropdownMenu/Tooltip portal into the open dialog (`useDialogLayer`); toasts sit in a top-layer popover (`ToastLayer`). A dialog that needs the website's colours passes `container` (#site-root).

@@ -1,6 +1,6 @@
 # ERP & CRM Multi-Platform SaaS — Master Task Tracker
 
-> **Last Updated:** 2026-11-16 (v16) — history up to September 2026 is kept below as written; see "October–November 2026" at the end for what changed since, and `REMAINING_TASKS.md` → "Open items" for pending work.
+> **Last Updated:** 2026-11-18 (v17) — history up to September 2026 is kept below as written; see "October–November 2026" at the end for what changed since, and `REMAINING_TASKS.md` → "Open items" for pending work.
 >
 > **Was (2026-09-17, v14):** **Branch:** `main` | **P2 Progress:** 100% COMPLETE ✅ | **P3 in Progress:** Project Management & Invoice Features 100% COMPLETE ✅ | Payroll, Manufacturing, Budgets & RFQ COMPLETE ✅
 
@@ -244,4 +244,5 @@ Details in `git log`, `BUG_REPORT.md` and `REMAINING_TASKS.md`.
 - [x] Marketing email kinds and audience targeting, branded emails and plan invoices, plan currency (six regions, USD for the rest) and India-only plan tax **(2026-11-14)**
 - [x] Native `<dialog>` modals with CSS animations; tab bars that scroll instead of wrapping; phone/tablet layout fixes on 13 pages; light/dark follows the device (toggles removed) **(2026-11-16)**
 - [x] Domain renewed to 2027-12-05; Dependabot alerts cleared (shadcn CLI removed, minimatch override); Super Admin pages fit phone/tablet; penetration test and database fix (no direct table writes through Supabase's REST API, migration 6) **(2026-11-16)**
+- [x] CRM edit pages (company, contact, deal, lead) no longer crash or lose fields; company country no longer defaults to India; the sidebar shows the business's uploaded logo; Email Templates preview in a sandboxed frame **(2026-11-17)**
 - [ ] Open: see `REMAINING_TASKS.md` → "Open items"

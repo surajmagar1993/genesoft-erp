@@ -1,7 +1,7 @@
 # 🚀 Remaining Tasks Tracker
 *(Auto-updated — pending modules only)*
 
-> **Last Updated:** 2026-11-16 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
+> **Last Updated:** 2026-11-18 | Testing on genesoftdev.vercel.app, not live yet. **Start with "Open items" at the bottom.**
 >
 > The ✅ entries below were written in September 2026 when each module was first built. Several overstate what shipped: the government-filing modules (GST returns, e-way bills, TDS, UAE VAT 201, KSA ZATCA phase 2, UK MTD, Australia BAS) only prepare figures and files, aren't connected to any government system, and are hidden behind `NEXT_PUBLIC_ENABLE_COMPLIANCE_MODULES`; "official/NIC-compliant/statutory" means "follows the published format", not certified. Stripe/PayPal invoice checkout and portal online payment aren't live. See "Known Gaps" and "Open items".
 
@@ -264,5 +264,6 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 - [x] Penetration test 2026-11-16 (local copy, Fixo and Genesoft accounts, nothing destructive): SQL injection, reflected and stored XSS, cross-business access by id, role/plan escalation, forged Razorpay webhook, cron and export without credentials, open redirect, password guessing and a 400-request burst were all stopped. One hole found and closed: any signed-in member could insert/update/delete their own business's rows directly through Supabase's REST API (skipping roles, ledger, limits and audit). Migration `6_no_direct_table_access` removed those rights; re-test: all direct writes refused, app pages, 156 integration and 159 unit tests pass.
 - [ ] From the pentest: "page not found" answers with HTTP 200 instead of 404 (harmless); the app's rate limit is per server instance, so add a Vercel Firewall rate-limit rule and turn on Bot Protection (Vercel dashboard: Firewall shows "Not configured", Bot Protection off); set `TURNSTILE_SECRET_KEY`; drop `'unsafe-inline'` from the script CSP (needs nonces).
 - [x] Email Templates preview renders in an empty-sandbox iframe (no scripts, forms or cookies) (2026-11-17).
+- [x] Found by a tester in Saudi Arabia (2026-11-17): editing a company crashed (the edit pages took form defaults from a `"use client"` file, which are empty on the server; contact, deal and lead edit had the same flaw), the company form preset India and saved a typed country with India's code, and the sidebar showed the Genesoft mark instead of the business's uploaded logo. All fixed and live (4ec135f); the tester's two companies corrected to Saudi Arabia.
 - [x] Dependabot alerts cleared 2026-11-16: the shadcn CLI was removed (its deepmerge had no fix; the one stylesheet it provided is kept in `src/app/shadcn-tailwind.css`, add components with `npx shadcn@latest add`), and minimatch is overridden to 11.0.8 for typescript-eslint. `npm audit`: 0 vulnerabilities.
 
