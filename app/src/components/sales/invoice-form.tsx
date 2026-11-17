@@ -344,7 +344,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
               <div>
                 <Label className="text-sm font-semibold">Document Type</Label>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Choose between an official GST Tax Invoice or a Proforma Invoice (Quotation).
+                  Choose between an official {taxLabel} Tax Invoice or a Proforma Invoice (Quotation).
                 </p>
               </div>
               <div className="flex gap-2">
@@ -500,7 +500,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                   <p className="text-emerald-700">
                     Customer is tax exempt ({TAX_EXEMPTION_REASONS.find(r => r.id === form.taxExemptionReason)?.label || form.taxExemptionReason || "Statutory Exemption"})
                     {form.taxExemptionCertificate && <span className="font-mono ml-1 font-medium">[{form.taxExemptionCertificate}]</span>}.
-                    CGST, SGST, IGST and VAT are automatically zeroed.
+                    {taxLabel} is automatically zeroed.
                   </p>
                 </div>
               </div>
@@ -756,7 +756,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
                           onChange={(e) =>
                             updateLineItem(item.id, "hsnSac", e.target.value)
                           }
-                          placeholder="Enter HSN/SAC"
+                          placeholder={isIndia ? "Enter HSN/SAC" : "Enter item code"}
                           className="text-sm text-center"
                         />
                         <Input
@@ -942,7 +942,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
             <div className="space-y-2 rounded-lg border p-4 bg-muted/20">
               <div className="flex items-center justify-between">
                 <Label htmlFor="declaration" className="text-sm font-semibold">
-                  Statutory GST Declaration
+                  Statutory {taxLabel} Declaration
                 </Label>
                 <Badge variant="outline" className="text-xs text-muted-foreground">
                   Statutory Rule

@@ -271,7 +271,7 @@ export function RecurringProfileForm({
                             <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatMoney(totals.subtotal)}</span></div>
                             <div className="flex justify-between"><span className="text-muted-foreground">{taxLabel}</span><span>{formatMoney(totals.tax)}</span></div>
                             <div className="flex justify-between border-t pt-1 font-semibold"><span>Each invoice</span><span>{formatMoney(totals.subtotal + totals.tax)}</span></div>
-                            <p className="text-xs text-muted-foreground">Indian GST is split into CGST + SGST or IGST from the customer&apos;s state on each invoice.</p>
+                            {regime?.mode === "IN_GST" && <p className="text-xs text-muted-foreground">Indian GST is split into CGST + SGST or IGST from the customer&apos;s state on each invoice.</p>}
                         </div>
                     </CardContent>
                 </Card>
