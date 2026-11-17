@@ -289,7 +289,7 @@ export default function ContactDetailClient({ contact, ledger, initialTasks, ini
                         <Globe className="h-4 w-4 text-muted-foreground" />
                         <div>
                           <p className="text-xs text-muted-foreground">Country</p>
-                          <p className="text-sm font-medium">{contact.country_code || "IN"}</p>
+                          <p className="text-sm font-medium">{contact.country_code || "—"}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">

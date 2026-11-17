@@ -326,7 +326,7 @@ async function _createVendor(data: {
             billingAddress: {
                 city: data.city?.trim() || "",
                 state: data.state?.trim() || "",
-                country: data.countryCode || "India"
+                country: data.countryCode || defaults.countryCode
             }
         }
     })
