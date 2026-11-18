@@ -160,6 +160,8 @@ From `app/`:
 | 10.3 | Invoice, quote, PDF | The country's tax name and currency; amounts are rounded correctly (e.g. 47.925 → 47.93) |
 | 10.4 | E-way bills | Shown only for India (and only when the compliance switch is on) |
 | 10.5 | Pricing page from that country | The region's currency; tax 18% GST for India only, 0% elsewhere |
+| 10.6 | As a non-Indian business (e.g. Saudi): invoice form, expense, bill, delivery challan, credit note, products list, contacts list, invoice preview (all 5 templates), Settings → Add tax group | Only the country's tax name (VAT…) and rates (15% for Saudi); no GST, CGST/SGST/IGST, HSN, GSTIN or PAN; new tax group starts with the business's country and rate |
+| 10.7 | As an Indian business, the same screens | GST, HSN/SAC, GSTIN/PAN still shown; expense rates 0/5/12/18/28 with 18% picked |
 
 ## 11. Super Admin (`/admin`)
 
