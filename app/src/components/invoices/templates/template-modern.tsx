@@ -120,7 +120,7 @@ export function TemplateModern({ invoice }: TemplateProps) {
                         <tr>
                             <th className="py-2.5 px-3 w-10 text-center">#</th>
                             <th className="py-2.5 px-3">Item Description</th>
-                            <th className="py-2.5 px-3 w-20 text-center">HSN/SAC</th>
+                            <th className="py-2.5 px-3 w-20 text-center">{isSingle ? "Code" : "HSN/SAC"}</th>
                             <th className="py-2.5 px-3 w-16 text-right">Qty</th>
                             <th className="py-2.5 px-3 w-24 text-right">Rate</th>
                             <th className="py-2.5 px-3 w-20 text-right">{taxLabel} %</th>

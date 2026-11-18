@@ -78,7 +78,7 @@ export function TemplateCreative({ invoice }: TemplateProps) {
                             <tr>
                                 <th className="py-3 px-3 w-10 text-center">#</th>
                                 <th className="py-3 px-3">Description</th>
-                                <th className="py-3 px-3 w-20 text-center">HSN</th>
+                                <th className="py-3 px-3 w-20 text-center">{isSingle ? "Code" : "HSN"}</th>
                                 <th className="py-3 px-3 w-16 text-right">Qty</th>
                                 <th className="py-3 px-3 w-24 text-right">Price</th>
                                 <th className="py-3 px-3 w-20 text-right">Tax</th>

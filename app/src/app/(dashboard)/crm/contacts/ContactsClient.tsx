@@ -265,7 +265,7 @@ export default function ContactsClient({ initialContacts, total, baseCurrency }:
                                     <div className="space-y-1 text-sm">
                                         {contact.gstin && (
                                             <div className="flex justify-between gap-4">
-                                                <span className="text-muted-foreground">GST:</span>
+                                                <span className="text-muted-foreground">Tax ID:</span>
                                                 <span className="font-medium">{contact.gstin}</span>
                                             </div>
                                         )}

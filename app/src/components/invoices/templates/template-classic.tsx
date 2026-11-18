@@ -95,7 +95,7 @@ export function TemplateClassic({ invoice }: TemplateProps) {
                         <tr>
                             <th className="p-2 border-r border-slate-800 w-10 text-center">S.N.</th>
                             <th className="p-2 border-r border-slate-800">Description of Goods / Services</th>
-                            <th className="p-2 border-r border-slate-800 w-20 text-center">HSN/SAC</th>
+                            <th className="p-2 border-r border-slate-800 w-20 text-center">{isSingle ? "Code" : "HSN/SAC"}</th>
                             <th className="p-2 border-r border-slate-800 w-16 text-right">Qty</th>
                             <th className="p-2 border-r border-slate-800 w-24 text-right">Rate</th>
                             <th className="p-2 border-r border-slate-800 w-20 text-right">Tax Rate</th>

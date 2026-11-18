@@ -64,7 +64,7 @@ export function TemplateMinimalist({ invoice }: TemplateProps) {
                     <thead className="border-b border-zinc-200 text-zinc-400 uppercase text-[10px] tracking-wider">
                         <tr>
                             <th className="pb-3 font-medium">Description</th>
-                            <th className="pb-3 text-center font-medium w-20">HSN</th>
+                            <th className="pb-3 text-center font-medium w-20">{isSingle ? "Code" : "HSN"}</th>
                             <th className="pb-3 text-right font-medium w-16">Qty</th>
                             <th className="pb-3 text-right font-medium w-24">Rate</th>
                             <th className="pb-3 text-right font-medium w-20">{taxLabel}</th>

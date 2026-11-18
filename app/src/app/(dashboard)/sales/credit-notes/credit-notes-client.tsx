@@ -74,7 +74,8 @@ interface NewCreditNoteItemState {
 }
 
 export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
-    const { formatMoney } = useTaxRegime()
+    const { formatMoney, taxLabel, regime } = useTaxRegime()
+    const codeLabel = regime?.mode === "IN_GST" ? "HSN/SAC Code" : "Item code"
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     // Straight from the server, so router.refresh() after a change shows it
@@ -926,10 +927,10 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                                             </div>
 
                                             <div className="space-y-1">
-                                                <Label className="text-xs">HSN/SAC Code</Label>
+                                                <Label className="text-xs">{codeLabel}</Label>
                                                 <Input
                                                     className="h-8 text-xs"
-                                                    placeholder="Enter HSN/SAC code"
+                                                    placeholder={`Enter ${codeLabel.toLowerCase()}`}
                                                     value={item.hsnSacCode}
                                                     onChange={e => handleItemChange(idx, "hsnSacCode", e.target.value)}
                                                 />
@@ -1026,7 +1027,7 @@ export function CreditNotesClient({ initialData }: CreditNotesClientProps) {
                         <div className="rounded-xl border bg-muted/40 p-3 flex justify-between items-center text-xs">
                             <div className="space-y-0.5">
                                 <div>Subtotal: {formatMoney(Number(newNoteTotals.subtotal))}</div>
-                                <div>GST Tax: {formatMoney(Number(newNoteTotals.tax))}</div>
+                                <div>{taxLabel}: {formatMoney(Number(newNoteTotals.tax))}</div>
                             </div>
                             <div className="text-right">
                                 <span className="text-muted-foreground block">Total Credit Memo Value:</span>

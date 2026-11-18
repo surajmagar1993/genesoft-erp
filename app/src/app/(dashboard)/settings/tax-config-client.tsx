@@ -1,5 +1,6 @@
 "use client"
 
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { confirmAction } from "@/components/confirm-dialog"
 import { useState, useEffect } from "react"
 import { Plus, Trash2, CheckCircle2, ShieldCheck } from "lucide-react"
@@ -16,13 +17,12 @@ import { errorMessage } from "@/lib/utils";
 export default function TaxConfigClient() {
     const [taxGroups, setTaxGroups] = useState<TaxGroup[]>([])
     const [loading, setLoading] = useState(true)
-    const [isAdding, setIsAdding] = useState(false)
-    const [newGroup, setNewGroup] = useState({
-        name: "",
-        country_code: "IN",
-        is_default: false,
-        rates: [{ name: "GST", rate: 18 }]
-    })
+    const [isAdding, setAdding] = useState(false)
+    const { regime, taxLabel, defaultRate } = useTaxRegime()
+    const blankGroup = () => ({ name: "", country_code: regime?.countryCode ?? "", is_default: false, rates: [{ name: taxLabel, rate: defaultRate }] })
+    const [newGroup, setNewGroup] = useState(blankGroup)
+    // fill the business's own country and rate each time the form opens
+    const setIsAdding = (open: boolean) => { if (open) setNewGroup(blankGroup()); setAdding(open) }
 
     useEffect(() => {
         loadTaxGroups()
@@ -45,7 +45,7 @@ export default function TaxConfigClient() {
             unwrap(await createTaxGroup(newGroup))
             toast.success("Tax group created")
             setIsAdding(false)
-            setNewGroup({ name: "", country_code: "IN", is_default: false, rates: [{ name: "GST", rate: 18 }] })
+            setNewGroup(blankGroup())
             loadTaxGroups()
         } catch (error) {
             toast.error(errorMessage(error))
@@ -90,7 +90,7 @@ export default function TaxConfigClient() {
             <div className="flex items-center justify-between">
                 <div>
                     <h2 className="text-xl font-bold">Tax Groups</h2>
-                    <p className="text-sm text-muted-foreground">Manage GST/VAT rates for your products and quotes.</p>
+                    <p className="text-sm text-muted-foreground">Manage the tax rates for your products and quotes.</p>
                 </div>
                 <Button onClick={() => setIsAdding(!isAdding)} variant={isAdding ? "outline" : "default"}>
                     {isAdding ? "Cancel" : <><Plus className="h-4 w-4 mr-2" /> Add Tax Group</>}
@@ -101,7 +101,7 @@ export default function TaxConfigClient() {
                 <Card className="border-primary/20 bg-primary/5 shadow-md animate-in fade-in slide-in-from-top-4 duration-300">
                     <CardHeader>
                         <CardTitle className="text-md">New Tax Group</CardTitle>
-                        <CardDescription>Define composite taxes (e.g., GST = CGST + SGST)</CardDescription>
+                        <CardDescription>Define a tax and the rates it is made of</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
@@ -116,7 +116,7 @@ export default function TaxConfigClient() {
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Country Code</label>
                                 <Input 
-                                    placeholder="IN" 
+                                    placeholder="Country code" 
                                     value={newGroup.country_code} 
                                     onChange={e => setNewGroup({ ...newGroup, country_code: e.target.value })} 
                                 />
@@ -213,7 +213,7 @@ export default function TaxConfigClient() {
                     </div>
                     <div className="max-w-xs mx-auto">
                         <p className="font-semibold text-muted-foreground">No tax groups configured.</p>
-                        <p className="text-xs text-muted-foreground mt-1">Add your country&apos;s GST/VAT rates to start generating quotes with accurate totals.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Add your tax rates to start generating quotes with accurate totals.</p>
                     </div>
                     <Button onClick={() => setIsAdding(true)} variant="outline">Setup Your First Tax Group</Button>
                 </div>

@@ -20,6 +20,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { ProductDB, deleteProduct, importProducts, exportProducts } from "@/app/actions/sales/products"
 import { formatCurrency } from "@/lib/utils"
+import { useTaxRegime } from "@/hooks/use-tax-regime"
 import { RequireRole } from "@/components/auth/role-context"
 import { toast } from "sonner"
 
@@ -29,6 +30,8 @@ interface ProductsClientProps {
 }
 
 export function ProductsClient({ initialProducts }: ProductsClientProps) {
+    const { regime } = useTaxRegime()
+    const codeLabel = regime?.mode === "IN_GST" ? "HSN" : "Code"
     const router = useRouter()
     const [products, setProducts] = useState<ProductDB[]>(initialProducts)
     // Pick up fresh server data after router.refresh() (seed / import)
@@ -230,7 +233,7 @@ export function ProductsClient({ initialProducts }: ProductsClientProps) {
                                     <TableHead>Item Details</TableHead>
                                     <TableHead>Category/Brand</TableHead>
                                     <TableHead>Type</TableHead>
-                                    <TableHead>SKU / HSN</TableHead>
+                                    <TableHead>SKU / {codeLabel}</TableHead>
                                     <TableHead className="text-right">Unit Price</TableHead>
                                     <TableHead className="text-center">Stock</TableHead>
                                     <TableHead>Status</TableHead>
@@ -272,7 +275,7 @@ export function ProductsClient({ initialProducts }: ProductsClientProps) {
                                             <TableCell>
                                                 <div className="flex flex-col gap-0.5 text-sm">
                                                     <span className="text-muted-foreground text-xs">SKU: <span className="text-foreground">{item.sku || "N/A"}</span></span>
-                                                    <span className="text-muted-foreground text-xs">HSN: <span className="text-foreground">{item.hsn_sac_code || "N/A"}</span></span>
+                                                    <span className="text-muted-foreground text-xs">{codeLabel}: <span className="text-foreground">{item.hsn_sac_code || "N/A"}</span></span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-right">
