@@ -158,9 +158,6 @@ export async function register(formData: FormData) {
 
   try {
     // 3. Create Tenant and Profile in Prisma
-    const [, ...lastNameParts] = fullName.split(' ')
-    lastNameParts.join(' ') || '';
-
     await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const tenant = await tx.tenant.create({
         data: {

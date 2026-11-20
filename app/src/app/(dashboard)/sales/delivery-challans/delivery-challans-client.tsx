@@ -254,7 +254,7 @@ export function DeliveryChallansClient({ initialData }: DeliveryChallansClientPr
             taxAmount: tax,
             totalValue: taxable + tax
         }
-    }, [lineItems])
+    }, [lineItems, defaultRate])
 
     // Handlers
     const handleCreateChallan = () => {

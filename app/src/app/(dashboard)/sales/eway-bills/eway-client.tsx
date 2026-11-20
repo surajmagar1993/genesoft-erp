@@ -1228,6 +1228,7 @@ export function EwayClient({ initialData }: EwayClientProps) {
                 </div>
                 {qrDataUrl && (
                   <div className="text-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- data: URL QR code, nothing to optimise */}
                     <img src={qrDataUrl} alt="E-Way Bill QR Code" className="w-28 h-28 mx-auto border bg-white p-1" />
                     <span className="text-xs text-muted-foreground font-mono">Draft reference</span>
                   </div>

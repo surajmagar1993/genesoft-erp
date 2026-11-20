@@ -399,6 +399,7 @@ export default function CompanyProfileTab({ initialSettings }: CompanyProfileTab
                             <div className="h-44 w-full rounded-xl border-2 border-dashed border-muted-foreground/25 bg-muted/10 flex flex-col items-center justify-center p-4 relative overflow-hidden group">
                                 {logoUrl ? (
                                     <div className="relative w-full h-full flex items-center justify-center">
+                                        {/* eslint-disable-next-line @next/next/no-img-element -- logo from our own storage; next/image would need remotePatterns */}
                                         <img
                                             src={logoUrl}
                                             alt="Tenant Brand Logo"

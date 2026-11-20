@@ -141,7 +141,7 @@ These are marked done above but are simulated or not enforced. The UI now says s
 - [x] **Recurring invoices**: due profiles run in the daily cron (2026-10-13).
 - [x] **Tests**: unit tests (`npm test`) plus integration tests of whole flows against a throwaway PGlite database (`npm run test:integration`: sign-up, invoice → payment → ledger, Razorpay plan checkout, export/close/purge) (2026-10-14). Left: browser (UI) tests.
 - [x] **Password reset**: the reset email linked to a page that didn't exist; added `/auth/confirm` + `/reset-password` and branded Supabase emails (2026-10-13).
-- [x] **Lint**: 0 errors (was 1,021; fixed 2026-11-12). 25 warnings left.
+- [x] **Lint**: 0 errors (was 1,021; fixed 2026-11-12). 0 warnings (2026-11-20: 3 stale-value bugs fixed, the rest justified inline).
 - [x] **Dependencies**: production 0 known vulnerabilities; updates arrive as Dependabot pull requests (2026-11-13). See "Engineering" under Open items.
 
 ---
@@ -245,7 +245,7 @@ Done on 2026-10-14: general ledger (all documents post double-entry journals; tr
 **Engineering:**
 - [ ] Prisma 8: still a release candidate on 2026-11-20 (npm `latest` = 8.0.0-rc.34), so not upgraded; Dependabot will offer it when final. 2026-11-20: the 3 high audit warnings (`effect` ≤3.22.0 ReDoS, GHSA-7589-6fvf-x4pw, via `@prisma/config`) fixed with an override to effect ^3.22.5; `npm audit` (dev included) = 0. Drop the override when Prisma ships a fixed `@prisma/config`.
 - [x] Migrations (2026-11-13): `schema.prisma` reconciled with the live database (indexes, enum names, foreign-key rules, column types/defaults copied from it); `prisma/migrations` = `0_baseline` (live as it was) + `1_document_counters_exchange_rates` + `2_drop_legacy_tables` (pos_sessions, processed_stripe_events). `migrations.int.test.ts` keeps them in step. The old hand-written `app/*.sql` files stay as history.
-- [x] Lint errors: 0 (was ~1,000; done 2026-11-12). 25 warnings left (hook dependencies, `<img>`).
+- [x] Lint errors: 0 (was ~1,000; done 2026-11-12). 0 warnings since 2026-11-20.
 - [x] Browser tests (Playwright, 2026-11-13): `e2e/public.spec.ts` (19 public pages on desktop + phone: status, error screens, console errors, sideways scroll; redirects, 404, sign-in gate) runs in CI against the build with a throwaway database (`e2e/ci-db.mjs`). `e2e/app.spec.ts` opens every app page signed in, with `E2E_EMAIL`/`E2E_PASSWORD` (and `E2E_BASE_URL`) set; run by hand. First signed-in run found the rate limit tripping on quick navigation (fixed: 5× for signed-in users).
 - [x] `npm run lint` passes (old scripts are excluded; 0 errors).
 - [x] Assumed India defaults removed (2026-11-12): new contacts, bank accounts and imported contacts/products take the business's own country and currency (`src/lib/tenant-defaults.ts`; forms prefill from `useTaxRegime`); a product row without a name is rejected; the fixed "+12%" on the Super Admin dashboard is gone.

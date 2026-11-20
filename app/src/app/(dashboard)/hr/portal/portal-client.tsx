@@ -72,7 +72,7 @@ export function PortalClient({ initialData }: PortalClientProps) {
         updateClock()
         const interval = setInterval(updateClock, 1000)
         return () => clearInterval(interval)
-    }, [])
+    }, [appLocale])
 
     // Switch Employee (for managers/admins)
     const handleSwitchEmployee = (empId: string) => {

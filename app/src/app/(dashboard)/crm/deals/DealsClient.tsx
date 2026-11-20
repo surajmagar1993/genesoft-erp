@@ -80,6 +80,7 @@ export default function DealsClient({ initialDeals, total }: Props) {
             }
         }, 500)
         return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs only when the typed search changes; updateUrl/searchParams change on every navigation
     }, [searchQuery])
 
     const moveStage = (dealId: string, newStage: DealStage) => {

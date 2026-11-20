@@ -206,6 +206,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber, contacts, products
     } else if (nextInvoiceNumber && !form.invoiceNumber) {
       setForm((prev) => ({ ...prev, invoiceNumber: nextInvoiceNumber }))
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- form.invoiceNumber is read only to avoid overwriting a number the user typed
   }, [initialData, nextInvoiceNumber])
 
   const update = <K extends keyof InvoiceFormData>(field: K, value: InvoiceFormData[K]) => {

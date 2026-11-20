@@ -49,7 +49,7 @@ export function useChatMessages(ticketId: string | null, initialMessages: Messag
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [ticketId, initialMessages])
+  }, [ticketId, initialMessages, supabase])
 
   return {
     messages,

@@ -81,7 +81,7 @@ export function BarcodeDisplay({
     return () => {
       isMounted = false
     }
-  }, [cleanValue, type, width, height, showText])
+  }, [cleanValue, effectiveType, width, height, effectiveShowText])
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation()

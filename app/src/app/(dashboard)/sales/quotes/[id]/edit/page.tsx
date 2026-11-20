@@ -60,6 +60,7 @@ export default function EditQuotePage() {
             // eslint-disable-next-line react-hooks/set-state-in-effect -- loading data when the screen opens
             fetchQuote()
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per quote id
     }, [id])
 
     const handleSave = async (data: QuoteFormData) => {

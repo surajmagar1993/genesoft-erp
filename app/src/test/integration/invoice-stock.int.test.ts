@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { prisma } from "@/lib/prisma"
 import { createInvoice, deleteInvoice, getInvoiceById, updateInvoice, type CreateInvoicePayload } from "@/app/actions/sales/invoices"
 import { getProductsForDocuments } from "@/app/actions/sales/products"
-import { syncInvoiceStock } from "@/lib/stock"
 import { actAs, createCustomer, createTestTenant } from "./helpers"
 
 const uid = () => Math.random().toString(36).slice(2, 8)

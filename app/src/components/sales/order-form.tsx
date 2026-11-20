@@ -103,6 +103,7 @@ export function OrderForm({ initialData, onSave }: OrderFormProps) {
             // Next number in the business's order series
             getNextOrderNumber().then((orderNumber) => setForm(prev => (prev.orderNumber ? prev : { ...prev, orderNumber }))).catch(() => {})
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch the next number once per form; form.orderNumber only guards against overwriting it
     }, [initialData])
 
     const update = <K extends keyof OrderFormData>(field: K, value: OrderFormData[K]) => {

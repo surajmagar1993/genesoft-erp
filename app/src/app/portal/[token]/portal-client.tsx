@@ -275,6 +275,7 @@ export function PortalClient({
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {tenantLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- logo from our own storage; next/image would need remotePatterns
               <img src={tenantLogoUrl} alt={tenantName} className="h-8 w-8 rounded-lg object-contain bg-white dark:bg-slate-800 p-0.5" />
             ) : (
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">

@@ -25,6 +25,7 @@ export function IdleWatcher() {
             const msg = minutes
                 ? `You were signed out after ${minutes} minutes without activity. Please sign in again.`
                 : "Your session ended. Please sign in again."
+            // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- full reload on purpose: drops all client state after sign-out
             window.location.assign(`/login?message=${encodeURIComponent(msg)}`)
         }
 

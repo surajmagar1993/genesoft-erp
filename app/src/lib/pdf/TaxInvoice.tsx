@@ -834,6 +834,7 @@ export function TaxInvoice({ invoice, templateId, zatcaQrDataUrl }: TaxInvoicePr
               <Text style={s.signatureCompany}>For {supplierName}</Text>
               <View style={s.signatureArea}>
                 {invoice.signature_url ? (
+                  // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt prop; PDFs have no alt text
                   <Image src={invoice.signature_url} style={s.signatureImage} />
                 ) : (
                   <View style={s.digitalSealBox}>

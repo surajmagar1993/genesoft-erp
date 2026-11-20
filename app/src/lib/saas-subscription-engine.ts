@@ -368,7 +368,6 @@ export function calculateSubscriptionProration(params: CalculateProrationParams)
         currentBillingCycle = "MONTHLY",
         targetBillingCycle,
         currencyCode = "INR",
-        cycleStartDate,
         cycleEndDate,
         currentPaidAmount,
         pricing,

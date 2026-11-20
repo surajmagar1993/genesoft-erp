@@ -101,6 +101,7 @@ export function QuoteForm({ initialData, onSave }: QuoteFormProps) {
             // Generate temporary business ID on client-side mount only
             getNextQuoteNumber().then((quoteNumber) => setForm(prev => (prev.quoteNumber ? prev : { ...prev, quoteNumber }))).catch(() => {})
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch the next number once per form; form.quoteNumber only guards against overwriting it
     }, [initialData])
 
     const update = <K extends keyof QuoteFormData>(field: K, value: QuoteFormData[K]) => {
