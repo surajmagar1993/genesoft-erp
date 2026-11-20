@@ -67,6 +67,9 @@
     "vitest": "^5.1.0"
   },
   "overrides": {
-    "minimatch@^10.0.0": "^11.0.8"
+    "minimatch@^10.0.0": "^11.0.8",
+    "@prisma/config": {
+      "effect": "^3.22.5"
+    }
   }
 }
